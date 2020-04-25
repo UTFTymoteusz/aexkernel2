@@ -1,0 +1,101 @@
+org 0x1000
+[BITS 16]
+
+nop
+
+cli ; Just incase
+cld
+
+xor ax, ax
+mov ds, ax
+
+jmp 0x00:fix
+
+fix:
+    mov ss, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+
+    ; Let this just fall through
+
+lgdt [tmp_gdt.ptr]
+
+; Enable PAE
+mov eax, cr4
+or  eax, 1 << 5
+mov cr4, eax
+
+; Setting the long mode bit
+mov ecx, 0xC0000080
+rdmsr
+or  eax, 1 << 8
+wrmsr
+
+; Set cr3 based of what the BSP gave us
+mov dword eax, [0x500]
+mov cr3, eax
+
+; Actually enabling paging and protected mode
+mov eax, cr0
+or  eax, (1 << 31) | 1 ; PE and PG
+and eax, ~0x60000000   ; disable CD and NW
+mov cr0, eax
+
+jmp tmp_gdt.code:lmode
+
+[BITS 64]
+lmode:
+    mov rax, tmp_gdt.data
+
+    mov ds, rax
+    mov ss, rax
+    mov es, rax
+
+	xor rax, rax
+	mov gs, rax
+
+	lidt [0x510]
+	lgdt [0x520]
+
+	mov qword rsi, [0x540]
+	mov qword rdi, [0x550]
+	
+	mov rsp, rsi
+
+	mov qword rax, [0x530]
+	call rax
+
+    mov byte [0x1000], 0xAA
+
+	; Now we wait
+    hcf:
+        hlt
+        jmp hcf
+
+align 16
+tmp_gdt:
+	.null: equ $ - tmp_gdt
+	dw 0xFFFF     ; Limit
+	dw 0x00       ; Base (low)
+	db 0x00       ; Base (middle)
+	db 0x00       ; Access
+	db 0x01       ; Granularity
+	db 0x00       ; Base (high)
+	.code: equ $ - tmp_gdt
+	dw 0xFFFF     ; Limit
+	dw 0x00       ; Base (low)
+	db 0x00       ; Base (middle)
+	db 0b10011010 ; Access (exec/read)
+	db 0b10101111 ; Granularity - 64 bits, limit 19:16
+	db 0x00       ; Base (high)
+	.data: equ $ - tmp_gdt
+	dw 0xFFFF     ; Limit
+	dw 0x00       ; Base (low)
+	db 0x00       ; Base (middle)
+	db 0b10010010 ; Access (read/write)
+	db 0b00000000 ; Granularity
+	db 0x00       ; Base (high)
+	.ptr:
+	dw $ - tmp_gdt - 1 ; Limit
+	dd tmp_gdt         ; Base

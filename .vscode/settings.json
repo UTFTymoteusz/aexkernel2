@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "types.hpp": "c",
+        "stdint.h": "c",
+        "printk.hpp": "c",
+        "new": "cpp"
+    }
+}
