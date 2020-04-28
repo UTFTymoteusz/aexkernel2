@@ -81,4 +81,4 @@ iso:
 	@grub-mkrescue -o $(BIN)aex.iso $(ISO) 2> /dev/null
 
 qemu:
-	qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso
+	qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 3 -m 32M -cdrom $(BIN)aex.iso

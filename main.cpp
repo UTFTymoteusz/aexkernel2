@@ -9,6 +9,7 @@
 #include "mem/memory.hpp"
 #include "sys/cpu.hpp"
 #include "sys/irq.hpp"
+#include "sys/mcore.hpp"
 #include "tty.hpp"
 
 using namespace AEX;
@@ -22,6 +23,10 @@ void main(multiboot_info_t* mbinfo) {
 
     Init::init_print_header();
     printk(PRINTK_INIT "Booting AEX/0.01\n\n");
+
+    size_t cr3;
+    asm volatile("mov rax, cr3; mov %0, rax;" : : "m"(cr3) : "memory");
+    printk("cr3: 0x%p\n", cr3);
 
     // clang-format off
     printk("Section info:\n");
@@ -44,6 +49,7 @@ void main(multiboot_info_t* mbinfo) {
     printk("\n");
 
     Sys::IRQ::init();
+    printk("\n");
 
     auto bsp = new Sys::CPU(0);
     bsp->initLocal();
@@ -52,24 +58,11 @@ void main(multiboot_info_t* mbinfo) {
 
     Sys::CPU::interrupts();
 
-    /*Sys::CPU::globalInit();
-
-    ACPI::init();
-    printk("\n");
-
-    auto cpu            = new Sys::CPU(0);
-    Sys::MCore::CPUs[0] = cpu;
-
     Sys::MCore::init();
 
-    Sys::CPU::broadcastPacket(3, nullptr, false);
-
-    while (true) {
-        //printk("0x%x\n", Sys::IOAPIC::read(0x10 + 4));
-        asm volatile("hlt;");
-
-    }*/
+    Sys::CPU::broadcastPacket(Sys::CPU::ipp_type::HALT, nullptr, true);
+    //bsp->sendPacket(Sys::CPU::ipp_type::HALT, nullptr);
 
     while (true)
-        asm volatile("hlt;");
+        Sys::CPU::waitForInterrupt();
 }

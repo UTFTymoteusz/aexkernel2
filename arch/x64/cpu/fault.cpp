@@ -45,16 +45,13 @@ namespace AEX::Sys {
         if (info->int_no == EXC_PAGE_FAULT) {
             size_t cr2, cr3;
 
-            asm volatile("mov %0, cr2;" : : "r"(cr2) : "memory");
-            asm volatile("mov %0, cr3;" : : "r"(cr3) : "memory");
+            asm volatile("mov rax, cr2; mov %0, rax;" : : "m"(cr2) : "memory");
+            asm volatile("mov rax, cr3; mov %0, rax;" : : "m"(cr3) : "memory");
 
             printk("CR2: 0x%016lx  CR3: 0x%016lx\n", cr2, cr3);
         }
 
-        for (volatile size_t i = 0; i < 203232323; i++)
-            ;
-
-        // CPU::broadcastPacket(CPU::ipp_type::HALT);
+        CPU::broadcastPacket(CPU::ipp_type::HALT);
         kpanic("Unrecoverable processor exception occured in CPU %i\n", CPU::getCurrentCPUID());
     }
 }

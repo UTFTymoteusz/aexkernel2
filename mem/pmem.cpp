@@ -185,10 +185,18 @@ namespace AEX::PMem {
             phys_addr addr  = mmap_entry->addr;
             phys_addr caddr = ceiltopg(addr);
 
-            int     delta  = caddr - addr;
-            int32_t frames = (mmap_entry->len - delta) / Sys::CPU::PAGE_SIZE;
+            if (addr & 0xFFF)
+                kpanic("Misaligned memory regions");
+
+            int64_t frames = mmap_entry->len / Sys::CPU::PAGE_SIZE;
+
+            // Why bother with those?
+            if (frames < 8)
+                continue;
 
             frames_available += frames;
+
+            printk("0x%016p, %li (%li MiB)\n", addr, frames * Sys::CPU::PAGE_SIZE, (frames * Sys::CPU::PAGE_SIZE) / 1048576);
 
             _createPieces(addr, frames);
         }
@@ -215,8 +223,10 @@ namespace AEX::PMem {
         spinlock.acquire();
 
         do {
-            if (piece->frames_free < frames)
+            if (piece->frames_free < frames) {
+                printk("alloc !free: %i < %i", piece->frames_free, frames);
                 continue;
+            }
 
             int32_t start = piece->find(frames);
             if (start == -1)

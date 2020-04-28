@@ -116,7 +116,7 @@ _irq_marker:
 irq_ipi:
     pusha
 
-    ;call ipi_handle
+    call ipi_handle
 
     popa
     iretq

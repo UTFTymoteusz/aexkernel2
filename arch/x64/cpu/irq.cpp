@@ -25,8 +25,6 @@ namespace AEX::Sys::IRQ {
     extern "C" void irq_marker(void* _info) {
         irq_mark = true;
 
-        printk("mark\n");
-
         APIC::eoi();
     }
 }

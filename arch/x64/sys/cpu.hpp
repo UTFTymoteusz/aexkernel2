@@ -1,5 +1,7 @@
 #pragma once
 
+#include "aex/spinlock.hpp"
+
 #include <stdint.h>
 
 namespace AEX::Sys {
@@ -9,6 +11,10 @@ namespace AEX::Sys {
      */
     class CPU {
       public:
+        enum ipp_type {
+            HALT = 0,
+        };
+        
         static constexpr int PAGE_SIZE = 4096;
 
         struct fault_info {
@@ -89,9 +95,41 @@ namespace AEX::Sys {
          */
         static CPU* getCurrentCPU();
 
+        /**
+         * Broadcasts a packet to all processors (except the local one, unless you specify
+         * otherwise) and IPIs them.
+         * @param type Type of the packet.
+         * @param data Optional data pointer.
+         * @param ignore_self If true, the executing CPU will not receive this packet.
+         */
+        static void broadcastPacket(uint32_t type, void* data = nullptr, bool ignore_self = true);
+
+        /**
+         * Sends a packet to a processor and IPIs it.
+         * @param type Type of the packet.
+         * @param data Optional data pointer.
+         */
+        void sendPacket(uint32_t type, void* data = nullptr);
+
+        /**
+         * Handles an IPP packet, shouldn't be invoked directly.
+         */
+        void handle_ipp();
+
         int id;
         int apic_id;
 
         CPU* self;
+
+      private:
+        struct ipi_packet {
+            uint8_t type;
+            void*   data;
+        };
+        typedef struct ipi_packet ipi_packet_t;
+
+        Spinlock      _ipi_lock;
+        volatile bool _ipi_ack;
+        ipi_packet_t  _ipi_packet;
     };
 }

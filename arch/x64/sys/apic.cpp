@@ -21,7 +21,7 @@ namespace AEX::Sys {
         *((volatile uint32_t*) ((size_t) addr + reg)) = val;
     }
 
-    void APIC::start() {
+    void APIC::init() {
         write(0xF0, read(0xF0) | 0x1FF);
     }
 
@@ -43,6 +43,51 @@ namespace AEX::Sys {
 
     uint32_t APIC::getTimerCounter() {
         return read(0x390);
+    }
+
+    void APIC::sendInterrupt(uint8_t dst, uint8_t vector) {
+        bool ints = CPU::checkInterrupts();
+
+        CPU::nointerrupts();
+
+        write(0x310, dst << 24);
+        write(0x300, (1 << 14) | vector);
+
+        while (read(0x300) & (1 << 12))
+            ;
+
+        if (ints)
+            CPU::interrupts();
+    }
+
+    void APIC::sendINIT(uint8_t dst) {
+        bool ints = CPU::checkInterrupts();
+
+        CPU::nointerrupts();
+
+        write(0x310, dst << 24);
+        write(0x300, (5 << 8));
+
+        while (read(0x300) & (1 << 12))
+            ;
+
+        if (ints)
+            CPU::interrupts();
+    }
+
+    void APIC::sendSIPI(uint8_t dst, uint8_t page) {
+        bool ints = CPU::checkInterrupts();
+
+        CPU::nointerrupts();
+
+        write(0x310, dst << 24);
+        write(0x300, (6 << 8) | (uint32_t) page);
+
+        while (read(0x300) & (1 << 12))
+            ;
+
+        if (ints)
+            CPU::interrupts();
     }
 
     void APIC::eoi() {

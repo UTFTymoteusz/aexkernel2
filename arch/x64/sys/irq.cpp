@@ -20,6 +20,7 @@
 
 namespace AEX::Sys::IRQ {
     bool is_APIC_present = false;
+    size_t APIC_tps = 0;
 
     ACPI::MADT*      madt;
     RCPArray<IOAPIC> ioapics;
@@ -91,9 +92,9 @@ namespace AEX::Sys::IRQ {
     }
 
     void setup_timer() {
-        size_t tps = find_apic_tps();
+        APIC_tps = find_apic_tps();
 
-        APIC::setupTimer(0x20 + 0, tps, true);
+        APIC::setupTimer(0x20 + 0, APIC_tps, true);
     }
 
     IOAPIC* find_ioapic(int irq) {

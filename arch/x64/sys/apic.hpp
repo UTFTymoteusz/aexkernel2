@@ -14,7 +14,7 @@ namespace AEX::Sys {
         static uint32_t read(int reg);
         static void     write(int reg, uint32_t val);
 
-        static void start();
+        static void init();
         static int  getID();
 
         static void setupTimer(uint32_t vector);
@@ -22,9 +22,9 @@ namespace AEX::Sys {
 
         static uint32_t getTimerCounter();
 
-        // static void sendInterrupt(uint8_t dst, uint8_t vector);
-        // static void sendINIT(uint8_t dst);
-        // static void sendSIPI(uint8_t dst, uint8_t page);
+        static void sendInterrupt(uint8_t dst, uint8_t vector);
+        static void sendINIT(uint8_t dst);
+        static void sendSIPI(uint8_t dst, uint8_t page);
 
         static void eoi();
     };
@@ -54,7 +54,7 @@ namespace AEX::Sys {
 
         void setMode(int irq, uint8_t mode);
 
-      //private:
+      private:
         volatile uint32_t* addr_reg;
         volatile uint32_t* data_reg;
 

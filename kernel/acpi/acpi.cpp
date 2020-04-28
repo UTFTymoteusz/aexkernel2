@@ -26,7 +26,7 @@ namespace AEX::ACPI {
 
         tables.addRef(table);
 
-        printk("acpi: Found table %s\n", buffer, table);
+        printk("acpi: Found table %s, len %i\n", buffer, header->length);
 
         return true;
     }
@@ -38,7 +38,7 @@ namespace AEX::ACPI {
         if (xsdp != nullptr) {
             printk("acpi: Found the xdsp\n");
 
-            auto xsdt = (xsdt_t*) VMem::kernel_pagemap->map(4096, xsdp->xsdt_address, 0);
+            auto xsdt = (xsdt_t*) VMem::kernel_pagemap->map(xsdp->length, xsdp->xsdt_address, 0);
 
             if (!add_table((table_t*) xsdt)) {
                 printk("acpi: Failed\n");
@@ -47,7 +47,10 @@ namespace AEX::ACPI {
 
             for (size_t i = sizeof(xsdt_t); i < xsdt->header.length; i += 8) {
                 uint64_t addr  = *((uint64_t*) ((size_t) xsdt + i));
-                auto     table = (table_t*) VMem::kernel_pagemap->map(4096, addr, 0);
+                auto     table_hdr = (sdt_header_t*) VMem::kernel_pagemap->map(sizeof(sdt_header_t), addr, 0);
+                auto     table     = (table_t*) VMem::kernel_pagemap->map(table_hdr->length, addr, 0);
+
+                // unmap the header once you bother enough to implement unmap in VMem
 
                 add_table(table);
             }
