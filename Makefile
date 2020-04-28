@@ -22,7 +22,7 @@ SYS  = $(ISO)sys/
 
 ARCH = arch/x64/
 
-GFLAGS = -O2 -Wall -Wextra -nostdlib -pipe
+GFLAGS = -O0 -Wall -Wextra -nostdlib -pipe
 
 INCLUDES := -I. -I$(ARCH) -Iinclude/ -Iinclude/libc/ -I../lai/include/
 
@@ -32,8 +32,6 @@ CCFLAGS := $(GFLAGS) \
 	-fno-exceptions \
 	-ffreestanding  \
 	-masm=intel     \
-	-mno-sse        \
-	-mno-sse2       \
 	-mcmodel=kernel \
 	-mno-red-zone   \
 	-fno-pic        \

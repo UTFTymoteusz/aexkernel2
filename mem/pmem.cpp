@@ -1,15 +1,18 @@
-#include "mem/pmem.hpp"
+#include "aex/mem/pmem.hpp"
 
-#include "kernel/kpanic.hpp"
-#include "kernel/math.hpp"
-#include "kernel/printk.hpp"
-#include "kernel/spinlock.hpp"
-#include "kernel/string.hpp"
+#include "aex/kpanic.hpp"
+#include "aex/math.hpp"
+#include "aex/printk.hpp"
+#include "aex/spinlock.hpp"
+#include "aex/string.hpp"
+
 #include "mem/memory.hpp"
 #include "sys/cpu.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
+
+//#include <new>
 
 namespace AEX::PMem {
     class FramePiece {
@@ -20,13 +23,17 @@ namespace AEX::PMem {
         uint32_t    frames_free;
         FramePiece* next;
 
-        FramePiece(phys_addr addr, uint32_t amnt) { init(addr, amnt); }
+        FramePiece(phys_addr addr, uint32_t amnt) {
+            init(addr, amnt);
+        }
 
         void init(phys_addr addr, uint32_t amnt) {
             start = addr;
 
             size        = amnt;
             frames_free = amnt;
+
+            next = nullptr;
 
             memset(_bitmap, 0, amnt / 8);
         }
@@ -123,26 +130,26 @@ namespace AEX::PMem {
     };
     typedef size_t phys_addr;
 
-    uint8_t     rootPieceMemory[4096];
-    FramePiece* firstPiece = (FramePiece*) rootPieceMemory;
-    FramePiece* currentPiece;
-    FramePiece* prevPiece = nullptr;
+    uint8_t     root_piece_memory[4096];
+    FramePiece* first_piece;
+    FramePiece* current_piece;
+    FramePiece* prev_piece = nullptr;
 
     Spinlock spinlock;
 
-    size_t framesAvailable;
-    size_t framesTakenByKernel;
+    size_t frames_available;
+    size_t frames_taken_by_kernel;
 
     static void _createPieces(size_t addr, uint32_t frames) {
-        if (currentPiece == firstPiece) {
-            int amnt = min((4096 - sizeof(FramePiece)) * 8, frames);
+        if (current_piece == first_piece) {
+            int amnt = min((sizeof(root_piece_memory) - sizeof(FramePiece)) * 8, frames);
             frames -= amnt;
 
-            currentPiece->init((phys_addr) addr, amnt);
+            first_piece->init((phys_addr) addr, amnt);
 
-            framesTakenByKernel = ceiltopg((uint64_t) &_end_bss - (uint64_t) &_start_text);
+            frames_taken_by_kernel = ceiltopg((uint64_t) &_end_bss - (uint64_t) &_start_text);
 
-            firstPiece->alloc(0, framesTakenByKernel);
+            first_piece->alloc(0, frames_taken_by_kernel);
 
             addr += amnt * Sys::CPU::PAGE_SIZE;
         }
@@ -156,8 +163,8 @@ namespace AEX::PMem {
 
         new_piece->init((phys_addr) addr, frames);
 
-        currentPiece->next = new_piece;
-        currentPiece       = new_piece;
+        current_piece->next = new_piece;
+        current_piece       = new_piece;
     }
 
     void init(const multiboot_info_t* mbinfo) {
@@ -166,7 +173,8 @@ namespace AEX::PMem {
         auto*    mmap = (multiboot_memory_map_t*) mbinfo->mmap_addr;
         uint32_t amnt = mbinfo->mmap_length / sizeof(multiboot_memory_map_t);
 
-        currentPiece = firstPiece;
+        first_piece   = (FramePiece*) &root_piece_memory;
+        current_piece = first_piece;
 
         for (size_t i = 0; i < amnt; i++) {
             auto* mmap_entry = &mmap[i];
@@ -180,21 +188,21 @@ namespace AEX::PMem {
             int     delta  = caddr - addr;
             int32_t frames = (mmap_entry->len - delta) / Sys::CPU::PAGE_SIZE;
 
-            framesAvailable += frames;
+            frames_available += frames;
 
             _createPieces(addr, frames);
         }
 
         int         pieceCount = 0;
-        FramePiece* piece      = firstPiece;
+        FramePiece* piece      = first_piece;
 
         do {
             pieceCount++;
             piece = piece->next;
         } while (piece != nullptr);
 
-        printk("Available memory: %i KiB\n", framesAvailable * Sys::CPU::PAGE_SIZE / 1024);
-        printk("Kernel memory   : %i KiB\n", framesTakenByKernel * Sys::CPU::PAGE_SIZE / 1024);
+        printk("Available memory: %i KiB\n", frames_available * Sys::CPU::PAGE_SIZE / 1024);
+        printk("Kernel memory   : %i KiB\n", frames_taken_by_kernel * Sys::CPU::PAGE_SIZE / 1024);
         printk("Memory pieces   : %i\n", pieceCount);
 
         printk(PRINTK_OK "Memory enumerated\n");
@@ -202,7 +210,7 @@ namespace AEX::PMem {
 
     phys_addr alloc(int32_t amount) {
         uint32_t    frames = ceiltopg(amount);
-        FramePiece* piece  = firstPiece;
+        FramePiece* piece  = first_piece;
 
         spinlock.acquire();
 
@@ -229,17 +237,17 @@ namespace AEX::PMem {
     void free(phys_addr addr, int32_t amount) {
         printk("Frame::free(0x%x, %i)\n", addr, amount);
 
-        if (addr < firstPiece->start)
+        if (addr < first_piece->start)
             return;
 
         uint32_t    frames = ceiltopg(amount);
-        FramePiece* piece  = firstPiece;
+        FramePiece* piece  = first_piece;
 
         spinlock.acquire();
 
         do {
-            if (addr / Sys::CPU::PAGE_SIZE >= firstPiece->size) {
-                addr -= firstPiece->size * Sys::CPU::PAGE_SIZE;
+            if (addr / Sys::CPU::PAGE_SIZE >= first_piece->size) {
+                addr -= first_piece->size * Sys::CPU::PAGE_SIZE;
                 continue;
             }
 

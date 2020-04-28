@@ -1,10 +1,10 @@
-#include "mem/heap.hpp"
+#include "aex/mem/heap.hpp"
 
-#include "kernel/kpanic.hpp"
-#include "kernel/printk.hpp"
-#include "kernel/spinlock.hpp"
-#include "kernel/string.hpp"
-#include "mem/vmem.hpp"
+#include "aex/kpanic.hpp"
+#include "aex/mem/vmem.hpp"
+#include "aex/printk.hpp"
+#include "aex/spinlock.hpp"
+#include "aex/string.hpp"
 
 #include <stdint.h>
 

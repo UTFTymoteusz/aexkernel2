@@ -1,8 +1,9 @@
 #pragma once
 
-#include "kernel/printk.hpp"
-#include "kernel/spinlock.hpp"
-#include "mem/heap.hpp"
+#include "aex/kpanic.hpp"
+#include "aex/mem/heap.hpp"
+#include "aex/printk.hpp"
+#include "aex/spinlock.hpp"
 
 #include <new>
 
@@ -14,6 +15,15 @@ namespace AEX {
           public:
             Pointer(T* ptr, Spinlock* lock) {
                 _refs    = new int(1);
+                _ptr     = ptr;
+                _lock    = lock;
+                _present = true;
+
+                // printk("ctorred t0x%p, 0x%p\n", this, _refs);
+            }
+
+            Pointer(T* ptr, Spinlock* lock, int* ref_counter) {
+                _refs    = ref_counter;
                 _ptr     = ptr;
                 _lock    = lock;
                 _present = true;
@@ -42,6 +52,9 @@ namespace AEX {
                 // printk("delett t0x%p, 0x%p (%i)\n", this, _refs, *_refs);
 
                 if ((*_refs) == 0) {
+                    if (_ptr == nullptr)
+                        kpanic("RCPArray tried to remove null\n");
+
                     printk("lets get rid of da object\n");
 
                     delete _ptr;
@@ -51,9 +64,13 @@ namespace AEX {
                 _lock->release();
             }
 
-            T& operator*() { return *_ptr; }
+            T& operator*() {
+                return *_ptr;
+            }
 
-            T* operator->() { return _ptr; }
+            T* operator->() {
+                return _ptr;
+            }
 
             Pointer& operator=(const Pointer& sp) {
                 if (this == &sp)
@@ -62,14 +79,16 @@ namespace AEX {
                 _lock->acquire();
 
                 (*_refs)++;
-                printk("reffed t0x%p, 0x%p (%i)\n", this, _refs, *_refs);
+                // printk("reffed t0x%p, 0x%p (%i)\n", this, _refs, *_refs);
 
                 _lock->release();
 
                 return *this;
             }
 
-            bool isPresent() { return _ptr != nullptr && _present; }
+            bool isPresent() {
+                return _ptr != nullptr && _present;
+            }
 
             void remove() {
                 _lock->acquire();
@@ -78,6 +97,9 @@ namespace AEX {
                 _present = false;
 
                 if ((*_refs) == 0) {
+                    if (_ptr == nullptr)
+                        kpanic("RCPArray tried to remove null\n");
+
                     printk("lets get rid of da pointer entirely\n");
 
                     delete _ptr;
@@ -104,7 +126,9 @@ namespace AEX {
             return _pointers[index];
         }*/
 
-        Pointer get(int index) { return *&_pointers[index]; }
+        Pointer get(int index) {
+            return *&_pointers[index];
+        }
 
         int addRef(T* ptr) {
             _lock.acquire();
@@ -118,13 +142,22 @@ namespace AEX {
             return index;
         }
 
-        int count() { return _pointerCount; }
+        int count() {
+            return _pointerCount;
+        }
+
+        /*Pointer getNullPointer() {
+            return _nullPointer;
+        }*/
 
       private:
         Spinlock _lock;
 
         int      _pointerCount = 0;
         Pointer* _pointers     = nullptr;
+
+        // int _nullRefCounter = 2137;
+        // Pointer _nullPointer = Pointer(nullptr, &_lock, &_nullRefCounter);
 
         int findSlotOrMakeSlot() {
             for (int i = 0; i < _pointerCount; i++) {

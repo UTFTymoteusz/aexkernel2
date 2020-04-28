@@ -5,6 +5,7 @@ global irq_spurious
 
 extern ipi_handle
 extern common_irq_handler
+extern irq_marker
 
 SECTION .text
 %macro pusha 0
@@ -75,10 +76,12 @@ irq_array:
     irq_entry 15
 
     %assign i 16
-    %rep 16
+    %rep 15
         irq_entry i
         %assign i i + 1
     %endrep
+
+    dq _irq_marker
 
 %assign i 0
 %rep 32
@@ -92,8 +95,8 @@ irq_spurious:
 
 irq_common:
     pusha
-    mov rdi, rsp
     
+    mov rdi, rsp
     call common_irq_handler
 
     popa
@@ -101,10 +104,19 @@ irq_common:
     add rsp, 8 ; Clean up pushed IRQ number
     iretq
 
+_irq_marker:
+    pusha
+
+    mov rdi, rsp
+    call irq_marker
+
+    popa
+    iretq
+
 irq_ipi:
     pusha
 
-    call ipi_handle
+    ;call ipi_handle
 
     popa
     iretq

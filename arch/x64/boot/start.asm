@@ -7,6 +7,7 @@ global _start
 extern main
 extern paging_init
 extern pml4
+extern sse_init
 
 _start:
     jmp bootstrap
@@ -84,6 +85,16 @@ bootstrap64:
 	mov rsp, stack_end
 	push rax
 
+	; Let's setup SSE
+    mov rax, cr0
+    and rax, ~(1 << 2)
+    or  rax, (1 << 1)
+    mov rax, cr0
+
+    mov rax, cr4
+    or  rax, (0b11 << 9)
+    mov cr4, rax
+
 	; Let's set our non-code segment registers
 	mov ax, gdt64.data
 	mov ds, ax
@@ -91,7 +102,8 @@ bootstrap64:
 	mov fs, ax
 	mov ss, ax
 
-	; gs is different
+	xor rax, rax
+	mov gs, ax
 
 	; Let's load our actual GDT
 	lgdt [gdt64.ptr]

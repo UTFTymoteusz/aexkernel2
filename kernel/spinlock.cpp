@@ -1,6 +1,7 @@
-#include "kernel/spinlock.hpp"
+#include "aex/spinlock.hpp"
 
-#include "kernel/printk.hpp"
+#include "aex/printk.hpp"
+
 #include "sys/cpu.hpp"
 
 namespace AEX {

@@ -1,6 +1,7 @@
-#include "kernel/printk.hpp"
+#include "aex/printk.hpp"
 
-#include "kernel/string.hpp"
+#include "aex/string.hpp"
+
 #include "tty.hpp"
 
 #include <stdarg.h>

@@ -1,14 +1,18 @@
 #include "tty.hpp"
 
-#include "kernel/string.hpp"
+#include "aex/string.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::TTY {
-    VTTY::VTTY() { _output = nullptr; }
+    VTTY::VTTY() {
+        _output = nullptr;
+    }
 
-    VTTY::VTTY(void* _outputB) { _output = (vga_char_t*) _outputB; }
+    VTTY::VTTY(void* _outputB) {
+        _output = (vga_char_t*) _outputB;
+    }
 
     void VTTY::_writeChar(char c) {
         switch (c) {

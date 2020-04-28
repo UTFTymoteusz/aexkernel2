@@ -1,12 +1,14 @@
+#include "aex/mem/heap.hpp"
+#include "aex/mem/pmem.hpp"
+#include "aex/mem/vmem.hpp"
+#include "aex/printk.hpp"
+
 #include "boot/mboot.h"
+#include "cpu/idt.hpp"
 #include "kernel/acpi/acpi.hpp"
-#include "kernel/printk.hpp"
-#include "mem/heap.hpp"
 #include "mem/memory.hpp"
-#include "mem/pmem.hpp"
-#include "mem/vmem.hpp"
 #include "sys/cpu.hpp"
-#include "sys/mcore.hpp"
+#include "sys/irq.hpp"
 #include "tty.hpp"
 
 using namespace AEX;
@@ -30,6 +32,9 @@ void main(multiboot_info_t* mbinfo) {
     printk("\n");
     // clang-format on
 
+    Sys::setup_idt();
+    Sys::load_idt(Sys::init_IDT, 256);
+
     PMem::init(mbinfo);
     VMem::init();
     Heap::init();
@@ -38,13 +43,33 @@ void main(multiboot_info_t* mbinfo) {
     ACPI::init();
     printk("\n");
 
-    Sys::CPU::globalInit();
+    Sys::IRQ::init();
 
-    auto cpu = new Sys::CPU(0);
-    Sys::MCore::CPUs.addRef(cpu);
+    auto bsp = new Sys::CPU(0);
+    bsp->initLocal();
+
+    Sys::IRQ::setup_timer();
 
     Sys::CPU::interrupts();
+
+    /*Sys::CPU::globalInit();
+
+    ACPI::init();
+    printk("\n");
+
+    auto cpu            = new Sys::CPU(0);
+    Sys::MCore::CPUs[0] = cpu;
+
     Sys::MCore::init();
 
     Sys::CPU::broadcastPacket(3, nullptr, false);
+
+    while (true) {
+        //printk("0x%x\n", Sys::IOAPIC::read(0x10 + 4));
+        asm volatile("hlt;");
+
+    }*/
+
+    while (true)
+        asm volatile("hlt;");
 }

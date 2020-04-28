@@ -1,10 +1,7 @@
 #include "sys/apic.hpp"
 
-#include "kernel/printk.hpp"
-#include "mem/pmem.hpp"
-#include "mem/vmem.hpp"
-
-#include <stdint.h>
+#include "aex/mem/vmem.hpp"
+#include "aex/printk.hpp"
 
 namespace AEX::Sys {
     void* APIC::addr;
@@ -16,80 +13,102 @@ namespace AEX::Sys {
         addr = VMem::kernel_pagemap->map(CPU::PAGE_SIZE, phys, PAGE_WRITE);
     }
 
-    void APIC::sendInterrupt(uint8_t dst, uint8_t vector) {
-        CPU::nointerrupts();
-
-        write(0x310, dst << 24);
-        write(0x300, (1 << 14) | vector);
-
-        while (read(0x300) & (1 << 12))
-            ;
-
-        CPU::interrupts();
+    uint32_t APIC::read(int reg) {
+        return *((volatile uint32_t*) ((size_t) addr + reg));
     }
 
-    void APIC::sendINIT(uint8_t dst) {
-        CPU::nointerrupts();
-
-        write(0x310, dst << 24);
-        write(0x300, (5 << 8));
-
-        while (read(0x300) & (1 << 12))
-            ;
-
-        CPU::interrupts();
+    void APIC::write(int reg, uint32_t val) {
+        *((volatile uint32_t*) ((size_t) addr + reg)) = val;
     }
 
-    void APIC::sendSIPI(uint8_t dst, uint8_t page) {
-        CPU::nointerrupts();
-
-        write(0x310, dst << 24);
-        write(0x300, (6 << 8) | (uint32_t) page);
-
-        while (read(0x300) & (1 << 12))
-            ;
-
-        CPU::interrupts();
+    void APIC::start() {
+        write(0xF0, read(0xF0) | 0x1FF);
     }
 
-    void APIC::eoi() { write(0xB0, 0x00); }
-
-    uint32_t APIC::read(int reg) { return *((uint32_t*) ((size_t) addr + reg)); }
-    void     APIC::write(int reg, uint32_t val) { *((uint32_t*) ((size_t) addr + reg)) = val; }
-
-
-    void* IOAPIC::addr;
-
-    uint32_t* IOAPIC::addressreg;
-    uint32_t* IOAPIC::datareg;
-
-    IOAPIC::INTEntry IOAPIC::entries[24];
-
-    void IOAPIC::map(PMem::phys_addr phys) {
-        addr = VMem::kernel_pagemap->map(CPU::PAGE_SIZE, phys, PAGE_WRITE);
-
-        addressreg = (uint32_t*) addr;
-        datareg    = (uint32_t*) ((size_t) addr + 0x10);
+    int APIC::getID() {
+        return read(0x20) >> 24;
     }
 
-    uint32_t IOAPIC::read(int reg) {
-        *addressreg = reg;
-        return *datareg;
+    void APIC::setupTimer(uint32_t vector) {
+        write(0x320, vector);
+        write(0x380, -1);
+        write(0x3E0, 0x03);
     }
 
-    void IOAPIC::write(int reg, uint32_t val) {
-        *addressreg = reg;
-        *datareg    = val;
+    void APIC::setupTimer(uint32_t vector, uint32_t initial_count, bool periodic) {
+        write(0x320, vector | (periodic ? (1 << 17) : 0x00));
+        write(0x380, initial_count);
+        write(0x3E0, 0x03);
     }
 
-    uint8_t IOAPIC::INTEntry::getVector() { return IOAPIC::read(0x10 + id * 2); }
+    uint32_t APIC::getTimerCounter() {
+        return read(0x390);
+    }
 
-    void IOAPIC::INTEntry::setVector(uint8_t vector) {
-        uint32_t val = IOAPIC::read(0x10 + id * 2);
+    void APIC::eoi() {
+        write(0xB0, 0x00);
+    }
+
+    IOAPIC::IOAPIC(void* mapped, int base) {
+        irq_base = base;
+
+        addr_reg = (uint32_t*) mapped;
+        data_reg = (uint32_t*) ((size_t) mapped + 0x10);
+    }
+
+    int IOAPIC::getIRQAmount() {
+        return (read(0x01) >> 16) & 0xFF;
+    }
+
+    void IOAPIC::setVector(int irq, uint8_t vector) {
+        uint32_t val = read(0x10 + irq * 2);
 
         val &= 0xFFFFFF00;
         val |= vector;
 
-        IOAPIC::write(0x10 + id * 2, val);
+        write(0x10 + irq * 2, val);
+    }
+
+    void IOAPIC::setMask(int irq, bool mask) {
+        uint32_t val = read(0x10 + irq * 2);
+
+        if (mask)
+            val |= (1 << 16);
+        else
+            val &= ~(1 << 16);
+
+        write(0x10 + irq * 2, val);
+    }
+        
+    void IOAPIC::setDestination(int irq, uint8_t destination) {
+        uint32_t vala = read(0x10 + irq * 2);
+        uint32_t valb = read(0x10 + irq * 2 + 1);
+
+        vala &= ~(1 << 11);
+
+        valb &= ~(0xFF000000);
+        valb |= destination << 24;
+
+        write(0x10 + irq * 2, vala);
+        write(0x10 + irq * 2 + 1, valb);
+    }
+
+    void IOAPIC::setMode(int irq, uint8_t mode) {
+        uint32_t val = read(0x10 + irq * 2);
+
+        val &= ~(0b111 << 8);
+        val |= mode << 8;
+
+        write(0x10 + irq * 2, val);
+    }
+
+    uint32_t IOAPIC::read(int reg) {
+        *addr_reg = reg;
+        return *data_reg;
+    }
+
+    void IOAPIC::write(int reg, uint32_t val) {
+        *addr_reg = reg;
+        *data_reg = val;
     }
 }

@@ -1,14 +1,10 @@
-/*
- * apic.hpp: The driver for all APIC stuff
- */
 #pragma once
 
-#include "mem/pmem.hpp"
+#include "aex/mem/pmem.hpp"
+
+#include <stdint.h>
 
 namespace AEX::Sys {
-    uint32_t apicRead(int reg);
-    void     apicWrite(int reg, uint32_t val);
-
     class APIC {
       public:
         static void* addr;
@@ -18,33 +14,51 @@ namespace AEX::Sys {
         static uint32_t read(int reg);
         static void     write(int reg, uint32_t val);
 
-        static void sendInterrupt(uint8_t dst, uint8_t vector);
-        static void sendINIT(uint8_t dst);
-        static void sendSIPI(uint8_t dst, uint8_t page);
+        static void start();
+        static int  getID();
+
+        static void setupTimer(uint32_t vector);
+        static void setupTimer(uint32_t vector, uint32_t initial_count, bool periodic);
+
+        static uint32_t getTimerCounter();
+
+        // static void sendInterrupt(uint8_t dst, uint8_t vector);
+        // static void sendINIT(uint8_t dst);
+        // static void sendSIPI(uint8_t dst, uint8_t page);
 
         static void eoi();
     };
 
     class IOAPIC {
       public:
-        class INTEntry {
-          public:
-            int id;
+        enum irq_mode {
+            NORMAL       = 0,
+            LOW_PRIORITY = 1,
+            SMI          = 2,
+            NMI          = 4,
+            INIT         = 5,
+            EXTERNAL     = 7,
+        };
 
-            void    setVector(uint8_t vector);
-            uint8_t getVector();
-        } __attribute((packed));
+        int irq_base;
 
-        static void* addr;
+        IOAPIC(void* mapped, int base);
 
-        static uint32_t* addressreg;
-        static uint32_t* datareg;
+        int getIRQAmount();
 
-        static INTEntry entries[24];
+        void setVector(int irq, uint8_t vector);
 
-        static void map(PMem::phys_addr phys);
+        void setMask(int irq, bool mask);
+        
+        void setDestination(int irq, uint8_t destination);
 
-        static uint32_t read(int reg);
-        static void     write(int reg, uint32_t val);
-    };
+        void setMode(int irq, uint8_t mode);
+
+      //private:
+        volatile uint32_t* addr_reg;
+        volatile uint32_t* data_reg;
+
+        uint32_t read(int reg);
+        void     write(int reg, uint32_t val);
+    } __attribute__((packed));
 }

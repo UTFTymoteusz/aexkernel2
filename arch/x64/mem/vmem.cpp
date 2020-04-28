@@ -1,11 +1,12 @@
-#include "mem/vmem.hpp"
+#include "aex/mem/vmem.hpp"
 
-#include "kernel/kpanic.hpp"
-#include "kernel/printk.hpp"
-#include "kernel/spinlock.hpp"
-#include "kernel/string.hpp"
+#include "aex/kpanic.hpp"
+#include "aex/mem/pmem.hpp"
+#include "aex/printk.hpp"
+#include "aex/spinlock.hpp"
+#include "aex/string.hpp"
+
 #include "mem/memory.hpp"
-#include "mem/pmem.hpp"
 #include "sys/cpu.hpp"
 
 #include <stdint.h>
@@ -72,7 +73,9 @@ namespace AEX::VMem {
         return pptr_vaddr[index];
     }
 
-    Pagemap::Pagemap(phys_addr rootAddr) { pageRoot = rootAddr; }
+    Pagemap::Pagemap(phys_addr rootAddr) {
+        pageRoot = rootAddr;
+    }
 
     void* Pagemap::alloc(size_t bytes, uint32_t flags) {
         if (bytes == 0)
@@ -129,7 +132,7 @@ namespace AEX::VMem {
         for (size_t i = 0; i < amount; i++) {
             assign(pptr, (void*) virt, paddr - offset, flags | PAGE_NOPHYS);
 
-            // printk("map 0x%016p >> 0x%016x\n", virt, paddr - offset);
+            // printk("map 0x%016p >> 0x%016x (+0x%04x)\n", virt, paddr - offset, offset);
 
             paddr += Sys::CPU::PAGE_SIZE;
             virt += Sys::CPU::PAGE_SIZE;

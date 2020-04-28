@@ -1,10 +1,10 @@
 #include "kernel/acpi/acpi.hpp"
 
-#include "kernel/printk.hpp"
-#include "kernel/string.hpp"
-#include "lib/rcparray.hpp"
-#include "mem/pmem.hpp"
-#include "mem/vmem.hpp"
+#include "aex/mem/pmem.hpp"
+#include "aex/mem/vmem.hpp"
+#include "aex/printk.hpp"
+#include "aex/rcparray.hpp"
+#include "aex/string.hpp"
 
 #include <stddef.h>
 
@@ -108,6 +108,28 @@ namespace AEX::ACPI {
             }
 
             return &*table;
+        }
+
+        return nullptr;
+    }
+
+    void* MADT::findEntry(int type, int index) {
+        for (size_t i = 0; i < header.length - sizeof(ACPI::MADT);) {
+            auto entry = (ACPI::MADT::entry_t*) &(data[i]);
+
+            if (entry->type != type) {
+                i += entry->len;
+                continue;
+            }
+
+            if (index > 0) {
+                index--;
+                i += entry->len;
+
+                continue;
+            }
+
+            return (void*) entry;
         }
 
         return nullptr;

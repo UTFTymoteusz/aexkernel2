@@ -1,5 +1,6 @@
-#include "kernel/kpanic.hpp"
-#include "kernel/printk.hpp"
+#include "aex/kpanic.hpp"
+#include "aex/printk.hpp"
+
 #include "sys/cpu.hpp"
 
 #include <stddef.h>
@@ -40,6 +41,7 @@ namespace AEX::Sys {
                     info->int_no, info->err);
         AEX::printk("RIP: 0x%016lx\n", info->rip);
 
+
         if (info->int_no == EXC_PAGE_FAULT) {
             size_t cr2, cr3;
 
@@ -49,7 +51,10 @@ namespace AEX::Sys {
             printk("CR2: 0x%016lx  CR3: 0x%016lx\n", cr2, cr3);
         }
 
-        CPU::broadcastPacket(CPU::ipp_type::HALT);
+        for (volatile size_t i = 0; i < 203232323; i++)
+            ;
+
+        // CPU::broadcastPacket(CPU::ipp_type::HALT);
         kpanic("Unrecoverable processor exception occured in CPU %i\n", CPU::getCurrentCPUID());
     }
 }

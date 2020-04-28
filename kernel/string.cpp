@@ -1,6 +1,6 @@
-#include "kernel/string.hpp"
+#include "aex/string.hpp"
 
-#include "kernel/printk.hpp"
+#include "aex/printk.hpp"
 
 #include <stdint.h>
 
@@ -22,7 +22,7 @@ namespace AEX {
     }
 
     void memcpy(void* dst, void* src, size_t size) {
-        /*size_t aligned = size / 8;
+        size_t aligned = size / 8;
 
         uint64_t* dst64 = (uint64_t*) dst;
         uint64_t* src64 = (uint64_t*) src;
@@ -36,12 +36,6 @@ namespace AEX {
         uint8_t* src8 = (uint8_t*) src + aligned * 8;
 
         for (size_t i = 0; i < remainder; i++)
-            dst8[i] = src8[i];*/
-
-        uint8_t* dst8 = (uint8_t*) dst;
-        uint8_t* src8 = (uint8_t*) src;
-
-        for (size_t i = 0; i < size; i++)
             dst8[i] = src8[i];
     }
 

@@ -1,6 +1,7 @@
-#include "kernel/kpanic.hpp"
+#include "aex/kpanic.hpp"
 
-#include "kernel/printk.hpp"
+#include "aex/printk.hpp"
+
 #include "sys/cpu.hpp"
 
 #include <stdarg.h>

@@ -23,5 +23,8 @@ namespace AEX::Sys {
         void setPresent(bool present);
     } __attribute((packed));
 
+    extern IDTEntry init_IDT[256];
+
+    void setup_idt();
     void load_idt(IDTEntry* idt, size_t entry_count);
 }

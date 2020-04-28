@@ -21,7 +21,8 @@ SortUsingDeclarations: true
 
 PointerAlignment:     Left
 SpaceAfterCStyleCast: true
-SpaceBeforeAssignmentOperators:  true
+SpaceBeforeAssignmentOperators:   true
+AllowShortFunctionsOnASingleLine: Empty
 
 FixNamespaceComments: false
 NamespaceIndentation: All
@@ -32,6 +33,8 @@ IncludeCategories:
   - Regex:           '^"(aex)'
     Priority:        1
   - Regex:           '<[[:alnum:].]+>'
-    Priority:        3
+    Priority:        4
   - Regex:           '.*'
+    Priority:        3
+  - Regex:           'aex*'
     Priority:        2

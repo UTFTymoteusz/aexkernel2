@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lib/rcparray.hpp"
+#include "aex/rcparray.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -57,16 +57,84 @@ namespace AEX::ACPI {
     } __attribute((packed));
     typedef struct xsdt xsdt_t;
 
-    struct madt {
+    class MADT {
+      public:
+        enum entry_type {
+            LAPIC      = 0,
+            IOAPIC     = 1,
+            IRQ_SOURCE = 2,
+            NMI        = 4,
+            LAPIC_ADDR = 5,
+        };
+
+        struct entry {
+            uint8_t type;
+            uint8_t len;
+        } __attribute((packed));
+        typedef struct entry entry_t;
+
+        struct lapic {
+            entry_t base;
+
+            uint8_t  id;
+            uint8_t  apic_id;
+            uint32_t flags;
+        } __attribute((packed));
+        typedef struct lapic lapic_t;
+
+        struct ioapic {
+            entry_t base;
+
+            uint8_t  id;
+            uint8_t  reserved;
+            uint32_t addr;
+            uint32_t global_interrupt_base;
+        } __attribute((packed));
+        typedef struct ioapic ioapic_t;
+
+        struct int_override {
+            entry_t base;
+
+            uint8_t  bus_source;
+            uint8_t  irq_source;
+            uint32_t global_interrupt;
+            uint16_t flags;
+        } __attribute((packed));
+        typedef struct int_override int_override_t;
+
+        struct nmi {
+            entry_t base;
+
+            uint8_t  id;
+            uint16_t flags;
+            uint8_t  num;
+        } __attribute((packed));
+        typedef struct nmi nmi_t;
+
+        struct addr_override {
+            entry_t base;
+
+            uint16_t reserved;
+            uint64_t addr;
+        } __attribute((packed));
+        typedef struct addr_override addr_override_t;
+
         sdt_header_t header;
         uint32_t     apic_addr;
         uint32_t     flags;
 
         uint8_t data[];
-    } __attribute((packed));
-    typedef struct madt madt_t;
 
-    struct madt_entry {
+        template <typename T>
+        T findEntry(int type, int index) {
+            return (T) findEntry(type, index);
+        }
+
+      private:
+        void* findEntry(int type, int index);
+    } __attribute((packed));
+
+    /*struct madt_entry {
         uint8_t type;
         uint8_t len;
     } __attribute((packed));
@@ -80,7 +148,7 @@ namespace AEX::ACPI {
 
         uint32_t flags;
     } __attribute((packed));
-    typedef struct madt_entry_apic madt_entry_apic_t;
+    typedef struct madt_entry_apic madt_entry_apic_t;*/
 
     typedef void* table_t;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "kernel/spinlock.hpp"
+#include "aex/spinlock.hpp"
 
 #include <stdint.h>
 
@@ -37,15 +37,36 @@ namespace AEX::TTY {
     } __attribute__((packed));
     typedef struct vga_char vga_char_t;
 
+    /**
+     * A basic virtual terminal class.
+     */
     class VTTY {
       public:
         VTTY();
         VTTY(void* _outputB);
 
+        /**
+         * Writes a character to the virtual terminal.
+         * @param str The character to write out.
+         */
         void writeChar(char c);
+
+        /**
+         * Writes a string to the virtual terminal.
+         * @param str The string to write out.
+         */
         void write(const char* str);
 
+        /**
+         * Sets the foreground or background color.
+         * @param ansi An ANSI color code.
+         */
         void setColorANSI(int ansi);
+
+        /**
+         * Scrolls down the virtual terminal.
+         * @param amnt Amount of lines to scroll down by.
+         */
         void scrollDown(int amnt);
 
       private:
@@ -62,10 +83,10 @@ namespace AEX::TTY {
         void _writeChar(char c);
     };
 
+    /**
+     * An array of all virtual terminals.
+     */
     extern VTTY VTTYs[TTY_AMOUNT];
 
-    /*
-     * Initializes all terminals.
-     */
     void init();
 } // namespace AEX::TTY
