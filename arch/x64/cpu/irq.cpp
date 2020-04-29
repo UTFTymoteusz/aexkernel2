@@ -14,10 +14,7 @@ namespace AEX::Sys::IRQ {
     extern "C" void common_irq_handler(void* _info) {
         auto info = (CPU::irq_info_t*) _info;
 
-        // TTY::VTTYs[TTY::ROOT_TTY].writeChar('a');
-
-        // index++;
-        AEX::printk("%i: irq: %i\n", CPU::getCurrentCPUID(), info->irq_no);
+        // AEX::printk("%i: irq: %i\n", CPU::getCurrentCPUID(), info->irq_no);
 
         APIC::eoi();
     }

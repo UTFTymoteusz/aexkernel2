@@ -12,9 +12,11 @@ namespace AEX::Sys {
     class CPU {
       public:
         enum ipp_type {
-            HALT = 0,
+            HALT   = 0,
+            RESHED = 1,
+            CALL   = 2,
         };
-        
+
         static constexpr int PAGE_SIZE = 4096;
 
         struct fault_info {
@@ -84,6 +86,8 @@ namespace AEX::Sys {
          * @param data Value to write.
          */
         static void wrmsr(uint32_t reg, uint64_t data);
+
+        static uint64_t rdmsr(uint32_t reg);
 
         /**
          * Gets the ID of the executing CPU.

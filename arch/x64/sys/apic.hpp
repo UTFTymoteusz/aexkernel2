@@ -49,7 +49,7 @@ namespace AEX::Sys {
         void setVector(int irq, uint8_t vector);
 
         void setMask(int irq, bool mask);
-        
+
         void setDestination(int irq, uint8_t destination);
 
         void setMode(int irq, uint8_t mode);

@@ -9,6 +9,7 @@
 #include "kernel/acpi/acpi.hpp"
 #include "sys/apic.hpp"
 #include "sys/cpu.hpp"
+#include "sys/mcore.hpp"
 #include "sys/pic.hpp"
 #include "sys/pit.hpp"
 
@@ -19,8 +20,8 @@
 #define CPUID_EDX_FEAT_APIC 0x100
 
 namespace AEX::Sys::IRQ {
-    bool is_APIC_present = false;
-    size_t APIC_tps = 0;
+    bool   is_APIC_present = false;
+    size_t APIC_tps        = 0;
 
     ACPI::MADT*      madt;
     RCPArray<IOAPIC> ioapics;
@@ -30,7 +31,7 @@ namespace AEX::Sys::IRQ {
     size_t  find_apic_tps();
 
     void init() {
-        printk(PRINTK_INIT "Initializing IRQs\n");
+        printk(PRINTK_INIT "irq: Initializing\n");
 
         uint32_t eax, ebx, ecx, edx;
 
@@ -83,18 +84,58 @@ namespace AEX::Sys::IRQ {
         }
 
         APIC::map(addr);
+        APIC::init();
 
         set_vector(0, 0x20 + 2);
         set_mask(0, true);
         set_destination(0, 0);
 
-        printk(PRINTK_OK "IRQs initialized\n");
+        printk(PRINTK_OK "irq: Initialized\n");
     }
 
-    void setup_timer() {
-        APIC_tps = find_apic_tps();
+    void setup_timer(double hz) {
+        if (APIC_tps == 0) {
+            APIC_tps = find_apic_tps();
 
-        APIC::setupTimer(0x20 + 0, APIC_tps, true);
+            printk(PRINTK_OK "apic: Timer calibrated\n");
+        }
+
+        APIC::setupTimer(0x20 + 0, (size_t)(APIC_tps / hz), true);
+    }
+
+    void irq_sleep(double ms) {
+        if (APIC_tps == 0)
+            APIC_tps = find_apic_tps();
+
+        irq_mark = false;
+        APIC::setupTimer(0x20 + 31, (size_t)(APIC_tps * (ms / 1000.0)), false);
+
+        while (!irq_mark)
+            CPU::waitForInterrupt();
+    }
+
+    double timer_hz = 0;
+
+    void timer_sync() {
+        setup_timer(timer_hz);
+    }
+
+    void setup_timers_mcore(double hz) {
+        timer_hz = hz;
+
+        double interval = (1000.0 / timer_hz) / MCore::cpu_count;
+
+        for (int i = 0; i < MCore::cpu_count; i++) {
+            if (i == CPU::getCurrentCPUID()) {
+                irq_sleep(interval);
+                continue;
+            }
+
+            MCore::CPUs[i]->sendPacket(CPU::ipp_type::CALL, (void*) timer_sync);
+            irq_sleep(interval);
+        }
+
+        setup_timer(timer_hz);
     }
 
     IOAPIC* find_ioapic(int irq) {
@@ -179,14 +220,14 @@ namespace AEX::Sys::IRQ {
         IRQ::irq_mark = false;
 
         APIC::setupTimer(0x20 + 0);
-        PIT::interruptIn(10);
+        PIT::interruptIn(50);
 
         CPU::interrupts();
 
         while (!IRQ::irq_mark)
             CPU::waitForInterrupt();
 
-        uint32_t ticks = -APIC::getTimerCounter() * 100;
+        uint32_t ticks = -APIC::getTimerCounter() * 20;
 
         if (!ints)
             CPU::nointerrupts();
@@ -194,7 +235,7 @@ namespace AEX::Sys::IRQ {
         // Now we don't need the PIT anymore, mask it to hell
         set_vector(0, 0x20 + 30);
         set_mask(0, true);
-        set_destination(0, 0);
+        set_destination(0, 1);
 
         return ticks;
     }

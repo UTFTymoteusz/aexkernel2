@@ -46,9 +46,10 @@ namespace AEX::ACPI {
             }
 
             for (size_t i = sizeof(xsdt_t); i < xsdt->header.length; i += 8) {
-                uint64_t addr  = *((uint64_t*) ((size_t) xsdt + i));
-                auto     table_hdr = (sdt_header_t*) VMem::kernel_pagemap->map(sizeof(sdt_header_t), addr, 0);
-                auto     table     = (table_t*) VMem::kernel_pagemap->map(table_hdr->length, addr, 0);
+                uint64_t addr = *((uint64_t*) ((size_t) xsdt + i));
+                auto     table_hdr =
+                    (sdt_header_t*) VMem::kernel_pagemap->map(sizeof(sdt_header_t), addr, 0);
+                auto table = (table_t*) VMem::kernel_pagemap->map(table_hdr->length, addr, 0);
 
                 // unmap the header once you bother enough to implement unmap in VMem
 

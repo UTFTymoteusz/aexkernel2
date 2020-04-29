@@ -62,7 +62,7 @@ namespace AEX::Sys {
                      : "=r"(flags)
                      :);
 
-        return (flags & 0x200) > 0;
+        return flags & 0x200;
     }
 
     void CPU::waitForInterrupt() {
@@ -118,6 +118,23 @@ namespace AEX::Sys {
                      :
                      : "r"(data), "c"(reg)
                      : "memory");
+    }
+
+    uint64_t CPU::rdmsr(uint32_t reg) {
+        uint64_t out;
+
+        asm volatile(" \
+        rdmsr; \
+        \
+        mov %0, rdx; \
+        shl %0, 32;  \
+        or  %0, rax; \
+        "
+                     : "=m"(out)
+                     : "c"(reg)
+                     : "memory");
+
+        return out;
     }
 
 

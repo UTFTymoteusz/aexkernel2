@@ -1,8 +1,8 @@
+#include "aex/printk.hpp"
+
 #include "sys/apic.hpp"
 #include "sys/cpu.hpp"
 #include "sys/mcore.hpp"
-
-#include "aex/printk.hpp"
 
 namespace AEX::Sys {
     void CPU::broadcastPacket(uint32_t type, void* data, bool ignore_self) {
@@ -45,17 +45,30 @@ namespace AEX::Sys {
     void CPU::handle_ipp() {
         switch (_ipi_packet.type) {
         case CPU::ipp_type::HALT:
-            _ipi_ack = true; // We have to ack here, we may get cause an infinite loop otherwise
+            _ipi_ack = true;
+
+            APIC::eoi();
             CPU::halt();
+
+            return;
+        case CPU::ipp_type::RESHED:
+            _ipi_ack = true;
+            printk("cpu%i: Reshed\n", CPU::getCurrentCPUID());
+
+            break;
+        case CPU::ipp_type::CALL:
+            _ipi_ack = true;
+            ((void (*)(void)) _ipi_packet.data)();
 
             break;
         default:
-            // printk(PRINTK_WARN "cpu%i: Received an IPP with an unknown type (%i)\n",
-            //        CPU::getCurrentCPUID(), _ipi_packet.type);
+            _ipi_ack = true;
+            printk(PRINTK_WARN "cpu%i: Received an IPP with an unknown type (%i)\n",
+                   CPU::getCurrentCPUID(), _ipi_packet.type);
 
             break;
         }
 
-        _ipi_ack = true;
+        APIC::eoi();
     }
 }

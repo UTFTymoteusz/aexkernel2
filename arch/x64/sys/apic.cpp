@@ -3,6 +3,8 @@
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
 
+#define IA32_APIC_BASE_MSR 0x1B
+
 namespace AEX::Sys {
     void* APIC::addr;
 
@@ -22,7 +24,7 @@ namespace AEX::Sys {
     }
 
     void APIC::init() {
-        write(0xF0, read(0xF0) | 0x1FF);
+        write(0xF0, 0x1FF);
     }
 
     int APIC::getID() {
@@ -124,7 +126,7 @@ namespace AEX::Sys {
 
         write(0x10 + irq * 2, val);
     }
-        
+
     void IOAPIC::setDestination(int irq, uint8_t destination) {
         uint32_t vala = read(0x10 + irq * 2);
         uint32_t valb = read(0x10 + irq * 2 + 1);

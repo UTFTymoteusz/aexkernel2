@@ -8,7 +8,7 @@
 #include "sys/cpu.hpp"
 
 #define PROCESSOR_ENABLED 1 << 0
-#define PROCESSOR_ONLINE  1 << 1
+#define PROCESSOR_ONLINE 1 << 1
 
 #define TRAMPOLINE_ADDR 0x1000 // Must be page aligned!
 
@@ -18,7 +18,7 @@ namespace AEX::Sys::MCore {
     extern "C" char _binary_bin_obj___arch_x64_boot_mcore_asmr_o_start;
     void*           trampoline = (void*) &_binary_bin_obj___arch_x64_boot_mcore_asmr_o_start;
 
-    int cpu_count = 0;
+    int  cpu_count = 0;
     CPU* CPUs[64];
 
     bool start_ap(int id, int apic_id);
@@ -56,7 +56,7 @@ namespace AEX::Sys::MCore {
 
         // We can assume it exists because the IRQ phase would panic the kernel otherwise
         auto madt = ACPI::find_table<MADT*>("APIC", 0);
-        int id = 0;
+        int  id   = 0;
 
         for (int i = 0; i <= 2137; i++) {
             auto entry = madt->findEntry<MADT::lapic_t*>(MADT::entry_type::LAPIC, i);
@@ -65,7 +65,7 @@ namespace AEX::Sys::MCore {
 
             if (!(entry->flags & PROCESSOR_ENABLED) && !(entry->flags & PROCESSOR_ONLINE)) {
                 printk(PRINTK_WARN "mcore: Found disabled CPU r:%i with APIC id of %i\n", entry->id,
-                        entry->apic_id);
+                       entry->apic_id);
                 continue;
             }
 
@@ -99,7 +99,7 @@ namespace AEX::Sys::MCore {
         volatile uint8_t* signal  = (uint8_t*) TRAMPOLINE_ADDR;
 
         for (int j = 0; j < 100; j++) {
-            for (int k = 0; k < 3200; k++)
+            for (int k = 0; k < 7200; k++)
                 CPU::inportb(0x20);
 
             if (*signal == 0xAA) {
@@ -113,7 +113,7 @@ namespace AEX::Sys::MCore {
 
     void finalize_ap(int id, void* stack) {
         APIC::init();
-        
+
         auto cpu = new CPU(id);
         cpu->initLocal();
 

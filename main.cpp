@@ -24,10 +24,6 @@ void main(multiboot_info_t* mbinfo) {
     Init::init_print_header();
     printk(PRINTK_INIT "Booting AEX/0.01\n\n");
 
-    size_t cr3;
-    asm volatile("mov rax, cr3; mov %0, rax;" : : "m"(cr3) : "memory");
-    printk("cr3: 0x%p\n", cr3);
-
     // clang-format off
     printk("Section info:\n");
     printk(".text  : %93$0x%p%90$, %93$0x%p%97$\n", &_start_text  , &_end_text);
@@ -49,19 +45,17 @@ void main(multiboot_info_t* mbinfo) {
     printk("\n");
 
     Sys::IRQ::init();
+    Sys::IRQ::setup_timer(0.1);
     printk("\n");
 
     auto bsp = new Sys::CPU(0);
     bsp->initLocal();
 
-    Sys::IRQ::setup_timer();
+    Sys::MCore::init();
 
     Sys::CPU::interrupts();
 
-    Sys::MCore::init();
-
-    Sys::CPU::broadcastPacket(Sys::CPU::ipp_type::HALT, nullptr, true);
-    //bsp->sendPacket(Sys::CPU::ipp_type::HALT, nullptr);
+    Sys::IRQ::setup_timers_mcore(100);
 
     while (true)
         Sys::CPU::waitForInterrupt();

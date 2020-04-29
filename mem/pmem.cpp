@@ -182,11 +182,8 @@ namespace AEX::PMem {
             if (mmap_entry->type != 1 || mmap_entry->addr < 0x100000)
                 continue;
 
-            phys_addr addr  = mmap_entry->addr;
-            phys_addr caddr = ceiltopg(addr);
-
-            if (addr & 0xFFF)
-                kpanic("Misaligned memory regions");
+            if (mmap_entry->addr & 0xFFF)
+                kpanic("Misaligned memory region encountered");
 
             int64_t frames = mmap_entry->len / Sys::CPU::PAGE_SIZE;
 
@@ -196,9 +193,10 @@ namespace AEX::PMem {
 
             frames_available += frames;
 
-            printk("0x%016p, %li (%li MiB)\n", addr, frames * Sys::CPU::PAGE_SIZE, (frames * Sys::CPU::PAGE_SIZE) / 1048576);
+            printk("0x%016p, %li (%li MiB)\n", mmap_entry->addr, frames * Sys::CPU::PAGE_SIZE,
+                   (frames * Sys::CPU::PAGE_SIZE) / 1048576);
 
-            _createPieces(addr, frames);
+            _createPieces(mmap_entry->addr, frames);
         }
 
         int         pieceCount = 0;
