@@ -69,9 +69,10 @@ void main(multiboot_info_t* mbinfo) {
 
         printk("%i: %li (%li ms, %li s, %li min)\n", Sys::CPU::getCurrentCPUID(), ns, ns / 1000000,
                ns / 1000000000, ns / 1000000000 / 60);
-        printk("idle: %li ns cpu time (pid %i)\n", (size_t) idle->usage.cpu_time_ns, idle->pid);
-        printk("us  : %li ns cpu time (pid %i)\n", (size_t) process->usage.cpu_time_ns,
-               process->pid);
+        printk("idle: %li ns (%li ms) cpu time (pid %i)\n", idle->usage.cpu_time_ns,
+               idle->usage.cpu_time_ns / 1000000, idle->pid);
+        printk("us  : %li ns (%li ms) cpu time (pid %i)\n", process->usage.cpu_time_ns,
+               process->usage.cpu_time_ns / 1000000, process->pid);
 
         Proc::Thread::sleep(2500);
     }

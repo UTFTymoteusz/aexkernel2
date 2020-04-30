@@ -21,8 +21,10 @@
 #define CPUID_EDX_FEAT_APIC 0x100
 
 namespace AEX::Sys::IRQ {
-    bool   is_APIC_present = false;
-    size_t APIC_tps        = 0;
+    bool   is_APIC_present   = false;
+    size_t APIC_tps          = 0;
+    double APIC_interval     = 0.0;
+    double APIC_interval_adj = 0.0;
 
     uint64_t ns_per_tick = 0;
     uint64_t curtime_ns  = 0;
@@ -146,9 +148,10 @@ namespace AEX::Sys::IRQ {
             irq_sleep(interval);
         }
 
-        double apic_interval = (size_t)((1.0 / (double) APIC_tps) * 1000000000.0);
+        APIC_interval     = (double) ((1.0 / (double) APIC_tps) * 1000000000.0);
+        APIC_interval_adj = APIC_interval / timer_hz / MCore::cpu_count;
 
-        ns_per_tick = (uint64_t)(apic_interval * APIC_tps / timer_hz / MCore::cpu_count);
+        ns_per_tick = (uint64_t)(APIC_interval * APIC_tps / hz / MCore::cpu_count);
 
         setup_timer(timer_hz);
     }
@@ -158,7 +161,7 @@ namespace AEX::Sys::IRQ {
     }
 
     uint64_t get_curtime() {
-        return curtime_ns;
+        return curtime_ns + (uint64_t)((APIC_tps - APIC::getTimerCounter()) * APIC_interval_adj);
     }
 
 
