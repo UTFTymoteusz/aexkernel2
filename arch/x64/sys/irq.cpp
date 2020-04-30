@@ -149,7 +149,7 @@ namespace AEX::Sys::IRQ {
         }
 
         APIC_interval     = (double) ((1.0 / (double) APIC_tps) * 1000000000.0);
-        APIC_interval_adj = APIC_interval / timer_hz / MCore::cpu_count;
+        APIC_interval_adj = APIC_interval / timer_hz;
 
         ns_per_tick = (uint64_t)(APIC_interval * APIC_tps / hz / MCore::cpu_count);
 
