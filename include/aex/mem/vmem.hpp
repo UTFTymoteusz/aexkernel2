@@ -1,8 +1,8 @@
 #pragma once
 
-#include "aex/mem/pmem.hpp"
 #include "aex/spinlock.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
 
 extern int _page_present, _page_write, _page_user, _page_nophys;
@@ -13,6 +13,8 @@ extern int _page_present, _page_write, _page_user, _page_nophys;
 #define PAGE_NOPHYS _page_nophys
 
 namespace AEX::VMem {
+    typedef size_t phys_addr;
+
     /**
      * The pagemap class. Contains the methods required to allocate virtual memory.
      */
@@ -21,9 +23,9 @@ namespace AEX::VMem {
         void* vstart;
         void* vend;
 
-        PMem::phys_addr pageRoot;
+        phys_addr pageRoot;
 
-        Pagemap(PMem::phys_addr pageRoot);
+        Pagemap(phys_addr pageRoot);
 
         /**
          * Allocates enough pages to fit the specified size and zeroes them out.
@@ -68,12 +70,12 @@ namespace AEX::VMem {
          * @param flags Flags.
          * @return Virtual address or nullptr on failure.
          */
-        void* map(size_t bytes, PMem::phys_addr paddr, uint16_t flags);
+        void* map(size_t bytes, phys_addr paddr, uint16_t flags);
 
       private:
         Spinlock spinlock;
 
-        void assign(int pptr, void* virt, PMem::phys_addr phys, uint16_t flags);
+        void assign(int pptr, void* virt, phys_addr phys, uint16_t flags);
 
         uint64_t* findTable(int pptr, uint64_t virt_addr) {
             uint64_t skip_by;

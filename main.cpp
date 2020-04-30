@@ -7,6 +7,7 @@
 #include "cpu/idt.hpp"
 #include "kernel/acpi/acpi.hpp"
 #include "mem/memory.hpp"
+#include "proc/proc.hpp"
 #include "sys/cpu.hpp"
 #include "sys/irq.hpp"
 #include "sys/mcore.hpp"
@@ -55,8 +56,12 @@ void main(multiboot_info_t* mbinfo) {
 
     Sys::CPU::interrupts();
 
-    Sys::IRQ::setup_timers_mcore(100);
+    Sys::IRQ::setup_timers_mcore(250);
 
-    while (true)
-        Sys::CPU::waitForInterrupt();
+    Proc::init();
+
+    while (true) {
+        printk("%i: %li\n", Sys::CPU::getCurrentCPUID(), (size_t) Sys::IRQ::get_curtime());
+        Proc::Thread::sleep(1000);
+    }
 }

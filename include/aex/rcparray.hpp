@@ -14,10 +14,12 @@ namespace AEX {
         class Pointer {
           public:
             Pointer(T* ptr, Spinlock* lock) {
-                _refs    = new int(1);
+                _refs    = &_refCounter;
                 _ptr     = ptr;
                 _lock    = lock;
                 _present = true;
+
+                _refCounter = 1;
 
                 // printk("ctorred t0x%p, 0x%p\n", this, _refs);
             }
@@ -53,7 +55,7 @@ namespace AEX {
 
                 if ((*_refs) == 0) {
                     if (_ptr == nullptr)
-                        kpanic("RCPArray tried to remove null\n");
+                        kpanic("RCPArray tried to remove null");
 
                     printk("lets get rid of da object\n");
 
@@ -74,7 +76,7 @@ namespace AEX {
 
             Pointer& operator=(const Pointer& sp) {
                 if (this == &sp)
-                    return *this;
+                    return _ptr;
 
                 _lock->acquire();
 
@@ -83,7 +85,7 @@ namespace AEX {
 
                 _lock->release();
 
-                return *this;
+                return _ptr;
             }
 
             bool isPresent() {
@@ -92,6 +94,11 @@ namespace AEX {
 
             void remove() {
                 _lock->acquire();
+
+                if (!_present) {
+                    _lock->release();
+                    return;
+                }
 
                 (*_refs)--;
                 _present = false;
@@ -109,8 +116,14 @@ namespace AEX {
                 _lock->release();
             }
 
+            T* get() {
+                return _ptr;
+            }
+
           private:
-            int*      _refs    = nullptr;
+            int* _refs       = nullptr;
+            int  _refCounter = 1;
+
             T*        _ptr     = nullptr;
             bool      _present = true;
             Spinlock* _lock;
@@ -146,9 +159,9 @@ namespace AEX {
             return _pointerCount;
         }
 
-        /*Pointer getNullPointer() {
+        Pointer getNullPointer() {
             return _nullPointer;
-        }*/
+        }
 
       private:
         Spinlock _lock;
@@ -156,8 +169,8 @@ namespace AEX {
         int      _pointerCount = 0;
         Pointer* _pointers     = nullptr;
 
-        // int _nullRefCounter = 2137;
-        // Pointer _nullPointer = Pointer(nullptr, &_lock, &_nullRefCounter);
+        int     _nullRefCounter = 2137;
+        Pointer _nullPointer    = Pointer(nullptr, &_lock, &_nullRefCounter);
 
         int findSlotOrMakeSlot() {
             for (int i = 0; i < _pointerCount; i++) {

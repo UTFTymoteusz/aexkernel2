@@ -55,7 +55,7 @@ namespace AEX::Sys::MCore {
         CPUs[0] = CPU::getCurrentCPU();
 
         // We can assume it exists because the IRQ phase would panic the kernel otherwise
-        auto madt = ACPI::find_table<MADT*>("APIC", 0);
+        auto madt = (MADT*) ACPI::find_table("APIC", 0).get();
         int  id   = 0;
 
         for (int i = 0; i <= 2137; i++) {
@@ -111,7 +111,7 @@ namespace AEX::Sys::MCore {
         return success;
     }
 
-    void finalize_ap(int id, void* stack) {
+    void finalize_ap(int id, void*) {
         APIC::init();
 
         auto cpu = new CPU(id);

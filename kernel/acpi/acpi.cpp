@@ -96,7 +96,7 @@ namespace AEX::ACPI {
         return sum == 0;
     }
 
-    table_t* find_table(const char signature[4], int index) {
+    RCPArray<table_t>::Pointer find_table(const char signature[4], int index) {
         for (int i = 0; i < tables.count(); i++) {
             auto table = tables.get(i);
             if (!table.isPresent())
@@ -111,11 +111,11 @@ namespace AEX::ACPI {
                 continue;
             }
 
-            return &*table;
+            return table;
         }
 
-        return nullptr;
-    }
+        return tables.getNullPointer();
+    };
 
     void* MADT::findEntry(int type, int index) {
         for (size_t i = 0; i < header.length - sizeof(ACPI::MADT);) {

@@ -6,6 +6,8 @@
 
 #include <stdarg.h>
 
+using CPU = AEX::Sys::CPU;
+
 namespace AEX {
     void kpanic(const char* format, ...) {
         va_list args;
@@ -13,9 +15,11 @@ namespace AEX {
 
         printk("Kernel Panic\n", args);
         printk(format, args);
+        printk("\n");
 
         va_end(args);
 
-        Sys::CPU::halt();
+        CPU::broadcastPacket(CPU::ipp_type::HALT);
+        CPU::halt();
     }
 }

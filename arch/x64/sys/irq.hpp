@@ -17,4 +17,7 @@ namespace AEX::Sys::IRQ {
     void irq_sleep(double ms);
 
     void setup_timers_mcore(double hz);
+
+    void   timer_tick();
+    double get_curtime();
 }

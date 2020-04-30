@@ -52,6 +52,6 @@ namespace AEX::Sys {
         }
 
         CPU::broadcastPacket(CPU::ipp_type::HALT);
-        kpanic("Unrecoverable processor exception occured in CPU %i\n", CPU::getCurrentCPUID());
+        kpanic("Unrecoverable processor exception occured in CPU %i", CPU::getCurrentCPUID());
     }
 }

@@ -2,6 +2,9 @@
 
 #include "aex/spinlock.hpp"
 
+#include "proc/context.hpp"
+#include "proc/thread.hpp"
+
 #include <stdint.h>
 
 namespace AEX::Sys {
@@ -120,10 +123,17 @@ namespace AEX::Sys {
          */
         void handle_ipp();
 
+        // Don't change the order of these or the kernel will go boom boom
         int id;
         int apic_id;
 
         CPU* self;
+
+        AEX::Proc::Context* currentContext;
+
+        // Safe to change again
+        int                current_tid;
+        AEX::Proc::Thread* currentThread;
 
       private:
         struct ipi_packet {

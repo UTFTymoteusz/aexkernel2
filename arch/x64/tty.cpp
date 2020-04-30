@@ -77,7 +77,7 @@ namespace AEX::TTY {
     }
 
     void VTTY::scrollDown(int amnt) {
-        for (size_t i = 0; i < amnt; i++)
+        for (int i = 0; i < amnt; i++)
             memcpy(_output, &_output[TTY_WIDTH], TTY_WIDTH * (TTY_HEIGHT - 1) * 2);
 
         for (size_t i = TTY_WIDTH * (TTY_HEIGHT - 1); i < TTY_WIDTH * TTY_HEIGHT; i++) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aex/rcparray.hpp"
+#include "aex/string.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -161,10 +162,5 @@ namespace AEX::ACPI {
 
     bool validate_table(const void* tbl, size_t len);
 
-    table_t* find_table(const char signature[4], int index);
-
-    template <typename T>
-    T find_table(const char signature[4], int index) {
-        return (T) find_table(signature, index);
-    };
+    RCPArray<table_t>::Pointer find_table(const char signature[4], int index);
 }

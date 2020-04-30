@@ -23,6 +23,9 @@ namespace AEX::Sys::IRQ {
     bool   is_APIC_present = false;
     size_t APIC_tps        = 0;
 
+    double ms_per_tick = 0;
+    double curtime_ms  = 0;
+
     ACPI::MADT*      madt;
     RCPArray<IOAPIC> ioapics;
 
@@ -40,7 +43,7 @@ namespace AEX::Sys::IRQ {
         is_APIC_present = edx & CPUID_EDX_FEAT_APIC;
 
         if (!is_APIC_present)
-            kpanic("This computer is too ancient to run this OS\n");
+            kpanic("This computer is too ancient to run this OS");
 
         pics[0] = PIC(0x20, 0x21);
         pics[1] = PIC(0xA0, 0xA1);
@@ -53,9 +56,9 @@ namespace AEX::Sys::IRQ {
 
         size_t addr = 0xFEE00000;
 
-        madt = ACPI::find_table<ACPI::MADT*>("APIC", 0);
+        madt = (ACPI::MADT*) ACPI::find_table("APIC", 0).get();
         if (!madt)
-            kpanic("This computer is too ancient to run this OS\n");
+            kpanic("This computer is too ancient to run this OS");
 
         addr = madt->apic_addr;
 
@@ -135,8 +138,19 @@ namespace AEX::Sys::IRQ {
             irq_sleep(interval);
         }
 
+        ms_per_tick = interval;
+
         setup_timer(timer_hz);
     }
+
+    void timer_tick() {
+        curtime_ms += ms_per_tick;
+    }
+
+    double get_curtime() {
+        return curtime_ms;
+    }
+
 
     IOAPIC* find_ioapic(int irq) {
         for (int i = 0; i < ioapics.count(); i++) {

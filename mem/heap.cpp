@@ -200,7 +200,7 @@ namespace AEX::Heap {
             piece = piece->next;
         } while (piece != nullptr);
 
-        kpanic("AEX::Heap::alloc() failed\n");
+        kpanic("AEX::Heap::alloc() failed");
         return nullptr;
     }
 
@@ -216,7 +216,7 @@ namespace AEX::Heap {
             piece = piece->next;
         } while (piece != nullptr);
 
-        kpanic("AEX::Heap::free() failed\n");
+        kpanic("AEX::Heap::free() failed");
     }
 
     size_t msize(void* ptr) {
@@ -229,7 +229,7 @@ namespace AEX::Heap {
             piece = piece->next;
         } while (piece != nullptr);
 
-        kpanic("AEX::Heap::msize() failed\n");
+        kpanic("AEX::Heap::msize() failed");
 
         return 0;
     }

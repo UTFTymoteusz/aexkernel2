@@ -170,7 +170,7 @@ namespace AEX::PMem {
     void init(const multiboot_info_t* mbinfo) {
         printk(PRINTK_INIT "Enumerating memory\n");
 
-        auto*    mmap = (multiboot_memory_map_t*) mbinfo->mmap_addr;
+        auto*    mmap = (multiboot_memory_map_t*) (size_t) mbinfo->mmap_addr;
         uint32_t amnt = mbinfo->mmap_length / sizeof(multiboot_memory_map_t);
 
         first_piece   = (FramePiece*) &root_piece_memory;
