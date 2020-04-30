@@ -32,43 +32,43 @@ namespace AEX::ACPI {
         return nullptr;
     }
 
-    rsdp_t* find_rsdp() {
+    rsdp* find_rsdp() {
         void* rsd_ptr = find_rsdptr();
         if (!rsd_ptr)
             return nullptr;
 
-        auto rsdp = (rsdp_t*) VMem::kernel_pagemap->map(sizeof(rsdp_t), (PMem::phys_addr) rsd_ptr,
-                                                        PAGE_WRITE);
-        auto xsdp = (xsdp_t*) rsdp;
+        auto _rsdp =
+            (rsdp*) VMem::kernel_pagemap->map(sizeof(rsdp), (PMem::phys_addr) rsd_ptr, PAGE_WRITE);
+        auto _xsdp = (xsdp*) _rsdp;
 
-        if (validate_table((void*) xsdp, sizeof(xsdp_t)) && xsdp->xsdt_address != 0x0000)
+        if (validate_table((void*) _xsdp, sizeof(xsdp)) && _xsdp->xsdt_address != 0x0000)
             return nullptr;
 
-        if (!validate_table((void*) rsdp, sizeof(rsdp_t)))
+        if (!validate_table((void*) _rsdp, sizeof(rsdp)))
             return nullptr;
 
-        if (rsdp->rsdt_address == 0x0000)
+        if (_rsdp->rsdt_address == 0x0000)
             return nullptr;
 
-        return rsdp;
+        return _rsdp;
     }
 
-    xsdp_t* find_xsdp() {
+    xsdp* find_xsdp() {
         void* rsd_ptr = find_rsdptr();
         if (!rsd_ptr)
             return nullptr;
 
-        auto xsdp = (xsdp_t*) VMem::kernel_pagemap->map(sizeof(xsdp_t), (PMem::phys_addr) rsd_ptr,
-                                                        PAGE_WRITE);
+        auto _xsdp =
+            (xsdp*) VMem::kernel_pagemap->map(sizeof(xsdp), (PMem::phys_addr) rsd_ptr, PAGE_WRITE);
 
-        if (!validate_table((void*) xsdp, sizeof(xsdp_t))) {
+        if (!validate_table((void*) _xsdp, sizeof(xsdp))) {
             // VMem::kernel_pagemap->unmap(xsdp);
             return nullptr;
         }
 
-        if (xsdp->xsdt_address == 0x0000)
+        if (_xsdp->xsdt_address == 0x0000)
             return nullptr;
 
-        return xsdp;
+        return _xsdp;
     }
 }

@@ -2,10 +2,12 @@
 
 #include "aex/spinlock.hpp"
 
-#include "proc/context.hpp"
-#include "proc/thread.hpp"
-
 #include <stdint.h>
+
+namespace AEX::Proc {
+    class Context;
+    class Thread;
+}
 
 namespace AEX::Sys {
     /**
@@ -27,14 +29,12 @@ namespace AEX::Sys {
             uint64_t int_no, err;
             uint64_t rip, cs, rflags, rsp, ss;
         } __attribute((packed));
-        typedef struct fault_info fault_info_t;
 
         struct irq_info {
             uint64_t r15, r14, r13, r12, r11, r10, r9, r8, rbp, rdi, rsi, rdx, rcx, rbx, rax;
             uint64_t irq_no;
             uint64_t rip, cs, rflags, rsp, ss;
         } __attribute((packed));
-        typedef struct irq_info irq_info_t;
 
         CPU(int id);
 
@@ -140,10 +140,9 @@ namespace AEX::Sys {
             uint8_t type;
             void*   data;
         };
-        typedef struct ipi_packet ipi_packet_t;
 
         Spinlock      _ipi_lock;
         volatile bool _ipi_ack;
-        ipi_packet_t  _ipi_packet;
+        ipi_packet    _ipi_packet;
     };
 }

@@ -63,12 +63,12 @@ namespace AEX::Sys::IRQ {
         addr = madt->apic_addr;
 
         auto override =
-            madt->findEntry<ACPI::MADT::addr_override_t*>(ACPI::MADT::entry_type::LAPIC_ADDR, 0);
+            madt->findEntry<ACPI::MADT::addr_override*>(ACPI::MADT::entry_type::LAPIC_ADDR, 0);
         if (override)
             addr = override->addr;
 
         for (int i = 0; i < 2137; i++) {
-            auto ioapic = madt->findEntry<ACPI::MADT::ioapic_t*>(ACPI::MADT::entry_type::IOAPIC, i);
+            auto ioapic = madt->findEntry<ACPI::MADT::ioapic*>(ACPI::MADT::entry_type::IOAPIC, i);
             if (!ioapic)
                 break;
 
@@ -173,7 +173,7 @@ namespace AEX::Sys::IRQ {
     int find_redirection(int irq) {
         for (int i = 0; i < 2137; i++) {
             auto _irq =
-                madt->findEntry<ACPI::MADT::int_override_t*>(ACPI::MADT::entry_type::IRQ_SOURCE, i);
+                madt->findEntry<ACPI::MADT::int_override*>(ACPI::MADT::entry_type::IRQ_SOURCE, i);
             if (!_irq)
                 break;
 

@@ -11,7 +11,7 @@ namespace AEX::TTY {
     }
 
     VTTY::VTTY(void* _outputB) {
-        _output = (vga_char_t*) _outputB;
+        _output = (vga_char*) _outputB;
     }
 
     void VTTY::_writeChar(char c) {
@@ -90,7 +90,7 @@ namespace AEX::TTY {
     VTTY VTTYs[TTY_AMOUNT];
 
     static void clear() {
-        vga_char* volatile buffer = (vga_char_t*) 0xFFFFFFFF800B8000;
+        vga_char* volatile buffer = (vga_char*) 0xFFFFFFFF800B8000;
 
         for (int y = 0; y < TTY_HEIGHT; y++)
             for (int x = 0; x < TTY_WIDTH; x++) {

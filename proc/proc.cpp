@@ -100,12 +100,10 @@ namespace AEX::Proc {
 
                 threads[i]->status = Thread::state::RUNNABLE;
                 break;
-            case Thread::state::BLOCKED:
-                // do some code here
-                break;
             default:
-                // do some code here
-                break;
+            case Thread::state::BLOCKED:
+                increment();
+                continue;
             }
 
             if (!threads[i]->lock.tryAcquire()) {

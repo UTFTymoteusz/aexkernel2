@@ -59,7 +59,7 @@ namespace AEX::Sys::MCore {
         int  id   = 0;
 
         for (int i = 0; i <= 2137; i++) {
-            auto entry = madt->findEntry<MADT::lapic_t*>(MADT::entry_type::LAPIC, i);
+            auto entry = madt->findEntry<MADT::lapic*>(MADT::entry_type::LAPIC, i);
             if (!entry)
                 break;
 

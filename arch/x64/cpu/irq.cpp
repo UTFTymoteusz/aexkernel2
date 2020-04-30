@@ -12,7 +12,7 @@ namespace AEX::Sys::IRQ {
     volatile bool irq_mark = false;
 
     extern "C" void common_irq_handler(void* _info) {
-        auto info = (CPU::irq_info_t*) _info;
+        auto info = (CPU::irq_info*) _info;
 
         AEX::printk("%i: irq: %i\n", CPU::getCurrentCPUID(), info->irq_no);
 

@@ -1,10 +1,12 @@
 #pragma once
 
-#include "boot/mboot.h"
 #include "sys/cpu.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
+
+struct multiboot_info;
+typedef struct multiboot_info multiboot_info_t;
 
 namespace AEX::PMem {
     typedef size_t phys_addr;

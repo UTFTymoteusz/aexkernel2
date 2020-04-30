@@ -6,8 +6,8 @@
 
 void* __dso_handle = 0;
 
-size_t              __atexit_func_count = 0;
-atexit_func_entry_t __atexit_funcs[ATEXIT_MAX_FUNCS];
+size_t            __atexit_func_count = 0;
+atexit_func_entry __atexit_funcs[ATEXIT_MAX_FUNCS];
 
 void* operator new(size_t size) {
     return AEX::Heap::malloc(size);

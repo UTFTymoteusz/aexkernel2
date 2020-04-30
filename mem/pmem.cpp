@@ -6,6 +6,7 @@
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
 
+#include "boot/mboot.h"
 #include "mem/memory.hpp"
 #include "sys/cpu.hpp"
 
@@ -15,15 +16,14 @@
 //#include <new>
 
 namespace AEX::PMem {
-    class FramePiece {
-      public:
+    struct frame_piece {
         phys_addr start;
 
-        uint32_t    size;
-        uint32_t    frames_free;
-        FramePiece* next;
+        uint32_t     size;
+        uint32_t     frames_free;
+        frame_piece* next;
 
-        FramePiece(phys_addr addr, uint32_t amnt) {
+        frame_piece(phys_addr addr, uint32_t amnt) {
             init(addr, amnt);
         }
 
@@ -48,7 +48,7 @@ namespace AEX::PMem {
                 tmp = 1 << ib;
 
                 if (_bitmap[ii] & tmp)
-                    kpanic("FramePiece::Alloc(%i, %u) tried to alloc an "
+                    kpanic("frame_piece::Alloc(%i, %u) tried to alloc an "
                            "alloced frame.",
                            lid, amount);
 
@@ -73,7 +73,7 @@ namespace AEX::PMem {
                 tmp = 1 << ib;
 
                 if (!(_bitmap[ii] & tmp))
-                    kpanic("FramePiece::Free(%i, %u) tried to free a unalloced "
+                    kpanic("frame_piece::Free(%i, %u) tried to free a unalloced "
                            "frame.",
                            lid, amount);
 
@@ -128,12 +128,13 @@ namespace AEX::PMem {
       private:
         uint32_t _bitmap[];
     };
+
     typedef size_t phys_addr;
 
-    uint8_t     root_piece_memory[4096];
-    FramePiece* first_piece;
-    FramePiece* current_piece;
-    FramePiece* prev_piece = nullptr;
+    uint8_t      root_piece_memory[4096];
+    frame_piece* first_piece;
+    frame_piece* current_piece;
+    frame_piece* prev_piece = nullptr;
 
     Spinlock spinlock;
 
@@ -142,7 +143,7 @@ namespace AEX::PMem {
 
     static void _createPieces(size_t addr, uint32_t frames) {
         if (current_piece == first_piece) {
-            int amnt = min((sizeof(root_piece_memory) - sizeof(FramePiece)) * 8, frames);
+            int amnt = min((sizeof(root_piece_memory) - sizeof(frame_piece)) * 8, frames);
             frames -= amnt;
 
             first_piece->init((phys_addr) addr, amnt);
@@ -157,9 +158,9 @@ namespace AEX::PMem {
         if (frames == 0)
             return;
 
-        int frp_size = ceiltopg(sizeof(FramePiece) + (frames + 1) / 8) * Sys::CPU::PAGE_SIZE;
+        int frp_size = ceiltopg(sizeof(frame_piece) + (frames + 1) / 8) * Sys::CPU::PAGE_SIZE;
 
-        FramePiece* new_piece = (FramePiece*) (alloc(frp_size) + (size_t) &KERNEL_VMA);
+        frame_piece* new_piece = (frame_piece*) (alloc(frp_size) + (size_t) &KERNEL_VMA);
 
         new_piece->init((phys_addr) addr, frames);
 
@@ -173,7 +174,7 @@ namespace AEX::PMem {
         auto*    mmap = (multiboot_memory_map_t*) (size_t) mbinfo->mmap_addr;
         uint32_t amnt = mbinfo->mmap_length / sizeof(multiboot_memory_map_t);
 
-        first_piece   = (FramePiece*) &root_piece_memory;
+        first_piece   = (frame_piece*) &root_piece_memory;
         current_piece = first_piece;
 
         for (size_t i = 0; i < amnt; i++) {
@@ -199,8 +200,8 @@ namespace AEX::PMem {
             _createPieces(mmap_entry->addr, frames);
         }
 
-        int         pieceCount = 0;
-        FramePiece* piece      = first_piece;
+        int          pieceCount = 0;
+        frame_piece* piece      = first_piece;
 
         do {
             pieceCount++;
@@ -215,8 +216,8 @@ namespace AEX::PMem {
     }
 
     phys_addr alloc(int32_t amount) {
-        uint32_t    frames = ceiltopg(amount);
-        FramePiece* piece  = first_piece;
+        uint32_t     frames = ceiltopg(amount);
+        frame_piece* piece  = first_piece;
 
         spinlock.acquire();
 
@@ -248,8 +249,8 @@ namespace AEX::PMem {
         if (addr < first_piece->start)
             return;
 
-        uint32_t    frames = ceiltopg(amount);
-        FramePiece* piece  = first_piece;
+        uint32_t     frames = ceiltopg(amount);
+        frame_piece* piece  = first_piece;
 
         spinlock.acquire();
 

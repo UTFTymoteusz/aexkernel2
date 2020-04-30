@@ -35,7 +35,6 @@ namespace AEX::TTY {
         uint8_t fg : 4;
         uint8_t bg : 4;
     } __attribute__((packed));
-    typedef struct vga_char vga_char_t;
 
     /**
      * A basic virtual terminal class.
@@ -76,7 +75,7 @@ namespace AEX::TTY {
         int _bgColor = VGA_BLACK;
         int _fgColor = VGA_WHITE;
 
-        vga_char_t* volatile _output;
+        vga_char* volatile _output;
 
         Spinlock _lock;
 

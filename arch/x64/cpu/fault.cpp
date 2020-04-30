@@ -35,7 +35,7 @@ namespace AEX::Sys {
     };
 
     extern "C" void common_fault_handler(void* _info) {
-        auto info = (AEX::Sys::CPU::fault_info_t*) _info;
+        auto info = (AEX::Sys::CPU::fault_info*) _info;
 
         AEX::printk("%93$%s%97$ Exception (%i) (%91$%i%97$)\n", exception_names[info->int_no],
                     info->int_no, info->err);

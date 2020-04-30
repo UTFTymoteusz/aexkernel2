@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 namespace AEX::ACPI {
-    enum madt_entry_type {
+    enum madt_entryype {
         APIC = 0,
     };
 
@@ -25,7 +25,6 @@ namespace AEX::ACPI {
         uint32_t creator_id;
         uint32_t creator_revision;
     } __attribute((packed));
-    typedef struct sdt_header sdt_header_t;
 
     struct rsdp {
         char     signature[8];
@@ -34,29 +33,25 @@ namespace AEX::ACPI {
         uint8_t  revision;
         uint32_t rsdt_address;
     } __attribute((packed));
-    typedef struct rsdp rsdp_t;
 
     struct rsdt {
-        sdt_header_t header;
-        uint32_t     table_pointers[];
+        sdt_header header;
+        uint32_t   table_pointers[];
     } __attribute((packed));
-    typedef struct rsdt rsdt_t;
 
     struct xsdp {
-        rsdp_t rsdp;
+        rsdp _rsdp;
 
         uint32_t length;
         uint64_t xsdt_address;
         uint8_t  extended_checksum;
         uint8_t  reserved[3];
     } __attribute((packed));
-    typedef struct xsdp xsdp_t;
 
     struct xsdt {
-        sdt_header_t header;
-        uint64_t     table_pointers[];
+        sdt_header header;
+        uint64_t   table_pointers[];
     } __attribute((packed));
-    typedef struct xsdt xsdt_t;
 
     class MADT {
       public:
@@ -72,57 +67,51 @@ namespace AEX::ACPI {
             uint8_t type;
             uint8_t len;
         } __attribute((packed));
-        typedef struct entry entry_t;
 
         struct lapic {
-            entry_t base;
+            entry base;
 
             uint8_t  id;
             uint8_t  apic_id;
             uint32_t flags;
         } __attribute((packed));
-        typedef struct lapic lapic_t;
 
         struct ioapic {
-            entry_t base;
+            entry base;
 
             uint8_t  id;
             uint8_t  reserved;
             uint32_t addr;
             uint32_t global_interrupt_base;
         } __attribute((packed));
-        typedef struct ioapic ioapic_t;
 
         struct int_override {
-            entry_t base;
+            entry base;
 
             uint8_t  bus_source;
             uint8_t  irq_source;
             uint32_t global_interrupt;
             uint16_t flags;
         } __attribute((packed));
-        typedef struct int_override int_override_t;
 
         struct nmi {
-            entry_t base;
+            entry base;
 
             uint8_t  id;
             uint16_t flags;
             uint8_t  num;
         } __attribute((packed));
-        typedef struct nmi nmi_t;
 
         struct addr_override {
-            entry_t base;
+            entry base;
 
             uint16_t reserved;
             uint64_t addr;
         } __attribute((packed));
-        typedef struct addr_override addr_override_t;
 
-        sdt_header_t header;
-        uint32_t     apic_addr;
-        uint32_t     flags;
+        sdt_header header;
+        uint32_t   apic_addr;
+        uint32_t   flags;
 
         uint8_t data[];
 
@@ -135,32 +124,16 @@ namespace AEX::ACPI {
         void* findEntry(int type, int index);
     } __attribute((packed));
 
-    /*struct madt_entry {
-        uint8_t type;
-        uint8_t len;
-    } __attribute((packed));
-    typedef struct madt_entry madt_entry_t;
+    typedef void* acpi_table;
 
-    struct madt_entry_apic {
-        madt_entry_t base;
+    extern RCPArray<acpi_table> tables;
 
-        uint8_t id;
-        uint8_t apic_id;
-
-        uint32_t flags;
-    } __attribute((packed));
-    typedef struct madt_entry_apic madt_entry_apic_t;*/
-
-    typedef void* table_t;
-
-    extern RCPArray<table_t> tables;
-
-    rsdp_t* find_rsdp();
-    xsdp_t* find_xsdp();
+    rsdp* find_rsdp();
+    xsdp* find_xsdp();
 
     void init();
 
     bool validate_table(const void* tbl, size_t len);
 
-    RCPArray<table_t>::Pointer find_table(const char signature[4], int index);
+    RCPArray<acpi_table>::Pointer find_table(const char signature[4], int index);
 }
