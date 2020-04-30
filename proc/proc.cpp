@@ -27,20 +27,6 @@ namespace AEX::Proc {
     void setup_idle_threads();
     void setup_cores(Thread* bsp_thread);
 
-    void testA() {
-        while (true) {
-            printk("%i: test A\n", Sys::CPU::getCurrentCPUID());
-            Proc::Thread::sleep(777);
-        }
-    }
-
-    void testB() {
-        while (true) {
-            printk("%i: test B\n", Sys::CPU::getCurrentCPUID());
-            Proc::Thread::sleep(231);
-        }
-    }
-
     void init() {
         // We need to make index 0 invalid
         processes.addRef(nullptr);
@@ -50,15 +36,11 @@ namespace AEX::Proc {
 
         thread_array_count = 1;
 
+        auto kernel_process = new Process("aexkrnl.elf", 0);
+        add_process(kernel_process);
+
         auto bsp_thread = new Thread();
-
         add_thread(bsp_thread);
-
-        void* stackA = Heap::malloc(1024);
-        add_thread(new Thread((void*) testA, stackA, 1024, VMem::kernel_pagemap));
-
-        void* stackB = Heap::malloc(1024);
-        add_thread(new Thread((void*) testB, stackB, 1024, VMem::kernel_pagemap));
 
         setup_idle_threads();
         setup_cores(bsp_thread);
@@ -99,6 +81,7 @@ namespace AEX::Proc {
                 }
 
                 threads[i]->status = Thread::state::RUNNABLE;
+
                 break;
             default:
             case Thread::state::BLOCKED:
@@ -129,7 +112,11 @@ namespace AEX::Proc {
         lock.release();
     }
 
-    void add_thread(Thread* thread) {
+    int add_process(Process* process) {
+        return processes.addRef(process);
+    }
+
+    int add_thread(Thread* thread) {
         auto scopeLock(ScopeSpinlock(lock));
 
         for (int i = 1; i < thread_array_count; i++) {
@@ -137,13 +124,15 @@ namespace AEX::Proc {
                 continue;
 
             threads[i] = thread;
-            return;
+            return i;
         }
 
         thread_array_count++;
 
         Heap::realloc(threads, thread_array_count * sizeof(Thread*));
         threads[thread_array_count - 1] = thread;
+
+        return thread_array_count - 1;
     }
 
     void idle() {

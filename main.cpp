@@ -46,7 +46,7 @@ void main(multiboot_info_t* mbinfo) {
     printk("\n");
 
     Sys::IRQ::init();
-    Sys::IRQ::setup_timer(0.1);
+    Sys::IRQ::init_timer();
     printk("\n");
 
     auto bsp = new Sys::CPU(0);

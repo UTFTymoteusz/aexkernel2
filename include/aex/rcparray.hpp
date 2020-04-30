@@ -89,7 +89,7 @@ namespace AEX {
             }
 
             bool isPresent() {
-                return _ptr != nullptr && _present;
+                return _ptr != nullptr || _present;
             }
 
             void remove() {

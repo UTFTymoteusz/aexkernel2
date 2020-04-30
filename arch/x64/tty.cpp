@@ -6,6 +6,12 @@
 #include <stdint.h>
 
 namespace AEX::TTY {
+    struct vga_char {
+        char    ascii;
+        uint8_t fg : 4;
+        uint8_t bg : 4;
+    };
+
     VTTY::VTTY() {
         _output = nullptr;
     }

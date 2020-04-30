@@ -26,6 +26,9 @@ namespace AEX {
     }
 
     void printk(const char* format, va_list args) {
+        // We cannot use scopeSpinlock here because the va_list does a big confuse on it apparently.
+        lock.acquire();
+
         auto rootTTY = &TTY::VTTYs[TTY::ROOT_TTY];
 
         auto printk_common = [rootTTY](char padchar, int padlen, char* buffer) {
@@ -34,8 +37,6 @@ namespace AEX {
 
             rootTTY->write(buffer);
         };
-
-        lock.acquire();
 
         static bool newline = true;
 

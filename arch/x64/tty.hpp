@@ -30,11 +30,7 @@ namespace AEX::TTY {
         VGA_WHITE        = 15,
     };
 
-    struct vga_char {
-        char    ascii;
-        uint8_t fg : 4;
-        uint8_t bg : 4;
-    } __attribute__((packed));
+    struct vga_char;
 
     /**
      * A basic virtual terminal class.

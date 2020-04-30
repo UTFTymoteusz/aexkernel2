@@ -7,9 +7,6 @@
 #include "sys/apic.hpp"
 #include "sys/cpu.hpp"
 
-#define PROCESSOR_ENABLED 1 << 0
-#define PROCESSOR_ONLINE 1 << 1
-
 #define TRAMPOLINE_ADDR 0x1000 // Must be page aligned!
 
 namespace AEX::Sys::MCore {
@@ -63,7 +60,7 @@ namespace AEX::Sys::MCore {
             if (!entry)
                 break;
 
-            if (!(entry->flags & PROCESSOR_ENABLED) && !(entry->flags & PROCESSOR_ONLINE)) {
+            if (!entry->canStart()) {
                 printk(PRINTK_WARN "mcore: Found disabled CPU r:%i with APIC id of %i\n", entry->id,
                        entry->apic_id);
                 continue;

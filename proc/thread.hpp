@@ -8,6 +8,8 @@
 #include <stddef.h>
 
 namespace AEX::Proc {
+    typedef int tid;
+
     class Thread {
       public:
         enum state : uint8_t {

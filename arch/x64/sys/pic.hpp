@@ -8,14 +8,14 @@ namespace AEX::Sys {
         int command;
         int data;
 
-        PIC() {}
+        PIC() = default;
         PIC(int cmd, int dat) {
             command = cmd;
             data    = dat;
         }
 
-        void setMask(uint8_t mask);
         void init(uint8_t start, bool slave = false);
+        void setMask(uint8_t mask);
     };
 
     extern PIC pics[2];

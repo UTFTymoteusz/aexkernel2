@@ -1,3 +1,11 @@
 #include "proc/process.hpp"
 
-namespace AEX::Proc {}
+#include "aex/string.hpp"
+
+namespace AEX::Proc {
+    Process::Process(const char* name, pid parent_pid) {
+        strncpy(this->name, name, sizeof(this->name));
+
+        this->parent_pid = parent_pid;
+    }
+}

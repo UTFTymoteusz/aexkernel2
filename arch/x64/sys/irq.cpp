@@ -96,13 +96,17 @@ namespace AEX::Sys::IRQ {
         printk(PRINTK_OK "irq: Initialized\n");
     }
 
-    void setup_timer(double hz) {
+    void init_timer() {
         if (APIC_tps == 0) {
             APIC_tps = find_apic_tps();
 
             printk(PRINTK_OK "apic: Timer calibrated\n");
         }
 
+        APIC::write(0x320, 1 << 16);
+    }
+
+    void setup_timer(double hz) {
         APIC::setupTimer(0x20 + 0, (size_t)(APIC_tps / hz), true);
     }
 

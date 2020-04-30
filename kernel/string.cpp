@@ -1,17 +1,30 @@
 #include "aex/string.hpp"
 
-#include "aex/printk.hpp"
+#include "aex/math.hpp"
 
 #include <stdint.h>
 
 namespace AEX {
-    int strlen(char* str) {
+    int strlen(const char* str) {
         int len = 0;
 
         while (*str++ != '\0')
             len++;
 
         return len;
+    }
+
+    char* strncpy(char* dst, const char* src, size_t num) {
+        int len = min((size_t) strlen(src), num - 1);
+        if (len < 0)
+            return dst;
+
+        for (int i = 0; i < len; i++)
+            dst[i] = src[i];
+
+        dst[len] = '\0';
+
+        return dst;
     }
 
     void memset(void* mem, char c, size_t len) {
@@ -21,7 +34,7 @@ namespace AEX {
             _mem[i] = c;
     }
 
-    void memcpy(void* dst, void* src, size_t size) {
+    void memcpy(void* dst, const void* src, size_t size) {
         size_t aligned = size / 8;
 
         uint64_t* dst64 = (uint64_t*) dst;

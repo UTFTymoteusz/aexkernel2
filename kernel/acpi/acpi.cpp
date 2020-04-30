@@ -102,7 +102,7 @@ namespace AEX::ACPI {
             if (!table.isPresent())
                 continue;
 
-            if (memcmp((void*) signature, (void*) ((sdt_header*) &*table), 4) != 0) {
+            if (memcmp((void*) signature, (void*) ((sdt_header*) table.get()), 4) != 0) {
                 continue;
             }
 

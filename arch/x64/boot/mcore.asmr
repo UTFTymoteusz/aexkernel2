@@ -1,6 +1,8 @@
 org 0x1000
 [BITS 16]
 
+; We're gonna overwrite this with 0xAA to 
+; signal a successful start
 nop
 
 cli ; Just incase
@@ -68,10 +70,8 @@ lmode:
     or  rax, (0b11 << 9)
     mov cr4, rax
 
-	mov qword rsi, [0x540]
+	mov qword rsp, [0x540]
 	mov qword rdi, [0x550]
-	
-	mov rsp, rsi
 
 	mov qword rax, [0x530]
 	call rax

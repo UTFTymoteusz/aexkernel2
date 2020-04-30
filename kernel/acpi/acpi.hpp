@@ -6,6 +6,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define PROCESSOR_ENABLED 1 << 0
+#define PROCESSOR_ONLINE 1 << 1
+
 namespace AEX::ACPI {
     enum madt_entryype {
         APIC = 0,
@@ -74,6 +77,10 @@ namespace AEX::ACPI {
             uint8_t  id;
             uint8_t  apic_id;
             uint32_t flags;
+
+            bool canStart() {
+                return flags & PROCESSOR_ENABLED || flags & PROCESSOR_ONLINE;
+            }
         } __attribute((packed));
 
         struct ioapic {

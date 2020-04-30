@@ -54,9 +54,10 @@ namespace AEX {
         return sign * res;
     }
 
-    int strlen(char* str);
+    int   strlen(const char* str);
+    char* strncpy(char* dst, const char* src, size_t num);
 
     void memset(void* mem, char c, size_t len);
-    void memcpy(void* dst, void* src, size_t size);
+    void memcpy(void* dst, const void* src, size_t size);
     int  memcmp(const void* a, const void* b, size_t num);
 } // namespace AEX::String
