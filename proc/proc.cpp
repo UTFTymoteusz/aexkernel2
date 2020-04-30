@@ -15,34 +15,26 @@
 
 namespace AEX::Proc {
     RCPArray<Process> processes;
-    Thread**          threads;
-    Thread**          idle_threads;
+    Thread**          threads      = nullptr;
+    Thread**          idle_threads = nullptr;
 
-    int thread_array_count;
+    int thread_array_count = 0;
 
     Thread void_thread;
 
     Spinlock lock;
 
-    void setup_idle_threads();
+    void setup_idle_threads(Process* process);
     void setup_cores(Thread* bsp_thread);
 
     void init() {
-        // We need to make index 0 invalid
-        processes.addRef(nullptr);
+        auto idle_process   = new Process("/sys/aexkrnl.elf", 0, "idle");
+        auto kernel_process = new Process("/sys/aexkrnl.elf", 0);
 
-        threads    = (Thread**) Heap::malloc(sizeof(Thread*));
-        threads[0] = nullptr;
+        auto bsp_thread = new Thread(kernel_process);
+        bsp_thread->start();
 
-        thread_array_count = 1;
-
-        auto kernel_process = new Process("aexkrnl.elf", 0);
-        add_process(kernel_process);
-
-        auto bsp_thread = new Thread();
-        add_thread(bsp_thread);
-
-        setup_idle_threads();
+        setup_idle_threads(idle_process);
         setup_cores(bsp_thread);
         setup_irq();
     }
@@ -52,9 +44,14 @@ namespace AEX::Proc {
             return;
 
         auto cpu = Sys::CPU::getCurrentCPU();
+        int  i   = cpu->current_tid;
 
-        int i = cpu->current_tid;
+        double curtime = Sys::IRQ::get_curtime();
+        double delta   = curtime - cpu->measurement_start;
 
+        cpu->measurement_start = curtime;
+
+        cpu->currentThread->parent->usage.cpu_time += delta;
         cpu->currentThread->lock.release();
 
         auto increment = [&i]() {
@@ -140,13 +137,14 @@ namespace AEX::Proc {
             Sys::CPU::waitForInterrupt();
     }
 
-    void setup_idle_threads() {
+    void setup_idle_threads(Process* idle_process) {
         idle_threads = (Thread**) Heap::malloc(sizeof(Thread*) * Sys::MCore::cpu_count);
 
         for (int i = 0; i < Sys::MCore::cpu_count; i++) {
             void* stack = Heap::malloc(1024);
 
-            idle_threads[i] = new Thread((void*) idle, stack, 1024, VMem::kernel_pagemap);
+            idle_threads[i] =
+                new Thread(idle_process, (void*) idle, stack, 1024, VMem::kernel_pagemap);
         }
     }
 
@@ -163,7 +161,7 @@ namespace AEX::Proc {
         Sys::MCore::CPUs[0]->currentThread  = bsp_thread;
         Sys::MCore::CPUs[0]->currentContext = &bsp_thread->context;
 
-        // The scheduler releases the lock
+        // The scheduler will release the lock
         bsp_thread->lock.acquire();
     }
 }

@@ -60,8 +60,14 @@ void main(multiboot_info_t* mbinfo) {
 
     Proc::init();
 
+    auto idle    = Proc::processes.get(0);
+    auto process = Proc::Thread::getCurrentThread()->getProcess();
+
     while (true) {
         printk("%i: %li\n", Sys::CPU::getCurrentCPUID(), (size_t) Sys::IRQ::get_curtime());
-        Proc::Thread::sleep(1000);
+        printk("idle: %li ms cpu time (pid %i)\n", (size_t) idle->usage.cpu_time, idle->pid);
+        printk("us  : %li ms cpu time (pid %i)\n", (size_t) process->usage.cpu_time, process->pid);
+
+        Proc::Thread::sleep(2500);
     }
 }

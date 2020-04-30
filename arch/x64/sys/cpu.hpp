@@ -135,6 +135,8 @@ namespace AEX::Sys {
         int                current_tid;
         AEX::Proc::Thread* currentThread;
 
+        double measurement_start;
+
       private:
         struct ipi_packet {
             uint8_t type;
