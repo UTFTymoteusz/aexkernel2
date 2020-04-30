@@ -65,10 +65,13 @@ void main(multiboot_info_t* mbinfo) {
     process->cpu_affinity.mask(3, true);
 
     while (true) {
-        printk("%i: %li (%li min)\n", Sys::CPU::getCurrentCPUID(), (size_t) Sys::IRQ::get_curtime(),
-               (size_t) Sys::IRQ::get_curtime() / 60000);
-        printk("idle: %li ms cpu time (pid %i)\n", (size_t) idle->usage.cpu_time, idle->pid);
-        printk("us  : %li ms cpu time (pid %i)\n", (size_t) process->usage.cpu_time, process->pid);
+        uint64_t ns = Sys::IRQ::get_curtime();
+
+        printk("%i: %li (%li ms, %li s, %li min)\n", Sys::CPU::getCurrentCPUID(), ns, ns / 1000000,
+               ns / 1000000000, ns / 1000000000 / 60);
+        printk("idle: %li ns cpu time (pid %i)\n", (size_t) idle->usage.cpu_time_ns, idle->pid);
+        printk("us  : %li ns cpu time (pid %i)\n", (size_t) process->usage.cpu_time_ns,
+               process->pid);
 
         Proc::Thread::sleep(2500);
     }

@@ -28,7 +28,7 @@ namespace AEX::Proc {
 
         state status;
         union {
-            size_t wakeup_at;
+            uint64_t wakeup_at;
         };
 
         Process* parent;

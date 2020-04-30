@@ -24,8 +24,8 @@ namespace AEX::Sys::IRQ {
     bool   is_APIC_present = false;
     size_t APIC_tps        = 0;
 
-    double ms_per_tick = 0;
-    double curtime_ms  = 0;
+    uint64_t ns_per_tick = 0;
+    uint64_t curtime_ns  = 0;
 
     ACPI::MADT*      madt;
     RCPArray<IOAPIC> ioapics;
@@ -146,17 +146,19 @@ namespace AEX::Sys::IRQ {
             irq_sleep(interval);
         }
 
-        ms_per_tick = interval;
+        double apic_interval = (size_t)((1.0 / (double) APIC_tps) * 1000000000.0);
+
+        ns_per_tick = (uint64_t)(apic_interval * APIC_tps / timer_hz / MCore::cpu_count);
 
         setup_timer(timer_hz);
     }
 
     void timer_tick() {
-        curtime_ms += ms_per_tick;
+        curtime_ns += ns_per_tick;
     }
 
-    double get_curtime() {
-        return curtime_ms;
+    uint64_t get_curtime() {
+        return curtime_ns;
     }
 
 

@@ -45,7 +45,7 @@ namespace AEX::Proc {
     void Thread::sleep(int ms) {
         auto currentThread = Thread::getCurrentThread();
 
-        currentThread->wakeup_at = (size_t) Sys::IRQ::get_curtime() + ms;
+        currentThread->wakeup_at = Sys::IRQ::get_curtime() + ((uint64_t) ms) * 1000000;
         currentThread->status    = Thread::state::SLEEPING;
 
         yield();

@@ -40,18 +40,23 @@ namespace AEX::Proc {
     }
 
     void schedule() {
-        if (!lock.tryAcquire())
-            return;
-
         auto cpu = Sys::CPU::getCurrentCPU();
-        int  i   = cpu->current_tid;
 
-        double curtime = Sys::IRQ::get_curtime();
-        double delta   = curtime - cpu->measurement_start;
+        if (!lock.tryAcquire()) {
+            if (cpu->currentThread->status != Thread::state::RUNNABLE)
+                lock.acquire();
+            else
+                return;
+        }
 
-        cpu->measurement_start = curtime;
+        int i = cpu->current_tid;
 
-        cpu->currentThread->parent->usage.cpu_time += delta;
+        uint64_t curtime = Sys::IRQ::get_curtime();
+        uint64_t delta   = curtime - cpu->measurement_start_ns;
+
+        cpu->measurement_start_ns = curtime;
+
+        cpu->currentThread->parent->usage.cpu_time_ns += delta;
         cpu->currentThread->lock.release();
 
         auto increment = [&i]() {
@@ -72,7 +77,7 @@ namespace AEX::Proc {
             case Thread::state::RUNNABLE:
                 break;
             case Thread::state::SLEEPING:
-                if ((size_t) Sys::IRQ::get_curtime() < threads[i]->wakeup_at) {
+                if (Sys::IRQ::get_curtime() < threads[i]->wakeup_at) {
                     increment();
                     continue;
                 }

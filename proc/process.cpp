@@ -17,8 +17,8 @@ namespace AEX::Proc {
 
         strncpy(this->image_path, image_path, strlen(image_path) + 1);
 
-        this->parent_pid     = parent_pid;
-        this->usage.cpu_time = 0;
-        this->pid            = add_process(this);
+        this->parent_pid        = parent_pid;
+        this->usage.cpu_time_ns = 0;
+        this->pid               = add_process(this);
     }
 }
