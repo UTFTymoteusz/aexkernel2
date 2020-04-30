@@ -34,9 +34,6 @@ void main(multiboot_info_t* mbinfo) {
     printk("\n");
     // clang-format on
 
-    Sys::setup_idt();
-    Sys::load_idt(Sys::init_IDT, 256);
-
     PMem::init(mbinfo);
     VMem::init();
     Heap::init();
@@ -63,8 +60,13 @@ void main(multiboot_info_t* mbinfo) {
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrentThread()->getProcess();
 
+    process->cpu_affinity.mask(1, true);
+    process->cpu_affinity.mask(2, true);
+    process->cpu_affinity.mask(3, true);
+
     while (true) {
-        printk("%i: %li\n", Sys::CPU::getCurrentCPUID(), (size_t) Sys::IRQ::get_curtime());
+        printk("%i: %li (%li min)\n", Sys::CPU::getCurrentCPUID(), (size_t) Sys::IRQ::get_curtime(),
+               (size_t) Sys::IRQ::get_curtime() / 60000);
         printk("idle: %li ms cpu time (pid %i)\n", (size_t) idle->usage.cpu_time, idle->pid);
         printk("us  : %li ms cpu time (pid %i)\n", (size_t) process->usage.cpu_time, process->pid);
 

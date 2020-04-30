@@ -3,12 +3,12 @@
 #include "aex/mem/heap.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
+#include "aex/proc/process.hpp"
+#include "aex/proc/thread.hpp"
 #include "aex/rcparray.hpp"
 #include "aex/spinlock.hpp"
 
 #include "proc/context.hpp"
-#include "proc/process.hpp"
-#include "proc/thread.hpp"
 #include "sys/cpu.hpp"
 #include "sys/irq.hpp"
 #include "sys/mcore.hpp"
@@ -82,6 +82,11 @@ namespace AEX::Proc {
                 break;
             default:
             case Thread::state::BLOCKED:
+                increment();
+                continue;
+            }
+
+            if (threads[i]->parent->cpu_affinity.isMasked(cpu->id)) {
                 increment();
                 continue;
             }

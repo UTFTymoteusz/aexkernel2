@@ -174,19 +174,19 @@ gdt64:
 	db 0b10010010 ; Access (read/write)
 	db 0b00000000 ; Granularity
 	db 0x00       ; Base (high)
-	.usrdata: equ $ - gdt64
-	dw 0xFFFF     ; Limit
-	dw 0x00       ; Base (low)
-	db 0x00       ; Base (middle)
-	db 0b11110010 ; Access (ring3/read/write)
-	db 0b00000000 ; Granularity
-	db 0x00       ; Base (high)
 	.usrcode: equ $ - gdt64
 	dw 0xFFFF     ; Limit
 	dw 0x00       ; Base (low)
 	db 0x00       ; Base (middle)
 	db 0b11111010 ; Access (ring3/exec/read)
 	db 0b10101111 ; Granularity - 64 bits, limit 19:16
+	db 0x00       ; Base (high)
+	.usrdata: equ $ - gdt64
+	dw 0xFFFF     ; Limit
+	dw 0x00       ; Base (low)
+	db 0x00       ; Base (middle)
+	db 0b11110010 ; Access (ring3/read/write)
+	db 0b00000000 ; Granularity
 	db 0x00       ; Base (high)
 	.tss: equ $ - gdt64
 	dw 0x00       ; Limit (size)

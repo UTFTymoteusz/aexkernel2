@@ -5,6 +5,7 @@
 #include "aex/printk.hpp"
 #include "aex/rcparray.hpp"
 
+#include "cpu/idt.hpp"
 #include "cpu/irq.hpp"
 #include "kernel/acpi/acpi.hpp"
 #include "sys/apic.hpp"
@@ -34,6 +35,9 @@ namespace AEX::Sys::IRQ {
     size_t  find_apic_tps();
 
     void init() {
+        Sys::setup_idt();
+        Sys::load_idt(Sys::init_IDT, 256);
+
         printk(PRINTK_INIT "irq: Initializing\n");
 
         uint32_t eax, ebx, ecx, edx;

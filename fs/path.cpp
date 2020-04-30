@@ -1,4 +1,4 @@
-#include "fs/path.hpp"
+#include "aex/fs/path.hpp"
 
 #include "aex/math.hpp"
 #include "aex/string.hpp"
@@ -19,7 +19,7 @@ namespace AEX::FS::Path {
                 last = i + 1;
         }
 
-        strncpy(buffer, &((char*) path)[last], min(num, len - last + 1));
+        strncpy(buffer, &((char*) path)[last], min((int) num, len - last + 1));
 
         return buffer;
     }

@@ -1,9 +1,9 @@
-#include "proc/process.hpp"
+#include "aex/proc/process.hpp"
 
+#include "aex/fs/path.hpp"
 #include "aex/mem/heap.hpp"
 #include "aex/string.hpp"
 
-#include "fs/path.hpp"
 #include "proc/proc.hpp"
 
 namespace AEX::Proc {
@@ -14,6 +14,7 @@ namespace AEX::Proc {
             strncpy(this->name, name, sizeof(this->name));
 
         this->image_path = (char*) Heap::malloc(strlen(image_path) + 1);
+
         strncpy(this->image_path, image_path, strlen(image_path) + 1);
 
         this->parent_pid     = parent_pid;

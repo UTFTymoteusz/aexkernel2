@@ -1,11 +1,11 @@
 #pragma once
 
 #include "aex/mem/vmem.hpp"
+#include "aex/proc/resource_usage.hpp"
 #include "aex/rcparray.hpp"
 #include "aex/spinlock.hpp"
 
 #include "proc/context.hpp"
-#include "proc/resource_usage.hpp"
 
 #include <stddef.h>
 
@@ -35,8 +35,8 @@ namespace AEX::Proc {
 
         Thread() = default;
         Thread(Process* parent);
-        Thread(Process* parent, void* entry, void* stack, size_t stack_size,
-               VMem::Pagemap* pagemap);
+        Thread(Process* parent, void* entry, void* stack, size_t stack_size, VMem::Pagemap* pagemap,
+               bool usermode = false);
 
         /**
          * Adds the thread to the run queue and sets its status as RUNNABLE.
@@ -49,8 +49,16 @@ namespace AEX::Proc {
          */
         RCPArray<Process>::Pointer getProcess();
 
+        /**
+         * Yields the currently executing thread's CPU timeshare. Will return immediately if no
+         * other threads are available.
+         */
         static void yield();
 
+        /**
+         * Sleeps the currently running thread.
+         * @param ms Amount of time to sleep for in milliseconds.
+         */
         static void sleep(int ms);
 
         /**

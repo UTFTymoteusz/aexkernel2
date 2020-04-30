@@ -1,4 +1,4 @@
-#include "proc/thread.hpp"
+#include "aex/proc/thread.hpp"
 
 #include "aex/printk.hpp"
 #include "aex/rcparray.hpp"
@@ -20,8 +20,8 @@ namespace AEX::Proc {
     }
 
     Thread::Thread(Process* parent, void* entry, void* stack, size_t stack_size,
-                   VMem::Pagemap* pagemap) {
-        context = Context(entry, stack, stack_size, pagemap);
+                   VMem::Pagemap* pagemap, bool usermode) {
+        context = Context(entry, stack, stack_size, pagemap, usermode);
         status  = FRESH;
 
         this->parent = parent;

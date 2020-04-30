@@ -1,9 +1,8 @@
 #pragma once
 
+#include "aex/proc/process.hpp"
+#include "aex/proc/thread.hpp"
 #include "aex/rcparray.hpp"
-
-#include "proc/process.hpp"
-#include "proc/thread.hpp"
 
 namespace AEX::Proc {
     extern RCPArray<Process> processes;
