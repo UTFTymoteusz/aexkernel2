@@ -14,6 +14,17 @@ namespace AEX {
         return len;
     }
 
+    int strcmp(const char* a, const char* b) {
+        do {
+            if (*a < *b)
+                return -1;
+            else if (*a > *b)
+                return 1;
+        } while (*a++ != '\0' && *b++ != '\0');
+
+        return 0;
+    }
+
     char* strncpy(char* dst, const char* src, size_t num) {
         int len = min((size_t) strlen(src), num - 1);
         if (len < 0)

@@ -2,6 +2,8 @@
 #include "aex/mem/pmem.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
+#include "aex/proc/thread.hpp"
+#include "aex/vector.hpp"
 
 #include "boot/mboot.h"
 #include "cpu/idt.hpp"
@@ -11,6 +13,7 @@
 #include "sys/cpu.hpp"
 #include "sys/irq.hpp"
 #include "sys/mcore.hpp"
+#include "sys/pci.hpp"
 #include "tty.hpp"
 
 using namespace AEX;
@@ -46,6 +49,9 @@ void main(multiboot_info_t* mbinfo) {
     Sys::IRQ::init_timer();
     printk("\n");
 
+    Sys::PCI::init();
+    printk("\n");
+
     auto bsp = new Sys::CPU(0);
     bsp->initLocal();
 
@@ -60,7 +66,6 @@ void main(multiboot_info_t* mbinfo) {
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrentThread()->getProcess();
 
-    process->cpu_affinity.mask(1, true);
     process->cpu_affinity.mask(2, true);
     process->cpu_affinity.mask(3, true);
 
@@ -74,6 +79,6 @@ void main(multiboot_info_t* mbinfo) {
         printk("us  : %li ns (%li ms) cpu time (pid %i)\n", process->usage.cpu_time_ns,
                process->usage.cpu_time_ns / 1000000, process->pid);
 
-        Proc::Thread::sleep(2500);
+        Proc::Thread::sleep(5000);
     }
 }

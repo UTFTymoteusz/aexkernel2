@@ -22,7 +22,7 @@ SYS  = $(ISO)sys/
 
 ARCH = arch/x64/
 
-GFLAGS = -O2 -Wall -Wextra -nostdlib -pipe
+GFLAGS = -O3 -Wall -Wextra -nostdlib -pipe
 
 INCLUDES := -I. -I$(ARCH) -Iinclude/ -Iinclude/libc/ -I../lai/include/
 

@@ -34,6 +34,9 @@ namespace AEX::Proc {
         auto bsp_thread = new Thread(kernel_process);
         bsp_thread->start();
 
+        tid_t tid = add_thread(bsp_thread);
+        kernel_process->threads.pushBack(tid);
+
         setup_idle_threads(idle_process);
         setup_cores(bsp_thread);
         setup_irq();
@@ -124,9 +127,9 @@ namespace AEX::Proc {
     }
 
     int add_thread(Thread* thread) {
-        auto scopeLock(ScopeSpinlock(lock));
+        auto scopeLock = ScopeSpinlock(lock);
 
-        for (int i = 1; i < thread_array_count; i++) {
+        for (int i = 0; i < thread_array_count; i++) {
             if (threads[i])
                 continue;
 
@@ -153,8 +156,8 @@ namespace AEX::Proc {
         for (int i = 0; i < Sys::MCore::cpu_count; i++) {
             void* stack = Heap::malloc(1024);
 
-            idle_threads[i] =
-                new Thread(idle_process, (void*) idle, stack, 1024, VMem::kernel_pagemap);
+            idle_threads[i] = new Thread(idle_process, (void*) idle, stack, 1024,
+                                         VMem::kernel_pagemap, false, true);
         }
     }
 

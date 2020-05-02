@@ -36,7 +36,7 @@ namespace AEX::Proc {
         Thread() = default;
         Thread(Process* parent);
         Thread(Process* parent, void* entry, void* stack, size_t stack_size, VMem::Pagemap* pagemap,
-               bool usermode = false);
+               bool usermode = false, bool dont_add = false);
 
         /**
          * Adds the thread to the run queue and sets its status as RUNNABLE.

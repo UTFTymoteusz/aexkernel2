@@ -26,8 +26,7 @@ namespace AEX {
     }
 
     void printk(const char* format, va_list args) {
-        // We cannot use scopeSpinlock here because the va_list does a big confuse on it apparently.
-        lock.acquire();
+        auto scopeLock = ScopeSpinlock(lock);
 
         auto rootTTY = &TTY::VTTYs[TTY::ROOT_TTY];
 
@@ -198,7 +197,5 @@ namespace AEX {
 
             TTY::VTTYs[0].writeChar(c);
         } while (*++format != '\0');
-
-        lock.release();
     }
 } // namespace AEX

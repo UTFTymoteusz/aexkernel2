@@ -161,7 +161,10 @@ namespace AEX::Sys::IRQ {
     }
 
     uint64_t get_curtime() {
-        return curtime_ns + (uint64_t)((APIC_tps - APIC::getTimerCounter()) * APIC_interval_adj);
+        int64_t offset = (APIC::getTimerCounter() / MCore::cpu_count) * CPU::getCurrentCPUID();
+        return curtime_ns +
+               (uint64_t)(((int64_t) APIC_tps - ((int64_t) APIC::getTimerCounter() - offset)) *
+                          APIC_interval_adj);
     }
 
 
@@ -246,8 +249,8 @@ namespace AEX::Sys::IRQ {
 
         IRQ::irq_mark = false;
 
-        APIC::setupTimer(0x20 + 0);
         PIT::interruptIn(50);
+        APIC::setupTimer(0x20 + 0);
 
         CPU::interrupts();
 

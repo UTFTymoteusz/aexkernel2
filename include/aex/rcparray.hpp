@@ -24,11 +24,11 @@ namespace AEX {
                 // printk("ctorred t0x%p, 0x%p\n", this, _refs);
             }
 
-            Pointer(T* ptr, Spinlock* lock, int* ref_counter) {
+            Pointer(T* ptr, Spinlock* lock, int* ref_counter, bool present = true) {
                 _refs    = ref_counter;
                 _ptr     = ptr;
                 _lock    = lock;
-                _present = true;
+                _present = present;
 
                 // printk("ctorred t0x%p, 0x%p\n", this, _refs);
             }
@@ -129,6 +129,8 @@ namespace AEX {
             Spinlock* _lock;
         };
 
+        Pointer& operator[](int) = delete;
+
         /*Pointer& operator[](int index) {
             printk("indexed\n");
 
@@ -140,6 +142,9 @@ namespace AEX {
         }*/
 
         Pointer get(int index) {
+            if (index < 0 || index >= _pointerCount)
+                return getNullPointer();
+
             return *&_pointers[index];
         }
 
@@ -170,7 +175,7 @@ namespace AEX {
         Pointer* _pointers     = nullptr;
 
         int     _nullRefCounter = 2137;
-        Pointer _nullPointer    = Pointer(nullptr, &_lock, &_nullRefCounter);
+        Pointer _nullPointer    = Pointer(nullptr, &_lock, &_nullRefCounter, false);
 
         int findSlotOrMakeSlot() {
             for (int i = 0; i < _pointerCount; i++) {

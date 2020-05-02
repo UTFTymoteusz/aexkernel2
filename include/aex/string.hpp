@@ -1,10 +1,14 @@
 #pragma once
 
+#include <stdarg.h>
 #include <stddef.h>
 
 namespace AEX {
     static const char* dictionary = "zyxwvutsrqponmlkjihgfedcba9876543210123456"
                                     "789abcdefghijklmnopqrstuvwxyz";
+
+    void snprintf(char* buffer, size_t n, const char* format, ...);
+    void snprintf(char* buffer, size_t n, const char* format, va_list args);
 
     template <typename T>
     char* itos(T num, int base, char* buffer) {
@@ -55,6 +59,7 @@ namespace AEX {
     }
 
     int   strlen(const char* str);
+    int   strcmp(const char* a, const char* b);
     char* strncpy(char* dst, const char* src, size_t num);
 
     void memset(void* mem, char c, size_t len);

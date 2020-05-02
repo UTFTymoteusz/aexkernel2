@@ -20,16 +20,23 @@ namespace AEX::Proc {
     }
 
     Thread::Thread(Process* parent, void* entry, void* stack, size_t stack_size,
-                   VMem::Pagemap* pagemap, bool usermode) {
+                   VMem::Pagemap* pagemap, bool usermode, bool dont_add) {
         context = Context(entry, stack, stack_size, pagemap, usermode);
         status  = FRESH;
 
         this->parent = parent;
+
+        if (dont_add)
+            return;
+
+        tid_t tid = Proc::add_thread(this);
+
+        parent->lock.acquire();
+        parent->threads.pushBack(tid);
+        parent->lock.release();
     }
 
     void Thread::start() {
-        Proc::add_thread(this);
-
         if (status == FRESH)
             status = RUNNABLE;
     }
