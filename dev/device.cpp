@@ -86,10 +86,10 @@ namespace AEX::Dev {
             auto resource = _resources.at(i);
 
             switch (resource.type) {
-            case resource::type::MEMORY:
+            case resource::type_t::MEMORY:
                 printk("MEM: 0x%p - 0x%p\n", resource.start, resource.end);
                 break;
-            case resource::type::IO:
+            case resource::type_t::IO:
                 printk("IO : 0x%p - 0x%p\n", resource.start, resource.end);
                 break;
             default:

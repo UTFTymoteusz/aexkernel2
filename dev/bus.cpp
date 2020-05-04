@@ -7,8 +7,6 @@
 
 namespace AEX::Dev {
     Bus::Bus(const char* name) {
-        auto scopeLock = ScopeSpinlock(lock);
-
         strncpy(this->name, name, sizeof(this->name));
 
         buses.addRef(this);

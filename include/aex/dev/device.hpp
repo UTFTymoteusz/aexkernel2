@@ -56,12 +56,12 @@ namespace AEX::Dev {
         };
 
         struct resource {
-            enum type : uint8_t {
+            enum type_t : uint8_t {
                 MEMORY = 0,
                 IO     = 1,
             };
 
-            type type;
+            type_t type;
 
             union {
                 size_t start;
@@ -70,6 +70,18 @@ namespace AEX::Dev {
             size_t end;
 
             resource() {}
+
+            resource(type_t type, size_t value) {
+                this->type  = type;
+                this->value = value;
+                this->end   = value;
+            }
+
+            resource(type_t type, size_t start, size_t end) {
+                this->type  = type;
+                this->start = start;
+                this->end   = end;
+            }
         };
 
         char name[32];

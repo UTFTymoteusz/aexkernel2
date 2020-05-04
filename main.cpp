@@ -14,7 +14,6 @@
 #include "sys/cpu.hpp"
 #include "sys/irq.hpp"
 #include "sys/mcore.hpp"
-#include "sys/pci.hpp"
 #include "tty.hpp"
 
 using namespace AEX;
@@ -50,8 +49,8 @@ void main(multiboot_info_t* mbinfo) {
     Sys::IRQ::init_timer();
     printk("\n");
 
-    Sys::PCI::init();
-    printk("\n");
+    // Sys::PCI::init();
+    // printk("\n");
 
     Dev::init();
     printk("\n");

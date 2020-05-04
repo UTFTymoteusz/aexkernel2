@@ -1,9 +1,10 @@
-#include "sys/pci.hpp"
-
+#include "aex/dev/bus.hpp"
+#include "aex/dev/device.hpp"
 #include "aex/dev/tree.hpp"
 #include "aex/mem/pmem.hpp"
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
+#include "aex/string.hpp"
 
 #include "sys/cpu.hpp"
 
@@ -12,10 +13,41 @@
 #define CONFIG_ADDRESS 0xCF8
 #define CONFIG_DATA 0xCFC
 
-namespace AEX::Sys::PCI {
-    Dev::Bus* dev_bus;
+namespace AEX::Dev::PCI {
+    void scan_all_buses();
+
+    Bus* dev_bus = nullptr;
+
+    class PCI : public Driver {
+      public:
+        PCI() : Driver("pci") {}
+        ~PCI() {}
+
+        bool check(Device* device) {
+            if (strcmp(device->name, "pci") != 0)
+                return false;
+
+            return true;
+        }
+
+        void bind(Device*) {
+            printk(PRINTK_INIT "pci: Initializing\n");
+
+            dev_bus = new Dev::Bus("pci");
+            scan_all_buses();
+
+            printk(PRINTK_OK "pci: Initialized\n");
+        }
+    };
+
+    PCI* driver;
 
     Spinlock lock;
+
+    void init() {
+        driver = new PCI();
+        Dev::registerDriver("main", driver);
+    }
 
     uint16_t read_word(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
     uint8_t  read_byte(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
@@ -29,15 +61,6 @@ namespace AEX::Sys::PCI {
     uint8_t get_class(uint16_t bus, uint8_t device, uint8_t function);
     uint8_t get_subclass(uint16_t bus, uint8_t device, uint8_t function);
     uint8_t get_prog_if(uint16_t bus, uint8_t device, uint8_t function);
-
-    void init() {
-        printk(PRINTK_INIT "pci: Initializing\n");
-
-        dev_bus = new Dev::Bus("pci");
-        scan_all_buses();
-
-        printk(PRINTK_OK "pci: Initialized\n");
-    }
 
     uint32_t read_dword(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset) {
         uint32_t address = 0x00;
@@ -136,7 +159,7 @@ namespace AEX::Sys::PCI {
             if (io) {
                 auto resource = Dev::Device::resource();
 
-                resource.type  = Dev::Device::resource::type::IO;
+                resource.type  = Dev::Device::resource::type_t::IO;
                 resource.value = addr;
                 resource.end   = addr + len;
 
@@ -145,7 +168,7 @@ namespace AEX::Sys::PCI {
             else {
                 auto resource = Dev::Device::resource();
 
-                resource.type  = Dev::Device::resource::type::MEMORY;
+                resource.type  = Dev::Device::resource::type_t::MEMORY;
                 resource.value = addr;
                 resource.end   = addr + len;
 
