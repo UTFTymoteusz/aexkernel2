@@ -191,7 +191,7 @@ namespace AEX::Sys::PCI {
 
             fill_bars(bus, device, function, dev_device);
 
-            dev_bus->addDevice(dev_device);
+            dev_bus->registerDevice(dev_device);
         }
     }
 

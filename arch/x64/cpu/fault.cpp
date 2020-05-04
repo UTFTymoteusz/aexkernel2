@@ -51,6 +51,9 @@ namespace AEX::Sys {
             printk("CR2: 0x%016lx  CR3: 0x%016lx\n", cr2, cr3);
         }
 
+        for (volatile size_t i = 0; i < 534354353; i++)
+            ;
+
         CPU::broadcastPacket(CPU::ipp_type::HALT);
         kpanic("Unrecoverable processor exception occured in CPU %i", CPU::getCurrentCPUID());
     }

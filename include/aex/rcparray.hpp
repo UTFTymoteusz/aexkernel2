@@ -13,6 +13,8 @@ namespace AEX {
       public:
         class Pointer {
           public:
+            Pointer() {}
+
             Pointer(T* ptr, Spinlock* lock) {
                 _refs    = &_refCounter;
                 _ptr     = ptr;
@@ -61,6 +63,8 @@ namespace AEX {
 
                     delete _ptr;
                     delete _refs;
+
+                    _lock->release();
                 }
 
                 _lock->release();
@@ -129,6 +133,42 @@ namespace AEX {
             Spinlock* _lock;
         };
 
+        class Iterator {
+          public:
+            Iterator(RCPArray<T>* base, int start = 0) {
+                _index = start;
+                _base  = base;
+
+                _lock = &base->_lock;
+            }
+
+            T* next() {
+                if (!_base->_pointers)
+                    return nullptr;
+
+                while (_index < _base->count()) {
+                    auto ptr = _base->_pointers[_index];
+                    auto val = ptr.get();
+
+                    if (!ptr.isPresent()) {
+                        _index++;
+                        continue;
+                    }
+
+                    _index++;
+
+                    return val;
+                }
+
+                return nullptr;
+            }
+
+          private:
+            int          _index = 0;
+            Spinlock*    _lock;
+            RCPArray<T>* _base;
+        };
+
         Pointer& operator[](int) = delete;
 
         /*Pointer& operator[](int index) {
@@ -166,6 +206,10 @@ namespace AEX {
 
         Pointer getNullPointer() {
             return _nullPointer;
+        }
+
+        Iterator getIterator(int start = 0) {
+            return Iterator(this, start);
         }
 
       private:

@@ -6,6 +6,7 @@
         "stdint.h": "c",
         "printk.hpp": "c",
         "new": "cpp",
-        "type_traits": "cpp"
+        "type_traits": "cpp",
+        "typeinfo": "cpp"
     }
 }

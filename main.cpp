@@ -7,6 +7,7 @@
 
 #include "boot/mboot.h"
 #include "cpu/idt.hpp"
+#include "dev/dev.hpp"
 #include "kernel/acpi/acpi.hpp"
 #include "mem/memory.hpp"
 #include "proc/proc.hpp"
@@ -50,6 +51,9 @@ void main(multiboot_info_t* mbinfo) {
     printk("\n");
 
     Sys::PCI::init();
+    printk("\n");
+
+    Dev::init();
     printk("\n");
 
     auto bsp = new Sys::CPU(0);
