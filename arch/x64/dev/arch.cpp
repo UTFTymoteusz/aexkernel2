@@ -3,7 +3,14 @@ namespace AEX::Dev {
         void init();
     }
 
+    namespace SATA {
+        extern void init();
+    }
+
+
     void arch_drivers_init() {
         PCI::init();
+
+        SATA::init();
     }
 }

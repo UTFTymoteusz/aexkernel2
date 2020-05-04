@@ -169,6 +169,11 @@ namespace AEX {
             RCPArray<T>* _base;
         };
 
+        // Gotta make this better
+        ~RCPArray() {
+            delete _pointers;
+        }
+
         Pointer& operator[](int) = delete;
 
         /*Pointer& operator[](int index) {

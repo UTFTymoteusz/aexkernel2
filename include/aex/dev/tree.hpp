@@ -20,7 +20,7 @@ namespace AEX::Dev {
      * @param device   The device.
      * @return True if succeeded.
      */
-    bool registerDevice(const char* bus_name, Device* device);
+    bool register_device(const char* bus_name, Device* device);
 
     /**
      * Tries to register a driver in the specified bus.
@@ -28,5 +28,12 @@ namespace AEX::Dev {
      * @param driver   The driver.
      * @return True if succeeded.
      */
-    bool registerDriver(const char* bus_name, Driver* driver);
+    bool register_driver(const char* bus_name, Driver* driver);
+
+    /**
+     * Checks if a bus exists.
+     * @param bus_name The bus name.
+     * @return True if the bus exists.
+     */
+    bool bus_exists(const char* bus_name);
 }

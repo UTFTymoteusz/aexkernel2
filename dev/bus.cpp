@@ -11,7 +11,7 @@ namespace AEX::Dev {
 
         buses.addRef(this);
 
-        printk(PRINTK_OK "dev: Added bus '%s'\n", this->name);
+        printk(PRINTK_OK "dev: Registered bus '%s'\n", this->name);
     }
 
     void Bus::bindDriverToDevice(Driver* driver, Device* device) {

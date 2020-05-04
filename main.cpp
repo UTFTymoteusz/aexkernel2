@@ -49,9 +49,6 @@ void main(multiboot_info_t* mbinfo) {
     Sys::IRQ::init_timer();
     printk("\n");
 
-    // Sys::PCI::init();
-    // printk("\n");
-
     Dev::init();
     printk("\n");
 
@@ -68,9 +65,6 @@ void main(multiboot_info_t* mbinfo) {
 
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrentThread()->getProcess();
-
-    process->cpu_affinity.mask(2, true);
-    process->cpu_affinity.mask(3, true);
 
     while (true) {
         uint64_t ns = Sys::IRQ::get_curtime();

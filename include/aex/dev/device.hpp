@@ -89,6 +89,7 @@ namespace AEX::Dev {
 
         void* interface_data;
         void* driver_data;
+        void* device_data;
 
         Device(const char* name);
 
@@ -109,6 +110,11 @@ namespace AEX::Dev {
         template <typename T>
         T getDriverData() {
             return (T) driver_data;
+        }
+
+        template <typename T>
+        T getDeviceData() {
+            return (T) device_data;
         }
 
       private:

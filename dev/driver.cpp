@@ -15,9 +15,5 @@ namespace AEX::Dev {
 
     void Driver::bind(Device* device) {}
 
-    extern void register_sata();
-
-    void register_base_drivers() {
-        register_sata();
-    }
+    void register_base_drivers() {}
 }

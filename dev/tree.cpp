@@ -10,7 +10,7 @@ namespace AEX::Dev {
 
     Spinlock lock;
 
-    bool registerDevice(const char* bus_name, Device* device) {
+    bool register_device(const char* bus_name, Device* device) {
         auto scopeLock = ScopeSpinlock(lock);
 
         for (auto iterator = buses.getIterator(); auto bus = iterator.next();) {
@@ -25,7 +25,7 @@ namespace AEX::Dev {
         return false;
     }
 
-    bool registerDriver(const char* bus_name, Driver* driver) {
+    bool register_driver(const char* bus_name, Driver* driver) {
         auto scopeLock = ScopeSpinlock(lock);
 
         for (auto iterator = buses.getIterator(); auto bus = iterator.next();) {
@@ -33,6 +33,17 @@ namespace AEX::Dev {
                 continue;
 
             bus->registerDriver(driver);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    bool bus_exists(const char* bus_name) {
+        for (auto iterator = buses.getIterator(); auto bus = iterator.next();) {
+            if (strcmp(bus->name, bus_name) != 0)
+                continue;
 
             return true;
         }

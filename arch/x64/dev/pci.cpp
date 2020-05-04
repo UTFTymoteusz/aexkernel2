@@ -1,3 +1,5 @@
+#include "aex/dev/pci.hpp"
+
 #include "aex/dev/bus.hpp"
 #include "aex/dev/device.hpp"
 #include "aex/dev/tree.hpp"
@@ -40,13 +42,35 @@ namespace AEX::Dev::PCI {
         }
     };
 
+    struct address {
+        uint8_t bus;
+        uint8_t device;
+        uint8_t function;
+
+        address(uint8_t bus, uint8_t device, uint8_t function) {
+            this->bus      = bus;
+            this->device   = device;
+            this->function = function;
+        }
+
+        address(size_t value) {
+            this->bus      = (value >> 16) & 0xFF;
+            this->device   = (value >> 8) & 0xFF;
+            this->function = (value >> 0) & 0xFF;
+        }
+
+        size_t get_value() {
+            return (((size_t) this->bus) << 16) | (((size_t) this->device) << 8) | this->function;
+        }
+    };
+
     PCI* driver;
 
     Spinlock lock;
 
     void init() {
         driver = new PCI();
-        Dev::registerDriver("main", driver);
+        Dev::register_driver("main", driver);
     }
 
     uint16_t read_word(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
@@ -212,10 +236,28 @@ namespace AEX::Dev::PCI {
             dev_device->addAttribute(
                 Dev::Device::attribute("prog_if", get_prog_if(bus, device, function)));
 
+            dev_device->addAttribute(
+                Dev::Device::attribute("address", address(bus, device, function).get_value()));
+
             fill_bars(bus, device, function, dev_device);
 
             dev_bus->registerDevice(dev_device);
         }
+    }
+
+    void set_busmaster(Device* _device, bool on) {
+        auto _addr = address(_device->getAttribute("address").value.integer);
+
+        auto bus      = _addr.bus;
+        auto device   = _addr.device;
+        auto function = _addr.function;
+
+        if (on)
+            write_dword(bus, device, function, 0x04,
+                        read_dword(bus, device, function, 0x04) | (1 << 2));
+        else
+            write_dword(bus, device, function, 0x04,
+                        read_dword(bus, device, function, 0x04) & ~(1 << 2));
     }
 
     uint16_t get_vendor_id(uint16_t bus, uint8_t device, uint8_t function) {
