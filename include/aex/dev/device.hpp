@@ -102,6 +102,8 @@ namespace AEX::Dev {
         void printAttributesDebug();
         void printResourcesDebug();
 
+        bool setInterface(const char* name);
+
         template <typename T>
         T getInterfaceData() {
             return (T) interface_data;

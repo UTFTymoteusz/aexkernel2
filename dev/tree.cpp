@@ -11,8 +11,6 @@ namespace AEX::Dev {
     Spinlock lock;
 
     bool register_device(const char* bus_name, Device* device) {
-        auto scopeLock = ScopeSpinlock(lock);
-
         for (auto iterator = buses.getIterator(); auto bus = iterator.next();) {
             if (strcmp(bus->name, bus_name) != 0)
                 continue;
@@ -26,8 +24,6 @@ namespace AEX::Dev {
     }
 
     bool register_driver(const char* bus_name, Driver* driver) {
-        auto scopeLock = ScopeSpinlock(lock);
-
         for (auto iterator = buses.getIterator(); auto bus = iterator.next();) {
             if (strcmp(bus->name, bus_name) != 0)
                 continue;

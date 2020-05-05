@@ -112,6 +112,39 @@ namespace AEX::VMem {
         return (void*) start;
     }
 
+    void* Pagemap::allocContinuous(size_t bytes, uint32_t flags) {
+        if (bytes == 0)
+            return nullptr;
+
+        size_t amount = ceiltopg(bytes);
+
+        flags &= 0xFFF;
+
+        spinlock.acquire();
+
+        int    pptr  = alloc_pptr();
+        size_t virt  = (size_t) findContiguous(pptr, amount);
+        size_t phys  = AEX::PMem::alloc(bytes);
+        size_t start = virt;
+
+        for (size_t i = 0; i < amount; i++) {
+            // printk("alloc 0x%016x >> 0x%016x\n", virt, phys);
+
+            assign(pptr, (void*) virt, phys, flags);
+
+            virt += Sys::CPU::PAGE_SIZE;
+            phys += Sys::CPU::PAGE_SIZE;
+        }
+
+        // proot->frames_used += amount;
+        free_pptr(pptr);
+        spinlock.release();
+
+        memset((void*) start, 0, amount * Sys::CPU::PAGE_SIZE);
+
+        return (void*) start;
+    }
+
     void* Pagemap::map(size_t bytes, phys_addr paddr, uint16_t flags) {
         flags &= 0x0FFF;
 
@@ -269,6 +302,28 @@ namespace AEX::VMem {
         }
 
         return nullptr;
+    }
+
+    phys_addr Pagemap::paddrof(void* vaddr) {
+        uint64_t virt_addr = (uint64_t) vaddr;
+        uint16_t offset    = virt_addr & 0xFFF;
+        uint64_t index     = ((size_t) vaddr >> 12) & 0x1FF;
+
+        virt_addr &= ~0xFFF;
+
+        spinlock.acquire();
+
+        int       pptr  = alloc_pptr();
+        uint64_t* table = findTable(pptr, virt_addr);
+        if (!table)
+            return 0;
+
+        uint64_t paddr = (table[index] & MEM_PAGE_MASK) + offset;
+
+        free_pptr(pptr);
+        spinlock.release();
+
+        return paddr;
     }
 
     void init() {

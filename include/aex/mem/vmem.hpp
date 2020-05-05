@@ -72,6 +72,13 @@ namespace AEX::VMem {
          */
         void* map(size_t bytes, phys_addr paddr, uint16_t flags);
 
+        /**
+         * Gets the physical address of a virtual address. Respects non-page-aligned addresses.
+         * @param vaddr The virtual address.
+         * @return The physical address or 0 on failure.
+         */
+        phys_addr paddrof(void* vaddr);
+
       private:
         Spinlock spinlock;
 

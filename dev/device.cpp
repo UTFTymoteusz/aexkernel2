@@ -97,4 +97,6 @@ namespace AEX::Dev {
             }
         }
     }
+
+    bool setInterface(const char* name) {}
 }

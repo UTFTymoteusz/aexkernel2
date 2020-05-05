@@ -5,24 +5,11 @@
 #include "aex/mem/pmem.hpp"
 #include "aex/mem/vmem.hpp"
 
+#include "dev/driver/sata/ahci.hpp"
+
+#include <stdint.h>
+
 namespace AEX::Dev::SATA {
-    class AHCI {
-      public:
-        AHCI(void* addr, int index) {
-            this->addr  = addr;
-            this->index = index;
-
-            if (!bus_exists("sata"))
-                new Bus("sata");
-
-            printk(PRINTK_OK "sata: ahci%i initialized\n", index);
-        }
-
-      private:
-        void* addr;
-        int   index;
-    };
-
     class SATA : public Driver {
       public:
         SATA() : Driver("sata") {}
@@ -60,7 +47,7 @@ namespace AEX::Dev::SATA {
 
             void* addr = VMem::kernel_pagemap->map(0x1000, paddr, PAGE_WRITE);
 
-            auto ahci = new AHCI(addr, index);
+            new AHCI(addr, index);
             index++;
         }
 
@@ -68,9 +55,18 @@ namespace AEX::Dev::SATA {
         int index = 0;
     };
 
+    extern void sd_init();
+    extern void sr_init();
+
     void init() {
         auto sata = new SATA();
 
         register_driver("pci", sata);
+
+        if (!bus_exists("sata"))
+            new Bus("sata");
+
+        sd_init();
+        sr_init();
     }
 }
