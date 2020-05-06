@@ -79,17 +79,16 @@ namespace AEX {
             }
 
             Pointer& operator=(const Pointer& sp) {
-                if (this == &sp)
-                    return _ptr;
+                if (this == &sp || !_lock)
+                    return *this;
 
                 _lock->acquire();
 
                 (*_refs)++;
-                // printk("reffed t0x%p, 0x%p (%i)\n", this, _refs, *_refs);
 
                 _lock->release();
 
-                return _ptr;
+                return *this;
             }
 
             bool isPresent() {
@@ -163,8 +162,13 @@ namespace AEX {
                 return nullptr;
             }
 
+            int index() {
+                return _index - 1;
+            }
+
           private:
-            int          _index = 0;
+            int _index = 0;
+
             Spinlock*    _lock;
             RCPArray<T>* _base;
         };
@@ -210,6 +214,7 @@ namespace AEX {
         }
 
         Pointer getNullPointer() {
+            _nullRefCounter = 10000000;
             return _nullPointer;
         }
 
@@ -218,7 +223,7 @@ namespace AEX {
         }
 
       private:
-        Spinlock _lock;
+        Spinlock _lock = {};
 
         int      _pointerCount = 0;
         Pointer* _pointers     = nullptr;

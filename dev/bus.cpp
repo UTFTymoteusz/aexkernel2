@@ -6,9 +6,7 @@
 #include "aex/string.hpp"
 
 namespace AEX::Dev {
-    Bus::Bus(const char* name) {
-        strncpy(this->name, name, sizeof(this->name));
-
+    Bus::Bus(const char* name) : Device(name) {
         buses.addRef(this);
 
         printk(PRINTK_OK "dev: Registered bus '%s'\n", this->name);
@@ -24,7 +22,7 @@ namespace AEX::Dev {
     void Bus::registerDevice(Device* device) {
         auto scopeLock = ScopeSpinlock(_lock);
 
-        _devices.addRef(device);
+        children.addRef(device);
 
         printk("dev: %s: Registered device '%s'\n", this->name, device->name);
 
@@ -39,7 +37,7 @@ namespace AEX::Dev {
 
         printk("dev: %s: Registered driver '%s'\n", this->name, driver->name);
 
-        for (auto iterator = _devices.getIterator(); auto device = iterator.next();)
+        for (auto iterator = children.getIterator(); auto device = iterator.next();)
             bindDriverToDevice(driver, device);
     }
 }

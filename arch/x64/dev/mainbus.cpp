@@ -1,4 +1,5 @@
 #include "aex/dev/bus.hpp"
+#include "aex/dev/tree.hpp"
 
 namespace AEX::Dev {
     Bus* mainbus;

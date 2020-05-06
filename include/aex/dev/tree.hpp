@@ -12,8 +12,6 @@ namespace AEX::Dev {
     extern RCPArray<Bus>       buses;
     extern RCPArray<Interface> interfaces;
 
-    extern Spinlock lock;
-
     /**
      * Tries to register a device in the specified bus.
      * @param bus_name The bus name.
@@ -29,6 +27,13 @@ namespace AEX::Dev {
      * @return True if succeeded.
      */
     bool register_driver(const char* bus_name, Driver* driver);
+
+    /**
+     * Gets a bus by it's name.
+     * @param bus_name The bus name.
+     * @return Optional that contains a smart pointer to the bus on success.
+     */
+    optional<RCPArray<Bus>::Pointer> getBus(const char* bus_name);
 
     /**
      * Checks if a bus exists.

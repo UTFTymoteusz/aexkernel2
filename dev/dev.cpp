@@ -1,5 +1,6 @@
 #include "dev/dev.hpp"
 
+#include "aex/dev/tree.hpp"
 #include "aex/printk.hpp"
 #include "aex/rcparray.hpp"
 
@@ -12,6 +13,8 @@ namespace AEX::Dev {
 
     void init() {
         printk(PRINTK_INIT "dev: Initializing\n");
+
+        buses = RCPArray<Bus>();
 
         mainbus_init();
         arch_drivers_init();

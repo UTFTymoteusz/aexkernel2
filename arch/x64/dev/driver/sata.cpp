@@ -16,16 +16,10 @@ namespace AEX::Dev::SATA {
         ~SATA() {}
 
         bool check(Device* device) {
-            auto pci_class = device->getAttribute("class");
-            if (!pci_class.has_value || pci_class.value.integer != 0x01)
-                return false;
+            auto pci_device = (PCI::PCIDevice*) device;
 
-            auto pci_subclass = device->getAttribute("subclass");
-            if (!pci_subclass.has_value || pci_subclass.value.integer != 0x06)
-                return false;
-
-            auto pci_prog_if = device->getAttribute("prog_if");
-            if (!pci_prog_if.has_value || pci_prog_if.value.integer != 0x01)
+            if (pci_device->p_class != 0x01 || pci_device->subclass != 0x06 ||
+                pci_device->prog_if != 0x01)
                 return false;
 
             return true;
@@ -61,10 +55,11 @@ namespace AEX::Dev::SATA {
     void init() {
         auto sata = new SATA();
 
-        register_driver("pci", sata);
-
         if (!bus_exists("sata"))
             new Bus("sata");
+
+        if (!register_driver("pci", sata))
+            printk(PRINTK_WARN "sata: Failed to register the PCI driver\n");
 
         sd_init();
         sr_init();

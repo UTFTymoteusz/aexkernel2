@@ -36,6 +36,23 @@ namespace AEX::Dev {
         return false;
     }
 
+    optional<RCPArray<Bus>::Pointer> getBus(const char* bus_name) {
+        int index = -1;
+
+        for (auto iterator = buses.getIterator(); auto bus = iterator.next();) {
+            if (strcmp(bus->name, bus_name) != 0)
+                continue;
+
+            index = iterator.index();
+            break;
+        }
+
+        if (index == -1)
+            return buses.getNullPointer();
+
+        return buses.get(index);
+    }
+
     bool bus_exists(const char* bus_name) {
         for (auto iterator = buses.getIterator(); auto bus = iterator.next();) {
             if (strcmp(bus->name, bus_name) != 0)

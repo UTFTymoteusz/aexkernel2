@@ -4,6 +4,8 @@
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
 
+#include "dev/driver/sata.hpp"
+
 namespace AEX::Dev::SATA {
     AHCI::AHCI(void* addr, int index) {
         this->hba   = (hba_t*) addr;
@@ -68,12 +70,10 @@ namespace AEX::Dev::SATA {
                 VMem::kernel_pagemap->paddrof(&_device->command_tables[i]);
 
             _device->command_headers[i].phys_region_table_len = prdt_count;
-
-            // I'll need to prepare the tables here too
         }
 
-        Device* sata_device;
-        char    buffer[8];
+        SATADevice* sata_device;
+        char        buffer[16];
 
         switch (port->signature) {
         case SATA_SIG_ATAPI:
@@ -82,8 +82,8 @@ namespace AEX::Dev::SATA {
             snprintf(buffer, sizeof(buffer), "sr%i", sr_counter);
             sr_counter++;
 
-            sata_device              = new Device(buffer);
-            sata_device->device_data = (void*) _device;
+            sata_device             = new SATADevice(buffer);
+            sata_device->controller = this;
 
             register_device("sata", sata_device);
             break;
@@ -99,8 +99,8 @@ namespace AEX::Dev::SATA {
             snprintf(buffer, sizeof(buffer), "sd%i", sd_counter);
             sd_counter++;
 
-            sata_device              = new Device(buffer);
-            sata_device->device_data = (void*) _device;
+            sata_device             = new SATADevice(buffer);
+            sata_device->controller = this;
 
             register_device("sata", sata_device);
             break;

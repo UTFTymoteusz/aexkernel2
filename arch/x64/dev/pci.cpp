@@ -144,7 +144,7 @@ namespace AEX::Dev::PCI {
                 scan_device(bus, device);
     }
 
-    void fill_bars(uint8_t bus, uint8_t device, uint8_t function, Dev::Device* dev_device) {
+    void fill_bars(uint8_t bus, uint8_t device, uint8_t function, PCIDevice* dev_device) {
         PMem::phys_addr bar0, bar1;
 
         PMem::phys_addr addr;
@@ -222,22 +222,18 @@ namespace AEX::Dev::PCI {
             char buffer[32];
             snprintf(buffer, sizeof(buffer), "%02x.%02x.%02x", bus, device, function);
 
-            auto dev_device = new Dev::Device(buffer);
+            auto dev_device = new PCIDevice(buffer);
 
-            dev_device->addAttribute(
-                Dev::Device::attribute("device_id", get_device_id(bus, device, function)));
-            dev_device->addAttribute(
-                Dev::Device::attribute("vendor_id", get_vendor_id(bus, device, function)));
+            dev_device->bus      = bus;
+            dev_device->device   = device;
+            dev_device->function = function;
 
-            dev_device->addAttribute(
-                Dev::Device::attribute("class", get_class(bus, device, function)));
-            dev_device->addAttribute(
-                Dev::Device::attribute("subclass", get_subclass(bus, device, function)));
-            dev_device->addAttribute(
-                Dev::Device::attribute("prog_if", get_prog_if(bus, device, function)));
+            dev_device->device_id = get_device_id(bus, device, function);
+            dev_device->vendor_id = get_vendor_id(bus, device, function);
 
-            dev_device->addAttribute(
-                Dev::Device::attribute("address", address(bus, device, function).get_value()));
+            dev_device->p_class  = get_class(bus, device, function);
+            dev_device->subclass = get_subclass(bus, device, function);
+            dev_device->prog_if  = get_prog_if(bus, device, function);
 
             fill_bars(bus, device, function, dev_device);
 
@@ -246,11 +242,11 @@ namespace AEX::Dev::PCI {
     }
 
     void set_busmaster(Device* _device, bool on) {
-        auto _addr = address(_device->getAttribute("address").value.integer);
+        auto pci_device = (PCIDevice*) _device;
 
-        auto bus      = _addr.bus;
-        auto device   = _addr.device;
-        auto function = _addr.function;
+        uint8_t bus      = pci_device->bus;
+        uint8_t device   = pci_device->device;
+        uint8_t function = pci_device->function;
 
         if (on)
             write_dword(bus, device, function, 0x04,

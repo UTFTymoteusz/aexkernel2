@@ -10,10 +10,8 @@
 #include <stdint.h>
 
 namespace AEX::Dev {
-    class Bus {
+    class Bus : public Device {
       public:
-        char name[16];
-
         Bus(const char* name);
 
         /**
@@ -29,7 +27,6 @@ namespace AEX::Dev {
         void registerDriver(Driver* driver);
 
       private:
-        RCPArray<Device> _devices;
         RCPArray<Driver> _drivers;
 
         Spinlock _lock;
