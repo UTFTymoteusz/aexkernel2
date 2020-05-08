@@ -1,11 +1,8 @@
 #pragma once
 
 #include "aex/dev/device.hpp"
-#include "aex/spinlock.hpp"
 
 #include "dev/driver/sata/ahci.hpp"
-
-#include <stdint.h>
 
 namespace AEX::Dev::SATA {
     class AHCI;

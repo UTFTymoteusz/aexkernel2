@@ -1,6 +1,7 @@
+#include "dev/driver/sata/satadevice.hpp"
+
 #include "aex/mem/vmem.hpp"
 
-#include "dev/driver/sata.hpp"
 #include "sys/cpu.hpp"
 
 // For some reason math.hpp didn't wanna work

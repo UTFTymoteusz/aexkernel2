@@ -16,11 +16,10 @@ namespace AEX::Dev {
 
         buses = RCPArray<Bus>();
 
-        mainbus_init();
-        arch_drivers_init();
-
         register_base_interfaces();
+        mainbus_init();
         register_base_drivers();
+        arch_drivers_init();
 
         printk(PRINTK_OK "dev: Initialized\n");
     }

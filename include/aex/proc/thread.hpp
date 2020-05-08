@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aex/mem/atomic.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/proc/resource_usage.hpp"
 #include "aex/rcparray.hpp"
@@ -39,11 +40,6 @@ namespace AEX::Proc {
                bool usermode = false, bool dont_add = false);
 
         /**
-         * Adds the thread to the run queue and sets its status as RUNNABLE.
-         */
-        void start();
-
-        /**
          * Gets the parent process of the thread.
          * @return The RCPArray::Pointer to the parent process.
          */
@@ -67,6 +63,38 @@ namespace AEX::Proc {
          */
         static Thread* getCurrentThread();
 
+        /**
+         * Adds the thread to the run queue and sets its status as RUNNABLE.
+         */
+        void start();
+
+        // pls atomic<T> later
+        /**
+         * Adds 1 to the thread's busy counter. If _busy is greater than 0, the thread cannot be
+         * killed.
+         */
+        inline void addBusy() {
+            Mem::atomic_add(&_busy, (uint16_t) 1);
+        }
+
+        /**
+         * Subtracts 1 from the thread's busy counter. If _busy is greater than 0, the thread cannot
+         * be killed.
+         */
+        inline void subBusy() {
+            Mem::atomic_sub(&_busy, (uint16_t) 1);
+        }
+
+        /**
+         * Checks the thread's busy counter. If _busy is greater than 0, the thread cannot
+         * be killed.
+         * @return Whenever the thread is "busy".
+         */
+        inline bool isBusy() {
+            return Mem::atomic_read(&_busy) > 0;
+        }
+
       private:
+        uint16_t _busy;
     };
 }

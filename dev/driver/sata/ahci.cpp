@@ -4,7 +4,7 @@
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
 
-#include "dev/driver/sata.hpp"
+#include "dev/driver/sata/satadevice.hpp"
 
 namespace AEX::Dev::SATA {
     AHCI::AHCI(void* addr, int index) {
@@ -17,11 +17,11 @@ namespace AEX::Dev::SATA {
         hba->global_host_control |= 1 << 31; // Let's set it to AHCI mode just incase.
 
         command_slots = ((hba->host_capability >> 8) & 0b11111) + 1;
-        printk("sata: ahci%i: %i command slots\n", index, command_slots);
+        printk("ahci%i: %i command slots\n", index, command_slots);
 
         scan_ports();
 
-        printk(PRINTK_OK "sata: ahci%i initialized\n", index);
+        printk(PRINTK_OK "ahci%i initialized\n", index);
     }
 
     void AHCI::scan_ports() {
