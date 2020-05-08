@@ -5,11 +5,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
-extern int _page_present, _page_write, _page_user, _page_nophys;
+extern int _page_present, _page_write, _page_user, _page_nocache, _page_nophys;
 
 #define PAGE_PRESENT _page_present
 #define PAGE_WRITE _page_write
 #define PAGE_USER _page_user
+#define PAGE_NOCACHE _page_nocache
 #define PAGE_NOPHYS _page_nophys
 
 namespace AEX::VMem {

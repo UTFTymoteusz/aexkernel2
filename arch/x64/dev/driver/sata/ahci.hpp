@@ -8,24 +8,27 @@ namespace AEX::Dev::SATA {
         typedef volatile uint32_t vuint32_t;
         typedef volatile uint64_t vuint64_t;
 
+        static constexpr auto DEV_BUSY = 0x80;
+        static constexpr auto DEV_DRQ  = 0x08;
+
         struct hba_port_t {
-            vuint64_t command_list_address;
-            vuint64_t fis_address;
+            vuint64_t command_list_address; // 0x00
+            vuint64_t fis_address;          // 0x08
 
-            vuint32_t interrupt_status;
-            vuint32_t interrupt_enable;
+            vuint32_t interrupt_status; // 0x10
+            vuint32_t interrupt_enable; // 0x14
 
-            vuint32_t command_and_status;
-            vuint32_t reserved0;
-            vuint32_t task_file_data;
-            vuint32_t signature;
+            vuint32_t command_and_status; // 0x18
+            vuint32_t reserved0;          // 0x1C
+            vuint32_t task_file_data;     // 0x20
+            vuint32_t signature;          // 0x24
 
-            vuint32_t sata_status;
-            vuint32_t sata_control;
-            vuint32_t sata_error;
-            vuint32_t sata_active;
-            vuint32_t command_issue;
-            vuint32_t sata_notification;
+            vuint32_t sata_status;       // 0x28
+            vuint32_t sata_control;      // 0x2C
+            vuint32_t sata_error;        // 0x30
+            vuint32_t sata_active;       // 0x34
+            vuint32_t command_issue;     // 0x38
+            vuint32_t sata_notification; // 0x3C
 
             vuint32_t fis_control;
             vuint32_t reserved1[11];
@@ -84,8 +87,127 @@ namespace AEX::Dev::SATA {
             uint32_t interrupt_on_completion : 1;
         } __attribute__((packed));
 
+        struct fis_reg_h2d {
+            uint8_t fis_type;
+
+            uint8_t pm_port : 4;
+            uint8_t reserved0 : 3;
+            bool    command_control : 1;
+
+            uint8_t command;
+            uint8_t feature_low;
+
+            uint8_t lba0;
+            uint8_t lba1;
+            uint8_t lba2;
+            uint8_t device;
+
+            uint8_t lba3;
+            uint8_t lba4;
+            uint8_t lba5;
+            uint8_t feature_high;
+
+            uint16_t count;
+            uint8_t  isochronous;
+            uint8_t  control;
+
+            uint8_t reserved1[4];
+        } __attribute__((packed));
+
+        struct fis_reg_d2h {
+            uint8_t fis_type;
+
+            uint8_t pm_port : 4;
+            uint8_t reserved0 : 2;
+            bool    interrupt : 1;
+            bool    reserved1 : 1;
+
+            uint8_t status;
+            uint8_t error;
+
+            uint8_t lba0;
+            uint8_t lba1;
+            uint8_t lba2;
+            uint8_t device;
+
+            uint8_t lba3;
+            uint8_t lba4;
+            uint8_t lba5;
+            uint8_t reserved2;
+
+            uint16_t count;
+            uint8_t  reserved3[2];
+
+            uint8_t reserved4[4];
+        } __attribute__((packed));
+
+        struct fis_data {
+            uint8_t fis_type;
+
+            uint8_t pm_port : 4;
+            uint8_t reserved0 : 4;
+
+            uint8_t reserved1[2];
+
+            uint8_t data[];
+        } __attribute__((packed));
+
+        struct fis_pio_setup {
+            uint8_t fis_type;
+
+            uint8_t pm_port : 4;
+            uint8_t reserved0 : 1;
+            bool    direction : 1;
+            bool    interrupt : 1;
+            bool    reserved1 : 1;
+
+            uint8_t status;
+            uint8_t error;
+
+            uint8_t lba0;
+            uint8_t lba1;
+            uint8_t lba2;
+            uint8_t device;
+
+            uint8_t lba3;
+            uint8_t lba4;
+            uint8_t lba5;
+            uint8_t reserved2;
+
+            uint16_t count;
+            uint8_t  reserved;
+            uint8_t  new_status;
+
+            uint16_t transfer_count;
+            uint8_t  reserved4[2];
+        } __attribute__((packed));
+
+        struct fis_dma_setup {
+            uint8_t fis_type;
+
+            uint8_t pm_port : 4;
+            uint8_t reserved0 : 1;
+            bool    direction : 1;
+            bool    interrupt : 1;
+            bool    auto_activate : 1;
+
+            uint8_t reserved1[2];
+
+            uint64_t dma_buffer_id;
+
+            uint32_t reserved2;
+
+            uint32_t dma_buffer_offset;
+            uint32_t transfer_count;
+            uint32_t reserved3;
+        } __attribute__((packed));
+
         struct hba_command_table {
-            uint8_t command_fis[64];
+            union {
+                uint8_t     command_fis[64];
+                fis_reg_h2d fis_reg_h2d_data;
+            };
+
             uint8_t atapi_command[16];
             uint8_t reserved[48];
 
@@ -93,18 +215,21 @@ namespace AEX::Dev::SATA {
         } __attribute__((packed));
 
         struct hba_fis {
-            uint8_t idc[256];
+            fis_dma_setup dma_setup;
+            uint8_t       pad0[4];
+
+            fis_pio_setup pio_setup;
+            uint8_t       pad1[12];
+
+            fis_reg_d2h reg;
+            uint8_t     pad2[4];
+
+            uint8_t dev_bits[8];
+
+            uint8_t idk[64];
+
+            uint8_t reserved[0x100 - 0xA0];
         } __attribute__((packed));
-
-        struct device {
-            int max_commands   = 1;
-            int max_page_burst = 0;
-
-            hba_port_t*         hba_port;
-            hba_command_header* command_headers;
-            hba_command_table*  command_tables;
-            hba_fis*            fis;
-        };
 
         AHCI(void* addr, int index);
 

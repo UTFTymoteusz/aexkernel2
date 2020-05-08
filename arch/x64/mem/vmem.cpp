@@ -22,6 +22,7 @@ extern void* pml4;
 int _page_present = 0x01;
 int _page_write   = 0x02;
 int _page_user    = 0x04;
+int _page_nocache = 0x10;
 int _page_nophys  = 0x200;
 
 namespace AEX::VMem {

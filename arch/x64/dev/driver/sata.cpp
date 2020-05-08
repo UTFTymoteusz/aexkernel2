@@ -39,7 +39,7 @@ namespace AEX::Dev::SATA {
                 break;
             }
 
-            void* addr = VMem::kernel_pagemap->map(0x1000, paddr, PAGE_WRITE);
+            void* addr = VMem::kernel_pagemap->map(0x1000, paddr, PAGE_NOCACHE | PAGE_WRITE);
 
             new AHCI(addr, index);
             index++;

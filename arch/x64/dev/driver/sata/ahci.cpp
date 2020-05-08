@@ -17,7 +17,7 @@ namespace AEX::Dev::SATA {
         hba->global_host_control |= 1 << 31; // Let's set it to AHCI mode just incase.
 
         command_slots = ((hba->host_capability >> 8) & 0b11111) + 1;
-        printk("%i command slots\n", command_slots);
+        printk("sata: ahci%i: %i command slots\n", index, command_slots);
 
         scan_ports();
 
@@ -47,29 +47,41 @@ namespace AEX::Dev::SATA {
         if (power_management != POWER_MANAGEMENT_ACTIVE || device_detection != DETECTION_PRESENT)
             return;
 
-        auto _device = new device();
+        int  max_cmd = command_slots;
+        auto headers = (hba_command_header*) VMem::kernel_pagemap->allocContinuous(
+            sizeof(hba_command_header) * command_slots, PAGE_WRITE | PAGE_NOCACHE);
+        auto tables = (hba_command_table*) VMem::kernel_pagemap->allocContinuous(
+            8192 * command_slots, PAGE_WRITE | PAGE_NOCACHE);
+        auto fis = (hba_fis*) VMem::kernel_pagemap->allocContinuous(sizeof(hba_fis),
+                                                                    PAGE_WRITE | PAGE_NOCACHE);
 
-        _device->hba_port        = port;
-        _device->max_commands    = command_slots;
-        _device->command_headers = (hba_command_header*) VMem::kernel_pagemap->allocContinuous(
-            sizeof(hba_command_header) * command_slots, PAGE_WRITE);
-        _device->command_tables = (hba_command_table*) VMem::kernel_pagemap->allocContinuous(
-            8192 * command_slots, PAGE_WRITE);
-        _device->fis =
-            (hba_fis*) VMem::kernel_pagemap->allocContinuous(sizeof(hba_fis), PAGE_WRITE);
+        memset(headers, '\0', sizeof(hba_command_header) * command_slots);
+        memset(tables, '\0', 8192 * command_slots);
+        memset(fis, '\0', sizeof(hba_fis));
 
-        port->command_list_address = VMem::kernel_pagemap->paddrof(_device->command_headers);
-        port->fis_address          = VMem::kernel_pagemap->paddrof(_device->fis);
+        // Forgetting these made me put away this goddamned code for 3 days
+        fis->dma_setup.fis_type = 0x41;
+        fis->pio_setup.fis_type = 0x5F;
+        fis->reg.fis_type       = 0x34;
+        fis->dev_bits[0]        = 0xA1;
+
+        port->command_list_address = VMem::kernel_pagemap->paddrof(headers);
+        port->fis_address          = VMem::kernel_pagemap->paddrof(fis);
+
+        port->interrupt_enable = 0x00000000;
+        port->interrupt_status = 0xFFFFFFFF;
+        port->sata_error       = 0xFFFFFFFF;
 
         int prdt_count = (8192 - sizeof(hba_command_table)) / sizeof(phys_region_table_entry);
 
-        _device->max_page_burst = prdt_count - 2;
+        int max_page_burst = prdt_count - 2;
+        int max_prts       = prdt_count;
 
         for (int i = 0; i < command_slots; i++) {
-            _device->command_headers[i].command_table_addr =
-                VMem::kernel_pagemap->paddrof(&_device->command_tables[i]);
+            headers[i].command_table_addr =
+                VMem::kernel_pagemap->paddrof((void*) ((size_t) tables + 8192 * i));
 
-            _device->command_headers[i].phys_region_table_len = prdt_count;
+            headers[i].phys_region_table_len = prdt_count;
         }
 
         SATADevice* sata_device;
@@ -84,6 +96,18 @@ namespace AEX::Dev::SATA {
 
             sata_device             = new SATADevice(buffer);
             sata_device->controller = this;
+            sata_device->type       = type_t::SATAPI;
+            sata_device->atapi      = true;
+
+            sata_device->max_commands   = max_cmd;
+            sata_device->hba_port       = port;
+            sata_device->max_page_burst = max_page_burst;
+            sata_device->max_prts       = max_prts;
+
+            sata_device->command_headers = headers;
+            sata_device->command_tables  = tables;
+
+            sata_device->init();
 
             register_device("sata", sata_device);
             break;
@@ -101,6 +125,18 @@ namespace AEX::Dev::SATA {
 
             sata_device             = new SATADevice(buffer);
             sata_device->controller = this;
+            sata_device->type       = type_t::SATA;
+            sata_device->atapi      = false;
+
+            sata_device->max_commands   = max_cmd;
+            sata_device->hba_port       = port;
+            sata_device->max_page_burst = max_page_burst;
+            sata_device->max_prts       = max_prts;
+
+            sata_device->command_headers = headers;
+            sata_device->command_tables  = tables;
+
+            sata_device->init();
 
             register_device("sata", sata_device);
             break;

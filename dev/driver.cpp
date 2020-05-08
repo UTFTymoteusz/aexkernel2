@@ -1,5 +1,6 @@
 #include "aex/dev/driver.hpp"
 
+#include "aex/printk.hpp"
 #include "aex/string.hpp"
 
 namespace AEX::Dev {
@@ -10,10 +11,13 @@ namespace AEX::Dev {
     Driver::~Driver() {}
 
     bool Driver::check(Device* device) {
+        printk(PRINTK_WARN "dev: Driver '%s' has not implemented the check method\n", name);
         return false;
     }
 
-    void Driver::bind(Device* device) {}
+    void Driver::bind(Device* device) {
+        printk(PRINTK_WARN "dev: Driver '%s' has not implemented the bind method\n", name);
+    }
 
     void register_base_drivers() {}
 }
