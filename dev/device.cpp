@@ -11,7 +11,7 @@ namespace AEX::Dev {
 
     Device::~Device() {
         // remove ourselves from the parent
-        children.~RCPArray();
+        // children.~RCPArray();
     }
 
     void Device::addResource(Device::resource resource) {

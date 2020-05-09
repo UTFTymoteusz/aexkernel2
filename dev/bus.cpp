@@ -37,7 +37,10 @@ namespace AEX::Dev {
 
         printk("dev: %s: Registered driver '%s'\n", this->name, driver->name);
 
-        for (auto iterator = children.getIterator(); auto device = iterator.next();)
+        for (auto iterator = children.getIterator(); auto device = iterator.next();) {
+            printk("mmm?\n");
+
             bindDriverToDevice(driver, device);
+        }
     }
 }

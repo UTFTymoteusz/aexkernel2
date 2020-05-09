@@ -1,9 +1,11 @@
 #include "aex/mem/heap.hpp"
 #include "aex/mem/pmem.hpp"
+#include "aex/mem/smartarray.hpp"
+#include "aex/mem/smartptr.hpp"
+#include "aex/mem/vector.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc/thread.hpp"
-#include "aex/vector.hpp"
 
 #include "boot/mboot.h"
 #include "cpu/idt.hpp"
@@ -49,8 +51,13 @@ void main(multiboot_info_t* mbinfo) {
     Sys::IRQ::init_timer();
     printk("\n");
 
+    VMem::cleanup_bootstrap();
+
     Dev::init();
     printk("\n");
+
+    while (true)
+        ;
 
     auto bsp = new Sys::CPU(0);
     bsp->initLocal();

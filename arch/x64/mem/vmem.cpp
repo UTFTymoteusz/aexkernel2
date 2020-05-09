@@ -195,12 +195,12 @@ namespace AEX::VMem {
         asm volatile("mov %0, cr3; mov cr3, %0;" : : "r"(aa) : "memory");
     }
 
-    uint64_t* Pagemap::findTable(int pptr, uint64_t virt_addr, uint64_t* skip_by) {
+    uint64_t* find_table(phys_addr root, int pptr, uint64_t virt_addr, uint64_t* skip_by) {
         uint64_t pml4index = (virt_addr >> 39) & 0x1FF;
         uint64_t pdpindex  = (virt_addr >> 30) & 0x1FF;
         uint64_t pdindex   = (virt_addr >> 21) & 0x1FF;
 
-        auto pml4 = aim_pptr(pptr, pageRoot);
+        auto pml4 = aim_pptr(pptr, root);
         if (pml4[pml4index] == 0x0000) {
             *skip_by += 0x8000000000;
             return nullptr;
@@ -218,6 +218,10 @@ namespace AEX::VMem {
         auto pt = aim_pptr(pptr, pd[pdindex] & ~0xFFF);
 
         return (uint64_t*) ((uint64_t) pt & ~0xFFF);
+    }
+
+    uint64_t* Pagemap::findTable(int pptr, uint64_t virt_addr, uint64_t* skip_by) {
+        return find_table(pageRoot, pptr, virt_addr, skip_by);
     }
 
     uint64_t* Pagemap::findTableEnsure(int pptr, uint64_t virt_addr) {
@@ -358,5 +362,16 @@ namespace AEX::VMem {
         }
 
         ready = true;
+    }
+
+    void cleanup_bootstrap() {
+        int       pptr  = alloc_pptr();
+        uint64_t* table = find_table(VMem::kernel_pagemap->pageRoot, pptr, 0x0000, nullptr);
+
+        memset(table, '\0', 4096);
+
+        free_pptr(pptr);
+
+        asm volatile("mov rax, cr3; mov cr3, rax;");
     }
 }

@@ -52,7 +52,7 @@ namespace AEX::Sys::MCore {
         CPUs[0] = CPU::getCurrentCPU();
 
         // We can assume it exists because the IRQ phase would panic the kernel otherwise
-        auto madt = (MADT*) ACPI::find_table("APIC", 0).get();
+        auto madt = (MADT*) ACPI::find_table("APIC", 0);
         int  id   = 0;
 
         for (int i = 0; i <= 2137; i++) {

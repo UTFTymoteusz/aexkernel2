@@ -1,15 +1,15 @@
 #include "kernel/acpi/acpi.hpp"
 
 #include "aex/mem/pmem.hpp"
+#include "aex/mem/vector.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
-#include "aex/rcparray.hpp"
 #include "aex/string.hpp"
 
 #include <stddef.h>
 
 namespace AEX::ACPI {
-    RCPArray<acpi_table> tables;
+    Vector<acpi_table*> tables;
 
     bool add_table(acpi_table* table) {
         auto header = (sdt_header*) table;
@@ -24,7 +24,7 @@ namespace AEX::ACPI {
             return false;
         }
 
-        tables.addRef(table);
+        tables.pushBack(table);
 
         printk("acpi: Found table %s, len %i\n", buffer, header->length);
 
@@ -96,13 +96,11 @@ namespace AEX::ACPI {
         return sum == 0;
     }
 
-    RCPArray<acpi_table>::Pointer find_table(const char signature[4], int index) {
+    acpi_table* find_table(const char signature[4], int index) {
         for (int i = 0; i < tables.count(); i++) {
-            auto table = tables.get(i);
-            if (!table.isPresent())
-                continue;
+            auto table = tables.at(i);
 
-            if (memcmp((void*) signature, (void*) ((sdt_header*) table.get()), 4) != 0) {
+            if (memcmp((void*) signature, (void*) ((sdt_header*) table), 4) != 0) {
                 continue;
             }
 
@@ -111,10 +109,10 @@ namespace AEX::ACPI {
                 continue;
             }
 
-            return table;
+            return (acpi_table*) table;
         }
 
-        return tables.getNullPointer();
+        return nullptr;
     };
 
     void* MADT::findEntry(int type, int index) {

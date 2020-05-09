@@ -80,6 +80,18 @@ namespace AEX {
 
                     rootTTY->setColorANSI(97);
                     break;
+                case '3':
+                    rootTTY->setColorANSI(90);
+                    rootTTY->write(" [ ");
+
+                    rootTTY->setColorANSI(91);
+                    rootTTY->write("FAIL");
+
+                    rootTTY->setColorANSI(90);
+                    rootTTY->write(" ] ");
+
+                    rootTTY->setColorANSI(97);
+                    break;
                 default:
                     break;
                 }

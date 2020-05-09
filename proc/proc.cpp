@@ -1,11 +1,11 @@
 #include "proc/proc.hpp"
 
 #include "aex/mem/heap.hpp"
+#include "aex/mem/smartarray.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc/process.hpp"
 #include "aex/proc/thread.hpp"
-#include "aex/rcparray.hpp"
 #include "aex/spinlock.hpp"
 
 #include "proc/context.hpp"
@@ -14,9 +14,9 @@
 #include "sys/mcore.hpp"
 
 namespace AEX::Proc {
-    RCPArray<Process> processes;
-    Thread**          threads      = nullptr;
-    Thread**          idle_threads = nullptr;
+    Mem::SmartArray<Process> processes;
+    Thread**                 threads      = nullptr;
+    Thread**                 idle_threads = nullptr;
 
     int thread_array_count = 0;
 

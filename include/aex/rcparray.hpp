@@ -91,6 +91,10 @@ namespace AEX {
                 return *this;
             }
 
+            T* get() {
+                return _ptr;
+            }
+
             bool isPresent() {
                 return _ptr != nullptr || _present;
             }
@@ -117,10 +121,6 @@ namespace AEX {
                 }
 
                 _lock->release();
-            }
-
-            T* get() {
-                return _ptr;
             }
 
           private:

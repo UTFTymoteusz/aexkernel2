@@ -1,5 +1,6 @@
 #include "aex/kpanic.hpp"
 
+#include "aex/debug.hpp"
 #include "aex/printk.hpp"
 
 #include "sys/cpu.hpp"
@@ -16,6 +17,9 @@ namespace AEX {
         printk("Kernel Panic\n", args);
         printk(format, args);
         printk("\n");
+
+        printk("Stack trace:\n");
+        Debug::stack_trace(1);
 
         va_end(args);
 

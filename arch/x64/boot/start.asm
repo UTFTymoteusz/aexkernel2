@@ -117,6 +117,8 @@ bootstrap64:
 	mov rdi, rbx
 	mov rsi, rax
 
+	xor rbp, rbp
+
     call main
 
     cli

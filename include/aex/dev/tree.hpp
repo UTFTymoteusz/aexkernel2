@@ -2,9 +2,9 @@
 
 #include "aex/dev/bus.hpp"
 #include "aex/dev/device.hpp"
+#include "aex/mem/vector.hpp"
 #include "aex/optional.hpp"
 #include "aex/rcparray.hpp"
-#include "aex/vector.hpp"
 
 #include <stdint.h>
 

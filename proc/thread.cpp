@@ -1,7 +1,7 @@
 #include "aex/proc/thread.hpp"
 
+#include "aex/mem/smartptr.hpp"
 #include "aex/printk.hpp"
-#include "aex/rcparray.hpp"
 
 #include "proc/context.hpp"
 #include "proc/proc.hpp"
@@ -41,7 +41,7 @@ namespace AEX::Proc {
             status = RUNNABLE;
     }
 
-    RCPArray<Process>::Pointer Thread::getProcess() {
+    Mem::SmartPointer<Process> Thread::getProcess() {
         return processes.get(this->parent->pid);
     }
 

@@ -1,9 +1,9 @@
 #pragma once
 
+#include "aex/mem/vector.hpp"
 #include "aex/proc/affinity.hpp"
 #include "aex/proc/resource_usage.hpp"
 #include "aex/proc/thread.hpp"
-#include "aex/vector.hpp"
 
 namespace AEX::Proc {
     typedef int pid_t;

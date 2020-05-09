@@ -22,7 +22,7 @@ SYS  = $(ISO)sys/
 
 ARCH = arch/x64/
 
-GFLAGS = -O2 -Wall -Wextra -nostdlib -pipe
+GFLAGS = -O0 -Wall -Wextra -nostdlib -pipe
 
 INCLUDES := -I. -I$(ARCH) -Iinclude/ -Iinclude/libc/ -I../lai/include/
 
@@ -81,4 +81,4 @@ iso:
 	@grub-mkrescue -o $(BIN)aex.iso $(ISO) 2> /dev/null
 
 qemu:
-	qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso
+	qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso -hda $(BIN)../../../aex/aexkrnl/bin/aexa.vdi -no-shutdown -no-reboot
