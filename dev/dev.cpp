@@ -27,14 +27,5 @@ namespace AEX::Dev {
         arch_drivers_init();
 
         printk(PRINTK_OK "dev: Initialized\n");
-
-        char buffer[32];
-
-        for (int i = 0; i < 70; i++) {
-            name_letter_increment(buffer, "sd%");
-            printk("%s;  ", buffer);
-        }
-
-        Sys::CPU::halt();
     }
 }
