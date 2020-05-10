@@ -38,8 +38,8 @@ namespace AEX::Sys {
     extern "C" void common_fault_handler(void* _info) {
         auto info = (AEX::Sys::CPU::fault_info*) _info;
 
-        AEX::printk(PRINTK_FAIL "%93$%s%97$ Exception (%i) (%91$%i%97$)\n",
-                    exception_names[info->int_no], info->int_no, info->err);
+        AEX::printk(PRINTK_FAIL "cpu%i: %93$%s%97$ Exception (%i) (%91$%i%97$)\n",
+                    CPU::getCurrentCPUID(), exception_names[info->int_no], info->int_no, info->err);
         AEX::printk("RIP: 0x%016lx\n", info->rip);
 
 
@@ -56,13 +56,6 @@ namespace AEX::Sys {
             printk("CR2: 0x%016lx  CR3: 0x%016lx\n", cr2, cr3);
         }
 
-        printk("Stack trace:\n");
-        Debug::stack_trace(2);
-
-        for (volatile size_t i = 0; i < 2534354353; i++)
-            ;
-
-        CPU::broadcastPacket(CPU::ipp_type::HALT);
         kpanic("Unrecoverable processor exception occured in CPU %i", CPU::getCurrentCPUID());
     }
 }

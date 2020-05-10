@@ -139,7 +139,7 @@ namespace AEX::Proc {
 
         thread_array_count++;
 
-        Heap::realloc(threads, thread_array_count * sizeof(Thread*));
+        threads = (Thread**) Heap::realloc(threads, thread_array_count * sizeof(Thread*));
         threads[thread_array_count - 1] = thread;
 
         return thread_array_count - 1;

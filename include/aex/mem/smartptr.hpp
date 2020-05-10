@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aex/kpanic.hpp"
 #include "aex/mem/atomic.hpp"
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
@@ -38,13 +39,20 @@ namespace AEX::Mem {
             _refs = ref_counter;
         }
 
+        SmartPointer(const SmartPointer& sp) {
+            _val  = sp._val;
+            _refs = sp._refs;
+
+            _refs->increment();
+        }
+
         ~SmartPointer() {
             if (!_refs) {
-                printk("dtor attempt (0x%p, 0x%p) *null*\n", _val, _refs);
+                // printk("dtor attempt (0x%p, 0x%p) *null*\n", _val, _refs);
                 return;
             }
 
-            printk("dtor attempt (0x%p, 0x%p) %i\n", _val, _refs, _refs->ref_count());
+            // printk("dtor attempt (0x%p, 0x%p) %i\n", _val, _refs, _refs->ref_count());
 
             if (_refs->decrement())
                 cleanup();
@@ -59,10 +67,17 @@ namespace AEX::Mem {
         }
 
         SmartPointer& operator=(const SmartPointer& sp) {
-            if (this == &sp || !_refs)
+            if (this == &sp)
                 return *this;
 
-            _refs->increment();
+            if (_refs && _refs->decrement())
+                cleanup();
+
+            _val  = sp._val;
+            _refs = sp._refs;
+
+            if (_refs)
+                _refs->increment();
 
             return *this;
         }
@@ -79,7 +94,7 @@ namespace AEX::Mem {
             return _val != nullptr;
         }
 
-        static SmartPointer<T> getNull() {
+        static auto getNull() {
             return SmartPointer<T>(nullptr, nullptr);
         }
 

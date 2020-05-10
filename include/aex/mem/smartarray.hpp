@@ -14,12 +14,6 @@ namespace AEX::Mem {
                 _base  = base;
 
                 _lock = &base->_lock;
-
-                printk("iter start\n");
-            }
-
-            ~Iterator() {
-                printk("iter end\n");
             }
 
             T* next() {
@@ -33,12 +27,10 @@ namespace AEX::Mem {
                         continue;
                     }
 
+                    _current = ptr;
                     _index++;
 
-                    _current = ptr;
-                    printk("iter get 0x%p\n", ptr.get());
-
-                    return ptr.get();
+                    return _current.get();
                 }
 
                 return nullptr;

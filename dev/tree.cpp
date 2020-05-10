@@ -1,12 +1,14 @@
 #include "aex/dev/tree.hpp"
 
+#include "aex/mem/smartarray.hpp"
+#include "aex/mem/smartptr.hpp"
 #include "aex/optional.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
 
 namespace AEX::Dev {
-    RCPArray<Bus>       buses;
-    RCPArray<Interface> interfaces;
+    Mem::SmartArray<Bus>       buses;
+    Mem::SmartArray<Interface> interfaces;
 
     Spinlock lock;
 
@@ -36,7 +38,7 @@ namespace AEX::Dev {
         return false;
     }
 
-    optional<RCPArray<Bus>::Pointer> getBus(const char* bus_name) {
+    Mem::SmartPointer<Bus> getBus(const char* bus_name) {
         int index = -1;
 
         for (auto iterator = buses.getIterator(); auto bus = iterator.next();) {
@@ -48,7 +50,7 @@ namespace AEX::Dev {
         }
 
         if (index == -1)
-            return buses.getNullPointer();
+            return buses.get(-1);
 
         return buses.get(index);
     }

@@ -25,6 +25,13 @@ namespace AEX::Sys {
         _ipi_packet.type = type;
         _ipi_packet.data = data;
 
+        if (CPU::getCurrentCPUID() == this->id) {
+            handle_ipp();
+            _ipi_lock.release();
+
+            return;
+        }
+
         APIC::sendInterrupt(apic_id, 32 + 13);
 
         while (!_ipi_ack)
@@ -59,6 +66,11 @@ namespace AEX::Sys {
         case CPU::ipp_type::CALL:
             _ipi_ack = true;
             ((void (*)(void)) _ipi_packet.data)();
+
+            break;
+        case CPU::ipp_type::PG_FLUSH:
+            _ipi_ack = true;
+            asm volatile("mov rax, cr3; mov cr3, rax;");
 
             break;
         default:

@@ -103,7 +103,16 @@ bootstrap64:
 	mov ss, ax
 
 	xor rax, rax
-	mov gs, ax
+	mov gs, rax
+
+	; Let's fake the CPU structure
+	mov rcx, 0xC0000101
+
+	mov rax, fake_cpu_class_ptr
+	mov rdx, rax
+	ror rdx, 32
+
+	wrmsr
 
 	; Let's load our actual GDT
 	lgdt [gdt64.ptr]
@@ -126,6 +135,17 @@ bootstrap64:
 		hlt
 		jmp hcf
 
+fake_cpu_class_ptr:
+	dq fake_cpu_class
+
+fake_cpu_class:
+	dd 0
+	dd 0
+
+	dq fake_cpu_class
+
+	dq 0
+	
 align 16
 gdt32to64:
 	.null: equ $ - gdt32to64

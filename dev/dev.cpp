@@ -1,8 +1,8 @@
 #include "dev/dev.hpp"
 
 #include "aex/dev/tree.hpp"
+#include "aex/mem/smartarray.hpp"
 #include "aex/printk.hpp"
-#include "aex/rcparray.hpp"
 
 namespace AEX::Dev {
     extern void register_base_interfaces();
@@ -14,7 +14,7 @@ namespace AEX::Dev {
     void init() {
         printk(PRINTK_INIT "dev: Initializing\n");
 
-        buses = RCPArray<Bus>();
+        buses = Mem::SmartArray<Bus>();
 
         register_base_interfaces();
         mainbus_init();

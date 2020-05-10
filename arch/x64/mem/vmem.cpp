@@ -372,6 +372,6 @@ namespace AEX::VMem {
 
         free_pptr(pptr);
 
-        asm volatile("mov rax, cr3; mov cr3, rax;");
+        Sys::CPU::broadcastPacket(Sys::CPU::ipp_type::PG_FLUSH, nullptr, true);
     }
 }

@@ -51,18 +51,15 @@ void main(multiboot_info_t* mbinfo) {
     Sys::IRQ::init_timer();
     printk("\n");
 
-    VMem::cleanup_bootstrap();
-
     Dev::init();
     printk("\n");
-
-    while (true)
-        ;
 
     auto bsp = new Sys::CPU(0);
     bsp->initLocal();
 
     Sys::MCore::init();
+
+    VMem::cleanup_bootstrap();
 
     Sys::CPU::interrupts();
 
