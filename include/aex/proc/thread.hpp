@@ -1,9 +1,9 @@
 #pragma once
 
 #include "aex/mem/atomic.hpp"
+#include "aex/mem/smartptr.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/proc/resource_usage.hpp"
-#include "aex/rcparray.hpp"
 #include "aex/spinlock.hpp"
 
 #include "proc/context.hpp"
@@ -41,9 +41,9 @@ namespace AEX::Proc {
 
         /**
          * Gets the parent process of the thread.
-         * @return The RCPArray::Pointer to the parent process.
+         * @return The SmartPointer to the parent process.
          */
-        RCPArray<Process>::Pointer getProcess();
+        Mem::SmartPointer<Process> getProcess();
 
         /**
          * Yields the currently executing thread's CPU timeshare. Will return immediately if no

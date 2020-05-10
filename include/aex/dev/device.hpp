@@ -1,10 +1,10 @@
 #pragma once
 
+#include "aex/mem/smartarray.hpp"
+#include "aex/mem/vector.hpp"
 #include "aex/optional.hpp"
-#include "aex/rcparray.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
-#include "aex/vector.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -41,8 +41,8 @@ namespace AEX::Dev {
             }
         };
 
-        Device*          parent;
-        RCPArray<Device> children;
+        Device*                 parent;
+        Mem::SmartArray<Device> children;
 
         char name[32];
 
@@ -61,6 +61,6 @@ namespace AEX::Dev {
       private:
         Spinlock _lock;
 
-        Vector<resource> _resources;
+        Mem::Vector<resource> _resources;
     };
 }

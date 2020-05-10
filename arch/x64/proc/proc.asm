@@ -67,7 +67,6 @@ extern proc_reshed_manual_ext
     mov qword rax, [gs:0x08]
 
     mov qword rbx, [rax + 0x08 * 15]
-    xchg bx, bx
     mov cr3, rbx
 
     mov qword rsp, [gs:0x08]

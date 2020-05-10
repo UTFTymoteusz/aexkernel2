@@ -216,7 +216,7 @@ namespace AEX::Heap {
             piece = piece->next;
         } while (piece != nullptr);
 
-        kpanic("AEX::Heap::free() failed");
+        kpanic("AEX::Heap::free(0x%p) failed", ptr);
     }
 
     size_t msize(void* ptr) {

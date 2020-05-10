@@ -1,9 +1,9 @@
 #include "sys/irq.hpp"
 
 #include "aex/kpanic.hpp"
+#include "aex/mem/vector.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
-#include "aex/rcparray.hpp"
 
 #include "cpu/idt.hpp"
 #include "cpu/irq.hpp"
@@ -29,8 +29,8 @@ namespace AEX::Sys::IRQ {
     uint64_t ns_per_tick = 0;
     uint64_t curtime_ns  = 0;
 
-    ACPI::MADT*      madt;
-    RCPArray<IOAPIC> ioapics;
+    ACPI::MADT*          madt;
+    Mem::Vector<IOAPIC*> ioapics;
 
     IOAPIC* find_ioapic(int irq);
     int     find_redirection(int irq);
@@ -62,7 +62,7 @@ namespace AEX::Sys::IRQ {
 
         size_t addr = 0xFEE00000;
 
-        madt = (ACPI::MADT*) ACPI::find_table("APIC", 0).get();
+        madt = (ACPI::MADT*) ACPI::find_table("APIC", 0);
         if (!madt)
             kpanic("This computer is too ancient to run this OS");
 
@@ -89,7 +89,7 @@ namespace AEX::Sys::IRQ {
                 _ioapic->setMode(j, IOAPIC::irq_mode::NORMAL);
             }
 
-            ioapics.addRef(_ioapic);
+            ioapics.pushBack(_ioapic);
         }
 
         APIC::map(addr);
@@ -170,9 +170,7 @@ namespace AEX::Sys::IRQ {
 
     IOAPIC* find_ioapic(int irq) {
         for (int i = 0; i < ioapics.count(); i++) {
-            auto ioapic = ioapics.get(i);
-            if (!ioapic.isPresent())
-                continue;
+            auto ioapic = ioapics.at(i);
 
             if (ioapic->irq_base > irq)
                 continue;

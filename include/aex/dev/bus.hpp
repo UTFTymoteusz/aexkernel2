@@ -3,9 +3,9 @@
 #include "aex/dev/device.hpp"
 #include "aex/dev/driver.hpp"
 #include "aex/dev/interface.hpp"
+#include "aex/mem/smartarray.hpp"
+#include "aex/mem/vector.hpp"
 #include "aex/optional.hpp"
-#include "aex/rcparray.hpp"
-#include "aex/vector.hpp"
 
 #include <stdint.h>
 
@@ -27,7 +27,7 @@ namespace AEX::Dev {
         void registerDriver(Driver* driver);
 
       private:
-        RCPArray<Driver> _drivers;
+        Mem::SmartArray<Driver> _drivers;
 
         Spinlock _lock;
 

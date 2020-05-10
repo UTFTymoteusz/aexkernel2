@@ -10,6 +10,9 @@
 #include <stdint.h>
 
 namespace AEX::Dev::SATA {
+    extern void sd_init();
+    extern void sr_init();
+
     class SATA : public Driver {
       public:
         SATA() : Driver("sata") {}
@@ -26,6 +29,8 @@ namespace AEX::Dev::SATA {
         }
 
         void bind(Device* device) {
+            init();
+
             PCI::set_busmaster(device, true);
 
             PMem::phys_addr paddr = 0;
@@ -47,21 +52,22 @@ namespace AEX::Dev::SATA {
 
       private:
         int index = 0;
-    };
 
-    extern void sd_init();
-    extern void sr_init();
+        void init() {
+            if (bus_exists("sata"))
+                return;
+
+            new Bus("sata");
+
+            sd_init();
+            sr_init();
+        }
+    };
 
     void init() {
         auto sata = new SATA();
 
-        if (!bus_exists("sata"))
-            new Bus("sata");
-
         if (!register_driver("pci", sata))
             printk(PRINTK_WARN "sata: Failed to register the PCI driver\n");
-
-        sd_init();
-        sr_init();
     }
 }

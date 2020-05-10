@@ -2,15 +2,16 @@
 
 #include "aex/dev/bus.hpp"
 #include "aex/dev/device.hpp"
+#include "aex/mem/smartarray.hpp"
+#include "aex/mem/smartptr.hpp"
+#include "aex/mem/vector.hpp"
 #include "aex/optional.hpp"
-#include "aex/rcparray.hpp"
-#include "aex/vector.hpp"
 
 #include <stdint.h>
 
 namespace AEX::Dev {
-    extern RCPArray<Bus>       buses;
-    extern RCPArray<Interface> interfaces;
+    extern Mem::SmartArray<Bus>       buses;
+    extern Mem::SmartArray<Interface> interfaces;
 
     /**
      * Tries to register a device in the specified bus.
@@ -31,9 +32,9 @@ namespace AEX::Dev {
     /**
      * Gets a bus by it's name.
      * @param bus_name The bus name.
-     * @return Optional that contains a smart pointer to the bus on success.
+     * @return A smart pointer that points to the bus. Will be null on failure.
      */
-    optional<RCPArray<Bus>::Pointer> getBus(const char* bus_name);
+    Mem::SmartPointer<Bus> getBus(const char* bus_name);
 
     /**
      * Checks if a bus exists.

@@ -78,10 +78,8 @@ lmode:
 
     mov byte [0x1000], 0xAA
 
-	; Now we wait
-    hcf:
-        hlt
-        jmp hcf
+	mov qword rax, [0x560]
+	call rax
 
 align 16
 tmp_gdt:

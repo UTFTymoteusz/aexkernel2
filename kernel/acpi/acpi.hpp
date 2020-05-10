@@ -1,6 +1,6 @@
 #pragma once
 
-#include "aex/rcparray.hpp"
+#include "aex/mem/vector.hpp"
 #include "aex/string.hpp"
 
 #include <stddef.h>
@@ -133,7 +133,7 @@ namespace AEX::ACPI {
 
     typedef void* acpi_table;
 
-    extern RCPArray<acpi_table> tables;
+    extern Mem::Vector<acpi_table*> tables;
 
     rsdp* find_rsdp();
     xsdp* find_xsdp();
@@ -142,5 +142,5 @@ namespace AEX::ACPI {
 
     bool validate_table(const void* tbl, size_t len);
 
-    RCPArray<acpi_table>::Pointer find_table(const char signature[4], int index);
+    acpi_table* find_table(const char signature[4], int index);
 }

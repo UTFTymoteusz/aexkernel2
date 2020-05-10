@@ -20,6 +20,7 @@ namespace AEX::Sys::MCore {
 
     bool start_ap(int id, int apic_id);
     void finalize_ap(int id, void* stack);
+    void ap_wait();
 
     void setup_trampoline(int id) {
         volatile size_t stack = (size_t) VMem::kernel_pagemap->alloc(1024, PAGE_WRITE) + 1024;
@@ -32,12 +33,13 @@ namespace AEX::Sys::MCore {
             mov qword [0x530 - 8], %0; \
             mov qword [0x540 - 8], %1; \
             mov qword [0x550 - 8], %2; \
+            mov qword [0x560 - 8], %3; \
             \
             mov rax, cr3; \
             mov qword [0x500 - 8], rax; \
         "
                      :
-                     : "r"(finalize_ap), "r"(stack), "r"(id)
+                     : "r"(finalize_ap), "r"(stack), "r"(id), "r"(ap_wait)
                      : "memory");
 
         void* dst = (void*) TRAMPOLINE_ADDR;
@@ -52,7 +54,7 @@ namespace AEX::Sys::MCore {
         CPUs[0] = CPU::getCurrentCPU();
 
         // We can assume it exists because the IRQ phase would panic the kernel otherwise
-        auto madt = (MADT*) ACPI::find_table("APIC", 0).get();
+        auto madt = (MADT*) ACPI::find_table("APIC", 0);
         int  id   = 0;
 
         for (int i = 0; i <= 2137; i++) {
@@ -119,5 +121,10 @@ namespace AEX::Sys::MCore {
         CPU::interrupts();
 
         printk(PRINTK_OK "mcore: cpu%i: Ready\n", CPU::getCurrentCPUID());
+    }
+
+    void ap_wait() {
+        while (true)
+            CPU::waitForInterrupt();
     }
 }

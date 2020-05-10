@@ -1,11 +1,12 @@
 #include "proc/proc.hpp"
 
 #include "aex/mem/heap.hpp"
+#include "aex/mem/smartarray.hpp"
+#include "aex/mem/vector.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc/process.hpp"
 #include "aex/proc/thread.hpp"
-#include "aex/rcparray.hpp"
 #include "aex/spinlock.hpp"
 
 #include "proc/context.hpp"
@@ -14,11 +15,9 @@
 #include "sys/mcore.hpp"
 
 namespace AEX::Proc {
-    RCPArray<Process> processes;
-    Thread**          threads      = nullptr;
-    Thread**          idle_threads = nullptr;
-
-    int thread_array_count = 0;
+    Mem::SmartArray<Process> processes;
+    Mem::Vector<Thread*>     threads      = nullptr;
+    Thread**                 idle_threads = nullptr;
 
     Thread void_thread;
 
@@ -64,13 +63,13 @@ namespace AEX::Proc {
 
         auto increment = [&i]() {
             i++;
-            if (i >= thread_array_count)
+            if (i >= threads.count())
                 i = 0;
         };
 
         increment();
 
-        for (int j = 0; j < thread_array_count; j++) {
+        for (int j = 0; j < threads.count(); j++) {
             if (!threads[i]) {
                 increment();
                 continue;
@@ -129,7 +128,7 @@ namespace AEX::Proc {
     int add_thread(Thread* thread) {
         auto scopeLock = ScopeSpinlock(lock);
 
-        for (int i = 0; i < thread_array_count; i++) {
+        for (int i = 0; i < threads.count(); i++) {
             if (threads[i])
                 continue;
 
@@ -137,12 +136,7 @@ namespace AEX::Proc {
             return i;
         }
 
-        thread_array_count++;
-
-        Heap::realloc(threads, thread_array_count * sizeof(Thread*));
-        threads[thread_array_count - 1] = thread;
-
-        return thread_array_count - 1;
+        return threads.pushBack(thread);
     }
 
     void idle() {

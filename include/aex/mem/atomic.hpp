@@ -15,4 +15,9 @@ namespace AEX::Mem {
     inline void atomic_sub(T* ptr, T val) {
         __sync_sub_and_fetch(ptr, val);
     }
+
+    template <typename T>
+    inline T atomic_sub_fetch(T* ptr, T val) {
+        return __sync_sub_and_fetch(ptr, val);
+    }
 }

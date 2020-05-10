@@ -102,4 +102,6 @@ namespace AEX::VMem {
     extern Pagemap* kernel_pagemap;
 
     void init();
+
+    void cleanup_bootstrap();
 }

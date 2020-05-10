@@ -4,7 +4,7 @@
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 
-namespace AEX {
+namespace AEX::Mem {
     template <typename T>
     class Vector {
       public:
@@ -15,6 +15,13 @@ namespace AEX {
             pushRecursive(rest...);
         }
 
+        T& operator[](int index) {
+            if (index < 0 || index >= _count)
+                return _array[0];
+
+            return _array[index];
+        }
+
         T at(int index) {
             if (index < 0 || index >= _count)
                 return _array[0];
@@ -22,11 +29,13 @@ namespace AEX {
             return _array[index];
         }
 
-        void pushBack(T val) {
+        int pushBack(T val) {
             _count++;
             _array = (T*) Heap::realloc((void*) _array, _count * sizeof(T));
 
             _array[_count - 1] = val;
+
+            return _count - 1;
         }
 
         void erase(int index) {
