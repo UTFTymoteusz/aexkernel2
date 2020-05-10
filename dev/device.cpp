@@ -11,6 +11,7 @@ namespace AEX::Dev {
 
     Device::~Device() {
         // remove ourselves from the parent
+
         // children.~RCPArray();
     }
 
@@ -34,5 +35,7 @@ namespace AEX::Dev {
         this->children.addRef(device);
     }
 
-    bool setInterface(const char* name) {}
+    bool setInterface(const char* name) {
+        return false;
+    }
 }

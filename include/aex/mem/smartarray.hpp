@@ -52,10 +52,8 @@ namespace AEX::Mem {
         SmartPointer<T> get(int index) {
             auto scopeLock = ScopeSpinlock(_lock);
 
-            if (index < 0 || index >= _element_count) {
-                printk("null\n");
-                return SmartPointer<T>(nullptr);
-            }
+            if (index < 0 || index >= _element_count)
+                return SmartPointer<T>(nullptr, nullptr);
 
             _elements[index].refs->increment();
 

@@ -47,12 +47,8 @@ namespace AEX::Mem {
         }
 
         ~SmartPointer() {
-            if (!_refs) {
-                // printk("dtor attempt (0x%p, 0x%p) *null*\n", _val, _refs);
+            if (!_refs)
                 return;
-            }
-
-            // printk("dtor attempt (0x%p, 0x%p) %i\n", _val, _refs, _refs->ref_count());
 
             if (_refs->decrement())
                 cleanup();
