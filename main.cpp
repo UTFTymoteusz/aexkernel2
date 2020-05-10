@@ -32,10 +32,10 @@ void main(multiboot_info_t* mbinfo) {
 
     // clang-format off
     printk("Section info:\n");
-    printk(".text  : %93$0x%p%90$, %93$0x%p%97$\n", &_start_text  , &_end_text);
-    printk(".rodata: %93$0x%p%90$, %93$0x%p%97$\n", &_start_rodata, &_end_rodata);
-    printk(".data  : %93$0x%p%90$, %93$0x%p%97$\n", &_start_data  , &_end_data);
-    printk(".bss   : %93$0x%p%90$, %93$0x%p%97$\n", &_start_bss   , &_end_bss);
+    printk(".text  : %93$0x%p%90$, %93$0x%p%$\n", &_start_text  , &_end_text);
+    printk(".rodata: %93$0x%p%90$, %93$0x%p%$\n", &_start_rodata, &_end_rodata);
+    printk(".data  : %93$0x%p%90$, %93$0x%p%$\n", &_start_data  , &_end_data);
+    printk(".bss   : %93$0x%p%90$, %93$0x%p%$\n", &_start_bss   , &_end_bss);
     printk("\n");
     // clang-format on
 
@@ -62,7 +62,6 @@ void main(multiboot_info_t* mbinfo) {
     VMem::cleanup_bootstrap();
 
     Sys::CPU::interrupts();
-
     Sys::IRQ::setup_timers_mcore(250);
 
     Proc::init();

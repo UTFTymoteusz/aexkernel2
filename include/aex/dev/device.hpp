@@ -51,8 +51,6 @@ namespace AEX::Dev {
         Device(const char* name);
         virtual ~Device();
 
-        bool setInterface(const char* name);
-
         void                       addResource(resource resource);
         optional<Device::resource> getResource(int index);
 

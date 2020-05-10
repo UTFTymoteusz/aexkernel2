@@ -10,8 +10,7 @@
 #include <stdint.h>
 
 namespace AEX::Dev {
-    extern Mem::SmartArray<Bus>       buses;
-    extern Mem::SmartArray<Interface> interfaces;
+    extern Mem::SmartArray<Bus> buses;
 
     /**
      * Tries to register a device in the specified bus.

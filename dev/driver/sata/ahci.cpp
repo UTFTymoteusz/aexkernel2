@@ -60,10 +60,10 @@ namespace AEX::Dev::SATA {
         memset(fis, '\0', sizeof(hba_fis));
 
         // Forgetting these made me put away this goddamned code for 3 days
-        fis->dma_setup.fis_type = 0x41;
-        fis->pio_setup.fis_type = 0x5F;
-        fis->reg.fis_type       = 0x34;
-        fis->dev_bits[0]        = 0xA1;
+        fis->dma_setup.fis_type = fis_type::DMA_SETUP;
+        fis->pio_setup.fis_type = fis_type::PIO_SETUP;
+        fis->reg.fis_type       = fis_type::REG_D2H;
+        fis->dev_bits[0]        = fis_type::DEV_BITS;
 
         port->command_list_address = VMem::kernel_pagemap->paddrof(headers);
         port->fis_address          = VMem::kernel_pagemap->paddrof(fis);

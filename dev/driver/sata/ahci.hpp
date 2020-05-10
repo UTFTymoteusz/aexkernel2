@@ -11,6 +11,17 @@ namespace AEX::Dev::SATA {
         static constexpr auto DEV_BUSY = 0x80;
         static constexpr auto DEV_DRQ  = 0x08;
 
+        enum fis_type {
+            REG_H2D   = 0x27,
+            REG_D2H   = 0x34,
+            DMA_ACT   = 0x39,
+            DMA_SETUP = 0x41,
+            DATA      = 0x46,
+            BIST      = 0x58,
+            PIO_SETUP = 0x5F,
+            DEV_BITS  = 0xA1,
+        };
+
         struct hba_port_t {
             vuint64_t command_list_address; // 0x00
             vuint64_t fis_address;          // 0x08

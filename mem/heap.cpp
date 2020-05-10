@@ -250,7 +250,7 @@ namespace AEX::Heap {
         rootPiece = Piece::createFromVMem(0x100000);
 
         void* a = malloc(24);
-        malloc(24);
+        void* b = malloc(24);
 
         free(a);
 
@@ -258,5 +258,8 @@ namespace AEX::Heap {
 
         if (a != c)
             kpanic("AEX::Heap is braindead");
+
+        free(b);
+        free(c);
     }
 }

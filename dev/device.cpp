@@ -1,5 +1,6 @@
 #include "aex/dev/device.hpp"
 
+#include "aex/dev/tree.hpp"
 #include "aex/optional.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
@@ -33,9 +34,5 @@ namespace AEX::Dev {
     void Device::registerDevice(Device* device) {
         device->parent = this;
         this->children.addRef(device);
-    }
-
-    bool setInterface(const char* name) {
-        return false;
     }
 }

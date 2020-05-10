@@ -4,8 +4,14 @@
 #include "aex/mem/smartarray.hpp"
 #include "aex/printk.hpp"
 
+// clang-format off
+
+#include "sys/cpu.hpp"
+#include "aex/dev/name.hpp"
+
+// clang-format on
+
 namespace AEX::Dev {
-    extern void register_base_interfaces();
     extern void register_base_drivers();
 
     extern void mainbus_init();
@@ -16,11 +22,19 @@ namespace AEX::Dev {
 
         buses = Mem::SmartArray<Bus>();
 
-        register_base_interfaces();
         mainbus_init();
         register_base_drivers();
         arch_drivers_init();
 
         printk(PRINTK_OK "dev: Initialized\n");
+
+        char buffer[32];
+
+        for (int i = 0; i < 70; i++) {
+            name_letter_increment(buffer, "sd%");
+            printk("%s;  ", buffer);
+        }
+
+        Sys::CPU::halt();
     }
 }

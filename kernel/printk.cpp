@@ -145,6 +145,9 @@ namespace AEX {
                 case '\0':
                     break;
                 case '$':
+                    if (padlen == 0)
+                        padlen = 97;
+
                     rootTTY->setColorANSI(padlen);
                     break;
                 case 's':

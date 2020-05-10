@@ -216,7 +216,7 @@ namespace AEX::Dev::PCI {
             if (get_vendor_id(bus, device, function) == 0xFFFF)
                 continue;
 
-            /*printk("pci: Found %93$%3i %3i %3i%97$ - 0x%02x, 0x%02x\n", bus, device, function,
+            /*printk("pci: Found %93$%3i %3i %3i%$ - 0x%02x, 0x%02x\n", bus, device, function,
                    get_class(bus, device, function), get_subclass(bus, device, function));*/
 
             char buffer[32];

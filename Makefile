@@ -47,6 +47,7 @@ LDFLAGS := $(GFLAGS) \
 	-no-pie
 
 format:
+	@$(MKDIR) $(ISO) $(ISO)bin/ $(ISO)dev/ $(ISO)mnt/ $(ISO)sys/
 	clang-format -style=file -i ${CFILES} ${HFILES}
 
 all: $(OBJS)

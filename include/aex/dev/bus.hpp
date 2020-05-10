@@ -2,7 +2,6 @@
 
 #include "aex/dev/device.hpp"
 #include "aex/dev/driver.hpp"
-#include "aex/dev/interface.hpp"
 #include "aex/mem/smartarray.hpp"
 #include "aex/mem/vector.hpp"
 #include "aex/optional.hpp"

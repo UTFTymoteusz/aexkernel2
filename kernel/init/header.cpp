@@ -20,7 +20,7 @@ namespace AEX::Init {
 
         char color = COLOR0;
         rootTTY->setColorANSI(COLOR0);
-
+ 
         for (size_t i = 0; i < sizeof(header) - 1; i++) {
             char c = header[i];
 

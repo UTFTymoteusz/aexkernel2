@@ -7,8 +7,7 @@
 #include "aex/string.hpp"
 
 namespace AEX::Dev {
-    Mem::SmartArray<Bus>       buses;
-    Mem::SmartArray<Interface> interfaces;
+    Mem::SmartArray<Bus> buses;
 
     Spinlock lock;
 
