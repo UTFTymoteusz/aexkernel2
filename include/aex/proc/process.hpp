@@ -21,7 +21,7 @@ namespace AEX::Proc {
 
         Spinlock lock;
 
-        Vector<tid_t> threads;
+        Mem::Vector<tid_t> threads;
 
         Process() = default;
 

@@ -133,7 +133,7 @@ namespace AEX::ACPI {
 
     typedef void* acpi_table;
 
-    extern Vector<acpi_table*> tables;
+    extern Mem::Vector<acpi_table*> tables;
 
     rsdp* find_rsdp();
     xsdp* find_xsdp();

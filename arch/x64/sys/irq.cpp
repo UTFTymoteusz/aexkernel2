@@ -29,8 +29,8 @@ namespace AEX::Sys::IRQ {
     uint64_t ns_per_tick = 0;
     uint64_t curtime_ns  = 0;
 
-    ACPI::MADT*     madt;
-    Vector<IOAPIC*> ioapics;
+    ACPI::MADT*          madt;
+    Mem::Vector<IOAPIC*> ioapics;
 
     IOAPIC* find_ioapic(int irq);
     int     find_redirection(int irq);

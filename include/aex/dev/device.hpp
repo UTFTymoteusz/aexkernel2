@@ -61,6 +61,6 @@ namespace AEX::Dev {
       private:
         Spinlock _lock;
 
-        Vector<resource> _resources;
+        Mem::Vector<resource> _resources;
     };
 }

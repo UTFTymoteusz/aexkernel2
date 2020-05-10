@@ -9,7 +9,7 @@
 #include <stddef.h>
 
 namespace AEX::ACPI {
-    Vector<acpi_table*> tables;
+    Mem::Vector<acpi_table*> tables;
 
     bool add_table(acpi_table* table) {
         auto header = (sdt_header*) table;
