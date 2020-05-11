@@ -62,7 +62,7 @@ namespace AEX::Dev::SATA {
         // Forgetting these made me put away this goddamned code for 3 days
         fis->dma_setup.fis_type = fis_type::DMA_SETUP;
         fis->pio_setup.fis_type = fis_type::PIO_SETUP;
-        fis->reg.fis_type       = fis_type::REG_D2H;
+        fis->reg_d2h.fis_type   = fis_type::REG_D2H;
         fis->dev_bits[0]        = fis_type::DEV_BITS;
 
         port->command_list_address = VMem::kernel_pagemap->paddrof(headers);

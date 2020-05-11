@@ -22,6 +22,20 @@ namespace AEX::Dev::SATA {
             DEV_BITS  = 0xA1,
         };
 
+        enum command {
+            READ_DMA_EXT           = 0x25,
+            WRITE_DMA_EXT          = 0x35,
+            PACKET                 = 0xA0,
+            IDENTIFY_PACKET_DEVICE = 0xA1,
+            IDENTIFY_DEVICE        = 0xEC,
+        };
+
+        enum scsi_command {
+            READ_CAPACITY_10 = 0x25,
+            READ_12          = 0xA8,
+            WRITE_12         = 0xAA,
+        };
+
         struct hba_port_t {
             vuint64_t command_list_address; // 0x00
             vuint64_t fis_address;          // 0x08
@@ -232,7 +246,7 @@ namespace AEX::Dev::SATA {
             fis_pio_setup pio_setup;
             uint8_t       pad1[12];
 
-            fis_reg_d2h reg;
+            fis_reg_d2h reg_d2h;
             uint8_t     pad2[4];
 
             uint8_t dev_bits[8];

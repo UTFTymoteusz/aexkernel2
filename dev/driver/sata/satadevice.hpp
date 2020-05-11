@@ -28,29 +28,36 @@ namespace AEX::Dev::SATA {
         int max_page_burst = 0;
         int max_prts       = 0;
 
+        uint64_t sector_count;
+
         AHCI*                     controller;
         AHCI::hba_port_t*         hba_port;
         AHCI::hba_command_header* command_headers;
         AHCI::hba_command_table*  command_tables;
         AHCI::hba_fis*            fis;
 
+        Spinlock _lock;
+
         SATADevice(const char* name) : Device(name) {}
 
         bool init();
 
+        void startCMD();
+        void stopCMD();
+
+        bool issueCMD(int slot);
+
+        int  findSlot();
+        void releaseSlot(int slot);
+
+        void fillPRDTs(volatile AHCI::hba_command_table* table, void* dst, size_t len);
+
+        void scsiPacket(uint8_t* packet, void* buffer, int len);
+
       private:
         volatile uint32_t _command_slots;
 
-        Spinlock _lock;
-
-        void start_cmd();
-        void stop_cmd();
-
-        bool issue_cmd(int slot);
-
-        int  find_slot();
-        void release_slot(int slot);
-
-        void fill_prdts(volatile AHCI::hba_command_table* table, void* dst, size_t len);
+        AHCI::hba_command_header* getHeader(int slot);
+        AHCI::hba_command_table*  getTable(int slot);
     };
 }

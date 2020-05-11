@@ -1,5 +1,6 @@
 #include "dev/driver/sata/satadevice.hpp"
 
+#include "aex/byte.hpp"
 #include "aex/mem/vmem.hpp"
 
 #include "sys/cpu.hpp"
@@ -9,8 +10,10 @@
 
 namespace AEX::Dev::SATA {
     bool SATADevice::init() {
-        int  slot   = find_slot();
-        auto header = &command_headers[slot];
+        int slot = findSlot();
+
+        auto header = getHeader(slot);
+        auto table  = getTable(slot);
 
         header->fis_length = sizeof(AHCI::fis_reg_h2d) / sizeof(uint32_t);
         header->write      = false;
@@ -19,26 +22,28 @@ namespace AEX::Dev::SATA {
         header->phys_region_table_transferred = 0;
         header->phys_region_table_len         = max_prts;
 
-        auto table = &command_tables[slot];
         memset((void*) &(table->fis_reg_h2d_data), '\0', sizeof(AHCI::fis_reg_h2d));
 
-        table->fis_reg_h2d_data.command         = atapi ? 0xA1 : 0xEC;
+        table->fis_reg_h2d_data.command =
+            atapi ? AHCI::command::IDENTIFY_PACKET_DEVICE : AHCI::command::IDENTIFY_DEVICE;
         table->fis_reg_h2d_data.command_control = true;
-        table->fis_reg_h2d_data.fis_type        = 0x27;
+        table->fis_reg_h2d_data.fis_type        = AHCI::fis_type::REG_H2D;
 
         uint8_t buffer[512];
         memset(buffer, '\0', sizeof(buffer));
 
-        fill_prdts(table, buffer, 512);
+        fillPRDTs(table, buffer, 512);
 
         while (hba_port->task_file_data & (AHCI::DEV_BUSY | AHCI::DEV_DRQ))
             ;
 
-        start_cmd();
-        issue_cmd(slot);
+        startCMD();
+        issueCMD(slot);
+
+        releaseSlot(slot);
 
         uint16_t* identify = (uint16_t*) buffer;
-        char      flipped_buffer[80];
+        char      flipped_buffer[42];
 
         memset(flipped_buffer, '\0', sizeof(flipped_buffer));
         memcpy(flipped_buffer, &identify[27], 40);
@@ -50,14 +55,28 @@ namespace AEX::Dev::SATA {
             flipped_buffer[i + 1] = temp;
         }
 
-        printk("sata: %s: Model %s\n", this->name, flipped_buffer);
+        if (!atapi)
+            sector_count = *((uint64_t*) (&identify[100]));
+        else {
+            uint8_t  packet[12] = {AHCI::scsi_command::READ_CAPACITY_10};
+            uint32_t buffer[2]  = {0};
 
-        release_slot(slot);
+            scsiPacket(packet, buffer, sizeof(buffer));
+
+            // scsi why :(
+            buffer[0] = uint32_bswap(buffer[0]);
+            buffer[1] = uint32_bswap(buffer[1]);
+
+            sector_count = buffer[0];
+        }
+
+        printk("sata: %s: Model %s\n", this->name, flipped_buffer);
+        printk("sata: %s: %li sectors\n", this->name, this->sector_count);
 
         return true;
     }
 
-    void SATADevice::start_cmd() {
+    void SATADevice::startCMD() {
         hba_port->command_and_status &= ~PxCMD_ST;
 
         while (hba_port->command_and_status & PxCMD_CR)
@@ -67,18 +86,16 @@ namespace AEX::Dev::SATA {
         hba_port->command_and_status |= PxCMD_ST;
     }
 
-    void SATADevice::stop_cmd() {
-        auto port = hba_port;
+    void SATADevice::stopCMD() {
+        hba_port->command_and_status &= ~PxCMD_ST;
 
-        port->command_and_status &= ~PxCMD_ST;
-
-        while (port->command_and_status & PxCMD_FR || port->command_and_status & PxCMD_CR)
+        while (hba_port->command_and_status & PxCMD_CR)
             ;
 
-        port->command_and_status &= ~PxCMD_FRE;
+        hba_port->command_and_status &= ~PxCMD_FRE;
     }
 
-    bool SATADevice::issue_cmd(int slot) {
+    bool SATADevice::issueCMD(int slot) {
         hba_port->command_issue = (1 << slot);
 
         while (true) {
@@ -95,20 +112,26 @@ namespace AEX::Dev::SATA {
         return true;
     }
 
-    int SATADevice::find_slot() {
+    int SATADevice::findSlot() {
         while (true)
-            for (int i = 0; i < max_commands; i++)
-                if (!(_command_slots & (1 << i)))
+            for (int i = 0; i < max_commands; i++) {
+                auto scopeLock = ScopeSpinlock(_lock);
+
+                if (!(_command_slots & (1 << i))) {
+                    _command_slots |= (1 << i);
+
                     return i;
+                }
+            }
     }
 
-    void SATADevice::release_slot(int slot) {
+    void SATADevice::releaseSlot(int slot) {
         auto scopeLock = ScopeSpinlock(_lock);
 
-        _command_slots |= (1 << slot);
+        _command_slots &= ~(1 << slot);
     }
 
-    void SATADevice::fill_prdts(volatile AHCI::hba_command_table* table, void* dst, size_t len) {
+    void SATADevice::fillPRDTs(volatile AHCI::hba_command_table* table, void* dst, size_t len) {
         size_t dsti      = (size_t) dst;
         size_t page_size = Sys::CPU::PAGE_SIZE;
 
@@ -125,5 +148,47 @@ namespace AEX::Dev::SATA {
             dsti += llen;
             len -= llen;
         }
+    }
+
+    void SATADevice::scsiPacket(uint8_t* packet, void* buffer, int len) {
+        int slot = findSlot();
+
+        auto header = getHeader(slot);
+        auto table  = getTable(slot);
+
+        header->fis_length = sizeof(AHCI::fis_reg_h2d) / sizeof(uint32_t);
+        header->write      = false;
+        header->atapi      = true;
+
+        header->phys_region_table_transferred = 0;
+
+        fillPRDTs(table, buffer, len);
+
+        memcpy(table->atapi_command, packet, 16);
+
+        auto fis = &table->fis_reg_h2d_data;
+
+        fis->command         = AHCI::command::PACKET;
+        fis->command_control = true;
+        fis->fis_type        = AHCI::fis_type::REG_H2D;
+
+        // idk this makes it magically work out of a sudden
+        fis->lba1 = 0x0008;
+        fis->lba2 = 0x0008;
+
+        while (hba_port->task_file_data & (AHCI::DEV_BUSY | AHCI::DEV_DRQ))
+            ;
+
+        issueCMD(slot);
+
+        releaseSlot(slot);
+    }
+
+    AHCI::hba_command_header* SATADevice::getHeader(int slot) {
+        return &command_headers[slot];
+    }
+
+    AHCI::hba_command_table* SATADevice::getTable(int slot) {
+        return (AHCI::hba_command_table*) ((size_t) command_tables + 8192 * slot);
     }
 }
