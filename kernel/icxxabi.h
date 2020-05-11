@@ -15,6 +15,8 @@ struct atexit_func_entry {
 int  __cxa_atexit(void (*f)(void*), void* objptr, void* dso);
 void __cxa_finalize(void* f);
 
+extern "C" void __cxa_pure_virtual() {}
+
 #ifdef __cplusplus
 }
 #endif

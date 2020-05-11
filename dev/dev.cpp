@@ -6,8 +6,7 @@
 
 // clang-format off
 
-#include "sys/cpu.hpp"
-#include "aex/dev/name.hpp"
+#include "aex/dev/block.hpp"
 
 // clang-format on
 
