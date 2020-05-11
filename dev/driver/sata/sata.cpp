@@ -1,7 +1,7 @@
-#include "aex/dev/device.hpp"
-#include "aex/dev/driver.hpp"
 #include "aex/dev/pci.hpp"
-#include "aex/dev/tree.hpp"
+#include "aex/dev/tree/device.hpp"
+#include "aex/dev/tree/driver.hpp"
+#include "aex/dev/tree/tree.hpp"
 #include "aex/mem/pmem.hpp"
 #include "aex/mem/vmem.hpp"
 
@@ -9,16 +9,17 @@
 
 #include <stdint.h>
 
+
 namespace AEX::Dev::SATA {
     extern void sd_init();
     extern void sr_init();
 
-    class SATA : public Driver {
+    class SATA : public Tree::Driver {
       public:
         SATA() : Driver("sata") {}
         ~SATA() {}
 
-        bool check(Device* device) {
+        bool check(Tree::Device* device) {
             auto pci_device = (PCI::PCIDevice*) device;
 
             if (pci_device->p_class != 0x01 || pci_device->subclass != 0x06 ||
@@ -28,7 +29,7 @@ namespace AEX::Dev::SATA {
             return true;
         }
 
-        void bind(Device* device) {
+        void bind(Tree::Device* device) {
             init();
 
             PCI::set_busmaster(device, true);
@@ -37,7 +38,8 @@ namespace AEX::Dev::SATA {
 
             for (int i = 5; i >= 0; i--) {
                 auto resource = device->getResource(i);
-                if (!resource.has_value || resource.value.type != Device::resource::type_t::MEMORY)
+                if (!resource.has_value ||
+                    resource.value.type != Tree::Device::resource::type_t::MEMORY)
                     continue;
 
                 paddr = resource.value.start;
@@ -54,10 +56,10 @@ namespace AEX::Dev::SATA {
         int index = 0;
 
         void init() {
-            if (bus_exists("sata"))
+            if (Tree::bus_exists("sata"))
                 return;
 
-            new Bus("sata");
+            new Tree::Bus("sata");
 
             sd_init();
             sr_init();
@@ -67,7 +69,7 @@ namespace AEX::Dev::SATA {
     void init() {
         auto sata = new SATA();
 
-        if (!register_driver("pci", sata))
+        if (!Tree::register_driver("pci", sata))
             printk(PRINTK_WARN "sata: Failed to register the PCI driver\n");
     }
 }

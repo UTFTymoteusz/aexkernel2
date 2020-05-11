@@ -1,14 +1,14 @@
 #pragma once
 
-#include "aex/dev/device.hpp"
-#include "aex/dev/driver.hpp"
+#include "aex/dev/tree/device.hpp"
+#include "aex/dev/tree/driver.hpp"
 #include "aex/mem/smartarray.hpp"
 #include "aex/mem/vector.hpp"
 #include "aex/optional.hpp"
 
 #include <stdint.h>
 
-namespace AEX::Dev {
+namespace AEX::Dev::Tree {
     class Bus : public Device {
       public:
         Bus(const char* name);

@@ -1,11 +1,13 @@
-#include "aex/dev/bus.hpp"
-#include "aex/dev/tree.hpp"
+#include "aex/dev/tree/bus.hpp"
+#include "aex/dev/tree/tree.hpp"
 
 namespace AEX::Dev {
-    Bus* mainbus;
+    using Device = Tree::Device;
+
+    Tree::Bus* mainbus;
 
     void mainbus_init() {
-        mainbus = new Bus("main");
+        mainbus = new Tree::Bus("main");
 
         auto pci = new Device("pci");
 

@@ -1,4 +1,4 @@
-#include "aex/dev/tree.hpp"
+#include "aex/dev/tree/tree.hpp"
 
 #include "aex/mem/smartarray.hpp"
 #include "aex/mem/smartptr.hpp"
@@ -6,7 +6,7 @@
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
 
-namespace AEX::Dev {
+namespace AEX::Dev::Tree {
     Mem::SmartArray<Bus> buses;
 
     Spinlock lock;

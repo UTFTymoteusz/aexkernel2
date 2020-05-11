@@ -1,8 +1,8 @@
 #include "aex/dev/pci.hpp"
 
-#include "aex/dev/bus.hpp"
-#include "aex/dev/device.hpp"
-#include "aex/dev/tree.hpp"
+#include "aex/dev/tree/bus.hpp"
+#include "aex/dev/tree/device.hpp"
+#include "aex/dev/tree/tree.hpp"
 #include "aex/mem/pmem.hpp"
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
@@ -18,24 +18,24 @@
 namespace AEX::Dev::PCI {
     void scan_all_buses();
 
-    Bus* dev_bus = nullptr;
+    Tree::Bus* dev_bus;
 
-    class PCI : public Driver {
+    class PCI : public Tree::Driver {
       public:
         PCI() : Driver("pci") {}
         ~PCI() {}
 
-        bool check(Device* device) {
+        bool check(Tree::Device* device) {
             if (strcmp(device->name, "pci") != 0)
                 return false;
 
             return true;
         }
 
-        void bind(Device*) {
+        void bind(Tree::Device*) {
             printk(PRINTK_INIT "pci: Initializing\n");
 
-            dev_bus = new Dev::Bus("pci");
+            dev_bus = new Tree::Bus("pci");
             scan_all_buses();
 
             printk(PRINTK_OK "pci: Initialized\n");
@@ -70,7 +70,7 @@ namespace AEX::Dev::PCI {
 
     void init() {
         driver = new PCI();
-        Dev::register_driver("main", driver);
+        Dev::Tree::register_driver("main", driver);
     }
 
     uint16_t read_word(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
@@ -181,18 +181,18 @@ namespace AEX::Dev::PCI {
                 len &= 0xFFFF;
 
             if (io) {
-                auto resource = Dev::Device::resource();
+                auto resource = Tree::Device::resource();
 
-                resource.type  = Dev::Device::resource::type_t::IO;
+                resource.type  = Tree::Device::resource::type_t::IO;
                 resource.value = addr;
                 resource.end   = addr + len;
 
                 dev_device->addResource(resource);
             }
             else {
-                auto resource = Dev::Device::resource();
+                auto resource = Tree::Device::resource();
 
-                resource.type  = Dev::Device::resource::type_t::MEMORY;
+                resource.type  = Tree::Device::resource::type_t::MEMORY;
                 resource.value = addr;
                 resource.end   = addr + len;
 
@@ -241,7 +241,7 @@ namespace AEX::Dev::PCI {
         }
     }
 
-    void set_busmaster(Device* _device, bool on) {
+    void set_busmaster(Tree::Device* _device, bool on) {
         auto pci_device = (PCIDevice*) _device;
 
         uint8_t bus      = pci_device->bus;

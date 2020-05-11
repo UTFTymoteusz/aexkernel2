@@ -1,13 +1,17 @@
 #include "aex/dev/block.hpp"
 
+#include "aex/dev/device.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/math.hpp"
 #include "aex/string.hpp"
 
 #include <stdint.h>
 
+
 namespace AEX::Dev {
     Block::Block(uint16_t sector_size, uint64_t sector_count, uint16_t max_sectors_at_once) {
+        type = type_t::BLOCK;
+
         _overflow_buffer = new uint8_t[4096];
 
         _sector_size         = sector_size;
@@ -80,9 +84,8 @@ namespace AEX::Dev {
 
         return 0;
     }
-    int64_t Block::write(uint8_t* buffer, uint64_t start, uint32_t len) {
-        // if (!isAligned(buffer) && word_align)
-        //    kpanic("Implement misaligned block writes pls\n");
+    int64_t Block::write(uint8_t*, uint64_t, uint32_t) {
+        kpanic("Block::write is unimplemented, I'm too lazy atm\n");
     }
 
     void Block::release() {
@@ -93,13 +96,11 @@ namespace AEX::Dev {
         return 0;
     }
 
-    int64_t Block::readBlock(uint8_t* buffer, uint64_t sector, uint32_t sector_count) {
-        printk("aaaa\n");
+    int64_t Block::readBlock(uint8_t*, uint64_t, uint32_t) {
         return -1;
     }
 
-    int64_t Block::writeBlock(uint8_t* buffer, uint64_t sector, uint32_t sector_count) {
-        printk("bbbb\n");
+    int64_t Block::writeBlock(uint8_t*, uint64_t, uint32_t) {
         return -1;
     }
 

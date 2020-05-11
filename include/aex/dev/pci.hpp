@@ -1,22 +1,10 @@
 #pragma once
 
-#include "aex/dev/device.hpp"
+#include "aex/dev/tree/device.hpp"
 
 namespace AEX::Dev::PCI {
-    class PCIDevice : public Device {
+    class PCIDevice : public Tree::Device {
       public:
-        struct bar {
-            enum type_t : uint8_t {
-                IO     = 0,
-                MEMORY = 1,
-            };
-
-            type_t type;
-
-            size_t start;
-            size_t len;
-        };
-
         uint16_t p_class, subclass, prog_if;
         uint16_t device_id, vendor_id;
 
@@ -27,5 +15,5 @@ namespace AEX::Dev::PCI {
       private:
     };
 
-    void set_busmaster(Device* device, bool on);
+    void set_busmaster(Tree::Device* device, bool on);
 }

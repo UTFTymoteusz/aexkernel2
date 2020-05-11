@@ -1,5 +1,5 @@
 #pragma once
 
 namespace AEX {
-    void kpanic(const char* format, ...);
+    __attribute((noreturn)) void kpanic(const char* format, ...);
 }

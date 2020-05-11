@@ -1,9 +1,9 @@
-#include "aex/dev/driver.hpp"
+#include "aex/dev/tree/driver.hpp"
 
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 
-namespace AEX::Dev {
+namespace AEX::Dev::Tree {
     Driver::Driver(const char* name) {
         strncpy(this->name, name, sizeof(this->name));
     }

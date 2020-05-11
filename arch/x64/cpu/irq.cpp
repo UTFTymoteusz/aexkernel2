@@ -6,14 +6,12 @@
 #include "sys/cpu.hpp"
 #include "tty.hpp"
 
-extern "C" void common_irq_handler(void* info);
+extern "C" void common_irq_handler(AEX::Sys::CPU::irq_info* info);
 
 namespace AEX::Sys::IRQ {
     volatile bool irq_mark = false;
 
-    extern "C" void common_irq_handler(void* _info) {
-        // auto info = (CPU::irq_info*) _info;
-
+    extern "C" void common_irq_handler(CPU::irq_info*) {
         // AEX::printk("%i: irq: %i\n", CPU::getCurrentCPUID(), info->irq_no);
 
         APIC::eoi();

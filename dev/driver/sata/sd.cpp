@@ -1,19 +1,19 @@
-#include "aex/dev/driver.hpp"
-#include "aex/dev/tree.hpp"
+#include "aex/dev/tree/driver.hpp"
+#include "aex/dev/tree/tree.hpp"
 
 #include "dev/driver/sata/satadevice.hpp"
 
 namespace AEX::Dev::SATA {
-    class SDDriver : public Driver {
+    class SDDriver : public Tree::Driver {
       public:
         SDDriver() : Driver("sd") {}
 
-        bool check(Device* _device) {
+        bool check(Tree::Device* _device) {
             auto device = (SATADevice*) _device;
             return device->type == type_t::SATA;
         }
 
-        void bind(Device* _device) {
+        void bind(Tree::Device* _device) {
             auto device = (SATADevice*) _device;
         }
     };

@@ -64,8 +64,8 @@ namespace AEX::Dev::SATA {
             scsiPacket(packet, buffer, sizeof(buffer));
 
             // scsi why :(
-            buffer[0] = uint32_bswap(buffer[0]);
-            buffer[1] = uint32_bswap(buffer[1]);
+            buffer[0] = bswap(buffer[0]);
+            buffer[1] = bswap(buffer[1]);
 
             sector_count = buffer[0];
         }

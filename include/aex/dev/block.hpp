@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aex/dev/device.hpp"
 #include "aex/printk.hpp"
 
 #include <stddef.h>
@@ -7,7 +8,7 @@
 
 
 namespace AEX::Dev {
-    class Block {
+    class Block : public Device {
       public:
         Block(uint16_t sector_size, uint64_t sector_count, uint16_t max_sectors_at_once);
         ~Block();

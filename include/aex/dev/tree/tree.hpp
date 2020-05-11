@@ -1,7 +1,7 @@
 #pragma once
 
-#include "aex/dev/bus.hpp"
-#include "aex/dev/device.hpp"
+#include "aex/dev/tree/bus.hpp"
+#include "aex/dev/tree/device.hpp"
 #include "aex/mem/smartarray.hpp"
 #include "aex/mem/smartptr.hpp"
 #include "aex/mem/vector.hpp"
@@ -9,7 +9,7 @@
 
 #include <stdint.h>
 
-namespace AEX::Dev {
+namespace AEX::Dev::Tree {
     extern Mem::SmartArray<Bus> buses;
 
     /**

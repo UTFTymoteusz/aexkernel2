@@ -1,6 +1,6 @@
 #pragma once
 
-namespace AEX::Dev {
+namespace AEX::Dev::Tree {
     class Device;
 
     class Driver {

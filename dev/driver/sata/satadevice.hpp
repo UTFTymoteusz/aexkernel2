@@ -1,6 +1,6 @@
 #pragma once
 
-#include "aex/dev/device.hpp"
+#include "aex/dev/tree/device.hpp"
 
 #include "dev/driver/sata/ahci.hpp"
 
@@ -14,7 +14,7 @@ namespace AEX::Dev::SATA {
         PM     = 3,
     };
 
-    class SATADevice : public Device {
+    class SATADevice : public Tree::Device {
       public:
         static constexpr auto PxCMD_CR  = 0x8000;
         static constexpr auto PxCMD_FR  = 0x4000;

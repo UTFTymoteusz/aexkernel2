@@ -1,6 +1,6 @@
 #include "dev/driver/sata/ahci.hpp"
 
-#include "aex/dev/tree.hpp"
+#include "aex/dev/tree/tree.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
 
@@ -11,8 +11,8 @@ namespace AEX::Dev::SATA {
         this->hba   = (hba_t*) addr;
         this->index = index;
 
-        if (!bus_exists("sata"))
-            new Bus("sata");
+        if (!Tree::bus_exists("sata"))
+            new Tree::Bus("sata");
 
         hba->global_host_control |= 1 << 31; // Let's set it to AHCI mode just incase.
 
@@ -109,7 +109,7 @@ namespace AEX::Dev::SATA {
 
             sata_device->init();
 
-            register_device("sata", sata_device);
+            Tree::register_device("sata", sata_device);
             break;
         case SATA_SIG_SEMB:
             printk("ahci%i: port%i: Found SEMB\n", index, port_index);

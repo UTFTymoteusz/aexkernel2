@@ -1,11 +1,11 @@
-#include "aex/dev/bus.hpp"
+#include "aex/dev/tree/bus.hpp"
 
-#include "aex/dev/tree.hpp"
+#include "aex/dev/tree/tree.hpp"
 #include "aex/optional.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
 
-namespace AEX::Dev {
+namespace AEX::Dev::Tree {
     Bus::Bus(const char* name) : Device(name) {
         buses.addRef(this);
 

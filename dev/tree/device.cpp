@@ -1,11 +1,11 @@
-#include "aex/dev/device.hpp"
+#include "aex/dev/tree/device.hpp"
 
-#include "aex/dev/tree.hpp"
+#include "aex/dev/tree/tree.hpp"
 #include "aex/optional.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
 
-namespace AEX::Dev {
+namespace AEX::Dev::Tree {
     Device::Device(const char* name) {
         strncpy(this->name, name, sizeof(this->name));
     }

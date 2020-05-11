@@ -48,7 +48,7 @@ namespace AEX::Sys {
         /**
          * Halts the local CPU.
          */
-        static void halt();
+        __attribute((noreturn)) static void halt();
 
         /**
          * Enables interrupts on the local CPU.

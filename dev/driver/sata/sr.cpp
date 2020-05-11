@@ -1,7 +1,7 @@
 #include "aex/byte.hpp"
 #include "aex/dev/block.hpp"
-#include "aex/dev/driver.hpp"
-#include "aex/dev/tree.hpp"
+#include "aex/dev/tree/driver.hpp"
+#include "aex/dev/tree/tree.hpp"
 
 #include "dev/driver/sata/satadevice.hpp"
 
@@ -31,26 +31,24 @@ namespace AEX::Dev::SATA {
             uint8_t packet[12] = {write ? AHCI::scsi_command::WRITE_12
                                         : AHCI::scsi_command::READ_12};
 
-            *((uint32_t*) &(packet[2])) = uint32_bswap(sector);
-            *((uint32_t*) &(packet[6])) = uint32_bswap(sector_count);
+            *((uint32_t*) &(packet[2])) = bswap(sector);
+            *((uint32_t*) &(packet[6])) = bswap(sector_count);
 
             _device->scsiPacket(packet, buffer, sector_count * SECTOR_SIZE);
         }
     };
 
-    class SRDriver : public Driver {
+    class SRDriver : public Tree::Driver {
       public:
         SRDriver() : Driver("sr") {}
 
-        bool check(Device* _device) {
+        bool check(Tree::Device* _device) {
             auto device = (SATADevice*) _device;
             return device->type == type_t::SATAPI;
         }
 
-        void bind(Device* _device) {
+        void bind(Tree::Device* _device) {
             auto device = (SATADevice*) _device;
-
-            uint8_t buffer[20];
         }
 
       private:
