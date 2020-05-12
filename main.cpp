@@ -24,6 +24,8 @@ namespace AEX::Init {
     void init_print_header();
 }
 
+void main_threaded();
+
 void main(multiboot_info_t* mbinfo) {
     TTY::init();
 
@@ -59,15 +61,23 @@ void main(multiboot_info_t* mbinfo) {
 
     Sys::MCore::init();
 
-    VMem::cleanup_bootstrap();
-
     Sys::CPU::interrupts();
     Sys::IRQ::setup_timers_mcore(250);
 
     Proc::init();
 
+    VMem::cleanup_bootstrap();
+    printk("\n");
+
+    // Let's get to it
+    main_threaded();
+}
+
+void main_threaded() {
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrentThread()->getProcess();
+
+    Spinlock lock;
 
     while (true) {
         uint64_t ns = Sys::IRQ::get_curtime();

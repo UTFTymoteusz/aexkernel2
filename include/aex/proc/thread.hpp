@@ -94,7 +94,33 @@ namespace AEX::Proc {
             return Mem::atomic_read(&_busy) > 0;
         }
 
+        /**
+         * Adds 1 to the thread's block counter. If _block is greater than 0, the thread cannot be
+         * interrupted.
+         */
+        inline void addBlock() {
+            Mem::atomic_add(&_block, (uint16_t) 1);
+        }
+
+        /**
+         * Subtracts 1 from the thread's block counter. If _block is greater than 0, the thread
+         * cannot be interrupted.
+         */
+        inline void subBlock() {
+            Mem::atomic_sub(&_block, (uint16_t) 1);
+        }
+
+        /**
+         * Checks the thread's block counter. If _block is greater than 0, the thread cannot be
+         * interrupted.
+         * @return Whenever the thread is "blocked".
+         */
+        inline bool isBlocked() {
+            return Mem::atomic_read(&_block) > 0;
+        }
+
       private:
         uint16_t _busy;
+        uint16_t _block;
     };
 }

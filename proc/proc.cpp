@@ -44,9 +44,12 @@ namespace AEX::Proc {
     void schedule() {
         auto cpu = Sys::CPU::getCurrentCPU();
 
-        if (!lock.tryAcquire()) {
+        if (cpu->currentThread->isBlocked())
+            return;
+
+        if (!lock.tryAcquireRaw()) {
             if (cpu->currentThread->status != Thread::state::RUNNABLE)
-                lock.acquire();
+                lock.acquireRaw();
             else
                 return;
         }
@@ -59,7 +62,7 @@ namespace AEX::Proc {
         cpu->measurement_start_ns = curtime;
 
         cpu->currentThread->parent->usage.cpu_time_ns += delta;
-        cpu->currentThread->lock.release();
+        cpu->currentThread->lock.releaseRaw();
 
         auto increment = [&i]() {
             i++;
@@ -98,7 +101,7 @@ namespace AEX::Proc {
                 continue;
             }
 
-            if (!threads[i]->lock.tryAcquire()) {
+            if (!threads[i]->lock.tryAcquireRaw()) {
                 increment();
                 continue;
             }
@@ -107,7 +110,7 @@ namespace AEX::Proc {
             cpu->currentThread  = threads[i];
             cpu->currentContext = &threads[i]->context;
 
-            lock.release();
+            lock.releaseRaw();
 
             return;
         }
@@ -116,9 +119,9 @@ namespace AEX::Proc {
         cpu->currentThread  = idle_threads[cpu->id];
         cpu->currentContext = &idle_threads[cpu->id]->context;
 
-        cpu->currentThread->lock.tryAcquire();
+        cpu->currentThread->lock.tryAcquireRaw();
 
-        lock.release();
+        lock.releaseRaw();
     }
 
     int add_process(Process* process) {
@@ -161,7 +164,7 @@ namespace AEX::Proc {
             Sys::MCore::CPUs[i]->currentContext = &void_thread.context;
             Sys::MCore::CPUs[i]->current_tid    = 0;
 
-            idle_threads[i]->lock.acquire();
+            idle_threads[i]->lock.acquireRaw();
         }
 
         Sys::MCore::CPUs[0]->current_tid    = 1;
@@ -169,6 +172,6 @@ namespace AEX::Proc {
         Sys::MCore::CPUs[0]->currentContext = &bsp_thread->context;
 
         // The scheduler will release the lock
-        bsp_thread->lock.acquire();
+        bsp_thread->lock.acquireRaw();
     }
 }

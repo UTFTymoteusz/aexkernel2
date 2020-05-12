@@ -57,6 +57,15 @@ lmode:
 	xor rax, rax
 	mov gs, rax
 
+	; Let's fake the CPU structure
+	mov rcx, 0xC0000101
+
+	mov rax, fake_cpu_class_ptr
+	mov rdx, rax
+	ror rdx, 32
+
+	wrmsr
+
 	lidt [0x510]
 	lgdt [0x520]
 
@@ -80,6 +89,22 @@ lmode:
 
 	mov qword rax, [0x560]
 	call rax
+
+fake_cpu_class_ptr:
+	dq fake_cpu_class
+
+fake_cpu_class:
+	dd 0
+	dd 0
+
+	dq fake_cpu_class
+
+	dq 0
+	dq 0
+	dq 0
+	dq 0
+	dq 0
+	dq 0
 
 align 16
 tmp_gdt:

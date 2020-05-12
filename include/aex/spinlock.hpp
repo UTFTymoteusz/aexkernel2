@@ -8,6 +8,11 @@ namespace AEX {
 
         bool tryAcquire();
 
+        void acquireRaw();
+        void releaseRaw();
+
+        bool tryAcquireRaw();
+
       private:
         volatile int _lock = 0;
     };

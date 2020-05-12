@@ -373,5 +373,7 @@ namespace AEX::VMem {
         free_pptr(pptr);
 
         Sys::CPU::broadcastPacket(Sys::CPU::ipp_type::PG_FLUSH, nullptr, true);
+
+        printk(PRINTK_OK "vmem: Bootstrap necessities cleaned\n");
     }
 }
