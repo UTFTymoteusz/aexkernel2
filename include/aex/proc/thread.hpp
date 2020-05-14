@@ -24,6 +24,8 @@ namespace AEX::Proc {
             BLOCKED  = 3,
         };
 
+        tid_t tid;
+
         Context  context;
         Spinlock lock;
 
@@ -62,6 +64,12 @@ namespace AEX::Proc {
          * @return Pointer to the currently running thread.
          */
         static Thread* getCurrentThread();
+
+        /**
+         * Gets the currently running thread's ID.
+         * @return Thread ID of the currently running thread.
+         */
+        static tid_t getCurrentTID();
 
         /**
          * Adds the thread to the run queue and sets its status as RUNNABLE.

@@ -74,9 +74,31 @@ void main(multiboot_info_t* mbinfo) {
     main_threaded();
 }
 
+void second_thread() {
+    auto idle    = Proc::processes.get(0);
+    auto process = Proc::Thread::getCurrentThread()->getProcess();
+
+    process->lock.acquire();
+
+    printk("threads\n");
+    for (int i = 0; i < process->threads.count(); i++) {
+        printk("  tid %i\n", process->threads[i]);
+    }
+
+    process->lock.release();
+
+    Proc::Thread::sleep(10000);
+}
+
 void main_threaded() {
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrentThread()->getProcess();
+
+    auto thread = new Proc::Thread(process.get(), (void*) second_thread, new uint8_t[1024], 1024,
+                                   process->pagemap);
+    thread->start();
+
+    Proc::Thread::sleep(500);
 
     while (true) {
         uint64_t ns = IRQ::get_uptime();
@@ -87,6 +109,8 @@ void main_threaded() {
                idle->usage.cpu_time_ns / 1000000, idle->pid);
         printk("us  : %li ns (%li ms) cpu time (pid %i)\n", process->usage.cpu_time_ns,
                process->usage.cpu_time_ns / 1000000, process->pid);
+
+        printk("tid: %i\n", Proc::Thread::getCurrentTID());
 
         Proc::Thread::sleep(1000);
     }

@@ -1,9 +1,13 @@
 #pragma once
 
-#include "aex/mem/vector.hpp"
+#include "aex/mem/lazyvector.hpp"
 #include "aex/proc/affinity.hpp"
 #include "aex/proc/resource_usage.hpp"
 #include "aex/proc/thread.hpp"
+
+namespace AEX::VMem {
+    class Pagemap;
+}
 
 namespace AEX::Proc {
     typedef int pid_t;
@@ -21,7 +25,9 @@ namespace AEX::Proc {
 
         Spinlock lock;
 
-        Mem::Vector<tid_t> threads;
+        Mem::LazyVector<tid_t, 0> threads;
+
+        VMem::Pagemap* pagemap;
 
         Process() = default;
 
@@ -31,7 +37,8 @@ namespace AEX::Proc {
          * @param name       Process name. Will get generated from the image path if not specified.
          * @param parent_pid PID of the parent process.
          */
-        Process(const char* image_path, pid_t parent_pid, const char* name = nullptr);
+        Process(const char* image_path, pid_t parent_pid, VMem::Pagemap* pagemap,
+                const char* name = nullptr);
 
       private:
     };

@@ -30,8 +30,11 @@ namespace AEX::Proc {
     void setup_cores(Thread* bsp_thread);
 
     void init() {
-        auto idle_process   = new Process("/sys/aexkrnl.elf", 0, "idle");
-        auto kernel_process = new Process("/sys/aexkrnl.elf", 0);
+        threads           = (Thread**) Heap::malloc(sizeof(Thread*) * 1);
+        thread_array_size = 1;
+
+        auto idle_process   = new Process("/sys/aexkrnl.elf", 0, VMem::kernel_pagemap, "idle");
+        auto kernel_process = new Process("/sys/aexkrnl.elf", 0, VMem::kernel_pagemap);
 
         auto bsp_thread = new Thread(kernel_process);
         bsp_thread->start();
@@ -70,12 +73,12 @@ namespace AEX::Proc {
         auto increment = [&i]() {
             i++;
             if (i >= thread_array_size)
-                i = 0;
+                i = 1;
         };
 
         increment();
 
-        for (int j = 0; j < thread_array_size; j++) {
+        for (int j = 1; j < thread_array_size; j++) {
             if (!threads[i]) {
                 increment();
                 continue;
@@ -127,14 +130,14 @@ namespace AEX::Proc {
         lock.releaseRaw();
     }
 
-    int add_process(Process* process) {
+    pid_t add_process(Process* process) {
         return processes.addRef(process);
     }
 
-    int add_thread(Thread* thread) {
+    tid_t add_thread(Thread* thread) {
         auto scopeLock = ScopeSpinlock(lock);
 
-        for (int i = 0; i < thread_array_size; i++) {
+        for (int i = 1; i < thread_array_size; i++) {
             if (threads[i])
                 continue;
 
@@ -146,6 +149,7 @@ namespace AEX::Proc {
         threads = (Thread**) Heap::realloc(threads, thread_array_size * sizeof(Thread*));
 
         threads[thread_array_size - 1] = thread;
+        thread->tid                    = thread_array_size - 1;
 
         return thread_array_size - 1;
     }
@@ -181,5 +185,9 @@ namespace AEX::Proc {
 
         // The scheduler will release the lock
         bsp_thread->lock.acquireRaw();
+    }
+
+    __attribute__((weak)) void _kthread_exit() {
+        kpanic("_kthread_exit() not implemented\n");
     }
 }

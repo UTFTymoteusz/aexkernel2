@@ -1,14 +1,23 @@
 #include "proc/context.hpp"
 
+#include "aex/debug.hpp"
 #include "aex/mem/vmem.hpp"
 
 namespace AEX::Proc {
     Context::Context(void* entry, void* stack, size_t stack_size, VMem::Pagemap* pagemap,
-                     bool usermode) {
+                     bool usermode, void (*on_end)()) {
         rip = (uint64_t) entry;
         rsp = (uint64_t) stack + stack_size;
 
         cr3 = (uint64_t) pagemap->pageRoot;
+
+        if (on_end) {
+            rsp -= sizeof(on_end);
+            *((uint64_t*) rsp) = usermode ? Debug::entry_type::USER : Debug::entry_type::KERNEL;
+
+            rsp -= sizeof(on_end);
+            *((uint64_t*) rsp) = (uint64_t) on_end;
+        }
 
         if (!usermode) {
             cs = 0x08;

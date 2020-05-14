@@ -15,6 +15,8 @@ namespace AEX::Proc {
 
     void schedule();
 
-    int add_process(Process* process);
-    int add_thread(Thread* thread);
+    pid_t add_process(Process* process);
+    tid_t add_thread(Thread* thread);
+
+    void _kthread_exit();
 }

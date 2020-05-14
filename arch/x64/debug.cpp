@@ -15,9 +15,22 @@ namespace AEX::Debug {
 
         asm volatile("mov %0, rbp;" : "=r"(frame));
 
-        while (frame) {
+        while (frame > (stack_frame*) 8) {
             if (skip == 0)
-                printk("  0x%p\n", frame->rip);
+                switch (frame->rip) {
+                case entry_type::BOOT:
+                    printk("  *bootstrap entry*\n");
+                    break;
+                case entry_type::USER:
+                    printk("  *user entry*\n");
+                    break;
+                case entry_type::KERNEL:
+                    printk("  *kernel entry*\n");
+                    break;
+                default:
+                    printk("  0x%p\n", frame->rip);
+                    break;
+                }
             else
                 skip--;
 

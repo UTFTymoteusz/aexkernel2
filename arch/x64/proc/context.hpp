@@ -17,6 +17,6 @@ namespace AEX::Proc {
         Context() = default;
 
         Context(void* entry, void* stack, size_t stack_size, VMem::Pagemap* pagemap,
-                bool usermode = false);
+                bool usermode = false, void (*on_end)() = nullptr);
     } __attribute__((packed));
 }
