@@ -47,6 +47,10 @@ namespace AEX::Sys {
         return read(0x390);
     }
 
+    uint32_t APIC::getTimerInitial() {
+        return read(0x380);
+    }
+
     void APIC::sendInterrupt(uint8_t dst, uint8_t vector) {
         bool ints = CPU::checkInterrupts();
 

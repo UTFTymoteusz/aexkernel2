@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 namespace AEX::Sys::IRQ {
-    extern bool   is_APIC_present;
-    extern size_t APIC_tps;
+    extern bool   is_apic_present;
+    extern size_t apic_tps;
 
     void init();
 
@@ -45,7 +45,7 @@ namespace AEX::Sys::IRQ {
     void setup_timers_mcore(double hz);
 
     /**
-     * Signalizes a timer tick. This is used for get_curtime. Should not be called directly.
+     * Signalizes a timer tick. This is used for get_uptime. Should not be called directly.
      */
     void timer_tick();
 
@@ -53,5 +53,5 @@ namespace AEX::Sys::IRQ {
      * Gets the amount of time passed since multicore timers were setup.
      * @return Amount of time passed in nanoseconds.
      */
-    uint64_t get_curtime();
+    uint64_t get_uptime();
 }

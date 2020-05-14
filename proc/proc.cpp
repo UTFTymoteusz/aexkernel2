@@ -16,8 +16,11 @@
 
 namespace AEX::Proc {
     Mem::SmartArray<Process> processes;
-    Mem::Vector<Thread*>     threads      = nullptr;
-    Thread**                 idle_threads = nullptr;
+
+    Thread** threads      = nullptr;
+    Thread** idle_threads = nullptr;
+
+    int thread_array_size = 0;
 
     Thread void_thread;
 
@@ -56,7 +59,7 @@ namespace AEX::Proc {
 
         int i = cpu->current_tid;
 
-        uint64_t curtime = Sys::IRQ::get_curtime();
+        uint64_t curtime = Sys::IRQ::get_uptime();
         uint64_t delta   = curtime - cpu->measurement_start_ns;
 
         cpu->measurement_start_ns = curtime;
@@ -66,13 +69,13 @@ namespace AEX::Proc {
 
         auto increment = [&i]() {
             i++;
-            if (i >= threads.count())
+            if (i >= thread_array_size)
                 i = 0;
         };
 
         increment();
 
-        for (int j = 0; j < threads.count(); j++) {
+        for (int j = 0; j < thread_array_size; j++) {
             if (!threads[i]) {
                 increment();
                 continue;
@@ -82,7 +85,7 @@ namespace AEX::Proc {
             case Thread::state::RUNNABLE:
                 break;
             case Thread::state::SLEEPING:
-                if (Sys::IRQ::get_curtime() < threads[i]->wakeup_at) {
+                if (curtime < threads[i]->wakeup_at) {
                     increment();
                     continue;
                 }
@@ -131,7 +134,7 @@ namespace AEX::Proc {
     int add_thread(Thread* thread) {
         auto scopeLock = ScopeSpinlock(lock);
 
-        for (int i = 0; i < threads.count(); i++) {
+        for (int i = 0; i < thread_array_size; i++) {
             if (threads[i])
                 continue;
 
@@ -139,7 +142,12 @@ namespace AEX::Proc {
             return i;
         }
 
-        return threads.pushBack(thread);
+        thread_array_size++;
+        threads = (Thread**) Heap::realloc(threads, thread_array_size * sizeof(Thread*));
+
+        threads[thread_array_size - 1] = thread;
+
+        return thread_array_size - 1;
     }
 
     void idle() {

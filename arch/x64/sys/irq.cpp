@@ -1,6 +1,7 @@
 #include "sys/irq.hpp"
 
 #include "aex/kpanic.hpp"
+#include "aex/mem/atomic.hpp"
 #include "aex/mem/vector.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
@@ -21,13 +22,15 @@
 #define CPUID_EDX_FEAT_APIC 0x100
 
 namespace AEX::Sys::IRQ {
-    bool   is_APIC_present   = false;
-    size_t APIC_tps          = 0;
-    double APIC_interval     = 0.0;
-    double APIC_interval_adj = 0.0;
+    bool   is_apic_present   = false;
+    size_t apic_tps          = 0;
+    double apic_interval     = 0.0;
+    double apic_interval_adj = 0.0;
 
-    uint64_t ns_per_tick = 0;
-    uint64_t curtime_ns  = 0;
+    uint64_t uptime_ns = 0;
+
+    uint64_t ns_per_irq     = 0;
+    uint64_t ns_per_irq_adj = 0;
 
     ACPI::MADT*          madt;
     Mem::Vector<IOAPIC*> ioapics;
@@ -46,9 +49,9 @@ namespace AEX::Sys::IRQ {
 
         CPU::cpuid(0x01, &eax, &ebx, &ecx, &edx);
 
-        is_APIC_present = edx & CPUID_EDX_FEAT_APIC;
+        is_apic_present = edx & CPUID_EDX_FEAT_APIC;
 
-        if (!is_APIC_present)
+        if (!is_apic_present)
             kpanic("This computer is too ancient to run this OS");
 
         pics[0] = PIC(0x20, 0x21);
@@ -103,8 +106,8 @@ namespace AEX::Sys::IRQ {
     }
 
     void init_timer() {
-        if (APIC_tps == 0) {
-            APIC_tps = find_apic_tps();
+        if (apic_tps == 0) {
+            apic_tps = find_apic_tps();
 
             printk(PRINTK_OK "apic: Timer calibrated\n");
         }
@@ -113,15 +116,17 @@ namespace AEX::Sys::IRQ {
     }
 
     void setup_timer(double hz) {
-        APIC::setupTimer(0x20 + 0, (size_t)(APIC_tps / hz), true);
+        uptime_ns = 100 * 1000000ul;
+
+        APIC::setupTimer(0x20 + 0, (size_t)(apic_tps / hz), true);
     }
 
     void irq_sleep(double ms) {
-        if (APIC_tps == 0)
-            APIC_tps = find_apic_tps();
+        if (apic_tps == 0)
+            apic_tps = find_apic_tps();
 
         irq_mark = false;
-        APIC::setupTimer(0x20 + 31, (size_t)(APIC_tps * (ms / 1000.0)), false);
+        APIC::setupTimer(0x20 + 31, (size_t)(apic_tps * (ms / 1000.0)), false);
 
         while (!irq_mark)
             CPU::waitForInterrupt();
@@ -148,25 +153,54 @@ namespace AEX::Sys::IRQ {
             irq_sleep(interval);
         }
 
-        APIC_interval     = (double) ((1.0 / (double) APIC_tps) * 1000000000.0);
-        APIC_interval_adj = APIC_interval / timer_hz;
+        apic_interval     = (double) ((1.0 / (double) apic_tps) * 1000000000.0);
+        apic_interval_adj = apic_interval / MCore::cpu_count;
 
-        ns_per_tick = (uint64_t)(APIC_interval * APIC_tps / hz / MCore::cpu_count);
+        ns_per_irq     = (uint64_t)(apic_interval * apic_tps / timer_hz);
+        ns_per_irq_adj = ns_per_irq / MCore::cpu_count;
 
         setup_timer(timer_hz);
     }
 
     void timer_tick() {
-        curtime_ns += ns_per_tick;
+        Mem::atomic_add_fetch(&uptime_ns, ns_per_irq_adj);
     }
 
-    uint64_t get_curtime() {
-        int64_t offset = (APIC::getTimerCounter() / MCore::cpu_count) * CPU::getCurrentCPUID();
-        return curtime_ns +
-               (uint64_t)(((int64_t) APIC_tps - ((int64_t) APIC::getTimerCounter() - offset)) *
-                          APIC_interval_adj);
-    }
+    uint64_t get_uptime() {
+        return Mem::atomic_read(&uptime_ns);
 
+        // I give up
+        /*static uint64_t last_time = 0;
+        static Spinlock lock;
+
+        bool ints = CPU::checkInterrupts();
+        CPU::nointerrupts();
+
+        auto cpu = CPU::getCurrentCPU();
+
+        uint64_t ticks = APIC::getTimerInitial() - APIC::getTimerCounter();
+
+        uint64_t time = Mem::atomic_read(&curtime_ns) + (uint64_t)(apic_interval * ticks) -
+                        ns_per_irq_adj * cpu->id;
+        uint64_t last = Mem::atomic_read(&last_time);
+
+        if (time > last)
+            last = time;
+
+        if (time < last) {
+            do
+                time += (uint64_t)(apic_interval_adj * APIC::getTimerInitial());
+            while (time < last);
+        }
+
+        if (time > Mem::atomic_read(&last_time))
+            last_time = time;
+
+        if (ints)
+            CPU::interrupts();
+
+        return time;*/
+    }
 
     IOAPIC* find_ioapic(int irq) {
         for (int i = 0; i < ioapics.count(); i++) {

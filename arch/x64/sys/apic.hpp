@@ -21,6 +21,7 @@ namespace AEX::Sys {
         static void setupTimer(uint32_t vector, uint32_t initial_count, bool periodic);
 
         static uint32_t getTimerCounter();
+        static uint32_t getTimerInitial();
 
         static void sendInterrupt(uint8_t dst, uint8_t vector);
         static void sendINIT(uint8_t dst);

@@ -19,6 +19,7 @@
 #include "tty.hpp"
 
 using namespace AEX;
+using namespace AEX::Sys;
 
 namespace AEX::Init {
     void init_print_header();
@@ -49,20 +50,20 @@ void main(multiboot_info_t* mbinfo) {
     ACPI::init();
     printk("\n");
 
-    Sys::IRQ::init();
-    Sys::IRQ::init_timer();
+    IRQ::init();
+    IRQ::init_timer();
     printk("\n");
 
     Dev::init();
     printk("\n");
 
-    auto bsp = new Sys::CPU(0);
+    auto bsp = new CPU(0);
     bsp->initLocal();
 
-    Sys::MCore::init();
+    MCore::init();
 
-    Sys::CPU::interrupts();
-    Sys::IRQ::setup_timers_mcore(250);
+    CPU::interrupts();
+    IRQ::setup_timers_mcore(250);
 
     Proc::init();
 
@@ -77,18 +78,16 @@ void main_threaded() {
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrentThread()->getProcess();
 
-    Spinlock lock;
-
     while (true) {
-        uint64_t ns = Sys::IRQ::get_curtime();
+        uint64_t ns = IRQ::get_uptime();
 
-        printk("%i: %li (%li ms, %li s, %li min)\n", Sys::CPU::getCurrentCPUID(), ns, ns / 1000000,
+        printk("%i: %li (%li ms, %li s, %li min)\n", CPU::getCurrentCPUID(), ns, ns / 1000000,
                ns / 1000000000, ns / 1000000000 / 60);
         printk("idle: %li ns (%li ms) cpu time (pid %i)\n", idle->usage.cpu_time_ns,
                idle->usage.cpu_time_ns / 1000000, idle->pid);
         printk("us  : %li ns (%li ms) cpu time (pid %i)\n", process->usage.cpu_time_ns,
                process->usage.cpu_time_ns / 1000000, process->pid);
 
-        Proc::Thread::sleep(5000);
+        Proc::Thread::sleep(1000);
     }
 }

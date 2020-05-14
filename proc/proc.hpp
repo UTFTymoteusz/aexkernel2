@@ -7,7 +7,7 @@
 
 namespace AEX::Proc {
     extern Mem::SmartArray<Process> processes;
-    extern Mem::Vector<Thread*>     threads;
+    extern Thread**                 threads;
 
     void init();
 

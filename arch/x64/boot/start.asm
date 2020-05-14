@@ -150,6 +150,8 @@ fake_cpu_class:
 	dq 0
 	dq 0
 	dq 0
+	dq 0
+	dq 0
 	
 align 16
 gdt32to64:

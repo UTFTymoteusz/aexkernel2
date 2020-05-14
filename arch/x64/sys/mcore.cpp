@@ -97,7 +97,7 @@ namespace AEX::Sys::MCore {
         bool              success = false;
         volatile uint8_t* signal  = (uint8_t*) TRAMPOLINE_ADDR;
 
-        for (int j = 0; j < 100; j++) {
+        for (int j = 0; j < 250; j++) {
             for (int k = 0; k < 7200; k++)
                 CPU::inportb(0x20);
 
