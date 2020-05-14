@@ -49,12 +49,12 @@ namespace AEX::Mem {
             if (index < 0 || index >= _count)
                 return;
 
+            _array[index] = nullboi;
+
             if (index == _count - 1) {
                 _count--;
                 _array = (T*) Heap::realloc((void*) _array, _count * sizeof(T));
             }
-
-            _array[index] = nullboi;
         }
 
         int count() {

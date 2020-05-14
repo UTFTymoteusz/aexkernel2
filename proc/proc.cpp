@@ -39,8 +39,8 @@ namespace AEX::Proc {
         auto bsp_thread = new Thread(kernel_process);
         bsp_thread->start();
 
-        tid_t tid = add_thread(bsp_thread);
-        kernel_process->threads.pushBack(tid);
+        add_thread(bsp_thread);
+        kernel_process->threads.addRef(bsp_thread, bsp_thread->refs);
 
         setup_idle_threads(idle_process);
         setup_cores(bsp_thread);
@@ -50,11 +50,11 @@ namespace AEX::Proc {
     void schedule() {
         auto cpu = Sys::CPU::getCurrentCPU();
 
-        if (cpu->currentThread->isBlocked())
+        if (cpu->currentThread->isCritical())
             return;
 
         if (!lock.tryAcquireRaw()) {
-            if (cpu->currentThread->status != Thread::state::RUNNABLE)
+            if (cpu->currentThread->status != Thread::status_t::RUNNABLE)
                 lock.acquireRaw();
             else
                 return;
@@ -85,19 +85,19 @@ namespace AEX::Proc {
             }
 
             switch (threads[i]->status) {
-            case Thread::state::RUNNABLE:
+            case Thread::status_t::RUNNABLE:
                 break;
-            case Thread::state::SLEEPING:
+            case Thread::status_t::SLEEPING:
                 if (curtime < threads[i]->wakeup_at) {
                     increment();
                     continue;
                 }
 
-                threads[i]->status = Thread::state::RUNNABLE;
+                threads[i]->status = Thread::status_t::RUNNABLE;
 
                 break;
             default:
-            case Thread::state::BLOCKED:
+            case Thread::status_t::BLOCKED:
                 increment();
                 continue;
             }
@@ -187,7 +187,7 @@ namespace AEX::Proc {
         bsp_thread->lock.acquireRaw();
     }
 
-    __attribute__((weak)) void _kthread_exit() {
+    void _kthread_exit() {
         kpanic("_kthread_exit() not implemented\n");
     }
 }

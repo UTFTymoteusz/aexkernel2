@@ -8,7 +8,7 @@
 
 namespace AEX {
     void Spinlock::acquire() {
-        Proc::Thread::getCurrentThread()->addBlock();
+        Proc::Thread::getCurrentThread()->addCritical();
 
         while (!__sync_bool_compare_and_swap(&_lock, false, true))
             asm volatile("pause");
@@ -20,18 +20,18 @@ namespace AEX {
         if (!__sync_bool_compare_and_swap(&_lock, true, false))
             kpanic("spinlock: Too many releases");
 
-        Proc::Thread::getCurrentThread()->subBlock();
+        Proc::Thread::getCurrentThread()->subCritical();
 
         __sync_synchronize();
     }
 
     bool Spinlock::tryAcquire() {
-        Proc::Thread::getCurrentThread()->addBlock();
+        Proc::Thread::getCurrentThread()->addCritical();
 
         bool ret = __sync_bool_compare_and_swap(&_lock, false, true);
 
         if (!ret)
-            Proc::Thread::getCurrentThread()->subBlock();
+            Proc::Thread::getCurrentThread()->subCritical();
 
         return ret;
     }

@@ -42,6 +42,8 @@ namespace AEX::Mem {
             if (index < 0 || index >= _count)
                 return;
 
+            _array[index].~T();
+
             _count--;
 
             int copy_amount = _count - index;

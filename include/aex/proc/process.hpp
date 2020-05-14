@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aex/mem/lazyvector.hpp"
+#include "aex/mem/smartarray.hpp"
 #include "aex/proc/affinity.hpp"
 #include "aex/proc/resource_usage.hpp"
 #include "aex/proc/thread.hpp"
@@ -25,7 +26,7 @@ namespace AEX::Proc {
 
         Spinlock lock;
 
-        Mem::LazyVector<tid_t, 0> threads;
+        Mem::SmartArray<Thread> threads;
 
         VMem::Pagemap* pagemap;
 

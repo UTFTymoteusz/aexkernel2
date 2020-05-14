@@ -33,11 +33,19 @@ namespace AEX::Proc {
         if (dont_add)
             return;
 
-        tid_t tid = Proc::add_thread(this);
+        Proc::add_thread(this);
 
         parent->lock.acquire();
-        parent->threads.pushBack(tid);
+        parent->threads.addRef(this, this->refs);
+
+        this->refs->increment();
+
         parent->lock.release();
+    }
+
+    Thread::~Thread() {
+        delete refs;
+        // cleanup the context too pls
     }
 
     void Thread::start() {
@@ -45,11 +53,23 @@ namespace AEX::Proc {
             status = RUNNABLE;
     }
 
+    Mem::SmartPointer<Thread> Thread::getSmartPointer() {
+        this->refs->increment();
+        return Mem::SmartPointer<Thread>(this, this->refs);
+    }
+
+    void Thread::setStatus(status_t status) {
+        this->status = status;
+    }
+
     Mem::SmartPointer<Process> Thread::getProcess() {
         return processes.get(this->parent->pid);
     }
 
     void Thread::yield() {
+        if (Thread::getCurrentThread()->isCritical())
+            return;
+
         proc_reshed();
     }
 
@@ -57,7 +77,7 @@ namespace AEX::Proc {
         auto currentThread = Thread::getCurrentThread();
 
         currentThread->wakeup_at = Sys::IRQ::get_uptime() + ((uint64_t) ms) * 1000000;
-        currentThread->status    = Thread::state::SLEEPING;
+        currentThread->status    = Thread::status_t::SLEEPING;
 
         yield();
     }

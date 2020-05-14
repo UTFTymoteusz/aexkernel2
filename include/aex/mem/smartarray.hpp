@@ -73,6 +73,15 @@ namespace AEX::Mem {
             return index;
         }
 
+        int addRef(T* ptr, ref_counter* counter) {
+            auto scopeLock = ScopeSpinlock(_lock);
+
+            int index        = findSlotOrMakeSlot();
+            _elements[index] = element(ptr, counter);
+
+            return index;
+        }
+
         Iterator getIterator(int start = 0) {
             return Iterator(this, start);
         }
@@ -85,6 +94,11 @@ namespace AEX::Mem {
             element(T* ptr) {
                 this->ptr = ptr;
                 refs      = new ref_counter(1);
+            }
+
+            element(T* ptr, ref_counter* refs) {
+                this->ptr  = ptr;
+                this->refs = refs;
             }
         };
 

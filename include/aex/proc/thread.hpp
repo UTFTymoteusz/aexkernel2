@@ -17,7 +17,7 @@ namespace AEX::Proc {
 
     class Thread {
       public:
-        enum state : uint8_t {
+        enum status_t : uint8_t {
             FRESH    = 0,
             RUNNABLE = 1,
             SLEEPING = 2,
@@ -26,10 +26,12 @@ namespace AEX::Proc {
 
         tid_t tid;
 
-        Context  context;
-        Spinlock lock;
+        Context context;
 
-        state status;
+        Spinlock          lock;
+        Mem::ref_counter* refs = new Mem::ref_counter(1);
+
+        status_t status;
         union {
             uint64_t wakeup_at;
         };
@@ -40,6 +42,8 @@ namespace AEX::Proc {
         Thread(Process* parent);
         Thread(Process* parent, void* entry, void* stack, size_t stack_size, VMem::Pagemap* pagemap,
                bool usermode = false, bool dont_add = false);
+
+        ~Thread();
 
         /**
          * Gets the parent process of the thread.
@@ -76,6 +80,10 @@ namespace AEX::Proc {
          */
         void start();
 
+        Mem::SmartPointer<Thread> getSmartPointer();
+
+        void setStatus(status_t status);
+
         // pls atomic<T> later
         /**
          * Adds 1 to the thread's busy counter. If _busy is greater than 0, the thread cannot be
@@ -99,36 +107,36 @@ namespace AEX::Proc {
          * @return Whenever the thread is "busy".
          */
         inline bool isBusy() {
-            return Mem::atomic_read(&_busy) > 0;
+            return Mem::atomic_read(&_busy) > 0 || Mem::atomic_read(&_critical) > 0;
         }
 
         /**
-         * Adds 1 to the thread's block counter. If _block is greater than 0, the thread cannot be
-         * interrupted.
+         * Adds 1 to the thread's critical counter. If _critical is greater than 0, the thread
+         * cannot be interrupted or killed.
          */
-        inline void addBlock() {
-            Mem::atomic_add(&_block, (uint16_t) 1);
+        inline void addCritical() {
+            Mem::atomic_add(&_critical, (uint16_t) 1);
         }
 
         /**
-         * Subtracts 1 from the thread's block counter. If _block is greater than 0, the thread
-         * cannot be interrupted.
+         * Subtracts 1 from the thread's critical counter. If _critical is greater than 0, the
+         * thread cannot be interrupted or killed.
          */
-        inline void subBlock() {
-            Mem::atomic_sub(&_block, (uint16_t) 1);
+        inline void subCritical() {
+            Mem::atomic_sub(&_critical, (uint16_t) 1);
         }
 
         /**
-         * Checks the thread's block counter. If _block is greater than 0, the thread cannot be
-         * interrupted.
-         * @return Whenever the thread is "blocked".
+         * Checks the thread's critical counter. If _critical is greater than 0, the thread cannot
+         * be interrupted or killed.
+         * @return Whenever the thread is "critical".
          */
-        inline bool isBlocked() {
-            return Mem::atomic_read(&_block) > 0;
+        inline bool isCritical() {
+            return Mem::atomic_read(&_critical) > 0;
         }
 
       private:
         uint16_t _busy;
-        uint16_t _block;
+        uint16_t _critical;
     };
 }
