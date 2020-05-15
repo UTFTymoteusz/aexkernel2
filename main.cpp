@@ -18,6 +18,10 @@
 #include "sys/mcore.hpp"
 #include "tty.hpp"
 
+// clang-format off
+#include "aex/ipc/messagequeue.hpp"
+// clang-format on
+
 using namespace AEX;
 using namespace AEX::Sys;
 
@@ -74,9 +78,33 @@ void main(multiboot_info_t* mbinfo) {
     main_threaded();
 }
 
+IPC::MessageQueue* mqueue;
+
+void secondary_threaded() {
+    char buffer[12];
+    mqueue->readArray(buffer, 9);
+
+    printk("received: %s\n", buffer);
+
+    while (true)
+        Proc::Thread::sleep(2450);
+}
+
 void main_threaded() {
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrentThread()->getProcess();
+
+    mqueue = new IPC::MessageQueue();
+
+    auto thread = new Proc::Thread(process.get(), (void*) secondary_threaded, Heap::malloc(8192),
+                                   8192, process->pagemap);
+    thread->start();
+
+    Proc::Thread::sleep(500);
+
+    mqueue->writeObject("xdxdddxd");
+
+    Proc::Thread::sleep(2500);
 
     while (true) {
         uint64_t ns = IRQ::get_uptime();

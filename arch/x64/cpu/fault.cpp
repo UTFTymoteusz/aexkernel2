@@ -42,12 +42,6 @@ namespace AEX::Sys {
                     CPU::getCurrentCPUID(), exception_names[info->int_no], info->int_no, info->err);
         AEX::printk("RIP: 0x%016lx\n", info->rip);
 
-        AEX::printk("håll käften din x64 javel\n");
-
-        CPU::broadcastPacket(CPU::ipp_type::HALT);
-        CPU::halt();
-
-
         if (info->int_no == EXC_PAGE_FAULT) {
             size_t cr2, cr3;
 
