@@ -9,12 +9,12 @@ SECTION .bootstrap
 
 paging_init:
     mov ecx, pml4
-    pml4init:
+    .pml4init:
         mov dword [ecx], 0
         add ecx, 4
 
         cmp ecx, 4096
-        jl pml4init
+        jl .pml4init
 
     mov edx, pdp0
     or  edx, PAGE_FLAGS
@@ -44,15 +44,14 @@ paging_init:
     xor ecx, ecx
     mov edx, PAGE_FLAGS
 
-    ptinit1:
+    .ptinit1:
         mov dword [ebx], edx
         add ebx, 8
         inc ecx
         add edx, 4096
 
         cmp ecx, 2048
-        jl ptinit1
-
+        jl .ptinit1
 
 
     mov edx, pdp511
@@ -87,14 +86,14 @@ paging_init:
     xor ecx, ecx
     mov edx, PAGE_FLAGS
 
-    ptinit2:
+    .ptinit2:
         mov dword [ebx], edx
         add ebx, 8
         inc ecx
         add edx, 4096
 
         cmp ecx, 2048
-        jl ptinit2
+        jl .ptinit2
 
 
 	; Enable PAE

@@ -34,14 +34,14 @@ rdmsr
 or  eax, 1 << 8
 wrmsr
 
-; Set cr3 based on what the BSP gave us
+; Set cr3 to what the BSP gave us
 mov dword eax, [0x500]
 mov cr3, eax
 
 ; Actually enabling paging and protected mode
 mov eax, cr0
 or  eax, (1 << 31) | 1 ; PE and PG
-and eax, ~0x60000000   ; disable CD and NW
+and eax, ~0x60000000   ; clear CD and NW
 mov cr0, eax
 
 jmp tmp_gdt.code:lmode

@@ -68,7 +68,7 @@ bootstrap:
 	; Actually enabling paging
 	mov eax, cr0
 	or  eax, (1 << 31)     ; PG
-	and eax, ~0x60000000   ; disable CD and NW
+	and eax, ~0x60000000   ; clear CD and NW
 	mov cr0, eax
 
 	pop edx
@@ -131,9 +131,9 @@ bootstrap64:
     call main
 
     cli
-	hcf:
+	.hcf:
 		hlt
-		jmp hcf
+		jmp .hcf
 
 fake_cpu_class_ptr:
 	dq fake_cpu_class

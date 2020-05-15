@@ -63,12 +63,18 @@ extern proc_reshed_manual_ext
     mov rsp, rbx
 %endmacro
 
-%macro enter_context 0
+enter_context:
     mov qword rax, [gs:0x08]
 
-    mov qword rbx, [rax + 0x08 * 15]
+    mov qword rbx, [rax + 0x08 * 15] ; Thread-to-enter cr3
+    mov rcx, cr3                     ; Current cr3
+
+    cmp rcx, rbx  ; Let's check if they are equal, and if they are, skip to not anger the cache.
+    je .no_reload
+
     mov cr3, rbx
 
+    .no_reload:
     mov qword rsp, [gs:0x08]
 
     pop r15
@@ -90,21 +96,20 @@ extern proc_reshed_manual_ext
     add rsp, 8
 
     iretq
-%endmacro
 
 proc_timer_tick:
     save_context
 
     call proc_timer_tick_ext
     
-    enter_context
+    jmp enter_context
 
 proc_reshed_manual:
     save_context
 
     call proc_reshed_manual_ext
     
-    enter_context
+    jmp enter_context
 
 
 proc_reshed:
