@@ -86,8 +86,7 @@ void secondary_threaded() {
 
     printk("received: %s\n", buffer);
 
-    while (true)
-        Proc::Thread::sleep(2450);
+    Proc::Thread::sleep(1200);
 }
 
 void main_threaded() {
@@ -100,11 +99,19 @@ void main_threaded() {
                                    8192, process->pagemap);
     thread->start();
 
+    printk("threads\n");
+    for (auto iterator = process->threads.getIterator(); auto _thread = iterator.next();)
+        printk("  %i\n", _thread->tid);
+
     Proc::Thread::sleep(500);
 
     mqueue->writeObject("xdxdddxd");
 
-    Proc::Thread::sleep(2500);
+    thread->join();
+
+    printk("threads\n");
+    for (auto iterator = process->threads.getIterator(); auto _thread = iterator.next();)
+        printk("  %i\n", _thread->tid);
 
     while (true) {
         uint64_t ns = IRQ::get_uptime();

@@ -55,6 +55,9 @@ namespace AEX::Mem {
             if (index < 0 || index >= _element_count)
                 return SmartPointer<T>(nullptr, nullptr);
 
+            if (!_elements[index].refs)
+                return SmartPointer<T>(nullptr, nullptr);
+
             _elements[index].refs->increment();
 
             return SmartPointer<T>(_elements[index].ptr, _elements[index].refs);
@@ -82,6 +85,15 @@ namespace AEX::Mem {
             return index;
         }
 
+        void remove(int index) {
+            auto scopeLock = ScopeSpinlock(_lock);
+
+            if (index < 0 || index >= _element_count)
+                return;
+
+            _elements[index].die();
+        }
+
         Iterator getIterator(int start = 0) {
             return Iterator(this, start);
         }
@@ -99,6 +111,18 @@ namespace AEX::Mem {
             element(T* ptr, ref_counter* refs) {
                 this->ptr  = ptr;
                 this->refs = refs;
+            }
+
+            void die() {
+                if (refs && refs->decrement()) {
+                    if (ptr)
+                        delete ptr;
+
+                    delete refs;
+                }
+
+                ptr  = nullptr;
+                refs = nullptr;
             }
         };
 

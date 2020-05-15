@@ -2,6 +2,7 @@
 
 #include "aex/printk.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Debug {
@@ -20,13 +21,13 @@ namespace AEX::Debug {
                 switch (frame->rip) {
                 case entry_type::BOOT:
                     printk("  *bootstrap entry*\n");
-                    break;
+                    return;
                 case entry_type::USER:
                     printk("  *user entry*\n");
-                    break;
+                    return;
                 case entry_type::KERNEL:
                     printk("  *kernel entry*\n");
-                    break;
+                    return;
                 default:
                     printk("  0x%p\n", frame->rip);
                     break;

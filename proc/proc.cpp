@@ -1,5 +1,6 @@
 #include "proc/proc.hpp"
 
+#include "aex/ipc/messagequeue.hpp"
 #include "aex/mem/heap.hpp"
 #include "aex/mem/smartarray.hpp"
 #include "aex/mem/vector.hpp"
@@ -17,6 +18,8 @@
 namespace AEX::Proc {
     Mem::SmartArray<Process> processes;
 
+    IPC::MessageQueue threads_to_reap;
+
     Thread** threads      = nullptr;
     Thread** idle_threads = nullptr;
 
@@ -29,7 +32,11 @@ namespace AEX::Proc {
     void setup_idle_threads(Process* process);
     void setup_cores(Thread* bsp_thread);
 
+    void thread_reaper();
+
     void init() {
+        threads_to_reap = IPC::MessageQueue();
+
         threads           = (Thread**) Heap::malloc(sizeof(Thread*) * 1);
         thread_array_size = 1;
 
@@ -43,6 +50,11 @@ namespace AEX::Proc {
 
         bsp_thread->refs->increment();
         kernel_process->threads.addRef(bsp_thread, bsp_thread->refs);
+
+        auto thread_reaper_thread =
+            new Thread(kernel_process, (void*) thread_reaper, VMem::kernel_pagemap->alloc(8192),
+                       8192, kernel_process->pagemap);
+        thread_reaper_thread->start();
 
         setup_idle_threads(idle_process);
         setup_cores(bsp_thread);
@@ -98,8 +110,13 @@ namespace AEX::Proc {
                 threads[i]->status = Thread::status_t::RUNNABLE;
 
                 break;
-            default:
             case Thread::status_t::BLOCKED:
+                if (threads[i]->isAbortSet())
+                    break;
+
+                increment();
+                continue;
+            default:
                 increment();
                 continue;
             }
@@ -156,6 +173,42 @@ namespace AEX::Proc {
         return thread_array_size - 1;
     }
 
+    void abort_thread(Thread* thread) {
+        {
+            auto process = thread->getProcess();
+            for (auto iterator = process->threads.getIterator(); auto _thread = iterator.next();) {
+                if (_thread == thread) {
+                    process->threads.remove(iterator.index());
+                    break;
+                }
+            }
+        }
+
+        thread->announceExit();
+
+        reap_thread(thread);
+
+        if (thread != Thread::getCurrentThread())
+            return;
+
+        while (true)
+            ;
+    }
+
+    void reap_thread(Thread* thread) {
+        {
+            auto scopeLock = ScopeSpinlock(lock);
+
+            if (thread->tid == -1)
+                return;
+
+            threads[thread->tid] = nullptr;
+            thread->tid          = -1;
+        }
+
+        threads_to_reap.writeObject(thread);
+    }
+
     void idle() {
         while (true)
             Sys::CPU::waitForInterrupt();
@@ -189,7 +242,18 @@ namespace AEX::Proc {
         bsp_thread->lock.acquireRaw();
     }
 
-    void kthread_exit() {
-        kpanic("kthread_exit() not implemented\n");
+    void thread_reaper() {
+        while (true) {
+            auto thread = threads_to_reap.readObject<Thread*>();
+
+            thread->lock.acquire();
+            thread->setStatus(Thread::status_t::DEAD);
+
+            int refs = thread->refs->ref_count();
+            refs--;
+
+            if (thread->refs->decrement())
+                delete thread;
+        }
     }
 }

@@ -10,10 +10,15 @@
 
 #include <stddef.h>
 
+namespace AEX::IPC {
+    class Event;
+}
+
 namespace AEX::Proc {
     typedef int tid_t;
 
     class Process;
+    class Event;
 
     class Thread {
       public:
@@ -22,6 +27,7 @@ namespace AEX::Proc {
             RUNNABLE = 1,
             SLEEPING = 2,
             BLOCKED  = 3,
+            DEAD     = 4,
         };
 
         tid_t tid;
@@ -44,12 +50,6 @@ namespace AEX::Proc {
                bool usermode = false, bool dont_add = false);
 
         ~Thread();
-
-        /**
-         * Gets the parent process of the thread.
-         * @return The SmartPointer to the parent process.
-         */
-        Mem::SmartPointer<Process> getProcess();
 
         /**
          * Yields the currently executing thread's CPU timeshare. Will return immediately if no
@@ -76,12 +76,53 @@ namespace AEX::Proc {
         static tid_t getCurrentTID();
 
         /**
+         * Checks if the currently running thread has received the abort signal.
+         * @return True if abort has been received.
+         */
+        static bool shouldExit();
+
+        static void exit();
+
+        /**
+         * Gets the parent process of the thread.
+         * @return The SmartPointer to the parent process.
+         */
+        Mem::SmartPointer<Process> getProcess();
+
+        /**
          * Adds the thread to the run queue and sets its status as RUNNABLE.
          */
         void start();
 
+        /**
+         * Waits until the thread finishes execution.
+         */
+        void join();
+
+        /**
+         * Aborts the thread.
+         * @param block Whenever to wait for the thread to exit fully.
+         */
+        void abort(bool block = false);
+
+        /**
+         * Checks if the thread has received the abort signal.
+         * @return True if abort has been received.
+         */
+        bool isAbortSet();
+
+        bool isFinished();
+
+        /**
+         * Returns a smart pointer to the thread.
+         * @return The smart pointer.
+         */
         Mem::SmartPointer<Thread> getSmartPointer();
 
+        /**
+         * Sets the status of the thread\n
+         * @param status Status to set to.
+         */
         void setStatus(status_t status);
 
         // pls atomic<T> later
@@ -98,7 +139,10 @@ namespace AEX::Proc {
          * be killed.
          */
         inline void subBusy() {
-            Mem::atomic_sub(&_busy, (uint16_t) 1);
+            uint16_t busy = Mem::atomic_sub_fetch(&_busy, (uint16_t) 1);
+
+            if (Mem::atomic_read(&_abort) == 1 && busy == 0)
+                Thread::exit();
         }
 
         /**
@@ -135,8 +179,15 @@ namespace AEX::Proc {
             return Mem::atomic_read(&_critical) > 0;
         }
 
+        void announceExit();
+
       private:
+        IPC::Event* _exit_event;
+
         uint16_t _busy;
         uint16_t _critical;
+
+        uint8_t _abort;
+        uint8_t _finished;
     };
 }
