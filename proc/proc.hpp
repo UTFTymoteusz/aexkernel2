@@ -18,5 +18,5 @@ namespace AEX::Proc {
     pid_t add_process(Process* process);
     tid_t add_thread(Thread* thread);
 
-    void _kthread_exit();
+    void kthread_exit();
 }

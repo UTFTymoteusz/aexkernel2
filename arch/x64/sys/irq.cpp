@@ -15,7 +15,6 @@
 #include "sys/pic.hpp"
 #include "sys/pit.hpp"
 
-#include <new>
 #include <stddef.h>
 #include <stdint.h>
 

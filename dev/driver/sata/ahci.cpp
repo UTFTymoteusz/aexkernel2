@@ -21,7 +21,7 @@ namespace AEX::Dev::SATA {
 
         scan_ports();
 
-        printk(PRINTK_OK "ahci%i initialized\n", index);
+        printk(PRINTK_OK "ahci%i: Initialized\n", index);
     }
 
     void AHCI::scan_ports() {

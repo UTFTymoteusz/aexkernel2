@@ -139,6 +139,8 @@ namespace AEX::Sys {
 
         uint64_t measurement_start_ns;
 
+        char name[48];
+
       private:
         struct ipi_packet {
             uint8_t type;
@@ -148,5 +150,7 @@ namespace AEX::Sys {
         Spinlock      _ipi_lock;
         volatile bool _ipi_ack;
         ipi_packet    _ipi_packet;
+
+        void fillAndCleanName();
     };
 }

@@ -40,6 +40,8 @@ namespace AEX::Proc {
         bsp_thread->start();
 
         add_thread(bsp_thread);
+
+        bsp_thread->refs->increment();
         kernel_process->threads.addRef(bsp_thread, bsp_thread->refs);
 
         setup_idle_threads(idle_process);
@@ -187,7 +189,7 @@ namespace AEX::Proc {
         bsp_thread->lock.acquireRaw();
     }
 
-    void _kthread_exit() {
-        kpanic("_kthread_exit() not implemented\n");
+    void kthread_exit() {
+        kpanic("kthread_exit() not implemented\n");
     }
 }

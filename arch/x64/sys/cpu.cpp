@@ -1,6 +1,7 @@
 #include "sys/cpu.hpp"
 
 #include "aex/printk.hpp"
+#include "aex/string.hpp"
 
 #include "cpu/idt.hpp"
 #include "sys/apic.hpp"
@@ -17,11 +18,17 @@
 
 #define GSBase 0xC0000101
 
+#define CPUID_NAME_STRING_1 0x80000002
+#define CPUID_NAME_STRING_2 0x80000003
+#define CPUID_NAME_STRING_3 0x80000004
+
 namespace AEX::Sys {
     CPU::CPU(int id) {
         this->id = id;
         apic_id  = APIC::getID();
         self     = this;
+
+        fillAndCleanName();
     }
 
     void CPU::initLocal() {
@@ -144,5 +151,24 @@ namespace AEX::Sys {
 
     CPU* CPU::getCurrentCPU() {
         return CURRENT_CPU;
+    }
+
+    void CPU::fillAndCleanName() {
+        memset(name, '\0', sizeof(name));
+
+        char* ptr = name;
+
+        for (int i = 0; i < 3; i++) {
+            cpuid(CPUID_NAME_STRING_1 + i, (uint32_t*) (ptr + 0), (uint32_t*) (ptr + 4),
+                  (uint32_t*) (ptr + 8), (uint32_t*) (ptr + 12));
+
+            ptr += 16;
+        }
+
+        // Now let's get rid of Intel's annoying right justification
+        while (name[0] == ' ') {
+            memcpy(name, name + 1, 47);
+            name[47] = '\0';
+        }
     }
 }

@@ -24,7 +24,7 @@ namespace AEX::Proc {
         if (usermode)
             context = Context(entry, stack, stack_size, pagemap, usermode);
         else
-            context = Context(entry, stack, stack_size, pagemap, usermode, _kthread_exit);
+            context = Context(entry, stack, stack_size, pagemap, usermode, kthread_exit);
 
         status = FRESH;
 

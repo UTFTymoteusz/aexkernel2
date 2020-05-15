@@ -52,6 +52,9 @@ namespace AEX::Heap {
         }
 
         void* alloc(size_t size) {
+            if (size == 0)
+                return nullptr;
+
             size += ALLOC_SIZE;
 
             spinlock.acquire();
@@ -78,6 +81,7 @@ namespace AEX::Heap {
 
             spinlock.acquire();
             unmark((uint32_t)((size_t) block - (size_t) data) / ALLOC_SIZE, header->len);
+            memset(block, '\0', header->len * ALLOC_SIZE);
             spinlock.release();
         }
 
@@ -200,7 +204,7 @@ namespace AEX::Heap {
             piece = piece->next;
         } while (piece != nullptr);
 
-        kpanic("AEX::Heap::alloc() failed");
+        // kpanic("AEX::Heap::alloc() failed");
         return nullptr;
     }
 
@@ -242,6 +246,9 @@ namespace AEX::Heap {
         size_t oldsize = msize(ptr);
 
         memcpy(newptr, ptr, oldsize);
+
+        if (oldsize < size)
+            memset((void*) ((size_t) newptr + oldsize), '\0', size - oldsize);
 
         return newptr;
     }
