@@ -35,7 +35,7 @@ void main(multiboot_info_t* mbinfo) {
     TTY::init(mbinfo);
 
     Init::init_print_header();
-    printk(PRINTK_INIT "Booting AEX/0.01\n\n");
+    printk(PRINTK_INIT "Booting AEX/2\n\n");
 
     // clang-format off
     printk("Section info:\n");
@@ -60,11 +60,11 @@ void main(multiboot_info_t* mbinfo) {
     IRQ::init_timer();
     printk("\n");
 
-    Dev::init();
-    printk("\n");
-
     auto bsp = new CPU(0);
     bsp->initLocal();
+
+    Dev::init();
+    printk("\n");
 
     MCore::init();
 
@@ -101,19 +101,11 @@ void main_threaded() {
                                    8192, process->pagemap);
     thread->start();
 
-    printk("threads\n");
-    for (auto iterator = process->threads.getIterator(); auto _thread = iterator.next();)
-        printk("  %i\n", _thread->tid);
-
     Proc::Thread::sleep(500);
 
     mqueue->writeObject("xdxdddxd");
 
     thread->join();
-
-    printk("threads\n");
-    for (auto iterator = process->threads.getIterator(); auto _thread = iterator.next();)
-        printk("  %i\n", _thread->tid);
 
     while (true) {
         uint64_t ns = IRQ::get_uptime();
@@ -127,6 +119,6 @@ void main_threaded() {
 
         printk("tid: %i\n", Proc::Thread::getCurrentTID());
 
-        Proc::Thread::sleep(1000);
+        Proc::Thread::sleep(5000);
     }
 }

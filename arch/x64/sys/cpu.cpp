@@ -1,5 +1,6 @@
 #include "sys/cpu.hpp"
 
+#include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 
@@ -22,6 +23,12 @@
 #define CPUID_NAME_STRING_2 0x80000003
 #define CPUID_NAME_STRING_3 0x80000004
 
+#define MSR_PAT 0x0277
+
+#define PAT_COMBINE 0x01
+
+#define CPUID_FEAT_PAT (1 << 16)
+
 namespace AEX::Sys {
     CPU::CPU(int id) {
         this->id = id;
@@ -42,6 +49,24 @@ namespace AEX::Sys {
         ");
 
         wrmsr(GSBase, (size_t) & (this->self));
+
+        uint32_t idc, edx;
+
+        cpuid(0x0000, &idc, &idc, &idc, &edx);
+
+        if (!(edx & CPUID_FEAT_PAT)) {
+            printk(PRINTK_WARN "cpu%i: PAT not supported\n", id);
+            return;
+        }
+
+        uint64_t pat = rdmsr(MSR_PAT);
+
+        pat &= ~(7ul << 32);
+        pat |= ((uint64_t) PAT_COMBINE << 32);
+
+        wrmsr(MSR_PAT, pat);
+
+        asm volatile("mov rax, cr3; mov cr3, rax;");
     }
 
     void CPU::halt() {

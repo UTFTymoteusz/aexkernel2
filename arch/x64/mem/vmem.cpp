@@ -19,11 +19,14 @@ using namespace AEX::PMem;
 
 extern void* pml4;
 
-int _page_present = 0x01;
-int _page_write   = 0x02;
-int _page_user    = 0x04;
-int _page_nocache = 0x10;
-int _page_nophys  = 0x200;
+const int _page_present = 0x01;
+const int _page_write   = 0x02;
+const int _page_user    = 0x04;
+const int _page_through = 0x08;
+const int _page_nocache = 0x10;
+const int _page_pat     = 0x80;
+const int _page_combine = _page_pat;
+const int _page_nophys  = 0x200;
 
 namespace AEX::VMem {
     Pagemap* kernel_pagemap;

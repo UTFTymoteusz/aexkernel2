@@ -21,7 +21,7 @@ namespace AEX::TTY {
 
       private:
         enum color {
-            BLACK        = 0x0A0A10,
+            BLACK        = 0x0A1010,
             BLUE         = 0x0000AA,
             GREEN        = 0x00AA00,
             CYAN         = 0x00AAAA,
@@ -30,12 +30,12 @@ namespace AEX::TTY {
             BROWN        = 0x7F4000,
             GRAY         = 0xAAAAAA,
             DARK_GRAY    = 0x555555,
-            LIGHT_BLUE   = 0x2020FF,
-            LIGHT_GREEN  = 0x20FF20,
-            LIGHT_CYAN   = 0x20FFFF,
-            LIGHT_RED    = 0xFF2020,
-            LIGHT_PURPLE = 0x7F00FF,
-            YELLOW       = 0xFFFF00,
+            LIGHT_BLUE   = 0x2020E0,
+            LIGHT_GREEN  = 0x20E020,
+            LIGHT_CYAN   = 0x20E0E0,
+            LIGHT_RED    = 0xE02020,
+            LIGHT_PURPLE = 0x7F00E0,
+            YELLOW       = 0xE0E020,
             WHITE        = 0xFFFFFF,
         };
 

@@ -32,7 +32,7 @@ namespace AEX::TTY {
 
         if (!_output) {
             _output = (uint32_t*) VMem::kernel_pagemap->map(total_len, mbinfo->framebuffer_addr,
-                                                            PAGE_WRITE);
+                                                            PAGE_COMBINE | PAGE_WRITE);
             memset32(_output, _bgColor, _px_width * _px_height);
         }
 
