@@ -28,7 +28,7 @@ namespace AEX {
     void printk(const char* format, va_list args) {
         auto scopeLock = ScopeSpinlock(lock);
 
-        auto rootTTY = &TTY::VTTYs[TTY::ROOT_TTY];
+        auto rootTTY = TTY::VTTYs[TTY::ROOT_TTY];
 
         auto printk_common = [rootTTY](char padchar, int padlen, char* buffer) {
             for (int i = strlen(buffer); i < padlen; i++)
@@ -210,7 +210,7 @@ namespace AEX {
             if (c == '\n')
                 newline = true;
 
-            TTY::VTTYs[0].writeChar(c);
+            TTY::VTTYs[0]->writeChar(c);
         } while (*++format != '\0');
     }
 } // namespace AEX

@@ -1,6 +1,9 @@
 #include "aex/debug.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/printk.hpp"
+#include "aex/proc/proc.hpp"
+#include "aex/proc/process.hpp"
+#include "aex/proc/thread.hpp"
 
 #include "sys/cpu.hpp"
 
@@ -37,10 +40,13 @@ namespace AEX::Sys {
 
     extern "C" void common_fault_handler(void* _info) {
         auto info = (AEX::Sys::CPU::fault_info*) _info;
+        auto cpu  = CPU::getCurrentCPU();
 
         AEX::printk(PRINTK_FAIL "cpu%i: %93$%s%$ Exception (%i) (%91$%i%$)\n",
                     CPU::getCurrentCPUID(), exception_names[info->int_no], info->int_no, info->err);
         AEX::printk("RIP: 0x%016lx\n", info->rip);
+        AEX::printk("PID: %8i, TID: %8i\n", Proc::threads[cpu->current_tid]->parent->pid,
+                    cpu->current_tid);
 
         if (info->int_no == EXC_PAGE_FAULT) {
             size_t cr2, cr3;

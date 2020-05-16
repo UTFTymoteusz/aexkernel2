@@ -51,6 +51,7 @@ format:
 	clang-format -style=file -i ${CFILES} ${HFILES}
 
 all: $(OBJS)
+	@$(MKDIR) $(ISO) $(ISO)bin/ $(ISO)dev/ $(ISO)mnt/ $(ISO)sys/
 	@$(CC) $(OBJS) $(LDFLAGS) -T linker.ld -o $(SYS)aexkrnl.elf
 
 include $(shell find $(DEP_DEST) -type f -name *.d)

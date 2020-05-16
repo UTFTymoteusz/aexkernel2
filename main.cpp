@@ -32,7 +32,7 @@ namespace AEX::Init {
 void main_threaded();
 
 void main(multiboot_info_t* mbinfo) {
-    TTY::init();
+    TTY::init(mbinfo);
 
     Init::init_print_header();
     printk(PRINTK_INIT "Booting AEX/0.01\n\n");
@@ -50,6 +50,8 @@ void main(multiboot_info_t* mbinfo) {
     VMem::init();
     Heap::init();
     printk("\n");
+
+    TTY::init_mem(mbinfo);
 
     ACPI::init();
     printk("\n");

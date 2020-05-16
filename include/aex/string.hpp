@@ -2,6 +2,7 @@
 
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdint.h>
 
 namespace AEX {
     static const char* dictionary = "zyxwvutsrqponmlkjihgfedcba9876543210123456"
@@ -63,6 +64,7 @@ namespace AEX {
     char* strncpy(char* dst, const char* src, size_t num);
 
     void memset(void* mem, char c, size_t len);
+    void memset32(void* mem, uint32_t n, size_t count);
     void memcpy(void* dst, const void* src, size_t size);
     int  memcmp(const void* a, const void* b, size_t num);
 } // namespace AEX::String

@@ -2,6 +2,7 @@
 
 #include "aex/math.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
 
 namespace AEX {
@@ -43,6 +44,13 @@ namespace AEX {
 
         for (size_t i = 0; i < len; i++)
             _mem[i] = c;
+    }
+
+    void memset32(void* mem, uint32_t n, size_t count) {
+        uint32_t* _mem = (uint32_t*) mem;
+
+        for (size_t i = 0; i < count; i++)
+            _mem[i] = n;
     }
 
     void memcpy(void* dst, const void* src, size_t size) {

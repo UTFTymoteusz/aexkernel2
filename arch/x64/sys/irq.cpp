@@ -94,6 +94,9 @@ namespace AEX::Sys::IRQ {
             ioapics.pushBack(_ioapic);
         }
 
+        if (ioapics.count() == 0)
+            kpanic("There are no IOAPICs on this computer");
+
         APIC::map(addr);
         APIC::init();
 

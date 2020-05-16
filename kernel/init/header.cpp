@@ -16,11 +16,11 @@ namespace AEX::Init {
     // clang-format on
 
     void init_print_header() {
-        auto rootTTY = &TTY::VTTYs[TTY::ROOT_TTY];
+        auto rootTTY = TTY::VTTYs[TTY::ROOT_TTY];
 
         char color = COLOR0;
         rootTTY->setColorANSI(COLOR0);
- 
+
         for (size_t i = 0; i < sizeof(header) - 1; i++) {
             char c = header[i];
 

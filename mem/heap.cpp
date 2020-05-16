@@ -6,6 +6,8 @@
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
 
+#include "sys/cpu.hpp"
+
 #include <stdint.h>
 
 #define ALLOC_SIZE 16

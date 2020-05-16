@@ -2,43 +2,23 @@
 
 #include "aex/spinlock.hpp"
 
+#include "boot/mboot.h"
+
 #include <stdint.h>
 
 namespace AEX::TTY {
     constexpr auto ROOT_TTY   = 0;
-    constexpr auto TTY_AMOUNT = 8;
-
-    static constexpr auto TTY_WIDTH  = 80;
-    static constexpr auto TTY_HEIGHT = 25;
-
-    enum vga_color {
-        VGA_BLACK        = 0,
-        VGA_BLUE         = 1,
-        VGA_GREEN        = 2,
-        VGA_CYAN         = 3,
-        VGA_RED          = 4,
-        VGA_PURPLE       = 5,
-        VGA_BROWN        = 6,
-        VGA_GRAY         = 7,
-        VGA_DARK_GRAY    = 8,
-        VGA_LIGHT_BLUE   = 9,
-        VGA_LIGHT_GREEN  = 10,
-        VGA_LIGHT_CYAN   = 11,
-        VGA_LIGHT_RED    = 12,
-        VGA_LIGHT_PURPLE = 13,
-        VGA_YELLOW       = 14,
-        VGA_WHITE        = 15,
-    };
-
-    struct vga_char;
+    constexpr auto TTY_AMOUNT = 4;
 
     /**
      * A basic virtual terminal class.
      */
     class VTTY {
       public:
+        int width, height;
+
         VTTY();
-        VTTY(void* _outputB);
+        VTTY(int width, int height);
 
         /**
          * Writes a character to the virtual terminal.
@@ -56,32 +36,68 @@ namespace AEX::TTY {
          * Sets the foreground or background color.
          * @param ansi An ANSI color code.
          */
-        void setColorANSI(int ansi);
+        virtual void setColorANSI(int ansi);
 
         /**
          * Scrolls down the virtual terminal.
          * @param amnt Amount of lines to scroll down by.
          */
-        void scrollDown(int amnt);
+        virtual void scrollDown(int amnt);
+
+        int getCursorX() {
+            return _cursorx;
+        }
+
+        int getCursorY() {
+            return _cursory;
+        }
+
+        void setCursorX(int x) {
+            _cursorx = x;
+        }
+
+        void setCursorY(int y) {
+            _cursory = y;
+        }
 
       private:
+        enum color {
+            COLOR_BLACK        = 0,
+            COLOR_BLUE         = 1,
+            COLOR_GREEN        = 2,
+            COLOR_CYAN         = 3,
+            COLOR_RED          = 4,
+            COLOR_PURPLE       = 5,
+            COLOR_BROWN        = 6,
+            COLOR_GRAY         = 7,
+            COLOR_DARK_GRAY    = 8,
+            COLOR_LIGHT_BLUE   = 9,
+            COLOR_LIGHT_GREEN  = 10,
+            COLOR_LIGHT_CYAN   = 11,
+            COLOR_LIGHT_RED    = 12,
+            COLOR_LIGHT_PURPLE = 13,
+            COLOR_YELLOW       = 14,
+            COLOR_WHITE        = 15,
+        };
+
+        int _bgColor = COLOR_BLACK;
+        int _fgColor = COLOR_WHITE;
+
+      protected:
         int _cursorx = 0;
         int _cursory = 0;
 
-        int _bgColor = VGA_BLACK;
-        int _fgColor = VGA_WHITE;
-
-        vga_char* volatile _output;
-
         Spinlock _lock;
 
-        void _writeChar(char c);
+        virtual void _writeChar(char c);
     };
 
     /**
      * An array of all virtual terminals.
      */
-    extern VTTY VTTYs[TTY_AMOUNT];
+    extern VTTY* VTTYs[TTY_AMOUNT];
 
-    void init();
+    void init(multiboot_info_t* mbinfo);
+
+    void init_mem(multiboot_info_t* mbinfo);
 } // namespace AEX::TTY

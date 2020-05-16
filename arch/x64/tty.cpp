@@ -2,51 +2,38 @@
 
 #include "aex/string.hpp"
 
+#include "boot/mboot.h"
+#include "grtty.hpp"
+#include "sys/cpu.hpp"
+#include "txtty.hpp"
+
+#include <new>
 #include <stddef.h>
 #include <stdint.h>
 
+// clang-format off
+#include "aex/kpanic.hpp"
+#include "aex/printk.hpp"
+// clang-format on
+
 namespace AEX::TTY {
-    struct vga_char {
-        char    ascii;
-        uint8_t fg : 4;
-        uint8_t bg : 4;
-    };
-
-    VTTY::VTTY() {
-        _output = nullptr;
+    VTTY::VTTY() {}
+    VTTY::VTTY(int width, int height) {
+        this->width  = width;
+        this->height = height;
     }
 
-    VTTY::VTTY(void* _outputB) {
-        _output = (vga_char*) _outputB;
+    void VTTY::_writeChar(char) {
+        Sys::CPU::outportb(0x3F8, 'b');
+        // kpanic("VTTY::_writeChar() not implemented");
     }
 
-    void VTTY::_writeChar(char c) {
-        switch (c) {
-        case '\n':
-            _cursorx = 0;
-            _cursory++;
-            break;
-        case '\r':
-            _cursorx = 0;
-            break;
-        default:
-            _output[_cursorx + _cursory * TTY_WIDTH].ascii = c;
-            _output[_cursorx + _cursory * TTY_WIDTH].bg    = _bgColor;
-            _output[_cursorx + _cursory * TTY_WIDTH].fg    = _fgColor;
+    void VTTY::scrollDown(int) {
+        // kpanic("VTTY::scrollDown() not implemented");
+    }
 
-            _cursorx++;
-
-            if (_cursorx >= TTY_WIDTH) {
-                _cursorx = 0;
-                _cursory++;
-            }
-            break;
-        }
-
-        if (_cursory >= TTY_HEIGHT) {
-            _cursory--;
-            scrollDown(1);
-        }
+    void VTTY::setColorANSI(int) {
+        // kpanic("VTTY::setColorANSI() not implemented");
     }
 
     void VTTY::writeChar(char c) {
@@ -64,52 +51,43 @@ namespace AEX::TTY {
         _lock.release();
     }
 
-    void VTTY::setColorANSI(int ansi) {
-        const char ansi_to_vga[16] = {
-            VGA_BLACK,      VGA_RED,          VGA_GREEN,       VGA_BROWN,
-            VGA_BLUE,       VGA_PURPLE,       VGA_CYAN,        VGA_GRAY,
-            VGA_DARK_GRAY,  VGA_LIGHT_RED,    VGA_LIGHT_GREEN, VGA_YELLOW,
-            VGA_LIGHT_BLUE, VGA_LIGHT_PURPLE, VGA_LIGHT_CYAN,  VGA_WHITE,
-        };
+    VTTY* VTTYs[TTY_AMOUNT];
+    TxTTY tx_init_tty;
+    GrTTY gr_init_tty;
 
-        if (ansi >= 30 && ansi <= 37)
-            _fgColor = ansi_to_vga[ansi - 30];
-        else if (ansi >= 40 && ansi <= 47)
-            _bgColor = ansi_to_vga[ansi - 40];
-        else if (ansi >= 90 && ansi <= 97)
-            _fgColor = ansi_to_vga[ansi - 90 + 8];
-        else if (ansi >= 100 && ansi <= 107)
-            _bgColor = ansi_to_vga[ansi - 100 + 8];
-    }
+    uint16_t buffer[80 * 25 * 2];
 
-    void VTTY::scrollDown(int amnt) {
-        for (int i = 0; i < amnt; i++)
-            memcpy(_output, &_output[TTY_WIDTH], TTY_WIDTH * (TTY_HEIGHT - 1) * 2);
+    void init(multiboot_info_t* mbinfo) {
+        TxTTY::clear();
 
-        for (size_t i = TTY_WIDTH * (TTY_HEIGHT - 1); i < TTY_WIDTH * TTY_HEIGHT; i++) {
-            _output[i].ascii = ' ';
-            _output[i].bg    = _bgColor;
-            _output[i].fg    = _fgColor;
+        if ((mbinfo->flags & (1 << 2)) &&
+            mbinfo->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT) {
+            new (&tx_init_tty) TxTTY((void*) 0xFFFFFFFF800B8000);
         }
+        else
+            new (&tx_init_tty) TxTTY((void*) &buffer);
+
+        VTTYs[0] = &tx_init_tty;
     }
 
-    VTTY VTTYs[TTY_AMOUNT];
+    void init_mem(multiboot_info_t* mbinfo) {
+        if ((mbinfo->flags & (1 << 2)) &&
+            mbinfo->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT) {
+            for (int i = 1; i < TTY_AMOUNT; i++)
+                VTTYs[i] = new TxTTY((void*) 0xFFFFFFFF800B8000);
 
-    static void clear() {
-        vga_char* volatile buffer = (vga_char*) 0xFFFFFFFF800B8000;
+            return;
+        }
 
-        for (int y = 0; y < TTY_HEIGHT; y++)
-            for (int x = 0; x < TTY_WIDTH; x++) {
-                buffer[x + y * TTY_WIDTH].ascii = '\0';
-                buffer[x + y * TTY_WIDTH].bg    = VGA_BLACK;
-                buffer[x + y * TTY_WIDTH].fg    = VGA_WHITE;
-            }
+        new (&gr_init_tty) GrTTY(mbinfo);
+
+        gr_init_tty.fillFromEGA((GrTTY::vga_char*) tx_init_tty.getOutputPointer());
+        VTTYs[0] = &gr_init_tty;
+
+        gr_init_tty.setCursorX(tx_init_tty.getCursorX());
+        gr_init_tty.setCursorY(tx_init_tty.getCursorY());
+
+        for (int i = 1; i < TTY_AMOUNT; i++)
+            VTTYs[i] = new GrTTY(mbinfo);
     }
-
-    void init() {
-        clear();
-
-        for (int i = 0; i < TTY_AMOUNT; i++)
-            VTTYs[i] = VTTY((void*) 0xFFFFFFFF800B8000);
-    }
-} // namespace AEX::TTY
+}
