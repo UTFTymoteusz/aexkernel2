@@ -60,6 +60,26 @@ namespace AEX::TTY {
             _cursory = y;
         }
 
+        VTTY& operator<<(bool val);
+
+        VTTY& operator<<(char c);
+
+        VTTY& operator<<(int8_t val);
+        VTTY& operator<<(uint8_t val);
+
+        VTTY& operator<<(int16_t val);
+        VTTY& operator<<(uint16_t val);
+
+        VTTY& operator<<(int32_t val);
+        VTTY& operator<<(uint32_t val);
+
+        VTTY& operator<<(int64_t val);
+        VTTY& operator<<(uint64_t val);
+
+        VTTY& operator<<(void* ptr);
+
+        VTTY& operator<<(const char* str);
+
       private:
         enum color {
             COLOR_BLACK        = 0,

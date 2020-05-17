@@ -116,11 +116,11 @@ void main_threaded() {
     while (true) {
         uint64_t ns = IRQ::get_uptime();
 
-        printk("%i: %li (%li ms, %li s, %li min)\n", CPU::getCurrentCPUID(), ns, ns / 1000000,
-               ns / 1000000000, ns / 1000000000 / 60);
-        printk("idle: %li ns (%li ms) cpu time (pid %i)\n", idle->usage.cpu_time_ns,
+        printk("cpu%i: %16li ns (%li ms, %li s, %li min)\n", CPU::getCurrentCPUID(), ns,
+               ns / 1000000, ns / 1000000000, ns / 1000000000 / 60);
+        printk("idle: %16li ns (%li ms) cpu time (pid %i)\n", idle->usage.cpu_time_ns,
                idle->usage.cpu_time_ns / 1000000, idle->pid);
-        printk("us  : %li ns (%li ms) cpu time (pid %i)\n", process->usage.cpu_time_ns,
+        printk("us  : %16li ns (%li ms) cpu time (pid %i)\n", process->usage.cpu_time_ns,
                process->usage.cpu_time_ns / 1000000, process->pid);
 
         printk("tid: %i\n", Proc::Thread::getCurrentTID());

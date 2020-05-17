@@ -32,9 +32,9 @@ namespace AEX {
 
         auto printk_common = [rootTTY](char padchar, int padlen, char* buffer) {
             for (int i = strlen(buffer); i < padlen; i++)
-                rootTTY->writeChar(padchar);
+                *rootTTY << padchar;
 
-            rootTTY->write(buffer);
+            *rootTTY << buffer;
         };
 
         static bool newline = true;
