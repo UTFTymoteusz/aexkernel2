@@ -52,7 +52,7 @@ namespace AEX::Sys {
 
         uint32_t idc, edx;
 
-        cpuid(0x0000, &idc, &idc, &idc, &edx);
+        cpuid(0x0001, &idc, &idc, &idc, &edx);
 
         if (!(edx & CPUID_FEAT_PAT)) {
             printk(PRINTK_WARN "cpu%i: PAT not supported\n", id);

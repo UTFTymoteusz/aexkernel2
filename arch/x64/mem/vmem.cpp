@@ -71,8 +71,7 @@ namespace AEX::VMem {
         debug_pptr_targets[index] = at;
         *pptr_entries[index]      = at | PAGE_WRITE | PAGE_PRESENT;
 
-        size_t aa = 0;
-        asm volatile("mov %0, cr3; mov cr3, %0;" : : "r"(aa) : "memory");
+        asm volatile("invlpg [%0]" : : "r"(pptr_vaddr[index]));
 
         return pptr_vaddr[index];
     }
@@ -194,8 +193,10 @@ namespace AEX::VMem {
 
         pt[index] = phys_addr | flags | PAGE_PRESENT;
 
-        size_t aa = 0;
-        asm volatile("mov %0, cr3; mov cr3, %0;" : : "r"(aa) : "memory");
+        asm volatile("invlpg [%0]" : : "r"(virt));
+
+        // size_t aa = 0;
+        // asm volatile("mov %0, cr3; mov cr3, %0;" : : "r"(aa) : "memory");
     }
 
     uint64_t* find_table(phys_addr root, int pptr, uint64_t virt_addr, uint64_t* skip_by) {

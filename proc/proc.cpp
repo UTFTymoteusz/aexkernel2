@@ -188,11 +188,9 @@ namespace AEX::Proc {
 
         reap_thread(thread);
 
-        if (thread != Thread::getCurrentThread())
-            return;
-
-        while (true)
-            ;
+        if (thread == Thread::getCurrentThread())
+            while (true)
+                ;
     }
 
     void reap_thread(Thread* thread) {
@@ -248,9 +246,6 @@ namespace AEX::Proc {
 
             thread->lock.acquire();
             thread->setStatus(Thread::status_t::DEAD);
-
-            int refs = thread->refs->ref_count();
-            refs--;
 
             if (thread->refs->decrement())
                 delete thread;

@@ -1,3 +1,4 @@
+#include "aex/fs/fs.hpp"
 #include "aex/mem/heap.hpp"
 #include "aex/mem/pmem.hpp"
 #include "aex/mem/smartarray.hpp"
@@ -10,6 +11,7 @@
 #include "boot/mboot.h"
 #include "cpu/idt.hpp"
 #include "dev/dev.hpp"
+#include "fs/fs.hpp"
 #include "kernel/acpi/acpi.hpp"
 #include "mem/memory.hpp"
 #include "proc/proc.hpp"
@@ -74,6 +76,10 @@ void main(multiboot_info_t* mbinfo) {
     Proc::init();
 
     VMem::cleanup_bootstrap();
+    printk("\n");
+
+    FS::init();
+    FS::mount(nullptr, "/", nullptr);
     printk("\n");
 
     // Let's get to it

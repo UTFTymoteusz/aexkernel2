@@ -11,11 +11,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// clang-format off
-#include "aex/kpanic.hpp"
-#include "aex/printk.hpp"
-// clang-format on
-
 namespace AEX::TTY {
     VTTY::VTTY() {}
     VTTY::VTTY(int width, int height) {

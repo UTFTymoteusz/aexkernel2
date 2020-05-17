@@ -9,6 +9,12 @@ namespace AEX {
         int16_t error_code = 0;
         T       value;
 
+        static optional error(int code) {
+            auto opt       = optional();
+            opt.error_code = code;
+            return opt;
+        }
+
         optional() {
             has_value = false;
         }

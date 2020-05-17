@@ -3,6 +3,8 @@
 #include <stddef.h>
 
 namespace AEX::FS::Path {
+    constexpr auto MAX_LEN = 1024;
+
     /**
      * Gets the filename or a directory name in a path.
      * @param buffer Destination buffer.

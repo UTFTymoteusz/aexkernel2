@@ -8,7 +8,7 @@
 
 namespace AEX::TTY {
     constexpr auto ROOT_TTY   = 0;
-    constexpr auto TTY_AMOUNT = 4;
+    constexpr auto TTY_AMOUNT = 6;
 
     /**
      * A basic virtual terminal class.
