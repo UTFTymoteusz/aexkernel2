@@ -45,8 +45,12 @@ namespace AEX::Sys {
         AEX::printk(PRINTK_FAIL "cpu%i: %93$%s%$ Exception (%i) (%91$%i%$)\n",
                     CPU::getCurrentCPUID(), exception_names[info->int_no], info->int_no, info->err);
         AEX::printk("RIP: 0x%016lx\n", info->rip);
-        AEX::printk("PID: %8i, TID: %8i\n", Proc::threads[cpu->current_tid]->parent->pid,
-                    cpu->current_tid);
+
+        if (Proc::threads[cpu->current_tid] && Proc::threads[cpu->current_tid]->parent)
+            AEX::printk("PID: %8i, TID: %8i\n", Proc::threads[cpu->current_tid]->parent->pid,
+                        cpu->current_tid);
+        else
+            AEX::printk("PID: %8s, TID: %8s\n", "*idk*", "*idk*");
 
         if (info->int_no == EXC_PAGE_FAULT) {
             size_t cr2, cr3;
@@ -60,6 +64,18 @@ namespace AEX::Sys {
 
             printk("CR2: 0x%016lx  CR3: 0x%016lx\n", cr2, cr3);
         }
+
+        printk("RAX: 0x%016lx  RBX: 0x%016lx  RCX: 0x%016lx  RDX: 0x%016lx\n", info->rax, info->rbx,
+               info->rcx, info->rdx);
+        printk("RSI: 0x%016lx  RDI: 0x%016lx  RSP: 0x%016lx  RBP: 0x%016lx\n", info->rsi, info->rdi,
+               info->rsp, info->rbp);
+
+        printk("R8 : 0x%016lx  R9 : 0x%016lx  R10: 0x%016lx  R11: 0x%016lx\n", info->r8, info->r9,
+               info->r10, info->r11);
+        printk("R12: 0x%016lx  R13: 0x%016lx  R14: 0x%016lx  R15: 0x%016lx\n", info->r12, info->r13,
+               info->r14, info->r15);
+
+        printk("RFLAGS: 0x%016lx\n", info->rflags);
 
         kpanic("Unrecoverable processor exception occured in CPU %i", CPU::getCurrentCPUID());
     }

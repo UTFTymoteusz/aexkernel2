@@ -10,7 +10,7 @@ namespace AEX::IPC {
     MessageQueue::MessageQueue() {}
 
     int MessageQueue::readMessage(void* ptr, int len) {
-        int total_len = sizeof(len) + sizeof(message_header);
+        int total_len = len + sizeof(message_header);
         if (total_len > MAX_WAITING_SIZE)
             return 0;
 
@@ -37,14 +37,16 @@ namespace AEX::IPC {
             left -= min(left, 32);
         }
 
-        _lock.release();
+        _free += total_len;
+
         _event.raise();
+        _lock.release();
 
         return min(header.len, len);
     }
 
     void MessageQueue::writeMessage(const void* ptr, int len) {
-        int total_len = sizeof(len) + sizeof(message_header);
+        int total_len = len + sizeof(message_header);
         if (total_len > MAX_WAITING_SIZE)
             return;
 
@@ -67,7 +69,7 @@ namespace AEX::IPC {
         _circ_buffer.write((uint8_t*) &header, sizeof(header));
         _circ_buffer.write((uint8_t*) ptr, len);
 
-        _lock.release();
         _event.raise();
+        _lock.release();
     }
 }

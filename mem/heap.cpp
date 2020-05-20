@@ -69,7 +69,7 @@ namespace AEX::Heap {
             mark(start, pieces);
             spinlock.release();
 
-            memset((void*) ((size_t) data + start * ALLOC_SIZE), 0, pieces * ALLOC_SIZE);
+            memset((void*) ((size_t) data + start * ALLOC_SIZE), '\0', pieces * ALLOC_SIZE);
 
             auto header = (alloc_block*) ((size_t) data + start * ALLOC_SIZE);
             header->len = pieces;
@@ -247,9 +247,10 @@ namespace AEX::Heap {
         void*  newptr  = malloc(size);
         size_t oldsize = msize(ptr);
 
-        memcpy(newptr, ptr, oldsize);
+        if (newptr && ptr)
+            memcpy(newptr, ptr, oldsize);
 
-        if (oldsize < size)
+        if (oldsize < size && newptr)
             memset((void*) ((size_t) newptr + oldsize), '\0', size - oldsize);
 
         return newptr;

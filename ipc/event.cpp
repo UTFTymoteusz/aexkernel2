@@ -8,7 +8,6 @@
 using namespace AEX::Proc;
 
 namespace AEX::IPC {
-    // Make the scheduler continually try to wake up a thread if it's aborted.
     void Event::wait() {
         _lock.acquire();
 
@@ -17,9 +16,15 @@ namespace AEX::IPC {
             return;
         }
 
-        _tiddies.pushBack(Thread::getCurrentThread()->getSmartPointer());
+        auto current_sptr = Thread::getCurrentThread()->getSmartPointer();
 
-        Thread::getCurrentThread()->setStatus(Thread::status_t::BLOCKED);
+        for (int i = 0; i < _tiddies.count(); i++)
+            if (_tiddies[i].get() == current_sptr.get())
+                kpanic("Tried to Event::wait() whilst the thread is already in the queue.");
+
+        _tiddies.pushBack(current_sptr);
+
+        current_sptr->setStatus(Thread::status_t::BLOCKED);
 
         _lock.release();
         Thread::yield();

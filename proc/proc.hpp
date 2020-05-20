@@ -21,4 +21,6 @@ namespace AEX::Proc {
     void abort_thread(Thread* thread);
 
     void reap_thread(Thread* thread);
+
+    void debug_print_cpu_jobs();
 }

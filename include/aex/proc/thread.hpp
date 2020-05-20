@@ -182,12 +182,12 @@ namespace AEX::Proc {
         void announceExit();
 
       private:
-        IPC::Event* _exit_event;
+        IPC::Event* _exit_event = nullptr;
 
-        uint16_t _busy;
-        uint16_t _critical;
+        uint16_t _busy     = 0;
+        uint16_t _critical = 0;
 
-        uint8_t _abort;
-        uint8_t _finished;
+        uint8_t _abort    = 0;
+        uint8_t _finished = 0;
     };
 }

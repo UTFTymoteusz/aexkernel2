@@ -27,8 +27,9 @@ namespace AEX::TTY {
         // kpanic("VTTY::scrollDown() not implemented");
     }
 
-    void VTTY::setColorANSI(int) {
+    VTTY& VTTY::setColorANSI(int) {
         // kpanic("VTTY::setColorANSI() not implemented");
+        return *this;
     }
 
     void VTTY::writeChar(char c) {

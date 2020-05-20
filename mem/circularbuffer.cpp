@@ -1,5 +1,6 @@
 #include "aex/mem/circularbuffer.hpp"
 
+#include "aex/debug.hpp"
 #include "aex/math.hpp"
 #include "aex/proc/thread.hpp"
 #include "aex/string.hpp"
@@ -35,6 +36,7 @@ namespace AEX::Mem {
             }
 
             memcpy(buffer + offset, _buffer + _readPos, clen);
+            // printk("read %i\n", clen);
 
             _readPos += clen;
             _event.raise();

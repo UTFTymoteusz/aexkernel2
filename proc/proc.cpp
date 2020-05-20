@@ -140,7 +140,7 @@ namespace AEX::Proc {
             return;
         }
 
-        cpu->current_tid    = i;
+        cpu->current_tid    = 0;
         cpu->currentThread  = idle_threads[cpu->id];
         cpu->currentContext = &idle_threads[cpu->id]->context;
 
@@ -243,12 +243,24 @@ namespace AEX::Proc {
     void thread_reaper() {
         while (true) {
             auto thread = threads_to_reap.readObject<Thread*>();
+            printk("reaping 0x%p\n", thread);
 
             thread->lock.acquire();
             thread->setStatus(Thread::status_t::DEAD);
+            thread->lock.release();
 
             if (thread->refs->decrement())
                 delete thread;
+
+            // printk("reappp\n");
+        }
+    }
+
+    void debug_print_cpu_jobs() {
+        for (int i = 0; i < Sys::MCore::cpu_count; i++) {
+            auto cpu = Sys::MCore::CPUs[i];
+            printk("cpu%i: PID %8i, TID %8i @ 0x%p\n", i, cpu->currentThread->parent->pid,
+                   cpu->current_tid, cpu->currentThread->context.rip);
         }
     }
 }

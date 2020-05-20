@@ -89,7 +89,7 @@ void main(multiboot_info_t* mbinfo) {
 IPC::MessageQueue* mqueue;
 
 void secondary_threaded() {
-    char buffer[12];
+    char buffer[16];
     mqueue->readArray(buffer, 9);
 
     printk("received: %s\n", buffer);
@@ -112,6 +112,7 @@ void main_threaded() {
     mqueue->writeObject("xdxdddxd");
 
     thread->join();
+    printk("joined\n");
 
     while (true) {
         uint64_t ns = IRQ::get_uptime();
@@ -124,6 +125,8 @@ void main_threaded() {
                process->usage.cpu_time_ns / 1000000, process->pid);
 
         printk("tid: %i\n", Proc::Thread::getCurrentTID());
+
+        Proc::debug_print_cpu_jobs();
 
         Proc::Thread::sleep(5000);
     }

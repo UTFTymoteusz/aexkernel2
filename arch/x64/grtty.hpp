@@ -13,7 +13,7 @@ namespace AEX::TTY {
         GrTTY();
         GrTTY(multiboot_info_t* mbinfo);
 
-        void setColorANSI(int ansi);
+        GrTTY& setColorANSI(int ansi);
 
         void scrollDown(int amnt);
 

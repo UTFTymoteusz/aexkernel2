@@ -8,7 +8,7 @@
 
 namespace AEX::TTY {
     constexpr auto ROOT_TTY   = 0;
-    constexpr auto TTY_AMOUNT = 6;
+    constexpr auto TTY_AMOUNT = 1;
 
     /**
      * A basic virtual terminal class.
@@ -36,7 +36,7 @@ namespace AEX::TTY {
          * Sets the foreground or background color.
          * @param ansi An ANSI color code.
          */
-        virtual void setColorANSI(int ansi);
+        virtual VTTY& setColorANSI(int ansi);
 
         /**
          * Scrolls down the virtual terminal.

@@ -47,8 +47,8 @@ namespace AEX::Proc {
     }
 
     Thread::~Thread() {
-        delete refs;
-        delete _exit_event;
+        // delete refs;
+        // delete _exit_event;
         // cleanup the context too pls
 
         printk("thread cleaned\n");

@@ -12,7 +12,7 @@ namespace AEX::TTY {
 
         static void clear();
 
-        void setColorANSI(int ansi);
+        TxTTY& setColorANSI(int ansi);
 
         void scrollDown(int amnt);
 

@@ -82,7 +82,7 @@ namespace AEX::TTY {
         }
     }
 
-    void GrTTY::setColorANSI(int ansi) {
+    GrTTY& GrTTY::setColorANSI(int ansi) {
         const uint32_t ansi_to_color[16] = {
             BLACK,     RED,       GREEN,       BROWN,  BLUE,       PURPLE,       CYAN,       GRAY,
             DARK_GRAY, LIGHT_RED, LIGHT_GREEN, YELLOW, LIGHT_BLUE, LIGHT_PURPLE, LIGHT_CYAN, WHITE,
@@ -96,6 +96,8 @@ namespace AEX::TTY {
             _fgColor = ansi_to_color[ansi - 90 + 8];
         else if (ansi >= 100 && ansi <= 107)
             _bgColor = ansi_to_color[ansi - 100 + 8];
+
+        return *this;
     }
 
     void GrTTY::scrollDown(int amnt) {

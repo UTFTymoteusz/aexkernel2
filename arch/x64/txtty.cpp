@@ -38,7 +38,7 @@ namespace AEX::TTY {
             }
     }
 
-    void TxTTY::setColorANSI(int ansi) {
+    TxTTY& TxTTY::setColorANSI(int ansi) {
         const char ansi_to_vga[16] = {
             VGA_BLACK,      VGA_RED,          VGA_GREEN,       VGA_BROWN,
             VGA_BLUE,       VGA_PURPLE,       VGA_CYAN,        VGA_GRAY,
@@ -54,6 +54,8 @@ namespace AEX::TTY {
             _fgColor = ansi_to_vga[ansi - 90 + 8];
         else if (ansi >= 100 && ansi <= 107)
             _bgColor = ansi_to_vga[ansi - 100 + 8];
+
+        return *this;
     }
 
     void TxTTY::scrollDown(int amnt) {

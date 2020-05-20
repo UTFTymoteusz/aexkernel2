@@ -1,6 +1,7 @@
 #include "aex/debug.hpp"
 
 #include "aex/printk.hpp"
+#include "aex/proc/thread.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -29,7 +30,11 @@ namespace AEX::Debug {
                     printk("  *kernel entry*\n");
                     return;
                 default:
-                    printk("  0x%p\n", frame->rip);
+                    if (frame->rip == (size_t) Proc::Thread::exit)
+                        printk("  *thread entry/exit*\n");
+                    else
+                        printk("  0x%p\n", frame->rip);
+
                     break;
                 }
             else

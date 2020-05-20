@@ -31,6 +31,6 @@ namespace AEX::IPC {
 
         Mem::Vector<Mem::SmartPointer<Proc::Thread>> _tiddies;
 
-        bool _defunct;
+        bool _defunct = false;
     };
 }

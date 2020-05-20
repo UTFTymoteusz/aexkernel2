@@ -40,7 +40,7 @@ namespace AEX::Mem {
             _count++;
             _array = (T*) Heap::realloc((void*) _array, _count * sizeof(T));
 
-            _array[_count - 1] = val;
+            memcpy(&_array[_count - 1], &val, sizeof(T));
 
             return _count - 1;
         }

@@ -11,6 +11,8 @@ namespace AEX::Proc {
 
         cr3 = (uint64_t) pagemap->pageRoot;
 
+        rbp = 0;
+
         if (on_end) {
             rsp -= sizeof(on_end);
             *((uint64_t*) rsp) = usermode ? Debug::entry_type::USER : Debug::entry_type::KERNEL;

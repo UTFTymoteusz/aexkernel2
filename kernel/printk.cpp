@@ -98,7 +98,7 @@ namespace AEX {
                 format += 2;
             }
             else
-                rootTTY->write("  ");
+                *rootTTY << "  ";
         }
 
         char buffer[72];
@@ -201,7 +201,7 @@ namespace AEX {
                     printk_common(padchar, padlen, buffer);
                     break;
                 default:
-                    rootTTY->writeChar(c);
+                    *rootTTY << c;
                     break;
                 }
                 continue;
@@ -210,7 +210,7 @@ namespace AEX {
             if (c == '\n')
                 newline = true;
 
-            TTY::VTTYs[0]->writeChar(c);
+            *rootTTY << c;
         } while (*++format != '\0');
     }
 } // namespace AEX
