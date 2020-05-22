@@ -81,12 +81,20 @@ void main(multiboot_info_t* mbinfo) {
     FS::init();
     FS::mount(nullptr, "/", "devfs");
     FS::mount(nullptr, "/dev/", "devfs");
-    // FS::mount("/dev/sra", "/", nullptr);
+    FS::mount("/dev/sra", "/", nullptr);
     printk("\n");
 
     FS::find_mount("/dev/aasda");
     FS::find_mount("/dev/");
     FS::find_mount("/dev");
+    FS::find_mount("/aaaa");
+    FS::find_mount("/");
+    FS::find_mount("asas");
+
+    for (auto walker = FS::Path::Walker("/test/bigbong/aaa///////help/bbb");
+         auto piece  = walker.next();) {
+        printk("aaa: %i, %s\n", walker.level(), piece);
+    }
 
     // Let's get to it
     main_threaded();

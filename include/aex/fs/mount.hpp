@@ -5,9 +5,9 @@
 namespace AEX::FS {
     class Mount {
       public:
-        char path[Path::MAX_LEN];
+        char path[Path::MAX_PATH_LEN];
 
-        ~Mount();
+        virtual ~Mount();
 
         virtual void unmount();
 

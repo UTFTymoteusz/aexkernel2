@@ -2,6 +2,7 @@
 
 #include "aex/errno.hpp"
 #include "aex/fs/mount.hpp"
+#include "aex/math.hpp"
 #include "aex/mem/smartarray.hpp"
 #include "aex/mem/smartptr.hpp"
 #include "aex/printk.hpp"
@@ -10,6 +11,7 @@
 #include "fs/driver/devfs/devfs.hpp"
 #include "fs/driver/iso9660/iso9660.hpp"
 #include "fs/fs.hpp"
+
 
 namespace AEX::FS {
     Mem::SmartArray<Filesystem> filesystems;
@@ -53,7 +55,7 @@ namespace AEX::FS {
         return error::EINVAL;
     }
 
-    optional<Mem::SmartPointer<Mount>> find_mount(char* path) {
+    optional<Mem::SmartPointer<Mount>> find_mount(const char* path) {
         if (!path || !Path::is_valid(path))
             return optional<Mem::SmartPointer<Mount>>::error(error::EINVAL);
 
@@ -67,15 +69,28 @@ namespace AEX::FS {
         for (auto iterator = mounts.getIterator(); iterator.next();) {
             auto mount = iterator.get_ptr();
 
-            printk("aaa path: %s\n", mount->path);
+            int mnt_len  = strlen(mount->path) - 1;
+            int path_len = max(strlen(path) - (Path::ends_with_slash(path) ? 1 : 0), 1);
 
-            int mnt_len  = strlen(mount->path);
-            int path_len = strlen(path) + Path::ends_with_slash(path) ? 0 : 1;
+            if (path_len < mnt_len)
+                continue;
 
+            if (memcmp(mount->path, path, mnt_len) != 0)
+                continue;
 
-            if (memcmp(mount->path, path, strlen(path)))
-                ;
+            if (mnt_len < max_len)
+                continue;
+
+            max_len = mnt_len;
+
+            ret   = mount;
+            found = true;
         }
+
+        printk("mount for %s: %s\n", path, ret->path);
+
+        if (found)
+            return ret;
 
         return optional<Mem::SmartPointer<Mount>>::error(ENOENT);
     }
