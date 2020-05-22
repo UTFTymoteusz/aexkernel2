@@ -40,6 +40,10 @@ namespace AEX::Mem {
                 return _index - 1;
             }
 
+            SmartPointer<T> get_ptr() {
+                return _current;
+            }
+
           private:
             int _index = 0;
 

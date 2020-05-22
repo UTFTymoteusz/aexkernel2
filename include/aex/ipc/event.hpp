@@ -15,14 +15,14 @@ namespace AEX::IPC {
 
         /**
          * Unblocks all threads on waiting on this event.
-         * @return The amount of threads that had been unblocked.
+         * @returns The amount of threads that had been unblocked.
          */
         int raise();
 
         /**
          * Unblocks all threads on waiting on this event and marks it as defunct, disallowing any
          * future blocks.
-         * @return The amount of threads that had been unblocked.
+         * @returns The amount of threads that had been unblocked.
          */
         int defunct();
 

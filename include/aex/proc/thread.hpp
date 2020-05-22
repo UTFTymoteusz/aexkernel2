@@ -65,19 +65,19 @@ namespace AEX::Proc {
 
         /**
          * Gets the currently running thread.
-         * @return Pointer to the currently running thread.
+         * @returns Pointer to the currently running thread.
          */
         static Thread* getCurrentThread();
 
         /**
          * Gets the currently running thread's ID.
-         * @return Thread ID of the currently running thread.
+         * @returns Thread ID of the currently running thread.
          */
         static tid_t getCurrentTID();
 
         /**
          * Checks if the currently running thread has received the abort signal.
-         * @return True if abort has been received.
+         * @returns True if abort has been received.
          */
         static bool shouldExit();
 
@@ -85,7 +85,7 @@ namespace AEX::Proc {
 
         /**
          * Gets the parent process of the thread.
-         * @return The SmartPointer to the parent process.
+         * @returns The SmartPointer to the parent process.
          */
         Mem::SmartPointer<Process> getProcess();
 
@@ -107,7 +107,7 @@ namespace AEX::Proc {
 
         /**
          * Checks if the thread has received the abort signal.
-         * @return True if abort has been received.
+         * @returns True if abort has been received.
          */
         bool isAbortSet();
 
@@ -115,7 +115,7 @@ namespace AEX::Proc {
 
         /**
          * Returns a smart pointer to the thread.
-         * @return The smart pointer.
+         * @returns The smart pointer.
          */
         Mem::SmartPointer<Thread> getSmartPointer();
 
@@ -148,7 +148,7 @@ namespace AEX::Proc {
         /**
          * Checks the thread's busy counter. If _busy is greater than 0, the thread cannot
          * be killed.
-         * @return Whenever the thread is "busy".
+         * @returns Whenever the thread is "busy".
          */
         inline bool isBusy() {
             return Mem::atomic_read(&_busy) > 0 || Mem::atomic_read(&_critical) > 0;
@@ -173,7 +173,7 @@ namespace AEX::Proc {
         /**
          * Checks the thread's critical counter. If _critical is greater than 0, the thread cannot
          * be interrupted or killed.
-         * @return Whenever the thread is "critical".
+         * @returns Whenever the thread is "critical".
          */
         inline bool isCritical() {
             return Mem::atomic_read(&_critical) > 0;

@@ -9,10 +9,9 @@
 
 
 namespace AEX::Dev {
-    Block::Block(uint16_t sector_size, uint64_t sector_count, uint16_t max_sectors_at_once) {
-        type = type_t::BLOCK;
-
-        _overflow_buffer = new uint8_t[4096];
+    Block::Block(uint16_t sector_size, uint64_t sector_count, uint16_t max_sectors_at_once)
+        : Device(type_t::BLOCK) {
+        _overflow_buffer = new uint8_t[sector_size];
 
         _sector_size         = sector_size;
         _sector_count        = sector_count;

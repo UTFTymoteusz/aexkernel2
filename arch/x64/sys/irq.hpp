@@ -51,7 +51,7 @@ namespace AEX::Sys::IRQ {
 
     /**
      * Gets the amount of time passed since multicore timers were setup.
-     * @return Amount of time passed in nanoseconds.
+     * @returns Amount of time passed in nanoseconds.
      */
     uint64_t get_uptime();
 }

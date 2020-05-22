@@ -7,7 +7,7 @@ namespace AEX::Heap {
      * Allocates memory the heap and returns the pointer to it. Returns
      * nullptr on failure.
      * @param size Amount of bytes to allocate.
-     * @return Pointer to the allocated memory.
+     * @returns Pointer to the allocated memory.
      */
     void* malloc(size_t size);
 
@@ -20,7 +20,7 @@ namespace AEX::Heap {
     /**
      * Returns the size of a previously-allocated region of memory in bytes.
      * @param ptr The pointer to a previously-allocated region of memory
-     * @return Size of the memory region.
+     * @returns Size of the memory region.
      */
     size_t msize(void* ptr);
 
@@ -29,7 +29,7 @@ namespace AEX::Heap {
      * nullptr.
      * @param ptr The pointer to a previously-allocated region of memory.
      * @param size Amount of bytes to resize to.
-     * @return Pointer to the reallocated memory.
+     * @returns Pointer to the reallocated memory.
      */
     void* realloc(void* ptr, size_t size);
 

@@ -1,8 +1,10 @@
 #pragma once
 
 namespace AEX::FS {
-    class FileHandle {
+    class File {
       public:
+        static File open(char* path);
+
       private:
     };
 }

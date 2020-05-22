@@ -23,4 +23,22 @@ namespace AEX::FS::Path {
 
         return buffer;
     }
+
+    bool check_length(const char* path) {
+        return strlen(path) + 1 < MAX_LEN;
+    }
+
+    bool ends_with_slash(const char* path) {
+        return path[strlen(path) - 1] == '/';
+    }
+
+    bool is_valid(const char* path) {
+        if (!check_length(path))
+            return false;
+
+        if (path[0] != '/')
+            return false;
+
+        return true;
+    }
 }

@@ -13,4 +13,14 @@ namespace AEX::FS::Path {
      * @returns Pointer to destination buffer.
      */
     char* get_filename(char* buffer, const char* path, size_t num);
+
+    /**
+     * Checks if a path fits in MAX_LEN.
+     * @returns True if the specified path fits, false otherwies.
+     */
+    bool check_length(const char* path);
+
+    bool ends_with_slash(const char* path);
+
+    bool is_valid(const char* path);
 }

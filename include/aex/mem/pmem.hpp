@@ -28,7 +28,7 @@ namespace AEX::PMem {
     /**
      * Allocates enough frames to fit the specified size.
      * @param amount Requested size in bytes.
-     * @return The physical address of the allocated frame region.
+     * @returns The physical address of the allocated frame region.
      */
     phys_addr alloc(int32_t amount);
 

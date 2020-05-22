@@ -79,8 +79,14 @@ void main(multiboot_info_t* mbinfo) {
     printk("\n");
 
     FS::init();
-    FS::mount(nullptr, "/", nullptr);
+    FS::mount(nullptr, "/", "devfs");
+    FS::mount(nullptr, "/dev/", "devfs");
+    // FS::mount("/dev/sra", "/", nullptr);
     printk("\n");
+
+    FS::find_mount("/dev/aasda");
+    FS::find_mount("/dev/");
+    FS::find_mount("/dev");
 
     // Let's get to it
     main_threaded();

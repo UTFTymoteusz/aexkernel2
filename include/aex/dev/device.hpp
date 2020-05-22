@@ -12,5 +12,7 @@ namespace AEX::Dev {
         };
 
         type_t type;
+
+        Device(type_t type) : type(type) {}
     };
 }

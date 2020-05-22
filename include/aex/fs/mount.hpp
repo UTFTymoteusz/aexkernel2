@@ -7,6 +7,8 @@ namespace AEX::FS {
       public:
         char path[Path::MAX_LEN];
 
+        ~Mount();
+
         virtual void unmount();
 
       private:

@@ -34,7 +34,7 @@ namespace AEX::VMem {
         /**
          * Allocates enough pages to fit the specified size and zeroes them out.
          * @param bytes Requested size in bytes.
-         * @return Virtual address or nullptr on failure.
+         * @returns Virtual address or nullptr on failure.
          */
         void* alloc(size_t bytes) {
             return alloc(bytes, 0);
@@ -44,7 +44,7 @@ namespace AEX::VMem {
          * Allocates enough pages to fit the specified size and zeroes them out.
          * @param bytes Requested size in bytes.
          * @param flags Optional flags.
-         * @return Virtual address or nullptr on failure.
+         * @returns Virtual address or nullptr on failure.
          */
         void* alloc(size_t bytes, uint32_t flags);
 
@@ -52,7 +52,7 @@ namespace AEX::VMem {
          * Allocates enough physically contiguous pages to fit the specified size and
          * zeroes them out.
          * @param bytes Requested size in bytes.
-         * @return Virtual address or nullptr on failure.
+         * @returns Virtual address or nullptr on failure.
          */
         void* allocContinuous(size_t bytes) {
             return allocContinuous(bytes, 0);
@@ -63,7 +63,7 @@ namespace AEX::VMem {
          * zeroes them out.
          * @param bytes Requested size in bytes.
          * @param flags Optional flags.
-         * @return Virtual address or nullptr on failure.
+         * @returns Virtual address or nullptr on failure.
          */
         void* allocContinuous(size_t bytes, uint32_t flags);
 
@@ -72,14 +72,14 @@ namespace AEX::VMem {
          * @param bytes Requested size in bytes.
          * @param paddr The physical address.
          * @param flags Flags.
-         * @return Virtual address or nullptr on failure.
+         * @returns Virtual address or nullptr on failure.
          */
         void* map(size_t bytes, phys_addr paddr, uint16_t flags);
 
         /**
          * Gets the physical address of a virtual address. Respects non-page-aligned addresses.
          * @param vaddr The virtual address.
-         * @return The physical address or 0 on failure.
+         * @returns The physical address or 0 on failure.
          */
         phys_addr paddrof(void* vaddr);
 
