@@ -84,9 +84,16 @@ void main(multiboot_info_t* mbinfo) {
     FS::mount("/dev/sra", "/", nullptr);
     printk("\n");
 
-    auto dir = FS::Directory::open("/dev/");
-    if (dir.has_value)
+    auto dir = FS::File::opendir("/dev/");
+    if (dir.has_value) {
         printk("Opened dir\n");
+
+        auto bong = dir.value->readdir();
+        while (bong.has_value) {
+            printk(" - %s\n", bong.value.name);
+            bong = dir.value->readdir();
+        }
+    }
     else
         printk("Failed to open dir: %s\n", strerror(dir.error_code));
 

@@ -19,6 +19,8 @@ namespace AEX::FS {
 
     class DevFSMount : public Mount {
       public:
+        optional<Mem::SmartPointer<File>> opendir(const char* lpath);
+
       private:
     };
 }

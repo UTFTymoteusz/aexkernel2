@@ -24,7 +24,7 @@ namespace AEX::Dev::Tree {
 
         children.addRef(device);
 
-        printk("dev: %s: Registered device '%s'\n", this->name, device->name);
+        printk("dev: %s: Registered tree device '%s'\n", this->name, device->name);
 
         for (auto iterator = _drivers.getIterator(); auto driver = iterator.next();)
             bindDriverToDevice(driver, device);
@@ -35,7 +35,7 @@ namespace AEX::Dev::Tree {
 
         _drivers.addRef(driver);
 
-        printk("dev: %s: Registered driver '%s'\n", this->name, driver->name);
+        printk("dev: %s: Registered tree driver '%s'\n", this->name, driver->name);
 
         for (auto iterator = children.getIterator(); auto device = iterator.next();)
             bindDriverToDevice(driver, device);

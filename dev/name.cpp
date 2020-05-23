@@ -32,8 +32,9 @@ namespace AEX::Dev {
             }
         }
 
-        void get(char* buffer) {
-            strncpy(buffer, this->current, 32);
+        void get(char* buffer, size_t len) {
+            strncpy(buffer, this->current, len);
+            buffer[len - 1] = '\0';
 
             for (size_t i = start; i < sizeof(this->current); i++) {
                 if (this->current[i] == '\0') {
@@ -56,7 +57,7 @@ namespace AEX::Dev {
 
     Spinlock name_lock;
 
-    void name_letter_increment(char buffer[32], const char* pattern) {
+    void name_letter_increment(char* buffer, size_t buffer_len, const char* pattern) {
         auto scopeLock = ScopeSpinlock(name_lock);
 
         for (int i = 0; i < incrementations.count(); i++) {
@@ -64,7 +65,7 @@ namespace AEX::Dev {
             if (strcmp(incrementation.pattern, pattern) != 0)
                 continue;
 
-            incrementations[i].get(buffer);
+            incrementations[i].get(buffer, buffer_len);
 
             return;
         }
@@ -73,6 +74,6 @@ namespace AEX::Dev {
 
         int index = incrementations.pushBack(new_incrementation);
 
-        incrementations[index].get(buffer);
+        incrementations[index].get(buffer, buffer_len);
     }
 }

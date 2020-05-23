@@ -10,7 +10,8 @@
 namespace AEX::Dev {
     class Block : public Device {
       public:
-        Block(uint16_t sector_size, uint64_t sector_count, uint16_t max_sectors_at_once);
+        Block(const char* name, uint16_t sector_size, uint64_t sector_count,
+              uint16_t max_sectors_at_once);
         ~Block();
 
         int     init();

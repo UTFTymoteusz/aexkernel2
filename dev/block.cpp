@@ -1,5 +1,6 @@
 #include "aex/dev/block.hpp"
 
+#include "aex/dev/dev.hpp"
 #include "aex/dev/device.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/math.hpp"
@@ -7,15 +8,17 @@
 
 #include <stdint.h>
 
-
 namespace AEX::Dev {
-    Block::Block(uint16_t sector_size, uint64_t sector_count, uint16_t max_sectors_at_once)
-        : Device(type_t::BLOCK) {
+    Block::Block(const char* name, uint16_t sector_size, uint64_t sector_count,
+                 uint16_t max_sectors_at_once)
+        : Device(name, type_t::BLOCK) {
         _overflow_buffer = new uint8_t[sector_size];
 
         _sector_size         = sector_size;
         _sector_count        = sector_count;
         _max_sectors_at_once = max_sectors_at_once;
+
+        printk(PRINTK_OK "Registered block device '%s'\n", name);
     }
 
     Block::~Block() {

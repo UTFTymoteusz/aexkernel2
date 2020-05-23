@@ -12,7 +12,8 @@ namespace AEX::Dev {
         };
 
         type_t type;
+        char   name[32];
 
-        Device(type_t type) : type(type) {}
+        Device(const char* name, type_t type);
     };
 }

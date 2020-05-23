@@ -1,5 +1,6 @@
 #include "dev/driver/sata/ahci.hpp"
 
+#include "aex/dev/name.hpp"
 #include "aex/dev/tree/tree.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
@@ -36,9 +37,6 @@ namespace AEX::Dev::SATA {
     }
 
     void AHCI::scan_port(hba_port_t* port, int port_index) {
-        static int sr_counter = 0;
-        static int sd_counter = 0;
-
         uint32_t status = port->sata_status;
 
         uint8_t power_management = (status >> 8) & 0b1111;
@@ -91,8 +89,7 @@ namespace AEX::Dev::SATA {
         case SATA_SIG_ATAPI:
             printk("ahci%i: port%i: Found SATAPI\n", index, port_index);
 
-            snprintf(buffer, sizeof(buffer), "sr%i", sr_counter);
-            sr_counter++;
+            name_letter_increment(buffer, sizeof(buffer), "sr%");
 
             sata_device             = new SATADevice(buffer);
             sata_device->controller = this;
@@ -120,8 +117,7 @@ namespace AEX::Dev::SATA {
         default:
             printk("ahci%i: port%i: Found SATA\n", index, port_index);
 
-            snprintf(buffer, sizeof(buffer), "sd%i", sd_counter);
-            sd_counter++;
+            name_letter_increment(buffer, sizeof(buffer), "sd%");
 
             sata_device             = new SATADevice(buffer);
             sata_device->controller = this;

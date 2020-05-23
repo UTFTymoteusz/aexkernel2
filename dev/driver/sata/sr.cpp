@@ -9,7 +9,7 @@ namespace AEX::Dev::SATA {
     class SRBlock : public Block {
       public:
         SRBlock(SATADevice* device)
-            : Block(SECTOR_SIZE, device->sector_count, device->max_page_burst) {
+            : Block(device->name, SECTOR_SIZE, device->sector_count, device->max_page_burst) {
             _device = device;
         }
 
@@ -49,6 +49,8 @@ namespace AEX::Dev::SATA {
 
         void bind(Tree::Device* _device) {
             auto device = (SATADevice*) _device;
+
+            new SRBlock(device);
         }
 
       private:

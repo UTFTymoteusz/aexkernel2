@@ -1,5 +1,6 @@
 #include "dev/dev.hpp"
 
+#include "aex/dev/device.hpp"
 #include "aex/dev/tree/tree.hpp"
 #include "aex/mem/smartarray.hpp"
 #include "aex/printk.hpp"
@@ -8,6 +9,8 @@ namespace AEX::Dev {
     namespace Tree {
         extern void register_base_drivers();
     }
+
+    Mem::SmartArray<Device> devices;
 
     extern void mainbus_init();
     extern void arch_drivers_init();

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "aex/errno.hpp"
-#include "aex/fs/directory.hpp"
 #include "aex/fs/file.hpp"
 #include "aex/fs/path.hpp"
 #include "aex/mem/smartptr.hpp"
@@ -16,7 +15,7 @@ namespace AEX::FS {
 
         virtual void unmount();
 
-        virtual optional<Mem::SmartPointer<Directory>> opendir(const char* lpath);
+        virtual optional<Mem::SmartPointer<File>> opendir(const char* lpath);
 
       private:
     };

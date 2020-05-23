@@ -17,12 +17,14 @@ namespace AEX {
             return opt;
         }
 
-        optional() {
-            has_value = false;
-        }
+        optional() {}
 
         optional(T value) : value(value) {
             has_value = true;
+        }
+
+        optional(error_t error) {
+            error_code = error;
         }
     };
 }
