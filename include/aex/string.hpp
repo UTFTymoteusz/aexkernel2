@@ -65,6 +65,7 @@ namespace AEX {
 
     void memset(void* mem, char c, size_t len);
     void memset32(void* mem, uint32_t n, size_t count);
+    void memset64(void* mem, uint64_t n, size_t count);
     void memcpy(void* dst, const void* src, size_t size);
     int  memcmp(const void* a, const void* b, size_t num);
 } // namespace AEX::String

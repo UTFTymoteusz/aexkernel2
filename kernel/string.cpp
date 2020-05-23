@@ -53,6 +53,13 @@ namespace AEX {
             _mem[i] = n;
     }
 
+    void memset64(void* mem, uint64_t n, size_t count) {
+        uint64_t* _mem = (uint64_t*) mem;
+
+        for (size_t i = 0; i < count; i++)
+            _mem[i] = n;
+    }
+
     void memcpy(void* dst, const void* src, size_t size) {
         size_t aligned = size / 8;
 

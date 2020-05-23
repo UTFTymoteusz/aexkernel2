@@ -60,8 +60,10 @@ namespace AEX::TTY {
             mbinfo->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT) {
             new (&tx_init_tty) TxTTY((void*) 0xFFFFFFFF800B8000);
         }
-        else
+        else {
+            memset64(buffer, '\0', sizeof(buffer) / sizeof(uint64_t));
             new (&tx_init_tty) TxTTY((void*) &buffer);
+        }
 
         VTTYs[0] = &tx_init_tty;
     }

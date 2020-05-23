@@ -106,8 +106,8 @@ namespace AEX::TTY {
                    _px_width * (_px_height - font->size) * sizeof(uint32_t));
         }
 
-        memset32(&_double_buffer[_px_width * (_px_height - font->size)], _bgColor,
-                 _px_width * font->size);
+        memset64(&_double_buffer[_px_width * (_px_height - font->size)], _bgColor,
+                 _px_width * font->size / 2);
 
         memcpy(_output, _double_buffer, _px_width * _px_height * sizeof(uint32_t));
     }
