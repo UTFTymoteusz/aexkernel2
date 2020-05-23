@@ -5,7 +5,18 @@
 #include "aex/optional.hpp"
 
 namespace AEX::FS {
+    struct mount_info {
+        optional<Mem::SmartPointer<Mount>> mount;
+
+        const char* new_path;
+
+        mount_info(optional<Mem::SmartPointer<Mount>> mount, const char* new_path) {
+            this->mount    = mount;
+            this->new_path = new_path;
+        }
+    };
+
     void init();
 
-    optional<Mem::SmartPointer<Mount>> find_mount(const char* path);
+    mount_info find_mount(const char* path);
 }

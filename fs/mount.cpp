@@ -8,4 +8,8 @@ namespace AEX::FS {
     }
 
     void Mount::unmount() {}
+
+    optional<Mem::SmartPointer<Directory>> Mount::opendir(const char*) {
+        return optional<Mem::SmartPointer<Directory>>::error(ENOSYS);
+    }
 }

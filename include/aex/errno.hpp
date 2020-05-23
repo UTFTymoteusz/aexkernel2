@@ -1,7 +1,7 @@
 #pragma once
 
 namespace AEX {
-    enum error {
+    enum error_t {
         ENONE   = 0,
         ENOSYS  = 1,
         ENOENT  = 2,
@@ -11,4 +11,8 @@ namespace AEX {
         ENOTDIR = 6,
         EISDIR  = 7,
     };
+
+    extern const char* error_names[64];
+
+    const char* strerror(error_t code);
 }

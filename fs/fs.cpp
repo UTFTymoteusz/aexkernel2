@@ -30,10 +30,10 @@ namespace AEX::FS {
 
     int mount(const char* source, const char* path, const char* type) {
         if (!path || !Path::is_valid(path))
-            return error::EINVAL;
+            return error_t::EINVAL;
 
         if (source && !Path::is_valid(source))
-            return error::EINVAL;
+            return error_t::EINVAL;
 
         auto scopeLock = ScopeSpinlock(mount_lock);
 
@@ -52,12 +52,12 @@ namespace AEX::FS {
             return 0;
         }
 
-        return error::EINVAL;
+        return error_t::EINVAL;
     }
 
-    optional<Mem::SmartPointer<Mount>> find_mount(const char* path) {
+    mount_info find_mount(const char* path) {
         if (!path || !Path::is_valid(path))
-            return optional<Mem::SmartPointer<Mount>>::error(error::EINVAL);
+            return mount_info(optional<Mem::SmartPointer<Mount>>::error(error_t::EINVAL), nullptr);
 
         auto scopeLock = ScopeSpinlock(mount_lock);
 
@@ -87,11 +87,16 @@ namespace AEX::FS {
             found = true;
         }
 
-        printk("mount for %s: %s\n", path, ret->path);
+        if (found) {
+            const char* new_path = path + max_len;
+            if (new_path[0] == '\0')
+                new_path = "/";
 
-        if (found)
-            return ret;
+            printk("mount for %s: %s - %s\n", path, ret->path, new_path);
 
-        return optional<Mem::SmartPointer<Mount>>::error(ENOENT);
+            return mount_info(ret, new_path);
+        }
+
+        return mount_info(optional<Mem::SmartPointer<Mount>>::error(ENOENT), nullptr);
     }
 }

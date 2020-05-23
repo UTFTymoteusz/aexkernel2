@@ -84,12 +84,11 @@ void main(multiboot_info_t* mbinfo) {
     FS::mount("/dev/sra", "/", nullptr);
     printk("\n");
 
-    FS::find_mount("/dev/aasda");
-    FS::find_mount("/dev/");
-    FS::find_mount("/dev");
-    FS::find_mount("/aaaa");
-    FS::find_mount("/");
-    FS::find_mount("asas");
+    auto dir = FS::Directory::open("/dev/");
+    if (dir.has_value)
+        printk("Opened dir\n");
+    else
+        printk("Failed to open dir: %s\n", strerror(dir.error_code));
 
     char buffer[2048];
     printk("aaa: %s\n", FS::Path::canonize_path("asdsad/xzcxz", "/base", buffer, 2048));
