@@ -20,7 +20,7 @@ namespace AEX::FS::Path {
 
         int         _index = 0;
         const char* _path;
-        bool        _too_long;
+        bool        _too_long = false;
 
         int _level = 0;
     };
@@ -43,4 +43,6 @@ namespace AEX::FS::Path {
     bool ends_with_slash(const char* path);
 
     bool is_valid(const char* path);
+
+    char* canonize_path(const char* path, const char* base_path, char* buffer, size_t buffer_len);
 }

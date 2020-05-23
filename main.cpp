@@ -91,10 +91,16 @@ void main(multiboot_info_t* mbinfo) {
     FS::find_mount("/");
     FS::find_mount("asas");
 
-    for (auto walker = FS::Path::Walker("/test/bigbong/aaa///////help/bbb");
-         auto piece  = walker.next();) {
-        printk("aaa: %i, %s\n", walker.level(), piece);
-    }
+    char buffer[2048];
+    printk("aaa: %s\n", FS::Path::canonize_path("asdsad/xzcxz", "/base", buffer, 2048));
+    printk("aaa: %s\n", FS::Path::canonize_path("asdsad/xzcxz", "/base/", buffer, 2048));
+    printk("aaa: %s\n", FS::Path::canonize_path("/asdsad/xzcxz", "/base", buffer, 2048));
+    printk("aaa: %s\n", FS::Path::canonize_path("/asdsad/xzcxz/", "/base", buffer, 2048));
+    printk("aaa: %s\n", FS::Path::canonize_path("/asdsad/./xzcxz", "/base", buffer, 2048));
+    printk("aaa: %s\n", FS::Path::canonize_path("../xzcxz/", "/base", buffer, 2048));
+    printk("aaa: %s\n", FS::Path::canonize_path("../xzcxz/../..", "/base", buffer, 2048));
+    printk("aaa: %s\n", FS::Path::canonize_path("../xzcxz/../../", "/base", buffer, 2048));
+    printk("aaa: %s\n", FS::Path::canonize_path("../xzcxz/./../../", "/base", buffer, 2048));
 
     // Let's get to it
     main_threaded();

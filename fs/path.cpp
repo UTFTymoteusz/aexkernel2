@@ -3,13 +3,17 @@
 #include "aex/math.hpp"
 #include "aex/string.hpp"
 
+// clang-format off
+#include "aex/printk.hpp"
+// clang-format on
+
 namespace AEX::FS::Path {
     Walker::Walker(const char* path) {
         _path = path;
     }
 
     char* Walker::next() {
-        if (!_path[_index])
+        if (!_path[_index] || _too_long)
             return nullptr;
 
         while (_path[_index] == '/')
@@ -28,6 +32,9 @@ namespace AEX::FS::Path {
             chars_this_piece++;
             _index++;
         }
+
+        if (chars_this_piece == 0)
+            return nullptr;
 
         _buffer[chars_this_piece] = '\0';
 
@@ -97,5 +104,72 @@ namespace AEX::FS::Path {
         }
 
         return true;
+    }
+
+    char* canonize_path(const char* path, const char* base_path, char* buffer, size_t buffer_len) {
+        size_t index = 0;
+
+        if (buffer_len < 2)
+            return nullptr;
+
+        buffer_len--;
+
+        buffer[0]          = '/';
+        buffer[1]          = '\0';
+        buffer[buffer_len] = '\0';
+
+        int base_len = strlen(base_path);
+
+        if (base_path && base_len > 0 && path[0] != '/') {
+            if (base_len > buffer_len)
+                return nullptr;
+
+            memcpy(buffer, base_path, base_len);
+
+            index += base_len;
+
+            buffer[index] = '\0';
+
+            if (buffer[index - 1] == '/')
+                index--;
+        }
+
+        for (auto walker = FS::Path::Walker(path); auto piece = walker.next();) {
+            if (strcmp(piece, ".") == 0)
+                continue;
+            else if (strcmp(piece, "..") == 0) {
+                while (index > 0 && buffer[index] != '/')
+                    index--;
+
+                if (index == 0)
+                    continue;
+
+                buffer[index] = '\0';
+
+                continue;
+            }
+
+            int piece_len = strlen(piece);
+
+            if (index + piece_len >= buffer_len)
+                return nullptr;
+
+            buffer[index] = '/';
+            index++;
+            strncpy(&buffer[index], piece, MAX_PATH_LEN);
+
+            index += piece_len;
+            buffer[index] = '\0';
+        }
+
+        if (ends_with_slash(path)) {
+            if (index >= buffer_len)
+                return nullptr;
+
+            buffer[index]     = '/';
+            buffer[index + 1] = '\0';
+        }
+
+        return buffer;
     }
 }

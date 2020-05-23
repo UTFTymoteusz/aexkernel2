@@ -46,11 +46,11 @@ namespace AEX::Sys {
                     CPU::getCurrentCPUID(), exception_names[info->int_no], info->int_no, info->err);
         AEX::printk("RIP: 0x%016lx\n", info->rip);
 
-        if (Proc::threads[cpu->current_tid] && Proc::threads[cpu->current_tid]->parent)
+        /*if (Proc::threads[cpu->current_tid] && Proc::threads[cpu->current_tid]->parent)
             AEX::printk("PID: %8i, TID: %8i\n", Proc::threads[cpu->current_tid]->parent->pid,
                         cpu->current_tid);
         else
-            AEX::printk("PID: %8s, TID: %8s\n", "*idk*", "*idk*");
+            AEX::printk("PID: %8s, TID: %8s\n", "*idk*", "*idk*");*/
 
         if (info->int_no == EXC_PAGE_FAULT) {
             size_t cr2, cr3;
