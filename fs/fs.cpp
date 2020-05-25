@@ -17,8 +17,6 @@ namespace AEX::FS {
     Mem::SmartArray<Filesystem> filesystems;
     Mem::SmartArray<Mount>      mounts;
 
-    Spinlock mount_lock;
-
     void init() {
         printk(PRINTK_INIT "fs: Initializing\n");
 
@@ -34,8 +32,6 @@ namespace AEX::FS {
 
         if (source && !Path::is_valid(source))
             return error_t::EINVAL;
-
-        auto scopeLock = ScopeSpinlock(mount_lock);
 
         for (auto iterator = filesystems.getIterator(); auto fs = iterator.next();) {
             if (type && strcmp(type, fs->name) != 0)
@@ -58,8 +54,6 @@ namespace AEX::FS {
     mount_info find_mount(const char* path) {
         if (!path || !Path::is_valid(path))
             return mount_info(optional<Mem::SmartPointer<Mount>>::error(error_t::EINVAL), nullptr);
-
-        auto scopeLock = ScopeSpinlock(mount_lock);
 
         Mem::SmartPointer<Mount> ret;
 

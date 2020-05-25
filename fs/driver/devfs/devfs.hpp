@@ -21,6 +21,8 @@ namespace AEX::FS {
       public:
         optional<Mem::SmartPointer<File>> opendir(const char* lpath);
 
+        virtual optional<file_info> info(const char* lpath);
+
       private:
     };
 }

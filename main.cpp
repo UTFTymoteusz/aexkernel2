@@ -79,9 +79,12 @@ void main(multiboot_info_t* mbinfo) {
     printk("\n");
 
     FS::init();
-    FS::mount(nullptr, "/", "devfs");
     FS::mount(nullptr, "/dev/", "devfs");
-    FS::mount("/dev/sra", "/", nullptr);
+
+    auto res = FS::mount("/dev/sra", "/", nullptr);
+    if (res != error_t::ENONE)
+        printk("Failed to mount iso9660: %s\n", strerror((error_t) res));
+
     printk("\n");
 
     auto dir = FS::File::opendir("/dev/");
@@ -93,6 +96,8 @@ void main(multiboot_info_t* mbinfo) {
             printk(" - %s\n", bong.value.name);
             bong = dir.value->readdir();
         }
+
+        printk("/dev/sra id: %i\n", FS::File::info("/dev/sra").value.dev_id);
     }
     else
         printk("Failed to open dir: %s\n", strerror(dir.error_code));

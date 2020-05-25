@@ -12,4 +12,8 @@ namespace AEX::FS {
     optional<Mem::SmartPointer<File>> Mount::opendir(const char*) {
         return ENOSYS;
     }
+
+    optional<file_info> Mount::info(const char*) {
+        return ENOSYS;
+    }
 }

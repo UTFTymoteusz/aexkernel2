@@ -10,9 +10,8 @@ namespace AEX {
         EINTR   = 5,
         ENOTDIR = 6,
         EISDIR  = 7,
+        ENOTBLK = 8,
     };
-
-    extern const char* error_names[64];
 
     const char* strerror(error_t code);
 }

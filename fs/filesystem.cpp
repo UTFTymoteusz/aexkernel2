@@ -14,7 +14,7 @@ namespace AEX::FS {
 
     Filesystem::~Filesystem() {}
 
-    optional<Mount*> Filesystem::mount(const char* source) {
+    optional<Mount*> Filesystem::mount(const char*) {
         return {};
     }
 }

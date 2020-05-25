@@ -40,7 +40,7 @@ namespace AEX::Sys {
 
     extern "C" void common_fault_handler(void* _info) {
         auto info = (AEX::Sys::CPU::fault_info*) _info;
-        auto cpu  = CPU::getCurrentCPU();
+        // auto cpu  = CPU::getCurrentCPU();
 
         AEX::printk(PRINTK_FAIL "cpu%i: %93$%s%$ Exception (%i) (%91$%i%$)\n",
                     CPU::getCurrentCPUID(), exception_names[info->int_no], info->int_no, info->err);

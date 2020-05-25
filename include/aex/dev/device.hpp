@@ -3,6 +3,8 @@
 #include <stdint.h>
 
 namespace AEX::Dev {
+    typedef int32_t devid_t;
+
     class Device {
       public:
         enum type_t : uint8_t {

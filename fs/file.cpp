@@ -5,7 +5,7 @@
 #include "fs/fs.hpp"
 
 namespace AEX::FS {
-    File::dir_entry::dir_entry(const char* name) {
+    dir_entry::dir_entry(const char* name) {
         strncpy(this->name, name, sizeof(this->name));
     }
 
@@ -19,7 +19,15 @@ namespace AEX::FS {
         return mount_info.mount.value->opendir(mount_info.new_path);
     }
 
-    optional<File::dir_entry> File::readdir() {
+    optional<file_info> File::info(const char* path) {
+        auto mount_info = find_mount(path);
+        if (!mount_info.mount.has_value)
+            return mount_info.mount.error_code;
+
+        return mount_info.mount.value->info(mount_info.new_path);
+    }
+
+    optional<dir_entry> File::readdir() {
         return error_t::ENOTDIR;
     }
 }

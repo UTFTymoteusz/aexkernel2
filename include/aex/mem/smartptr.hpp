@@ -48,7 +48,17 @@ namespace AEX::Mem {
             _val  = sp._val;
             _refs = sp._refs;
 
-            _refs->increment();
+            if (_refs)
+                _refs->increment();
+        }
+
+        template <typename T2>
+        SmartPointer(const SmartPointer<T2>& sp) {
+            _val  = (T*) sp._val;
+            _refs = sp._refs;
+
+            if (_refs)
+                _refs->increment();
         }
 
         ~SmartPointer() {
@@ -83,6 +93,10 @@ namespace AEX::Mem {
             return *this;
         }
 
+        static auto getNull() {
+            return SmartPointer<T>(nullptr, nullptr);
+        }
+
         T* get() {
             return _val;
         }
@@ -93,10 +107,6 @@ namespace AEX::Mem {
 
         bool isValid() {
             return _val != nullptr;
-        }
-
-        static auto getNull() {
-            return SmartPointer<T>(nullptr, nullptr);
         }
 
       private:
@@ -110,5 +120,8 @@ namespace AEX::Mem {
             if (_refs)
                 delete _refs;
         }
+
+        template <typename>
+        friend class SmartPointer;
     };
 }

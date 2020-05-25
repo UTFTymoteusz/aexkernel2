@@ -10,6 +10,7 @@ namespace AEX {
         "Interrupted system call",
         "Not a directory",
         "Is a directory",
+        "Block device required",
     };
 
     const char* strerror(error_t code) {
