@@ -9,6 +9,10 @@ namespace AEX::FS {
 
     void Mount::unmount() {}
 
+    optional<Mem::SmartPointer<File>> Mount::open(const char*) {
+        return ENOSYS;
+    }
+
     optional<Mem::SmartPointer<File>> Mount::opendir(const char*) {
         return ENOSYS;
     }

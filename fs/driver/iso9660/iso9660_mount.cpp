@@ -11,6 +11,62 @@
 namespace AEX::FS {
     void cleanupName(char* buffer);
 
+    class ISO9660File : public File {
+      public:
+        ISO9660File(Mem::SmartPointer<Dev::Block> block, const iso9660_dentry& dentry) : File() {
+            _dentry    = dentry;
+            _block_dev = block;
+        }
+
+        optional<uint32_t> read(void* buf, uint32_t count) {
+            count = min(_dentry.data_len.le - _pos, count);
+            if (count == 0)
+                return 0;
+
+            _block_dev->read((uint8_t*) buf,
+                             (uint64_t) _dentry.data_lba.le * BLOCK_SIZE + (uint64_t) _pos, count);
+
+            _pos += count;
+
+            return count;
+        }
+
+        optional<dir_entry> readdir() {
+            return error_t::ENOTDIR;
+        }
+
+        optional<int64_t> seek(int64_t offset, seek_mode mode) {
+            int64_t new_pos = 0;
+
+            switch (mode) {
+            case seek_mode::SET:
+                new_pos = offset;
+                break;
+            case seek_mode::CURRENT:
+                new_pos = _pos + offset;
+                break;
+            case seek_mode::END:
+                new_pos = _dentry.data_len.le + offset;
+                break;
+            default:
+                break;
+            }
+
+            if (new_pos < 0 || new_pos > _dentry.data_len.le)
+                return error_t::EINVAL;
+
+            _pos = new_pos;
+            return new_pos;
+        }
+
+      private:
+        int64_t _pos = 0;
+
+        Mem::SmartPointer<Dev::Block> _block_dev;
+
+        iso9660_dentry _dentry;
+    };
+
     class ISO9660Directory : public File {
       public:
         ISO9660Directory(Mem::SmartPointer<Dev::Block> block, const iso9660_dentry& dentry)
@@ -19,6 +75,10 @@ namespace AEX::FS {
             _block_dev = block;
 
             _block_dev->read(_buffer, _dentry.data_lba.le * BLOCK_SIZE + _pos, BLOCK_SIZE);
+        }
+
+        optional<uint32_t> read() {
+            return error_t::EISDIR;
         }
 
         optional<dir_entry> readdir() {
@@ -64,13 +124,25 @@ namespace AEX::FS {
         }
 
       private:
-        uint8_t  _buffer[2048];
-        uint32_t _pos = 0;
+        uint8_t _buffer[2048];
+        int64_t _pos = 0;
 
         Mem::SmartPointer<Dev::Block> _block_dev;
 
         iso9660_dentry _dentry;
     };
+
+    optional<Mem::SmartPointer<File>> ISO9660Mount::open(const char* lpath) {
+        auto dentry_try = findDentry(lpath);
+        if (!dentry_try.has_value)
+            return dentry_try.error_code;
+
+        auto dentry = dentry_try.value;
+        if (dentry.isDirectory())
+            return error_t::EISDIR;
+
+        return Mem::SmartPointer<File>(new ISO9660File(_block_dev, dentry));
+    }
 
     optional<Mem::SmartPointer<File>> ISO9660Mount::opendir(const char* lpath) {
         auto dentry_try = findDentry(lpath);

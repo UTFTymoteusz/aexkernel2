@@ -17,6 +17,7 @@ namespace AEX::FS {
             _block_dev   = block;
         }
 
+        optional<Mem::SmartPointer<File>> open(const char* lpath);
         optional<Mem::SmartPointer<File>> opendir(const char* lpath);
 
         optional<file_info> info(const char* lpath);

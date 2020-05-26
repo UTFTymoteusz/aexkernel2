@@ -108,6 +108,18 @@ void main(multiboot_info_t* mbinfo) {
     else
         printk("Failed to open dir: %s\n", strerror(dir.error_code));
 
+    auto file = FS::File::open("/sys/test.txt");
+    if (file.has_value) {
+        char buffer[24] = {};
+
+        file.value->seek(20);
+
+        int amnt = file.value->read(buffer, 20).value;
+        printk("read: %s (%i)\n", buffer, amnt);
+    }
+    else
+        printk("Failed to open /sys/test.txt: %s\n", strerror(file.error_code));
+
     // Let's get to it
     main_threaded();
 }
