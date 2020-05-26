@@ -74,7 +74,10 @@ namespace AEX::Mem {
         int addRef(T* ptr) {
             auto scopeLock = ScopeSpinlock(_lock);
 
-            int index        = findSlotOrMakeSlot();
+            int index = findSlotOrMakeSlot();
+            if (index == -1)
+                return -1;
+
             _elements[index] = element(ptr);
 
             return index;
@@ -83,7 +86,10 @@ namespace AEX::Mem {
         int addRef(T* ptr, ref_counter* counter) {
             auto scopeLock = ScopeSpinlock(_lock);
 
-            int index        = findSlotOrMakeSlot();
+            int index = findSlotOrMakeSlot();
+            if (index == -1)
+                return -1;
+
             _elements[index] = element(ptr, counter);
 
             return index;

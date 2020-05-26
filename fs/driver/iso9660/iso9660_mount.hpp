@@ -17,6 +17,8 @@ namespace AEX::FS {
             _block_dev   = block;
         }
 
+        optional<Mem::SmartPointer<File>> opendir(const char* lpath);
+
         optional<file_info> info(const char* lpath);
 
       private:
@@ -24,7 +26,5 @@ namespace AEX::FS {
         iso9660_dentry                _root_dentry;
 
         optional<iso9660_dentry> findDentry(const char* lpath);
-
-        void cleanupName(char* buffer);
     };
 }

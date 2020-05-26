@@ -18,5 +18,11 @@ namespace AEX::Dev {
         int    id;
 
         Device(const char* name, type_t type);
+
+        /**
+         * Registers a device.
+         * @returns True if registration succeded.
+         */
+        bool registerDevice();
     };
 }

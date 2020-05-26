@@ -17,8 +17,6 @@ namespace AEX::Dev {
         _sector_size         = sector_size;
         _sector_count        = sector_count;
         _max_sectors_at_once = max_sectors_at_once;
-
-        printk(PRINTK_OK "Registered block device '%s'\n", name);
     }
 
     Block::~Block() {
@@ -86,6 +84,7 @@ namespace AEX::Dev {
 
         return 0;
     }
+
     int64_t Block::write(uint8_t*, uint64_t, uint32_t) {
         kpanic("Block::write is unimplemented, I'm too lazy atm\n");
     }

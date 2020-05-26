@@ -93,13 +93,13 @@ void main(multiboot_info_t* mbinfo) {
 
     printk("\n");
 
-    auto dir = FS::File::opendir("/dev/");
+    auto dir = FS::File::opendir("/sys/");
     if (dir.has_value) {
         printk("Opened dir\n");
 
         auto bong = dir.value->readdir();
         while (bong.has_value) {
-            printk(" - %s\n", bong.value.name);
+            printk(" - %s %s\n", bong.value.name, bong.value.is_directory() ? "dir" : "file");
             bong = dir.value->readdir();
         }
 
