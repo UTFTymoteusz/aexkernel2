@@ -4,8 +4,14 @@
 #include "aex/dev/dev.hpp"
 #include "aex/fs/file.hpp"
 #include "aex/printk.hpp"
+#include "aex/string.hpp"
+
+#include "iso9660_mount.hpp"
+#include "types.hpp"
 
 #define BLOCK_SIZE 2048
+#define ISO_START BLOCK_SIZE * 0x10
+#define IDENTIFIER "CD001"
 
 namespace AEX::FS {
     void ISO9660::init() {
@@ -32,11 +38,36 @@ namespace AEX::FS {
         if (!block.isValid())
             return error_t::ENOENT;
 
-        char buffer[12];
+        iso9660_dentry root_dentry;
 
-        block->read((uint8_t*) &buffer, 0x38, 10);
-        printk("read: %s\n", buffer);
+        uint8_t buffer[BLOCK_SIZE];
 
-        return new ISO9660Mount();
+        for (int i = 0; i <= 64; i++) {
+            if (i == 64) {
+                printk(PRINTK_WARN "iso9660: Too many volume descriptors\n");
+                return EINVAL;
+            }
+
+            block->read(buffer, ISO_START + BLOCK_SIZE * i, BLOCK_SIZE);
+
+            auto header = (iso9660_vd_header*) buffer;
+            if (memcmp(header->identifier, IDENTIFIER, 5) != 0)
+                return EINVAL;
+
+            switch (header->type) {
+            case ios9960_vd_type::TERMINATOR:
+                i = 666;
+                break;
+            case ios9960_vd_type::PRIMARY_VOLUME_DESCRIPTOR: {
+                auto pvd = (iso9660_primary_volume_descriptor*) buffer;
+
+                root_dentry = *((iso9660_dentry*) pvd->root_dentry_bytes);
+            } break;
+            default:
+                break;
+            }
+        }
+
+        return new ISO9660Mount(block, root_dentry);
     }
 }

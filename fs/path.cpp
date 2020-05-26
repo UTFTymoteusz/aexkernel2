@@ -9,7 +9,8 @@
 
 namespace AEX::FS::Path {
     Walker::Walker(const char* path) {
-        _path = path;
+        _path   = path;
+        _levels = count_levels(path);
     }
 
     char* Walker::next() {
@@ -38,6 +39,8 @@ namespace AEX::FS::Path {
 
         _buffer[chars_this_piece] = '\0';
 
+        _level++;
+
         return _buffer;
     }
 
@@ -45,8 +48,12 @@ namespace AEX::FS::Path {
         return _level;
     }
 
-    bool Walker::is_piece_too_long() {
+    bool Walker::isPieceTooLong() {
         return _too_long;
+    }
+
+    bool Walker::isFinal() {
+        return _level == _levels;
     }
 
     char* get_filename(char* buffer, const char* path, size_t num) {
@@ -100,7 +107,8 @@ namespace AEX::FS::Path {
                 index++;
             }
 
-            index++;
+            while (path[index] == '/')
+                index++;
         }
 
         return true;
@@ -171,5 +179,25 @@ namespace AEX::FS::Path {
         }
 
         return buffer;
+    }
+
+    int count_levels(const char* path) {
+        int total = 0;
+        int index = 0;
+
+        while (path[index] == '/')
+            index++;
+
+        while (path[index]) {
+            while (path[index] && path[index] != '/')
+                index++;
+
+            total++;
+
+            while (path[index] == '/')
+                index++;
+        }
+
+        return total;
     }
 }

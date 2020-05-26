@@ -18,6 +18,7 @@ namespace AEX::FS {
         Dev::devid_t containing_dev_id = -1;
         FS::type_t   type              = type_t::UNKNOWN;
         Dev::devid_t dev_id            = -1;
+        uint64_t     total_size        = 0;
 
         bool is_regular() {
             return (type & FS::type_t::REGULAR) == FS::type_t::REGULAR;

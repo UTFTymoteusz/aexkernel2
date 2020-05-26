@@ -16,9 +16,4 @@ namespace AEX::FS {
 
       private:
     };
-
-    class ISO9660Mount : public Mount {
-      public:
-      private:
-    };
 }

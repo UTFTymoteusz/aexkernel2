@@ -66,7 +66,7 @@ namespace AEX::Dev {
                 if (!combo) {
                     combo = true;
 
-                    combo_start = start;
+                    combo_start = start / _sector_size;
                     combo_count = 0;
                 }
 

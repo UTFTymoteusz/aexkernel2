@@ -5,6 +5,7 @@
 namespace AEX::FS::Path {
     constexpr auto MAX_PATH_LEN     = 2048;
     constexpr auto MAX_FILENAME_LEN = 256;
+    constexpr auto MAX_DEPTH        = 256;
 
     class Walker {
       public:
@@ -13,7 +14,8 @@ namespace AEX::FS::Path {
         char* next();
 
         int  level();
-        bool is_piece_too_long();
+        bool isPieceTooLong();
+        bool isFinal();
 
       private:
         char _buffer[MAX_FILENAME_LEN];
@@ -22,7 +24,8 @@ namespace AEX::FS::Path {
         const char* _path;
         bool        _too_long = false;
 
-        int _level = 0;
+        int _level  = 0;
+        int _levels = 0;
     };
 
     /**
@@ -45,4 +48,6 @@ namespace AEX::FS::Path {
     bool is_valid(const char* path);
 
     char* canonize_path(const char* path, const char* base_path, char* buffer, size_t buffer_len);
+
+    int count_levels(const char* path);
 }

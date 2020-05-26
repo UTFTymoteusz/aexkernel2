@@ -7,6 +7,6 @@ namespace AEX::Dev {
     Device::Device(const char* name, Device::type_t type) : type(type) {
         strncpy(this->name, name, sizeof(this->name));
 
-        devices.addRef(this);
+        this->id = devices.addRef(this);
     }
 }

@@ -85,6 +85,12 @@ void main(multiboot_info_t* mbinfo) {
     if (res != error_t::ENONE)
         printk("Failed to mount iso9660: %s\n", strerror((error_t) res));
 
+    auto res2 = FS::File::info("/sys/aexkrnl.elf");
+    if (!res2.has_value)
+        printk("Failed to open /sys/aexkrnl.elf: %s\n", strerror(res2.error_code));
+    else
+        printk("/sys/aexkrnl.elf total size: %i\n", res2.value.total_size);
+
     printk("\n");
 
     auto dir = FS::File::opendir("/dev/");
@@ -101,17 +107,6 @@ void main(multiboot_info_t* mbinfo) {
     }
     else
         printk("Failed to open dir: %s\n", strerror(dir.error_code));
-
-    char buffer[2048];
-    printk("aaa: %s\n", FS::Path::canonize_path("asdsad/xzcxz", "/base", buffer, 2048));
-    printk("aaa: %s\n", FS::Path::canonize_path("asdsad/xzcxz", "/base/", buffer, 2048));
-    printk("aaa: %s\n", FS::Path::canonize_path("/asdsad/xzcxz", "/base", buffer, 2048));
-    printk("aaa: %s\n", FS::Path::canonize_path("/asdsad/xzcxz/", "/base", buffer, 2048));
-    printk("aaa: %s\n", FS::Path::canonize_path("/asdsad/./xzcxz", "/base", buffer, 2048));
-    printk("aaa: %s\n", FS::Path::canonize_path("../xzcxz/", "/base", buffer, 2048));
-    printk("aaa: %s\n", FS::Path::canonize_path("../xzcxz/../..", "/base", buffer, 2048));
-    printk("aaa: %s\n", FS::Path::canonize_path("../xzcxz/../../", "/base", buffer, 2048));
-    printk("aaa: %s\n", FS::Path::canonize_path("../xzcxz/./../../", "/base", buffer, 2048));
 
     // Let's get to it
     main_threaded();
