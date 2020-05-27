@@ -5,7 +5,7 @@
 #include "sys/mcore.hpp"
 
 namespace AEX::Sys {
-    void CPU::broadcastPacket(uint32_t type, void* data, bool ignore_self) {
+    void CPU::broadcastPacket(ipp_type type, void* data, bool ignore_self) {
         for (int i = 0; i < MCore::cpu_count; i++) {
             if (i == CPU::getCurrentCPUID() && ignore_self)
                 continue;
@@ -18,7 +18,7 @@ namespace AEX::Sys {
         }
     }
 
-    void CPU::sendPacket(uint32_t type, void* data) {
+    void CPU::sendPacket(ipp_type type, void* data) {
         _ipi_lock.acquire();
         _ipi_ack = false;
 
@@ -26,7 +26,7 @@ namespace AEX::Sys {
         _ipi_packet.data = data;
 
         if (CPU::getCurrentCPUID() == this->id) {
-            handle_ipp();
+            handleIPP();
             _ipi_lock.release();
 
             return;
@@ -46,10 +46,10 @@ namespace AEX::Sys {
     extern "C" void ipi_handle() {
         auto us = CPU::getCurrentCPU();
 
-        us->handle_ipp();
+        us->handleIPP();
     }
 
-    void CPU::handle_ipp() {
+    void CPU::handleIPP() {
         switch (_ipi_packet.type) {
         case CPU::ipp_type::HALT:
             _ipi_ack = true;

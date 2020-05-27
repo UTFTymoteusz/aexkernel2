@@ -42,6 +42,9 @@ namespace AEX::Sys::IRQ {
      */
     void irq_sleep(double ms);
 
+    /**
+     * Setups the local CPU timers in a way that they are offset in phase nicely.
+     */
     void setup_timers_mcore(double hz);
 
     /**

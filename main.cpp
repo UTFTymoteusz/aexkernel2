@@ -141,7 +141,7 @@ void main_threaded() {
 
     mqueue = new IPC::MessageQueue();
 
-    auto thread = new Proc::Thread(process.get(), (void*) secondary_threaded, Heap::malloc(8192),
+    auto thread = new Proc::Thread(process.get(), (void*) secondary_threaded, new uint8_t[8192],
                                    8192, process->pagemap);
     thread->start();
 

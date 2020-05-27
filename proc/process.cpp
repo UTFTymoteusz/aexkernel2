@@ -14,7 +14,7 @@ namespace AEX::Proc {
         else
             strncpy(this->name, name, sizeof(this->name));
 
-        this->image_path = (char*) Heap::malloc(strlen(image_path) + 1);
+        this->image_path = new char[strlen(image_path) + 1];
 
         strncpy(this->image_path, image_path, strlen(image_path) + 1);
 

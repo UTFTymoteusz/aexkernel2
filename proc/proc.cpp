@@ -37,7 +37,7 @@ namespace AEX::Proc {
     void init() {
         threads_to_reap = IPC::MessageQueue();
 
-        threads           = (Thread**) Heap::malloc(sizeof(Thread*) * 1);
+        threads           = (Thread**) new Thread*[1];
         thread_array_size = 1;
 
         auto idle_process   = new Process("/sys/aexkrnl.elf", 0, VMem::kernel_pagemap, "idle");
@@ -213,10 +213,10 @@ namespace AEX::Proc {
     }
 
     void setup_idle_threads(Process* idle_process) {
-        idle_threads = (Thread**) Heap::malloc(sizeof(Thread*) * Sys::MCore::cpu_count);
+        idle_threads = (Thread**) new Thread*[Sys::MCore::cpu_count];
 
         for (int i = 0; i < Sys::MCore::cpu_count; i++) {
-            void* stack = Heap::malloc(1024);
+            void* stack = new uint8_t[1024];
 
             idle_threads[i] = new Thread(idle_process, (void*) idle, stack, 1024,
                                          VMem::kernel_pagemap, false, true);

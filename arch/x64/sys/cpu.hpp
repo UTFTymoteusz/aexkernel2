@@ -10,13 +10,15 @@ namespace AEX::Proc {
 }
 
 namespace AEX::Sys {
+    extern "C" void ipi_handle();
+
     /**
      * The base CPU class that represents a processor in the system and contains some CPU-dependant
      * functionality.
      */
     class CPU {
       public:
-        enum ipp_type {
+        enum ipp_type : uint8_t {
             HALT     = 0,
             RESHED   = 1,
             CALL     = 2,
@@ -92,6 +94,11 @@ namespace AEX::Sys {
          */
         static void wrmsr(uint32_t reg, uint64_t data);
 
+        /**
+         * Reads a model specific register.
+         * @param reg  The register in question.
+         * @returns Value read.
+         */
         static uint64_t rdmsr(uint32_t reg);
 
         /**
@@ -111,19 +118,14 @@ namespace AEX::Sys {
          * @param data Optional data pointer.
          * @param ignore_self If true, the executing CPU will not receive this packet.
          */
-        static void broadcastPacket(uint32_t type, void* data = nullptr, bool ignore_self = true);
+        static void broadcastPacket(ipp_type type, void* data = nullptr, bool ignore_self = true);
 
         /**
          * Sends a packet to a processor and IPIs it.
          * @param type Type of the packet.
          * @param data Optional data pointer.
          */
-        void sendPacket(uint32_t type, void* data = nullptr);
-
-        /**
-         * Handles an IPP packet, shouldn't be invoked directly.
-         */
-        void handle_ipp();
+        void sendPacket(ipp_type type, void* data = nullptr);
 
         // Don't change the order of these or the kernel will go boom boom
         int id;
@@ -143,8 +145,8 @@ namespace AEX::Sys {
 
       private:
         struct ipi_packet {
-            uint8_t type;
-            void*   data;
+            ipp_type type;
+            void*    data;
         };
 
         Spinlock      _ipi_lock;
@@ -152,5 +154,9 @@ namespace AEX::Sys {
         ipi_packet    _ipi_packet;
 
         void fillAndCleanName();
+
+        void handleIPP();
+
+        friend void ipi_handle();
     };
 }

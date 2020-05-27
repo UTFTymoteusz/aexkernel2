@@ -117,7 +117,13 @@ namespace AEX::TTY {
      */
     extern VTTY* VTTYs[TTY_AMOUNT];
 
+    /**
+     * Initializes the bare neccesities required for a terminal.
+     */
     void init(multiboot_info_t* mbinfo);
 
+    /**
+     * Initializes all terminals and makes them actually appear if in framebuffer mode.
+     */
     void init_mem(multiboot_info_t* mbinfo);
 } // namespace AEX::TTY

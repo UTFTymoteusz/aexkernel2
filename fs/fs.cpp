@@ -12,7 +12,6 @@
 #include "fs/driver/iso9660/iso9660.hpp"
 #include "fs/fs.hpp"
 
-
 namespace AEX::FS {
     Mem::SmartArray<Filesystem> filesystems;
     Mem::SmartArray<Mount>      mounts;
@@ -85,8 +84,6 @@ namespace AEX::FS {
             const char* new_path = path + max_len;
             if (new_path[0] == '\0')
                 new_path = "/";
-
-            printk("mount for %s: %s - %s\n", path, ret->path, new_path);
 
             return mount_info(ret, new_path);
         }

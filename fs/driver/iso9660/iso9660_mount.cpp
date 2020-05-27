@@ -9,7 +9,7 @@
 
 
 namespace AEX::FS {
-    void cleanupName(char* buffer);
+    void clean_name(char* buffer);
 
     class ISO9660File : public File {
       public:
@@ -111,7 +111,7 @@ namespace AEX::FS {
                 memcpy(name_buffer, ldentry->name, min(sizeof(name_buffer) - 1, ldentry->name_len));
                 name_buffer[ldentry->name_len] = '\0';
 
-                cleanupName(name_buffer);
+                clean_name(name_buffer);
 
                 auto dentry_ret = dir_entry(name_buffer);
 
@@ -206,7 +206,7 @@ namespace AEX::FS {
                 memcpy(name_buffer, ldentry->name, min(sizeof(name_buffer) - 1, ldentry->name_len));
                 name_buffer[ldentry->name_len] = '\0';
 
-                cleanupName(name_buffer);
+                clean_name(name_buffer);
 
                 if (strcmp(name_buffer, piece) == 0) {
                     if (!walker.isFinal() && !ldentry->isDirectory())
@@ -226,7 +226,7 @@ namespace AEX::FS {
         return dentry;
     }
 
-    void cleanupName(char* buffer) {
+    void clean_name(char* buffer) {
         for (int i = 0; i < Path::MAX_FILENAME_LEN; i++) {
             if (buffer[i] == ';')
                 buffer[i] = '\0';
