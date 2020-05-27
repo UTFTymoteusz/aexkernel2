@@ -1,8 +1,12 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 
 namespace AEX::Heap {
+    extern uint64_t heap_allocated;
+    extern uint64_t heap_free;
+
     /**
      * Allocates memory the heap and returns the pointer to it. Returns
      * nullptr on failure.

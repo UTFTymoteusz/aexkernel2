@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stddef.h>
+
 namespace AEX::Debug {
     enum entry_type {
         BOOT   = 0,
@@ -8,4 +10,10 @@ namespace AEX::Debug {
     };
 
     void stack_trace(int skip = 0);
+
+    void load_kernel_symbols(const char* elf_path);
+
+    const char* symbol_addr2name(void* addr);
+
+    char* demangle_name(const char* symbol, char* buffer, size_t buffer_len);
 }

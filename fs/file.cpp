@@ -50,4 +50,6 @@ namespace AEX::FS {
     optional<dir_entry> File::readdir() {
         return error_t::ENOTDIR;
     }
+
+    void File::close() {}
 }

@@ -1,6 +1,7 @@
 #include "aex/mem/heap.hpp"
 
 #include "aex/kpanic.hpp"
+#include "aex/mem/atomic.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
@@ -22,6 +23,9 @@ namespace AEX::Heap {
     T ceilToPiece(T val) {
         return (val + ALLOC_SIZE - 1) / ALLOC_SIZE;
     }
+
+    uint64_t heap_allocated = 0;
+    uint64_t heap_free      = 0;
 
     class Piece {
       public:
@@ -50,6 +54,9 @@ namespace AEX::Heap {
             piece->data        = (void*) ((size_t) mem + data_offset);
             piece->next        = nullptr;
 
+            Mem::atomic_add(&heap_allocated, pieces * ALLOC_SIZE);
+            Mem::atomic_add(&heap_free, pieces * ALLOC_SIZE);
+
             return piece;
         }
 
@@ -74,6 +81,8 @@ namespace AEX::Heap {
             auto header = (alloc_block*) ((size_t) data + start * ALLOC_SIZE);
             header->len = pieces;
 
+            Mem::atomic_sub(&heap_free, (size / ALLOC_SIZE) * ALLOC_SIZE);
+
             return (void*) ((size_t) data + start * ALLOC_SIZE + ALLOC_SIZE);
         }
 
@@ -83,6 +92,8 @@ namespace AEX::Heap {
 
             spinlock.acquire();
             unmark((uint32_t)((size_t) block - (size_t) data) / ALLOC_SIZE, header->len);
+            Mem::atomic_add(&heap_free, (uint64_t) header->len * ALLOC_SIZE);
+
             memset(block, '\0', header->len * ALLOC_SIZE);
             spinlock.release();
         }
@@ -252,6 +263,8 @@ namespace AEX::Heap {
 
         if (oldsize < size && newptr)
             memset((void*) ((size_t) newptr + oldsize), '\0', size - oldsize);
+
+        free(ptr);
 
         return newptr;
     }

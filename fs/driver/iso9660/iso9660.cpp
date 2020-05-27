@@ -56,7 +56,7 @@ namespace AEX::FS {
 
             switch (header->type) {
             case ios9960_vd_type::TERMINATOR:
-                i = 666;
+                i = 666; // a quick and dirty way to break out of this for in a switch
                 break;
             case ios9960_vd_type::PRIMARY_VOLUME_DESCRIPTOR: {
                 auto pvd = (iso9660_primary_volume_descriptor*) buffer;

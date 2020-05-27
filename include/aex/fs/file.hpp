@@ -68,6 +68,8 @@ namespace AEX::FS {
 
         virtual optional<dir_entry> readdir();
 
+        virtual void close();
+
       private:
     };
 }

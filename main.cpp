@@ -1,3 +1,4 @@
+#include "aex/debug.hpp"
 #include "aex/fs/fs.hpp"
 #include "aex/mem/heap.hpp"
 #include "aex/mem/pmem.hpp"
@@ -85,40 +86,7 @@ void main(multiboot_info_t* mbinfo) {
     if (res != error_t::ENONE)
         printk("Failed to mount iso9660: %s\n", strerror((error_t) res));
 
-    auto res2 = FS::File::info("/sys/aexkrnl.elf");
-    if (!res2.has_value)
-        printk("Failed to open /sys/aexkrnl.elf: %s\n", strerror(res2.error_code));
-    else
-        printk("/sys/aexkrnl.elf total size: %i\n", res2.value.total_size);
-
-    printk("\n");
-
-    auto dir = FS::File::opendir("/sys/");
-    if (dir.has_value) {
-        printk("Opened dir\n");
-
-        auto bong = dir.value->readdir();
-        while (bong.has_value) {
-            printk(" - %s %s\n", bong.value.name, bong.value.is_directory() ? "dir" : "file");
-            bong = dir.value->readdir();
-        }
-
-        printk("/dev/sra id: %i\n", FS::File::info("/dev/sra").value.dev_id);
-    }
-    else
-        printk("Failed to open dir: %s\n", strerror(dir.error_code));
-
-    auto file = FS::File::open("/sys/test.txt");
-    if (file.has_value) {
-        char buffer[24] = {};
-
-        file.value->seek(20);
-
-        int amnt = file.value->read(buffer, 20).value;
-        printk("read: %s (%i)\n", buffer, amnt);
-    }
-    else
-        printk("Failed to open /sys/test.txt: %s\n", strerror(file.error_code));
+    Debug::load_kernel_symbols("/sys/aexkrnl.elf");
 
     // Let's get to it
     main_threaded();
