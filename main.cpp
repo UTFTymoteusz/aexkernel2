@@ -81,6 +81,7 @@ void main(multiboot_info_t* mbinfo) {
 
     FS::init();
     FS::mount(nullptr, "/dev/", "devfs");
+    printk("\n");
 
     auto res = FS::mount("/dev/sra", "/", nullptr);
     if (res != error_t::ENONE)
@@ -119,6 +120,8 @@ void main_threaded() {
 
     thread->join();
     printk("joined\n");
+
+    kpanic("test\n");
 
     while (true) {
         uint64_t ns = IRQ::get_uptime();

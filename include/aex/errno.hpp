@@ -11,6 +11,7 @@ namespace AEX {
         ENOTDIR = 6,
         EISDIR  = 7,
         ENOTBLK = 8,
+        ENOEXEC = 9,
     };
 
     const char* strerror(error_t code);

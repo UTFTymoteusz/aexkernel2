@@ -10,6 +10,11 @@ namespace AEX::Mem {
       public:
         Vector() = default;
 
+        ~Vector() {
+            if (_array)
+                delete _array;
+        }
+
         template <typename... T2>
         Vector(T2... rest) {
             pushRecursive(rest...);
