@@ -3,7 +3,6 @@
 #include "aex/math.hpp"
 #include "aex/proc/thread.hpp"
 
-
 using namespace AEX::Proc;
 
 namespace AEX::IPC {

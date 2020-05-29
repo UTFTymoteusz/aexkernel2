@@ -2,10 +2,13 @@
 
 #include "aex/debug.hpp"
 #include "aex/math.hpp"
+#include "aex/mem/vmem.hpp"
 #include "aex/proc/thread.hpp"
 #include "aex/string.hpp"
 
 #include <stdint.h>
+
+using namespace AEX::Proc;
 
 namespace AEX::Mem {
     CircularBuffer::CircularBuffer(int size) {
@@ -28,7 +31,7 @@ namespace AEX::Mem {
                 _event.wait();
                 _lock.release();
 
-                Proc::Thread::yield();
+                Thread::yield();
 
                 _lock.acquire();
 
@@ -36,7 +39,6 @@ namespace AEX::Mem {
             }
 
             memcpy(buffer + offset, _buffer + _readPos, clen);
-            // printk("read %i\n", clen);
 
             _readPos += clen;
             _event.raise();
@@ -62,7 +64,7 @@ namespace AEX::Mem {
                 _event.wait();
                 _lock.release();
 
-                Proc::Thread::yield();
+                Thread::yield();
 
                 _lock.acquire();
 

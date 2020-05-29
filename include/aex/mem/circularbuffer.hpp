@@ -22,8 +22,8 @@ namespace AEX::Mem {
         Spinlock   _lock;
         IPC::Event _event;
 
-        uint8_t* _buffer;
-        int      _size;
+        uint8_t* _buffer = nullptr;
+        int      _size   = 0;
 
         int _readPos  = 0;
         int _writePos = 0;

@@ -345,10 +345,10 @@ namespace AEX {
 
         section_header_agnostic symbol_table;
 
-        const char* section_names;
-        const char* strings;
+        const char* section_names = nullptr;
+        const char* strings       = nullptr;
 
-        size_t string_array_size;
+        size_t string_array_size = 0;
 
       private:
         header _header;

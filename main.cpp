@@ -6,6 +6,7 @@
 #include "aex/mem/smartptr.hpp"
 #include "aex/mem/vector.hpp"
 #include "aex/mem/vmem.hpp"
+#include "aex/module.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc/thread.hpp"
 
@@ -88,6 +89,7 @@ void main(multiboot_info_t* mbinfo) {
         printk("Failed to mount iso9660: %s\n", strerror((error_t) res));
 
     Debug::load_kernel_symbols("/sys/aexkrnl.elf");
+    load_module("/sys/core/testmod.km");
 
     // Let's get to it
     main_threaded();
@@ -101,7 +103,10 @@ void secondary_threaded() {
 
     printk("received: %s\n", buffer);
 
-    Proc::Thread::sleep(1200);
+    // while (true)
+    //   Proc::Thread::sleep(1200);
+
+    Proc::Thread::sleep(100);
 }
 
 void main_threaded() {
@@ -114,14 +119,12 @@ void main_threaded() {
                                    8192, process->pagemap);
     thread->start();
 
-    Proc::Thread::sleep(500);
+    Proc::Thread::sleep(200);
 
     mqueue->writeObject("xdxdddxd");
 
     thread->join();
     printk("joined\n");
-
-    kpanic("test\n");
 
     while (true) {
         uint64_t ns = IRQ::get_uptime();

@@ -17,4 +17,6 @@ namespace AEX::Debug {
     void*       symbol_name2addr(const char* name);
 
     char* demangle_name(const char* symbol, char* buffer, size_t buffer_len);
+
+    void dumb_bytes(void* addr, size_t len);
 }

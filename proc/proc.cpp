@@ -18,7 +18,7 @@
 namespace AEX::Proc {
     Mem::SmartArray<Process> processes;
 
-    IPC::MessageQueue threads_to_reap;
+    IPC::MessageQueue* threads_to_reap;
 
     Thread** threads      = nullptr;
     Thread** idle_threads = nullptr;
@@ -35,7 +35,7 @@ namespace AEX::Proc {
     void thread_reaper();
 
     void init() {
-        threads_to_reap = IPC::MessageQueue();
+        threads_to_reap = new IPC::MessageQueue();
 
         threads           = (Thread**) new Thread*[1];
         thread_array_size = 1;
@@ -51,9 +51,9 @@ namespace AEX::Proc {
         bsp_thread->refs->increment();
         kernel_process->threads.addRef(bsp_thread, bsp_thread->refs);
 
-        auto thread_reaper_thread =
-            new Thread(kernel_process, (void*) thread_reaper, VMem::kernel_pagemap->alloc(8192),
-                       8192, kernel_process->pagemap);
+        auto thread_reaper_thread = new Thread(kernel_process, (void*) thread_reaper,
+                                               VMem::kernel_pagemap->alloc(8192, PAGE_WRITE), 8192,
+                                               kernel_process->pagemap);
         thread_reaper_thread->start();
 
         setup_idle_threads(idle_process);
@@ -131,6 +131,8 @@ namespace AEX::Proc {
                 continue;
             }
 
+            // printk("entering %i\n", i);
+
             cpu->current_tid    = i;
             cpu->currentThread  = threads[i];
             cpu->currentContext = &threads[i]->context;
@@ -194,6 +196,8 @@ namespace AEX::Proc {
     }
 
     void reap_thread(Thread* thread) {
+        printk("reap thread %i from %i\n", thread->tid, Thread::getCurrentTID());
+
         {
             auto scopeLock = ScopeSpinlock(lock);
 
@@ -204,7 +208,7 @@ namespace AEX::Proc {
             thread->tid          = -1;
         }
 
-        threads_to_reap.writeObject(thread);
+        threads_to_reap->writeObject(thread);
     }
 
     void idle() {
@@ -242,8 +246,7 @@ namespace AEX::Proc {
 
     void thread_reaper() {
         while (true) {
-            auto thread = threads_to_reap.readObject<Thread*>();
-            printk("reaping 0x%p\n", thread);
+            auto thread = threads_to_reap->readObject<Thread*>();
 
             thread->lock.acquire();
             thread->setStatus(Thread::status_t::DEAD);

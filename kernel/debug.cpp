@@ -104,6 +104,28 @@ namespace AEX::Debug {
         return (void*) match.address;
     }
 
+    void dumb_bytes(void* addr, size_t len) {
+        uint8_t* _addr = (uint8_t*) addr;
+        uint16_t cap   = 17;
+
+        while (len) {
+            cap--;
+            if (cap == 8) {
+                printk("  ");
+            }
+            else if (cap == 0) {
+                cap = 16;
+                printk("\n");
+            }
+
+            printk("%02x ", *_addr);
+
+            _addr++;
+            len--;
+        }
+        printk("\n");
+    }
+
     // Gotta work on this later, cant bother atm
     char* demangle_name(const char* symbol, char* buffer, size_t buffer_len) {
         int  i = 0;
