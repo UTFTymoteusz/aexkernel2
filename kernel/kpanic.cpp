@@ -14,7 +14,7 @@ namespace AEX {
         va_list args;
         va_start(args, format);
 
-        printk("Kernel Panic\n", args);
+        printk(PRINTK_FAIL "Kernel Panic\n", args);
         printk(format, args);
         printk("\n");
 

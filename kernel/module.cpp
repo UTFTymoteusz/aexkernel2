@@ -11,10 +11,10 @@
 
 #include "elf.hpp"
 
-
 namespace AEX {
     struct module_section {
-        void* addr = nullptr;
+        void*  addr = nullptr;
+        size_t size = 0;
 
         module_section() {}
     };
@@ -25,12 +25,19 @@ namespace AEX {
 
         void (*enter)();
         void (*exit)();
+
+        Mem::Vector<module_section> sections;
+
+        ~Module() {
+            for (int i = 0; i < sections.count(); i++)
+                ; // implement paging dealloc pls
+        }
     };
 
     error_t load_module(const char* path) {
         auto file_try = FS::File::open(path);
         if (!file_try.has_value)
-            kpanic("Failed to load symbols: %s\n", strerror(file_try.error_code));
+            return file_try.error_code;
 
         auto file = file_try.value;
         auto elf  = ELF(file);
@@ -73,6 +80,7 @@ namespace AEX {
         }
 
         auto section_info = new module_section[elf.section_headers.count()];
+        auto module       = new Module();
 
         for (int i = 0; i < elf.section_headers.count(); i++) {
             auto section_header = elf.section_headers[i];
@@ -87,9 +95,13 @@ namespace AEX {
             file->read(ptr, section_header.size);
 
             section_info[i].addr = ptr;
+            section_info[i].size = section_header.size;
 
+            module->sections.pushBack(section_info[i]);
             // printk("%s [%i] is full'o'program data (0x%p)\n", section_header.name, i, ptr);
         }
+
+        bool fail = false;
 
         for (int i = 0; i < elf.section_headers.count(); i++) {
             auto section_header = elf.section_headers[i];
@@ -136,6 +148,11 @@ namespace AEX {
                         break;
                     }
 
+                if (!dst_addr) {
+                    printk(PRINTK_WARN "module: Unresolved symbol: %s\n", name);
+                    fail = true;
+                }
+
                 size_t self_addr =
                     (size_t) section_info[section_header.info].addr + relocation.addr;
                 void* dst = (void*) self_addr;
@@ -158,7 +175,7 @@ namespace AEX {
                     *((int32_t*) dst) = dst_addr + addend;
                     break;
                 default:
-                    kpanic("Unknown relocation type encountered: %i\n",
+                    kpanic("module: Unknown relocation type encountered: %i\n",
                            relocation.info & 0xFFFFFFFF);
                     break;
                 }
@@ -169,7 +186,14 @@ namespace AEX {
             }
         }
 
-        auto module = new Module();
+        if (fail) {
+            delete module;
+
+            delete symbols;
+            delete section_info;
+
+            return error_t::ENOSYS;
+        }
 
         module->name =
             *((const char**) section_info[name_symbol.symbol_index].addr + name_symbol.address);
