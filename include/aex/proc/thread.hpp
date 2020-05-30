@@ -6,8 +6,6 @@
 #include "aex/proc/resource_usage.hpp"
 #include "aex/spinlock.hpp"
 
-#include "proc/context.hpp"
-
 #include <stddef.h>
 
 namespace AEX::IPC {
@@ -19,6 +17,7 @@ namespace AEX::Proc {
 
     class Process;
     class Event;
+    class Context;
 
     class Thread {
       public:
@@ -32,7 +31,7 @@ namespace AEX::Proc {
 
         tid_t tid;
 
-        Context context;
+        Context* context;
 
         Spinlock          lock;
         Mem::ref_counter* refs = new Mem::ref_counter(1);
@@ -44,7 +43,7 @@ namespace AEX::Proc {
 
         Process* parent;
 
-        Thread() = default;
+        Thread();
         Thread(Process* parent);
         Thread(Process* parent, void* entry, void* stack, size_t stack_size, VMem::Pagemap* pagemap,
                bool usermode = false, bool dont_add = false);

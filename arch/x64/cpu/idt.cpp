@@ -29,6 +29,10 @@ namespace AEX::Sys {
         attributes = present ? (attributes | 0x80) : (attributes & 0x7F);
     }
 
+    void IDTEntry::setIST(uint8_t ist) {
+        this->ist = ist;
+    }
+
     void setup_idt() {
         memset(init_IDT, 0, sizeof(init_IDT));
 
@@ -39,6 +43,7 @@ namespace AEX::Sys {
             init_IDT[i].setSelector(0x08);
             init_IDT[i].setType(0x0E);
             init_IDT[i].setPresent(true);
+            init_IDT[i + 32].setIST(0);
         }
 
         size_t* _irq_array = (size_t*) &irq_array;
@@ -48,6 +53,7 @@ namespace AEX::Sys {
             init_IDT[i + 32].setSelector(0x08);
             init_IDT[i + 32].setType(0x0E);
             init_IDT[i + 32].setPresent(true);
+            init_IDT[i + 32].setIST(0);
         }
 
         size_t spurious = (size_t) &irq_spurious;
@@ -56,6 +62,17 @@ namespace AEX::Sys {
         init_IDT[255].setSelector(0x08);
         init_IDT[255].setType(0x0E);
         init_IDT[255].setPresent(true);
+        init_IDT[255].setIST(0);
+    }
+
+    void set_idt_ists() {
+        for (int i = 0; i < 32; i++)
+            init_IDT[i + 32].setIST(1);
+
+        for (int i = 0; i < 32; i++)
+            init_IDT[i + 32].setIST(2);
+
+        init_IDT[255].setIST(2);
     }
 
     void load_idt(IDTEntry* idt, size_t entry_count) {

@@ -14,8 +14,13 @@
 namespace AEX::Proc {
     extern "C" void proc_reshed();
 
+    Thread::Thread() {
+        context = new Context();
+    }
+
     Thread::Thread(Process* parent) {
-        status = FRESH;
+        status  = FRESH;
+        context = new Context();
 
         this->parent      = parent;
         this->_exit_event = new IPC::Event();
@@ -23,10 +28,13 @@ namespace AEX::Proc {
 
     Thread::Thread(Process* parent, void* entry, void* stack, size_t stack_size,
                    VMem::Pagemap* pagemap, bool usermode, bool dont_add) {
+        if (!parent)
+            parent = processes.get(1).get();
+
         if (usermode)
-            context = Context(entry, stack, stack_size, pagemap, usermode);
+            context = new Context(entry, stack, stack_size, pagemap, usermode);
         else
-            context = Context(entry, stack, stack_size, pagemap, usermode, Thread::exit);
+            context = new Context(entry, stack, stack_size, pagemap, usermode, Thread::exit);
 
         status = FRESH;
 
@@ -50,6 +58,9 @@ namespace AEX::Proc {
         // delete refs;
         // delete _exit_event;
         // cleanup the context too pls
+
+        // this is the issue
+        delete context;
 
         printk("thread cleaned\n");
     }

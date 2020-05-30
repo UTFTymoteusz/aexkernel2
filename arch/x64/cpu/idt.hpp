@@ -21,10 +21,12 @@ namespace AEX::Sys {
         void setType(uint8_t type);
         void setSelector(uint8_t selector);
         void setPresent(bool present);
+        void setIST(uint8_t ist);
     } __attribute((packed));
 
     extern IDTEntry init_IDT[256];
 
     void setup_idt();
     void load_idt(IDTEntry* idt, size_t entry_count);
+    void set_idt_ists();
 }

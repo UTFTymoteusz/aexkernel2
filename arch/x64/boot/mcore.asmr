@@ -21,8 +21,6 @@ fix:
 
     ; Let this just fall through
 
-lgdt [tmp_gdt.ptr]
-
 ; Enable PAE
 mov eax, cr4
 or  eax, 1 << 5
@@ -44,6 +42,7 @@ or  eax, (1 << 31) | 1 ; PE and PG
 and eax, ~0x60000000   ; clear CD and NW
 mov cr0, eax
 
+lgdt [tmp_gdt.ptr]
 jmp tmp_gdt.code:lmode
 
 [BITS 64]
@@ -57,18 +56,6 @@ lmode:
 	xor rax, rax
 	mov gs, rax
 
-	; Let's fake the CPU structure
-	mov rcx, 0xC0000101
-
-	mov rax, fake_cpu_class_ptr
-	mov rdx, rax
-	ror rdx, 32
-
-	wrmsr
-
-	lidt [0x510]
-	lgdt [0x520]
-
 	; Let's setup SSE
     mov rax, cr0
     and rax, ~(1 << 2)
@@ -79,6 +66,20 @@ lmode:
     or  rax, (0b11 << 9)
     mov cr4, rax
 
+	; Let's fake the CPU structure
+	mov rcx, 0xC0000101
+
+	mov rax, fake_cpu_class_ptr
+	mov rdx, rax
+	ror rdx, 32
+
+	wrmsr
+
+	; Let's load the BSP's GDT and IDT
+	lidt [0x510]
+	lgdt [0x520]
+
+	; Time to get the rest of the parameters
 	mov qword rsp, [0x540]
 	mov qword rdi, [0x550]
 

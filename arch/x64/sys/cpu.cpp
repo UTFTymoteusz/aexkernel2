@@ -66,6 +66,9 @@ namespace AEX::Sys {
 
         wrmsr(MSR_PAT, pat);
 
+        // TSS, wooo
+        asm volatile("mov eax, %0; ltr ax;" : : "r"(0x28 + id * 0x10));
+
         asm volatile("mov rax, cr3; mov cr3, rax;");
     }
 

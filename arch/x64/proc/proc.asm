@@ -96,6 +96,7 @@ enter_context:
     add rsp, 8
 
     iretq
+    
 
 proc_timer_tick:
     save_context

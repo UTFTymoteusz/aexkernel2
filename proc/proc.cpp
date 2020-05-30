@@ -1,5 +1,6 @@
 #include "proc/proc.hpp"
 
+#include "aex/debug.hpp"
 #include "aex/ipc/messagequeue.hpp"
 #include "aex/mem/heap.hpp"
 #include "aex/mem/smartarray.hpp"
@@ -14,6 +15,8 @@
 #include "sys/cpu.hpp"
 #include "sys/irq.hpp"
 #include "sys/mcore.hpp"
+
+#include <new>
 
 namespace AEX::Proc {
     Mem::SmartArray<Process> processes;
@@ -35,6 +38,8 @@ namespace AEX::Proc {
     void thread_reaper();
 
     void init() {
+        new (&void_thread) Thread();
+
         threads_to_reap = new IPC::MessageQueue();
 
         threads           = (Thread**) new Thread*[1];
@@ -131,11 +136,9 @@ namespace AEX::Proc {
                 continue;
             }
 
-            // printk("entering %i\n", i);
-
             cpu->current_tid    = i;
             cpu->currentThread  = threads[i];
-            cpu->currentContext = &threads[i]->context;
+            cpu->currentContext = threads[i]->context;
 
             lock.releaseRaw();
 
@@ -144,7 +147,7 @@ namespace AEX::Proc {
 
         cpu->current_tid    = 0;
         cpu->currentThread  = idle_threads[cpu->id];
-        cpu->currentContext = &idle_threads[cpu->id]->context;
+        cpu->currentContext = idle_threads[cpu->id]->context;
 
         cpu->currentThread->lock.tryAcquireRaw();
 
@@ -196,8 +199,6 @@ namespace AEX::Proc {
     }
 
     void reap_thread(Thread* thread) {
-        printk("reap thread %i from %i\n", thread->tid, Thread::getCurrentTID());
-
         {
             auto scopeLock = ScopeSpinlock(lock);
 
@@ -230,7 +231,7 @@ namespace AEX::Proc {
     void setup_cores(Thread* bsp_thread) {
         for (int i = 1; i < Sys::MCore::cpu_count; i++) {
             Sys::MCore::CPUs[i]->currentThread  = idle_threads[i];
-            Sys::MCore::CPUs[i]->currentContext = &void_thread.context;
+            Sys::MCore::CPUs[i]->currentContext = void_thread.context;
             Sys::MCore::CPUs[i]->current_tid    = 0;
 
             idle_threads[i]->lock.acquireRaw();
@@ -238,7 +239,7 @@ namespace AEX::Proc {
 
         Sys::MCore::CPUs[0]->current_tid    = 1;
         Sys::MCore::CPUs[0]->currentThread  = bsp_thread;
-        Sys::MCore::CPUs[0]->currentContext = &bsp_thread->context;
+        Sys::MCore::CPUs[0]->currentContext = bsp_thread->context;
 
         // The scheduler will release the lock
         bsp_thread->lock.acquireRaw();
@@ -254,8 +255,6 @@ namespace AEX::Proc {
 
             if (thread->refs->decrement())
                 delete thread;
-
-            // printk("reappp\n");
         }
     }
 
@@ -263,7 +262,7 @@ namespace AEX::Proc {
         for (int i = 0; i < Sys::MCore::cpu_count; i++) {
             auto cpu = Sys::MCore::CPUs[i];
             printk("cpu%i: PID %8i, TID %8i @ 0x%p\n", i, cpu->currentThread->parent->pid,
-                   cpu->current_tid, cpu->currentThread->context.rip);
+                   cpu->current_tid, cpu->currentThread->context->rip);
         }
     }
 }

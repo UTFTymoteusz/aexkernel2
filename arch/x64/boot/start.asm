@@ -218,12 +218,14 @@ gdt64:
 	db 0b00000000 ; Granularity
 	db 0x00       ; Base (high)
 	.tss: equ $ - gdt64
-	dw 0x00       ; Limit (size)
+	dw 0xFFFF     ; Limit
 	dw 0x00       ; Base (low)
 	db 0x00       ; Base (middle)
-	db 0b10001001 ; Access (exec/accessed)
-	db 0b01000000 ; Granularity, limit 19:16
+	db 0b10001001 ; Access (ring3/read/write)
+	db 0b00000000 ; Granularity
 	db 0x00       ; Base (high)
+	dd 0x00000000 ; Extra TSS things
+	dd 0x00000000 ; 
 	.ptr:
 	dw $ - gdt64 - 1 ; Limit
 	dq gdt64         ; Base

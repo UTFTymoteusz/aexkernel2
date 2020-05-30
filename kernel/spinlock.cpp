@@ -1,5 +1,6 @@
 #include "aex/spinlock.hpp"
 
+#include "aex/debug.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc/thread.hpp"
@@ -8,10 +9,18 @@
 
 namespace AEX {
     void Spinlock::acquire() {
+        volatile size_t count = 0;
         Proc::Thread::getCurrentThread()->addCritical();
 
-        while (!__sync_bool_compare_and_swap(&_lock, false, true))
+        while (!__sync_bool_compare_and_swap(&_lock, false, true)) {
             asm volatile("pause");
+            count++;
+
+            if (count > 4212222) {
+                kpanic("spinlock 0x%p hung (val: %i, cpu: %i)\n", this, _lock,
+                       Sys::CPU::getCurrentCPUID());
+            }
+        }
 
         __sync_synchronize();
     }

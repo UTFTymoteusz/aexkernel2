@@ -13,7 +13,7 @@ namespace AEX::FS::Path {
         _levels = count_levels(path);
     }
 
-    char* Walker::next() {
+    const char* Walker::next() {
         if (!_path[_index] || _too_long)
             return nullptr;
 
@@ -126,7 +126,7 @@ namespace AEX::FS::Path {
         buffer[1]          = '\0';
         buffer[buffer_len] = '\0';
 
-        int base_len = strlen(base_path);
+        size_t base_len = strlen(base_path);
 
         if (base_path && base_len > 0 && path[0] != '/') {
             if (base_len > buffer_len)

@@ -3,6 +3,9 @@
 #include "aex/mem/vmem.hpp"
 #include "aex/string.hpp"
 
+#include "cpu/gdt.hpp"
+#include "cpu/idt.hpp"
+#include "cpu/tss.hpp"
 #include "kernel/acpi/acpi.hpp"
 #include "sys/apic.hpp"
 #include "sys/cpu.hpp"
@@ -23,7 +26,7 @@ namespace AEX::Sys::MCore {
     void ap_wait();
 
     void setup_trampoline(int id) {
-        volatile size_t stack = (size_t) VMem::kernel_pagemap->alloc(1024, PAGE_WRITE) + 1024;
+        volatile size_t stack = (size_t) VMem::kernel_pagemap->alloc(4096, PAGE_WRITE) + 4096;
 
         // For some reason g++ offsets some of the addresses by 8
         asm volatile("    \
@@ -57,6 +60,21 @@ namespace AEX::Sys::MCore {
         auto madt = (MADT*) ACPI::find_table("APIC", 0);
         int  id   = 0;
 
+        // We need to count 'em up so the GDT can be prepared
+        for (int i = 0; i <= 2137; i++) {
+            auto entry = madt->findEntry<MADT::lapic*>(MADT::entry_type::LAPIC, i);
+            if (!entry)
+                break;
+
+            if (!entry->canStart())
+                continue;
+
+            cpu_count++;
+        }
+
+        init_gdt();
+        set_idt_ists();
+
         for (int i = 0; i <= 2137; i++) {
             auto entry = madt->findEntry<MADT::lapic*>(MADT::entry_type::LAPIC, i);
             if (!entry)
@@ -67,8 +85,6 @@ namespace AEX::Sys::MCore {
                        entry->apic_id);
                 continue;
             }
-
-            cpu_count++;
 
             if (entry->apic_id == CPU::getCurrentCPU()->apic_id)
                 continue;
@@ -97,8 +113,8 @@ namespace AEX::Sys::MCore {
         bool              success = false;
         volatile uint8_t* signal  = (uint8_t*) TRAMPOLINE_ADDR;
 
-        for (int j = 0; j < 250; j++) {
-            for (int k = 0; k < 9600; k++)
+        for (int j = 0; j < 2000; j++) {
+            for (int k = 0; k < 2400; k++)
                 CPU::inportb(0x20);
 
             if (*signal == 0xAA) {

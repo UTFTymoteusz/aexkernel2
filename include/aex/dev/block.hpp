@@ -6,7 +6,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-
 namespace AEX::Dev {
     class Block : public Device {
       public:

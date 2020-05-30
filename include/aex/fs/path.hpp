@@ -11,7 +11,7 @@ namespace AEX::FS::Path {
       public:
         Walker(const char* path);
 
-        char* next();
+        const char* next();
 
         int  level();
         bool isPieceTooLong();
