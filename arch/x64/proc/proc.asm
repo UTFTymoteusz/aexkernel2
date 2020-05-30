@@ -126,11 +126,11 @@ proc_reshed:
     mov  rax, cs
     push rax
 
-    push ret
+    push .ret
 
-    cli
+    cli 
 
     jmp proc_reshed_manual
 
-    ret:
-        retq
+    .ret:
+        ret

@@ -230,6 +230,8 @@ namespace AEX::FS {
         for (int i = 0; i < Path::MAX_FILENAME_LEN; i++) {
             if (buffer[i] == ';')
                 buffer[i] = '\0';
+
+            buffer[i] = tolower(buffer[i]);
         }
     }
 }

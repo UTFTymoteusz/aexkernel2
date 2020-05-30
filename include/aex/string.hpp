@@ -68,4 +68,11 @@ namespace AEX {
     void memset64(void* mem, uint64_t n, size_t count);
     void memcpy(void* dst, const void* src, size_t size);
     int  memcmp(const void* a, const void* b, size_t num);
+
+    inline char tolower(char c) {
+        if (c >= 'A' && c <= 'Z')
+            return c + ('a' - 'A');
+
+        return c;
+    }
 } // namespace AEX::String

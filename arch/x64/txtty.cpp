@@ -98,5 +98,4 @@ namespace AEX::TTY {
             scrollDown(1);
         }
     }
-
 }

@@ -40,6 +40,8 @@ namespace AEX::Proc {
     void init() {
         new (&void_thread) Thread();
 
+        void_thread.tid = 666;
+
         threads_to_reap = new IPC::MessageQueue();
 
         threads           = (Thread**) new Thread*[1];
@@ -78,6 +80,9 @@ namespace AEX::Proc {
             else
                 return;
         }
+
+        // printk("exited from 0x%p (%i)\n", cpu->currentContext->rip,
+        // threads[cpu->current_tid]->tid);
 
         int i = cpu->current_tid;
 
@@ -140,6 +145,8 @@ namespace AEX::Proc {
             cpu->currentThread  = threads[i];
             cpu->currentContext = threads[i]->context;
 
+            // printk("entering 0x%p (%i)\n", cpu->currentContext->rip, threads[i]->tid);
+
             lock.releaseRaw();
 
             return;
@@ -148,6 +155,8 @@ namespace AEX::Proc {
         cpu->current_tid    = 0;
         cpu->currentThread  = idle_threads[cpu->id];
         cpu->currentContext = idle_threads[cpu->id]->context;
+
+        // printk("entering 0x%p (%i)\n", cpu->currentContext->rip, idle_threads[cpu->id]->tid);
 
         cpu->currentThread->lock.tryAcquireRaw();
 
