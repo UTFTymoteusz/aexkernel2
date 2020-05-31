@@ -113,6 +113,28 @@ namespace AEX::FS {
 
                 clean_name(name_buffer);
 
+                // I'm too lazy atm
+                int lpos = sizeof(iso9660_dentry) + ldentry->name_len;
+                lpos += lpos % 2;
+
+                int max_len = 255 - lpos;
+
+                while (lpos < max_len) {
+                    int susp_pos = _pos - len + lpos;
+
+                    if (_buffer[susp_pos] < 'A' || _buffer[susp_pos] > 'Z')
+                        break;
+
+                    lpos += _buffer[susp_pos + 2];
+
+                    if (memcmp(&_buffer[susp_pos], "CE", 2) == 0)
+                        kpanic("iso9660: CE encountered");
+                    else if (memcmp(&_buffer[susp_pos], "NM", 2) == 0) {
+                        strncpy(name_buffer, (const char*) &_buffer[susp_pos + 5],
+                                min(_buffer[susp_pos + 2] - 5 + 1, 255));
+                    }
+                }
+
                 auto dentry_ret = dir_entry(name_buffer);
 
                 dentry_ret.type = ldentry->isDirectory() ? type_t::DIRECTORY : type_t::REGULAR;
@@ -208,6 +230,28 @@ namespace AEX::FS {
 
                 clean_name(name_buffer);
 
+                // I'm too lazy atm
+                int lpos = sizeof(iso9660_dentry) + ldentry->name_len;
+                lpos += lpos % 2;
+
+                int max_len = 255 - lpos;
+
+                while (lpos < max_len) {
+                    int susp_pos = pos - len + lpos;
+
+                    if (buffer[susp_pos] < 'A' || buffer[susp_pos] > 'Z')
+                        break;
+
+                    lpos += buffer[susp_pos + 2];
+
+                    if (memcmp(&buffer[susp_pos], "CE", 2) == 0)
+                        kpanic("iso9660: CE encountered");
+                    else if (memcmp(&buffer[susp_pos], "NM", 2) == 0) {
+                        strncpy(name_buffer, (const char*) &buffer[susp_pos + 5],
+                                min(buffer[susp_pos + 2] - 5 + 1, 255));
+                    }
+                }
+
                 if (strcmp(name_buffer, piece) == 0) {
                     if (!walker.isFinal() && !ldentry->isDirectory())
                         return error_t::ENOTDIR;
@@ -231,7 +275,7 @@ namespace AEX::FS {
             if (buffer[i] == ';')
                 buffer[i] = '\0';
 
-            buffer[i] = tolower(buffer[i]);
+            // buffer[i] = tolower(buffer[i]);
         }
     }
 }

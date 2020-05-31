@@ -57,8 +57,9 @@ all: $(OBJS)
 include $(shell find $(DEP_DEST) -type f -name *.d)
 
 clean:
-	rm -rf $(DEP_DEST)	
-	rm -rf $(OBJ_DEST)	
+	rm -rf $(DEP_DEST)
+	rm -rf $(OBJ_DEST)
+	rm -rf $(SYS)core/
 
 $(OBJ_DEST)%.cpp.o : %.cpp
 	@$(MKDIR) ${@D}
@@ -83,4 +84,4 @@ iso:
 	@grub-mkrescue -o $(BIN)aex.iso $(ISO) 2> /dev/null
 
 qemu:
-	qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso
+	qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso -netdev user,id=net0 -device rtl8139,netdev=net0

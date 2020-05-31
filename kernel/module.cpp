@@ -10,6 +10,7 @@
 #include "aex/proc/thread.hpp"
 
 #include "elf.hpp"
+#include "kernel/module.hpp"
 
 namespace AEX {
     struct module_section {
@@ -213,6 +214,91 @@ namespace AEX {
         delete symbols;
         delete section_info;
 
+        file->close();
+
         return error_t::ENONE;
+    }
+
+    // This will need to be changed in the future, though
+    // Or I'll just need to make the /sys/core/ directory not modifyable by users
+    void load_core_modules() {
+        struct module_entry {
+            char name[FS::Path::MAX_FILENAME_LEN];
+            int  order = 99999;
+        };
+
+        auto dir_try = FS::File::opendir("/sys/core/");
+        if (!dir_try.has_value) {
+            printk(PRINTK_WARN "module: Failed to opendir /sys/core/: %s\n",
+                   strerror(dir_try.error_code));
+
+            return;
+        }
+
+        auto get_order = [](FS::dir_entry& dir_entry) {
+            auto name = (char*) &dir_entry.name;
+
+            while (*name && (*name != '.'))
+                name++;
+
+            if (*name == '\0')
+                return 999999;
+
+            name++;
+
+            char parse_buffer[16] = {};
+            int  pos              = 0;
+
+            while (*name && (*name != '.') && pos != 15) {
+                parse_buffer[pos] = *name;
+
+                pos++;
+                name++;
+            }
+
+            return stoi<int>(10, parse_buffer);
+        };
+
+        auto dir  = dir_try.value;
+        auto list = Mem::Vector<module_entry>();
+
+        while (true) {
+            auto entry_try = dir->readdir();
+            if (!entry_try.has_value)
+                break;
+
+            if (!entry_try.value.is_regular())
+                continue;
+
+            auto entry = module_entry();
+
+            strncpy(entry.name, entry_try.value.name, sizeof(entry.name));
+            entry.order = get_order(entry_try.value);
+
+            list.pushBack(entry);
+        }
+
+        // No need for anything fancy atm
+        for (int i = 0; i < list.count() - 1; i++) {
+            auto entry = list[i];
+
+            for (int j = 0; j < list.count() - 1; j++) {
+                if (list[j].order > list[j + 1].order) {
+                    auto tmp    = list[j];
+                    list[j]     = list[j + 1];
+                    list[j + 1] = tmp;
+                }
+            }
+        }
+
+        for (int i = 0; i < list.count(); i++) {
+            char buffer[FS::Path::MAX_PATH_LEN];
+
+            FS::Path::canonize_path(list[i].name, "/sys/core/", buffer, sizeof(buffer));
+
+            load_module(buffer);
+        }
+
+        dir->close();
     }
 }

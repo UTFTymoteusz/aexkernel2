@@ -4,6 +4,8 @@
 #include "aex/dev/device.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/math.hpp"
+#include "aex/proc/process.hpp"
+#include "aex/proc/thread.hpp"
 #include "aex/string.hpp"
 
 #include <stdint.h>
@@ -33,6 +35,8 @@ namespace AEX::Dev {
 
         bool combo = false;
 
+        auto current_usage = &Proc::Thread::getCurrentThread()->getProcess()->usage;
+
         uint64_t combo_start = 0;
         uint32_t combo_count = 0;
 
@@ -43,6 +47,8 @@ namespace AEX::Dev {
             if (combo && combo_count == _max_sectors_at_once) {
                 readBlock(buffer, combo_start, combo_count);
                 buffer += combo_count * _sector_size;
+
+                current_usage->block_bytes_read += combo_count * _sector_size;
 
                 combo = false;
             }
@@ -57,6 +63,8 @@ namespace AEX::Dev {
 
                 readBlock(_overflow_buffer, start / _sector_size, 1);
                 memcpy(buffer, _overflow_buffer + offset, llen);
+
+                current_usage->block_bytes_read += _sector_size;
 
                 buffer += llen;
             }
@@ -78,6 +86,8 @@ namespace AEX::Dev {
         if (combo) {
             readBlock(buffer, combo_start, combo_count);
             buffer += combo_count * _sector_size;
+
+            current_usage->block_bytes_read += combo_count * _sector_size;
 
             combo = false;
         }

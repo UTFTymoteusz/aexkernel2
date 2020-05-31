@@ -15,6 +15,7 @@
 #include "dev/dev.hpp"
 #include "fs/fs.hpp"
 #include "kernel/acpi/acpi.hpp"
+#include "kernel/module.hpp"
 #include "mem/memory.hpp"
 #include "proc/proc.hpp"
 #include "sys/cpu.hpp"
@@ -88,9 +89,6 @@ void main(multiboot_info_t* mbinfo) {
     if (res != error_t::ENONE)
         printk("Failed to mount iso9660: %s\n", strerror((error_t) res));
 
-    Debug::load_kernel_symbols("/sys/aexkrnl.elf");
-    load_module("/sys/core/testmod.km");
-
     // Let's get to it
     main_threaded();
 }
@@ -110,6 +108,10 @@ void secondary_threaded() {
 }
 
 void main_threaded() {
+    Debug::load_kernel_symbols("/sys/aexkrnl.elf");
+
+    load_core_modules();
+
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrentThread()->getProcess();
 
@@ -135,6 +137,7 @@ void main_threaded() {
                idle->usage.cpu_time_ns / 1000000, idle->pid);
         printk("us  : %16li ns (%li ms) cpu time (pid %i)\n", process->usage.cpu_time_ns,
                process->usage.cpu_time_ns / 1000000, process->pid);
+        printk("bytes read: %li\n", process->usage.block_bytes_read);
 
         printk("tid: %i\n", Proc::Thread::getCurrentTID());
 
