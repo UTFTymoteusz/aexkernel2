@@ -111,7 +111,7 @@ namespace AEX {
             section_info[i].size = section_header.size;
 
             module->sections.pushBack(section_info[i]);
-            printk("%s [%i] is full'o'program data (0x%p + 0x%p)\n", section_header.name, i, ptr, section_header.size);
+            // printk("%s [%i] is full'o'program data (0x%p + 0x%p)\n", section_header.name, i, ptr, section_header.size);
         }
 
         for (int i = 0; i < elf.section_headers.count(); i++) {
@@ -238,8 +238,7 @@ namespace AEX {
         module->exit  = (void (*)())((size_t) section_info[exit_symbol.section_index].addr +
                                     exit_symbol.address);
 
-        printk(PRINTK_OK "Loaded module '%s' (0x%p)\n", module->name,
-               section_info[name_symbol.section_index].addr + name_symbol.address);
+        printk(PRINTK_OK "Loaded module '%s'\n", module->name);
 
         // 2 goddamned hours + sleep for this goddamned thing (stack size)
         auto thread =

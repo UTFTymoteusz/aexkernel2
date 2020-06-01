@@ -15,7 +15,8 @@ namespace AEX::Proc {
     extern "C" void proc_reshed();
 
     Thread::Thread() {
-        context = new Context();
+        context           = new Context();
+        this->_exit_event = new IPC::Event();
     }
 
     Thread::Thread(Process* parent) {
@@ -161,8 +162,9 @@ namespace AEX::Proc {
     }
 
     void Thread::subCritical() {
-        if (Mem::atomic_sub_fetch(&_critical, (uint16_t) 1) == 0 && Sys::CPU::getCurrentCPU()->should_yield) {
+        if (Mem::atomic_sub_fetch(&_critical, (uint16_t) 1) == 0 &&
+            Sys::CPU::getCurrentCPU()->should_yield) {
             Proc::Thread::yield();
-        } 
+        }
     }
 }

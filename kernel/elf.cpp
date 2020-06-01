@@ -197,7 +197,7 @@ namespace AEX {
     void ELF::loadRelocationsFromSection64(section_header_agnostic section) {
         _file->seek(section.file_offset);
 
-        int symbol_table_id = 0;
+        uint32_t symbol_table_id = 0;
 
         for (int i = 0; i < section_headers.count(); i++) {
             auto header = section_headers[i];

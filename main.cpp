@@ -93,8 +93,6 @@ void main(multiboot_info_t* mbinfo) {
     if (res != error_t::ENONE)
         printk("Failed to mount iso9660: %s\n", strerror((error_t) res));
 
-    // lai_init();
-
     // Let's get to it
     main_threaded();
 }
@@ -102,7 +100,7 @@ void main(multiboot_info_t* mbinfo) {
 IPC::MessageQueue* mqueue;
 
 void secondary_threaded() {
-    /*char buffer[16];
+    char buffer[16];
     mqueue->readArray(buffer, 9);
 
     printk("received: %s\n", buffer);
@@ -110,11 +108,26 @@ void secondary_threaded() {
     // while (true)
     //   Proc::Thread::sleep(1200);
 
-    Proc::Thread::sleep(100);*/
-        Proc::Thread::sleep(10000);
+    Proc::Thread::sleep(100);
+}
+
+void main_threaded() {
+    Debug::load_kernel_symbols("/sys/aexkrnl.elf");
+    load_core_modules();
 
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrentThread()->getProcess();
+
+    mqueue = new IPC::MessageQueue();
+
+    auto thread = new Proc::Thread(process.get(), (void*) secondary_threaded, new uint8_t[8192],
+                                   8192, process->pagemap);
+    thread->start();
+
+    mqueue->writeObject("abcdefghi");
+
+    thread->join();
+    printk("joined\n");
 
     while (true) {
         uint64_t ns = IRQ::get_uptime();
@@ -133,21 +146,4 @@ void secondary_threaded() {
 
         Proc::Thread::sleep(5000);
     }
-}
-
-void main_threaded() {
-
-    auto idle    = Proc::processes.get(0);
-    auto process = Proc::Thread::getCurrentThread()->getProcess();
-
-    auto thread = new Proc::Thread(process.get(), (void*) secondary_threaded, new uint8_t[8192],
-                                   8192, process->pagemap);
-    thread->start();
-
-    Debug::load_kernel_symbols("/sys/aexkrnl.elf");
-
-    load_core_modules();
-    
-    thread->join();
-    printk("joined\n");
 }

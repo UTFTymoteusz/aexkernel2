@@ -197,7 +197,7 @@ namespace AEX {
                     else
                         itos((uint32_t) va_arg(args, unsigned int), 16, buffer);
 
-                    for (int i = 0; i < sizeof(buffer); i++)
+                    for (size_t i = 0; i < sizeof(buffer); i++)
                         buffer[i] = toupper(buffer[i]);
 
                     printk_common(padchar, padlen, buffer);

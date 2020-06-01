@@ -121,6 +121,11 @@ namespace AEX::Sys {
         static void broadcastPacket(ipp_type type, void* data = nullptr, bool ignore_self = true);
 
         /**
+         * Triple faults the executing processor.
+         */
+        static void tripleFault();
+
+        /**
          * Sends a packet to a processor and IPIs it.
          * @param type Type of the packet.
          * @param data Optional data pointer.

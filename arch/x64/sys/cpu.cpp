@@ -181,6 +181,13 @@ namespace AEX::Sys {
         return CURRENT_CPU;
     }
 
+    void CPU::tripleFault() {
+        nointerrupts();
+        load_idt(nullptr, 0);
+
+        asm volatile("ud2;");
+    }
+
     void CPU::fillAndCleanName() {
         memset(name, '\0', sizeof(name));
 

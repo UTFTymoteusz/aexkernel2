@@ -59,12 +59,16 @@ extern proc_reshed_manual_ext
     push r14
     push r15
     push r10
+
+    fxsave [rsp + 0x08 * 7]
     
     mov rsp, rbx
 %endmacro
 
 enter_context:
     mov qword rax, [gs:0x08]
+
+    fxrstor [rax + 0x08 * 22]
 
     mov qword rbx, [rax + 0x08 * 15] ; Thread-to-enter cr3
     mov rcx, cr3                     ; Current cr3

@@ -178,7 +178,9 @@ namespace AEX::Proc {
             if (threads[i])
                 continue;
 
-            threads[i] = thread;
+            threads[i]  = thread;
+            thread->tid = i;
+
             return i;
         }
 
@@ -275,7 +277,8 @@ namespace AEX::Proc {
         for (int i = 0; i < Sys::MCore::cpu_count; i++) {
             auto cpu = Sys::MCore::CPUs[i];
             printk("cpu%i: PID %8i, TID %8i @ 0x%p %s\n", i, cpu->currentThread->parent->pid,
-                   cpu->current_tid, cpu->currentThread->context->rip, cpu->currentThread->isCritical() ? "critical" : "");
+                   cpu->current_tid, cpu->currentThread->context->rip,
+                   cpu->currentThread->isCritical() ? "critical" : "");
         }
     }
 }

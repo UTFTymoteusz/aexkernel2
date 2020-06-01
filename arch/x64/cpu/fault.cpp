@@ -40,7 +40,7 @@ namespace AEX::Sys {
 
     extern "C" void common_fault_handler(void* _info) {
         auto info = (AEX::Sys::CPU::fault_info*) _info;
-        // auto cpu  = CPU::getCurrentCPU();
+        auto cpu  = CPU::getCurrentCPU();
 
         int  delta = 0;
         auto name  = Debug::symbol_addr2name((void*) info->rip, &delta);
@@ -50,6 +50,8 @@ namespace AEX::Sys {
         AEX::printk(PRINTK_FAIL "cpu%i: %93$%s%$ Exception (%i) (%91$%i%$)\n",
                     CPU::getCurrentCPUID(), exception_names[info->int_no], info->int_no, info->err);
         AEX::printk("RIP: 0x%016lx <%s+0x%x>\n", info->rip, name, delta);
+
+        AEX::printk("TID: %8i\n", cpu->current_tid);
 
         /*if (Proc::threads[cpu->current_tid] && Proc::threads[cpu->current_tid]->parent)
             AEX::printk("PID: %8i, TID: %8i\n", Proc::threads[cpu->current_tid]->parent->pid,

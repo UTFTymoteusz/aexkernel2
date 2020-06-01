@@ -8,10 +8,9 @@ namespace AEX::Proc {
                      bool usermode, void (*on_exit)()) {
         rip = (uint64_t) entry;
         rsp = (uint64_t) stack + stack_size;
+        rbp = 0;
 
         cr3 = (uint64_t) pagemap->pageRoot;
-
-        rbp = 0;
 
         if (on_exit) {
             rsp -= sizeof(uint64_t);
@@ -31,5 +30,7 @@ namespace AEX::Proc {
         }
 
         rflags = 0x202;
+
+        *((uint16_t*) &fxstate[24]) = 0b0001111110000000;
     }
 }
