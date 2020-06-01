@@ -8,6 +8,7 @@
 #include "aex/string.hpp"
 
 #include "boot/mboot.h"
+#include "kernel/module.hpp"
 
 extern void main(multiboot_info_t* mbinfo);
 
@@ -31,38 +32,41 @@ namespace AEX::Debug {
         if (!elf.isValid(ELF::bitness_t::BITS64, ELF::endianiness_t::LITTLE, ELF::isa_t::AMD64))
             kpanic("Apparently our own ELF doesn't work on this machine");
 
-        kernel_image_strings = new char[elf.string_array_size];
-        memcpy(kernel_image_strings, elf.strings, elf.string_array_size);
+        elf.loadStrings();
+        elf.loadSymbols();
 
-        for (int i = 0; i < elf.section_headers.count(); i++) {
-            auto section_header = elf.section_headers[i];
-            if (section_header.type == ELF::sc_type_t::SC_UNUSED)
+        size_t strings_len = Heap::msize((void*) elf.strings);
+
+        kernel_image_strings = new char[strings_len];
+        memcpy(kernel_image_strings, elf.strings, strings_len);
+
+        for (int i = 0; i < elf.symbols.count(); i++) {
+            auto symbol = elf.symbols[i];
+            if (!symbol.name)
                 continue;
 
-            if (strcmp(section_header.name, ".symtab") != 0)
-                continue;
+            char* name = kernel_image_strings + (symbol.name - elf.strings);
 
-            file->seek(section_header.file_offset);
+            auto _symbol = kernel_symbol();
 
-            for (size_t j = 0; j < section_header.size / sizeof(ELF::symbol); j++) {
-                ELF::symbol symbol;
-                file->read(&symbol, sizeof(symbol));
+            _symbol.name    = name;
+            _symbol.address = symbol.address;
 
-                auto _kernel_symbol = kernel_symbol();
-
-                _kernel_symbol.name    = kernel_image_strings + symbol.name_offset;
-                _kernel_symbol.address = symbol.address;
-
-                kernel_symbols.pushBack(_kernel_symbol);
-            }
+            kernel_symbols.pushBack(_symbol);
         }
 
         file->close();
     }
 
-    const char* symbol_addr2name(void* addr) {
+    const char* symbol_addr2name(void* addr, int* delta_ret, bool only_kernel) {
         if (kernel_symbols.count() == 0)
             return nullptr;
+
+        if (!only_kernel) {
+            const char* ret = module_symbol_addr2name(addr, delta_ret);
+            if (ret)
+                return ret;
+        }
 
         uint64_t _addr = (uint64_t) addr;
         uint64_t delta = 0x63756e74;
@@ -83,7 +87,14 @@ namespace AEX::Debug {
             match = symbol;
         }
 
+        *delta_ret = delta;
+
         return match.name;
+    }
+
+    const char* symbol_addr2name(void* addr, bool only_kernel) {
+        int delta = 0;
+        return symbol_addr2name(addr, &delta, only_kernel);
     }
 
     void* symbol_name2addr(const char* name) {

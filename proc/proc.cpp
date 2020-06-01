@@ -71,8 +71,12 @@ namespace AEX::Proc {
     void schedule() {
         auto cpu = Sys::CPU::getCurrentCPU();
 
-        if (cpu->currentThread->isCritical())
+        if (cpu->currentThread->isCritical()) {
+            cpu->should_yield = true;
             return;
+        }
+
+        cpu->should_yield = false;
 
         if (!lock.tryAcquireRaw()) {
             if (cpu->currentThread->status != Thread::status_t::RUNNABLE)
@@ -270,8 +274,8 @@ namespace AEX::Proc {
     void debug_print_cpu_jobs() {
         for (int i = 0; i < Sys::MCore::cpu_count; i++) {
             auto cpu = Sys::MCore::CPUs[i];
-            printk("cpu%i: PID %8i, TID %8i @ 0x%p\n", i, cpu->currentThread->parent->pid,
-                   cpu->current_tid, cpu->currentThread->context->rip);
+            printk("cpu%i: PID %8i, TID %8i @ 0x%p %s\n", i, cpu->currentThread->parent->pid,
+                   cpu->current_tid, cpu->currentThread->context->rip, cpu->currentThread->isCritical() ? "critical" : "");
         }
     }
 }

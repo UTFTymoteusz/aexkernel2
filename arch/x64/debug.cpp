@@ -33,9 +33,10 @@ namespace AEX::Debug {
                     if (frame->rip == (size_t) Proc::Thread::exit)
                         printk("  *thread entry/exit*\n");
                     else {
-                        const char* name = symbol_addr2name((void*) frame->rip);
+                        int         delta = 0;
+                        const char* name  = symbol_addr2name((void*) frame->rip, &delta);
 
-                        printk("  0x%p <%s>\n", frame->rip, name ? name : "no idea");
+                        printk("  0x%p <%s+0x%x>\n", frame->rip, name ? name : "no idea", delta);
                     }
 
                     break;

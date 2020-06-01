@@ -56,6 +56,12 @@ namespace AEX::ACPI {
         uint64_t   table_pointers[];
     } __attribute((packed));
 
+    struct fadt {
+        sdt_header header;
+        uint32_t   firmware_ctrl;
+        uint32_t   dsdt;
+    } __attribute((packed));
+
     class MADT {
       public:
         enum entry_type {
@@ -134,6 +140,7 @@ namespace AEX::ACPI {
     typedef void* acpi_table;
 
     extern Mem::Vector<acpi_table*> tables;
+    extern uint8_t                  revision;
 
     rsdp* find_rsdp();
     xsdp* find_xsdp();

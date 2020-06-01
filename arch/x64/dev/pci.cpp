@@ -125,11 +125,39 @@ namespace AEX::Dev::PCI {
         return (uint16_t)((Sys::CPU::inportd(CONFIG_DATA) >> ((offset & 3) * 8)) & 0xFF);
     }
 
-    void write_dword(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint32_t val) {
-        uint32_t address = 0x00;
+    void write_byte(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint8_t val) {
+        uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
+                           ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
-        address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
-                  ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
+        auto scopeLock = ScopeSpinlock(lock);
+
+        Sys::CPU::outportd(CONFIG_ADDRESS, address);
+
+        uint32_t data = (uint32_t) Sys::CPU::inportd(CONFIG_DATA);
+        data &= ~(0xFF << ((offset & 3) * 8));
+        data |= (val << ((offset & 3) * 8));
+
+        Sys::CPU::outportd(CONFIG_DATA, data);
+    }
+
+    void write_word(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint16_t val) {
+        uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
+                           ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
+
+        auto scopeLock = ScopeSpinlock(lock);
+
+        Sys::CPU::outportd(CONFIG_ADDRESS, address);
+
+        uint32_t data = (uint32_t) Sys::CPU::inportd(CONFIG_DATA);
+        data &= ~(0xFFFF << ((offset & 2) * 8));
+        data |= (val << ((offset & 2) * 8));
+
+        Sys::CPU::outportd(CONFIG_DATA, data);
+    }
+
+    void write_dword(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint32_t val) {
+        uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
+                           ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
         auto scopeLock = ScopeSpinlock(lock);
 

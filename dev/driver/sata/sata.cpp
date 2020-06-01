@@ -47,9 +47,11 @@ namespace AEX::Dev::SATA {
             }
 
             void* addr = VMem::kernel_pagemap->map(0x1000, paddr, PAGE_NOCACHE | PAGE_WRITE);
+            auto  ahci = new AHCI(addr, index);
 
-            new AHCI(addr, index);
             index++;
+
+            device->driver_data = ahci;
         }
 
       private:

@@ -1,5 +1,7 @@
 #include "kernel/acpi/acpi.hpp"
 
+#include "aex/acpi.hpp"
+#include "aex/kpanic.hpp"
 #include "aex/mem/pmem.hpp"
 #include "aex/mem/vector.hpp"
 #include "aex/mem/vmem.hpp"
@@ -10,6 +12,7 @@
 
 namespace AEX::ACPI {
     Mem::Vector<acpi_table*> tables;
+    uint8_t                  revision;
 
     bool add_table(acpi_table* table) {
         auto header = (sdt_header*) table;
@@ -26,9 +29,24 @@ namespace AEX::ACPI {
 
         tables.pushBack(table);
 
-        printk("acpi: Found table %s, len %i\n", buffer, header->length);
+        printk("acpi: Found table %s, len %i (put it at 0x%p, was at 0x%p)\n", buffer,
+               header->length, table, VMem::kernel_pagemap->paddrof(table));
 
         return true;
+    }
+
+    void _init() {
+        auto _fadt = (fadt*) find_table("FACP", 0);
+        if (!_fadt)
+            kpanic("This system has no FADT, what the hell?");
+
+        // unmap the header once you bother enough to implement unmap in VMem
+
+        auto table_hdr =
+            (sdt_header*) VMem::kernel_pagemap->map(sizeof(sdt_header), _fadt->dsdt, 0);
+        auto table = (acpi_table*) VMem::kernel_pagemap->map(table_hdr->length, _fadt->dsdt, 0);
+
+        add_table(table);
     }
 
     void init() {
@@ -45,6 +63,8 @@ namespace AEX::ACPI {
                 return;
             }
 
+            revision = _xsdt->header.revision;
+
             for (size_t i = sizeof(xsdt); i < _xsdt->header.length; i += 8) {
                 uint64_t addr = *((uint64_t*) ((size_t) _xsdt + i));
                 auto     table_hdr =
@@ -55,6 +75,8 @@ namespace AEX::ACPI {
 
                 add_table(table);
             }
+
+            _init();
 
             printk(PRINTK_OK "acpi: Initialized\n");
             return;
@@ -71,6 +93,8 @@ namespace AEX::ACPI {
                 return;
             }
 
+            revision = _rsdt->header.revision;
+
             for (size_t i = sizeof(rsdt); i < _rsdt->header.length; i += 4) {
                 uint32_t addr  = *((uint32_t*) ((size_t) _rsdt + i));
                 auto     table = (acpi_table*) VMem::kernel_pagemap->map(4096, addr, 0);
@@ -78,8 +102,9 @@ namespace AEX::ACPI {
                 add_table(table);
             }
 
-            printk(PRINTK_OK "acpi: Initialized\n");
+            _init();
 
+            printk(PRINTK_OK "acpi: Initialized\n");
             return;
         }
 

@@ -324,8 +324,10 @@ namespace AEX::VMem {
 
         int       pptr  = alloc_pptr();
         uint64_t* table = findTable(pptr, virt_addr);
-        if (!table)
+        if (!table) {
+            spinlock.release();
             return 0;
+        }
 
         uint64_t paddr = (table[index] & MEM_PAGE_MASK) + offset;
 

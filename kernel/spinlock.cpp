@@ -13,6 +13,8 @@ namespace AEX {
         Proc::Thread::getCurrentThread()->addCritical();
 
         while (!__sync_bool_compare_and_swap(&_lock, false, true)) {
+            Proc::Thread::getCurrentThread()->subCritical();
+
             asm volatile("pause");
             count++;
 
@@ -20,12 +22,17 @@ namespace AEX {
                 kpanic("spinlock 0x%p hung (val: %i, cpu: %i)\n", this, _lock,
                        Sys::CPU::getCurrentCPUID());
             }
+
+            Proc::Thread::getCurrentThread()->addCritical();
         }
 
         __sync_synchronize();
     }
 
     void Spinlock::release() {
+        if (!Proc::Thread::getCurrentThread()->isCritical())
+            kpanic("aaa!!!");
+
         if (!__sync_bool_compare_and_swap(&_lock, true, false))
             kpanic("spinlock: Too many releases");
 

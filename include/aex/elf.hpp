@@ -60,13 +60,20 @@ namespace AEX {
             SC_SYMTAB  = 2,
             SC_STRTAB  = 3,
             SC_RELOCA  = 4,
-            SC_RELOC   = 9
+            SC_NO_DATA = 8,
+            SC_RELOC   = 9,
         };
 
         enum sc_flags_t : uint32_t {
             SC_WRITE   = 1,
             SC_ALLOC   = 2,
             SC_EXECUTE = 4,
+        };
+
+        enum sym_binding : uint8_t {
+            SB_LOCAL  = 0,
+            SB_GLOBAL = 1,
+            SB_WEAK   = 2,
         };
 
 
@@ -246,7 +253,9 @@ namespace AEX {
 
         struct section_header_agnostic {
             const char* name;
-            bitness_t   bitness;
+            char*       strings = nullptr;
+
+            bitness_t bitness;
 
             sc_type_t  type;
             sc_flags_t flags;
@@ -311,7 +320,7 @@ namespace AEX {
         };
 
 
-        struct symbol {
+        struct symbol64 {
             uint32_t name_offset;
             uint8_t  info;
             uint8_t  other;
@@ -322,17 +331,48 @@ namespace AEX {
             uint64_t size;
         } __attribute__((packed));
 
-        struct relocation {
+        struct symbol_agnostic {
+            const char* name;
+
+            uint16_t section_index = 0;
+
+            uint8_t info;
+            uint8_t other;
+
+            uint64_t address;
+            uint64_t size;
+        } __attribute__((packed));
+
+        struct relocation64 {
             uint64_t addr;
             uint64_t info;
         } __attribute__((packed));
 
-        struct relocation_addend {
+        struct relocation_addend64 {
             uint64_t addr;
             uint64_t info;
             int64_t  addend;
         } __attribute__((packed));
 
+        struct relocation {
+            uint64_t addr;
+            uint64_t arch_info;
+            int64_t  addend;
+
+            uint32_t target_section_id;
+            uint32_t symbol_id;
+        } __attribute__((packed));
+
+        Mem::Vector<program_header_agnostic> program_headers;
+        Mem::Vector<section_header_agnostic> section_headers;
+
+        Mem::Vector<symbol_agnostic> symbols;
+        Mem::Vector<relocation>      relocations;
+
+        const char* section_names = nullptr;
+        const char* strings       = nullptr;
+
+        size_t string_array_size = 0;
 
         ELF(Mem::SmartPointer<FS::File> file);
         ~ELF();
@@ -340,17 +380,19 @@ namespace AEX {
         bool isValid(bitness_t desired_bitness, endianiness_t desired_endianiness,
                      isa_t desired_isa);
 
-        Mem::Vector<program_header_agnostic> program_headers;
-        Mem::Vector<section_header_agnostic> section_headers;
+        void loadSymbols();
+        void loadStrings();
 
-        section_header_agnostic symbol_table;
-
-        const char* section_names = nullptr;
-        const char* strings       = nullptr;
-
-        size_t string_array_size = 0;
+        void loadRelocations();
 
       private:
-        header _header;
+        header                      _header;
+        Mem::SmartPointer<FS::File> _file;
+
+        void loadSymbols64();
+        void loadSymbols32();
+
+        void loadRelocations64();
+        void loadRelocationsFromSection64(section_header_agnostic section);
     };
 }

@@ -189,6 +189,19 @@ namespace AEX {
 
                     printk_common(padchar, padlen, buffer);
                     break;
+                case 'X':
+                    if (size == SIZE_SHORT)
+                        itos((uint16_t) va_arg(args, unsigned int), 16, buffer);
+                    else if (size == SIZE_LONG)
+                        itos((uint64_t) va_arg(args, unsigned long), 16, buffer);
+                    else
+                        itos((uint32_t) va_arg(args, unsigned int), 16, buffer);
+
+                    for (int i = 0; i < sizeof(buffer); i++)
+                        buffer[i] = toupper(buffer[i]);
+
+                    printk_common(padchar, padlen, buffer);
+                    break;
                 case 'p':
 #if INTPTR_MAX == INT64_MAX
                     itos((uint64_t) va_arg(args, unsigned long), 16, buffer);

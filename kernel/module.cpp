@@ -4,6 +4,7 @@
 #include "aex/elf.hpp"
 #include "aex/errno.hpp"
 #include "aex/fs/fs.hpp"
+#include "aex/mem/smartarray.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/proc/proc.hpp"
 #include "aex/proc/process.hpp"
@@ -13,6 +14,11 @@
 #include "kernel/module.hpp"
 
 namespace AEX {
+    struct module_symbol {
+        char  name[32];
+        void* addr;
+    };
+
     struct module_section {
         void*  addr = nullptr;
         size_t size = 0;
@@ -28,6 +34,7 @@ namespace AEX {
         void (*exit)();
 
         Mem::Vector<module_section> sections;
+        Mem::Vector<module_symbol>  symbols;
 
         ~Module() {
             for (int i = 0; i < sections.count(); i++)
@@ -35,7 +42,11 @@ namespace AEX {
         }
     };
 
+    Mem::SmartArray<Module> modules;
+
     error_t load_module(const char* path) {
+        printk("loading module: %s\n", path);
+
         auto file_try = FS::File::open(path);
         if (!file_try.has_value)
             return file_try.error_code;
@@ -46,37 +57,34 @@ namespace AEX {
         if (!elf.isValid(ELF::bitness_t::BITS64, ELF::endianiness_t::LITTLE, ELF::isa_t::AMD64))
             return error_t::ENOEXEC;
 
-        size_t symbol_count = elf.symbol_table.size / sizeof(ELF::symbol);
-        auto   symbols      = new ELF::symbol[symbol_count];
+        elf.loadStrings();
+        elf.loadSymbols();
 
-        file->seek(elf.symbol_table.file_offset);
-        file->read(symbols, symbol_count * sizeof(ELF::symbol));
+        ELF::symbol_agnostic entry_symbol;
+        ELF::symbol_agnostic exit_symbol;
+        ELF::symbol_agnostic name_symbol;
 
-        ELF::symbol entry_symbol;
-        ELF::symbol exit_symbol;
-        ELF::symbol name_symbol;
+        for (int i = 0; i < elf.symbols.count(); i++) {
+            auto symbol = elf.symbols[i];
+            if (!symbol.name)
+                continue;
 
-        for (size_t i = 0; i < symbol_count; i++) {
-            const char* name = elf.strings + symbols[i].name_offset;
-
-            if (strcmp(name, "_Z12module_enterv") == 0) {
-                entry_symbol = symbols[i];
+            if (strcmp(symbol.name, "_Z12module_enterv") == 0) {
+                entry_symbol = elf.symbols[i];
                 continue;
             }
-            else if (strcmp(name, "_Z11module_exitv") == 0) {
-                exit_symbol = symbols[i];
+            else if (strcmp(symbol.name, "_Z11module_exitv") == 0) {
+                exit_symbol = elf.symbols[i];
                 continue;
             }
-            else if (strcmp(name, "MODULE_NAME") == 0) {
-                name_symbol = symbols[i];
+            else if (strcmp(symbol.name, "MODULE_NAME") == 0) {
+                name_symbol = elf.symbols[i];
                 continue;
             }
         }
 
-        if (entry_symbol.symbol_index == 0 || exit_symbol.symbol_index == 0 ||
-            name_symbol.symbol_index == 0) {
-            delete symbols;
-
+        if (entry_symbol.section_index == 0 || exit_symbol.section_index == 0 ||
+            name_symbol.section_index == 0) {
             return error_t::ENOEXEC;
         }
 
@@ -91,127 +99,154 @@ namespace AEX {
 
             file->seek(section_header.file_offset);
 
-            void* ptr = VMem::kernel_pagemap->alloc(section_header.size);
+            void* ptr = VMem::kernel_pagemap->alloc(section_header.size, PAGE_WRITE);
+            if (!(section_header.flags & ELF::sc_flags_t::SC_ALLOC))
+                continue;
 
-            file->read(ptr, section_header.size);
+            // 6 hours of debugging for this god forsaken thing
+            if (section_header.type != ELF::sc_type_t::SC_NO_DATA)
+                file->read(ptr, section_header.size);
 
             section_info[i].addr = ptr;
             section_info[i].size = section_header.size;
 
             module->sections.pushBack(section_info[i]);
-            // printk("%s [%i] is full'o'program data (0x%p)\n", section_header.name, i, ptr);
+            printk("%s [%i] is full'o'program data (0x%p + 0x%p)\n", section_header.name, i, ptr, section_header.size);
         }
-
-        bool fail = false;
 
         for (int i = 0; i < elf.section_headers.count(); i++) {
             auto section_header = elf.section_headers[i];
 
-            if (!(section_header.type & ELF::sc_type_t::SC_RELOCA))
+            if (strcmp(section_header.name, ".rodata") != 0)
                 continue;
 
-            // printk("%s is full'o'relocations (relates to %i)\n", section_header.name,
-            //       section_header.info);
-            file->seek(section_header.file_offset);
+            break;
+        }
 
-            for (size_t j = 0; j < section_header.size / sizeof(ELF::relocation_addend); j++) {
-                ELF::relocation_addend relocation;
-                file->read(&relocation, sizeof(relocation));
+        for (int i = 0; i < elf.symbols.count(); i++) {
+            auto symbol = elf.symbols[i];
+            if (!symbol.name)
+                continue;
 
-                uint32_t symbol_id = (relocation.info >> 32);
-                auto     symbol    = symbols[symbol_id];
+            auto _symbol = module_symbol();
 
-                const char* name = elf.strings + symbol.name_offset;
-                if (name[0] == '\0')
-                    name = elf.section_headers[symbol.symbol_index].name;
+            strncpy(_symbol.name, symbol.name, sizeof(_symbol.name));
+            _symbol.addr = section_info[symbol.section_index].addr + symbol.address;
 
-                size_t dst_addr = 0;
-                if (!dst_addr)
-                    dst_addr = (uint64_t) Debug::symbol_name2addr(name);
+            module->symbols.pushBack(_symbol);
+        }
 
-                if (!dst_addr)
-                    for (size_t i = 0; i < symbol_count; i++) {
-                        if (strcmp(elf.strings + symbols[i].name_offset, name) != 0)
-                            continue;
+        elf.loadRelocations();
 
-                        dst_addr =
-                            (size_t) section_info[symbol.symbol_index].addr + symbols[i].address;
-                        break;
-                    }
+        bool fail = false;
 
-                if (!dst_addr)
-                    for (int i = 0; i < elf.section_headers.count(); i++) {
-                        auto section_header = elf.section_headers[i];
-                        if (strcmp(section_header.name, name) != 0)
-                            continue;
+        for (int i = 0; i < elf.relocations.count(); i++) {
+            auto relocation = elf.relocations[i];
 
-                        dst_addr = (size_t) section_info[i].addr;
-                        break;
-                    }
+            auto symbol = elf.symbols[relocation.symbol_id];
+            if (!symbol.name)
+                continue;
 
-                if (!dst_addr) {
-                    printk(PRINTK_WARN "module: Unresolved symbol: %s\n", name);
-                    fail = true;
-                }
+            size_t S = 0;
 
-                size_t self_addr =
-                    (size_t) section_info[section_header.info].addr + relocation.addr;
-                void* dst = (void*) self_addr;
+            // if ((symbol.info >> 4) == 2)
+            //    printk(PRINTK_WARN "module: %s: Weak\n", symbol.name);
 
-                int64_t addend = relocation.addend;
+            // printk("%s: %i\n", symbol.name, symbol.info >> 4);
 
-                switch ((amd64_rel_type) relocation.info & 0xFFFFFFFF) {
-                case R_AMD64_64:
-                    *((uint64_t*) dst) = dst_addr + addend;
-                    break;
-                case R_AMD64_PC32:
-                    *((int32_t*) dst) =
-                        (int32_t)((int64_t) dst_addr - (int64_t) self_addr + addend);
-                    break;
-                case R_AMD64_PLT32:
-                    *((int32_t*) dst) =
-                        (int32_t)((int64_t) dst_addr - (int64_t) self_addr + addend);
-                    break;
-                case R_AMD64_32S:
-                    *((int32_t*) dst) = dst_addr + addend;
-                    break;
-                default:
-                    kpanic("module: Unknown relocation type encountered: %i\n",
-                           relocation.info & 0xFFFFFFFF);
+            if (!S)
+                for (int i = 0; i < elf.section_headers.count(); i++) {
+                    auto section_header = elf.section_headers[i];
+                    if (!section_header.name)
+                        continue;
+
+                    if (strcmp(symbol.name, section_header.name) != 0)
+                        continue;
+
+                    S = (size_t) section_info[i].addr;
                     break;
                 }
 
-                // printk("0x%p v. %i: [%i] %s + %li (to 0x%p)\n", dst, symbol.symbol_index,
-                // symbol_id,
-                //       name, relocation.addend, dst_addr);
+            if (!S) {
+                for (int j = 0; j < elf.symbols.count(); j++) {
+                    auto symbol_b = elf.symbols[j];
+                    if (!symbol_b.name)
+                        continue;
+
+                    if (symbol_b.section_index == 0)
+                        continue;
+
+                    if (strcmp(symbol.name, symbol_b.name) != 0)
+                        continue;
+
+                    S = (size_t) section_info[symbol_b.section_index].addr + symbol_b.address;
+                    break;
+                }
+            }
+
+            if (!S && (symbol.info >> 4) != ELF::sym_binding::SB_LOCAL)
+                S = (uint64_t) Debug::symbol_name2addr(symbol.name);
+
+            if (!S) {
+                printk(PRINTK_WARN "module: Unresolved symbol: %s\n", symbol.name);
+                fail = true;
+
+                break;
+            }
+
+            size_t self_addr =
+                (size_t) section_info[relocation.target_section_id].addr + relocation.addr;
+            void* self = (void*) self_addr;
+
+            size_t  P = self_addr;
+            int64_t A = relocation.addend;
+
+            switch ((amd64_rel_type) relocation.arch_info & 0xFFFFFFFF) {
+            case R_AMD64_64:
+                *((uint64_t*) self) = S + A;
+                break;
+            case R_AMD64_PC32:
+                *((int32_t*) self) = (int32_t)(S - P + A);
+                break;
+            case R_AMD64_PLT32:
+                *((int32_t*) self) = (int32_t)(S - P + A);
+                break;
+            case R_AMD64_32S:
+                *((int32_t*) self) = S + A;
+                break;
+            default:
+                kpanic("module: Unknown relocation type encountered: %i\n",
+                       relocation.arch_info & 0xFFFFFFFF);
+                break;
             }
         }
 
         if (fail) {
             delete module;
-
-            delete symbols;
             delete section_info;
 
             return error_t::ENOSYS;
         }
 
-        module->name =
-            *((const char**) section_info[name_symbol.symbol_index].addr + name_symbol.address);
+        modules.addRef(module);
 
-        module->enter = (void (*)())((size_t) section_info[entry_symbol.symbol_index].addr +
+        module->name =
+            *((const char**) (section_info[name_symbol.section_index].addr + name_symbol.address));
+
+        module->enter = (void (*)())((size_t) section_info[entry_symbol.section_index].addr +
                                      entry_symbol.address);
-        module->exit  = (void (*)())((size_t) section_info[exit_symbol.symbol_index].addr +
+        module->exit  = (void (*)())((size_t) section_info[exit_symbol.section_index].addr +
                                     exit_symbol.address);
 
-        printk(PRINTK_OK "Loaded module '%s'\n", module->name);
+        printk(PRINTK_OK "Loaded module '%s' (0x%p)\n", module->name,
+               section_info[name_symbol.section_index].addr + name_symbol.address);
 
+        // 2 goddamned hours + sleep for this goddamned thing (stack size)
         auto thread =
             new Proc::Thread(Proc::processes.get(1).get(), (void*) module->enter,
-                             VMem::kernel_pagemap->alloc(8192), 8192, VMem::kernel_pagemap);
+                             VMem::kernel_pagemap->alloc(16384), 16384, VMem::kernel_pagemap);
         thread->start();
 
-        delete symbols;
         delete section_info;
 
         file->close();
@@ -280,8 +315,6 @@ namespace AEX {
 
         // No need for anything fancy atm
         for (int i = 0; i < list.count() - 1; i++) {
-            auto entry = list[i];
-
             for (int j = 0; j < list.count() - 1; j++) {
                 if (list[j].order > list[j + 1].order) {
                     auto tmp    = list[j];
@@ -301,4 +334,34 @@ namespace AEX {
 
         dir->close();
     }
+
+    const char* module_symbol_addr2name(void* addr, int* delta_ret) {
+        uint64_t _addr = (uint64_t) addr;
+        uint64_t delta = 0x63756e74;
+
+        module_symbol match = {};
+        const char*   name  = nullptr;
+
+        for (auto iterator = modules.getIterator(); auto module = iterator.next();)
+            for (int i = 0; i < module->symbols.count(); i++) {
+                auto symbol = module->symbols[i];
+
+                if (_addr < (size_t) symbol.addr)
+                    continue;
+
+                uint64_t new_delta = _addr - (size_t) symbol.addr;
+                if (new_delta >= delta)
+                    continue;
+
+                delta = new_delta;
+                match = symbol;
+
+                name = module->symbols[i].name;
+            }
+
+        *delta_ret = delta;
+
+        return name;
+    }
+
 }

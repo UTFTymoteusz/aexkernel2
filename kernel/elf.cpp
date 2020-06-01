@@ -2,6 +2,8 @@
 
 namespace AEX {
     ELF::ELF(Mem::SmartPointer<FS::File> file) {
+        _file = file;
+
         file->seek(0);
         file->read(&_header, sizeof(_header));
 
@@ -81,38 +83,11 @@ namespace AEX {
                     section_names + _section_header64.name_offset, _section_header64));
             }
         }
-
-        for (int i = 0; i < section_headers.count(); i++) {
-            auto header = section_headers[i];
-            if (strcmp(header.name, ".symtab") != 0)
-                continue;
-
-            symbol_table = header;
-            break;
-        }
-
-        for (int i = 0; i < section_headers.count(); i++) {
-            auto header = section_headers[i];
-            if (strcmp(header.name, ".strtab") != 0)
-                continue;
-
-            strings = new char[header.size];
-
-            file->seek(header.file_offset);
-            file->read((void*) strings, header.size);
-
-            string_array_size = header.size;
-
-            break;
-        }
     }
 
     ELF::~ELF() {
         if (section_names)
             delete section_names;
-
-        if (strings)
-            delete strings;
     }
 
     bool ELF::isValid(bitness_t desired_bitness, endianiness_t desired_endianiness,
@@ -122,5 +97,138 @@ namespace AEX {
             return false;
 
         return true;
+    }
+
+    void ELF::loadStrings() {
+        if (strings)
+            return;
+
+        for (int i = 0; i < section_headers.count(); i++) {
+            auto header = section_headers[i];
+            if (strcmp(header.name, ".strtab") != 0)
+                continue;
+
+            strings = new char[header.size];
+
+            _file->seek(header.file_offset);
+            _file->read((void*) strings, header.size);
+
+            string_array_size = header.size;
+
+            break;
+        }
+    }
+
+    void ELF::loadSymbols() {
+        if (_header.bitness == bitness_t::BITS64)
+            loadSymbols64();
+    }
+
+    void ELF::loadSymbols64() {
+        bool found = false;
+
+        section_header_agnostic symbol_table;
+
+        for (int i = 0; i < section_headers.count(); i++) {
+            auto header = section_headers[i];
+            if (strcmp(header.name, ".symtab") != 0)
+                continue;
+
+            found        = true;
+            symbol_table = header;
+
+            break;
+        }
+
+        if (!found)
+            return;
+
+        loadStrings();
+
+        _file->seek(symbol_table.file_offset);
+
+        for (size_t i = 0; i < symbol_table.size / sizeof(symbol64); i++) {
+            symbol64 symbol;
+            _file->read(&symbol, sizeof(symbol));
+
+            if (symbol.name_offset == 0 || strcmp(strings + symbol.name_offset, "") == 0) {
+                auto _symbol = symbol_agnostic();
+
+                _symbol.name          = section_headers[symbol.symbol_index].name;
+                _symbol.section_index = symbol.symbol_index;
+
+                symbols.pushBack(_symbol);
+
+                continue;
+            }
+
+            auto _symbol = symbol_agnostic();
+
+            _symbol.name          = strings + symbol.name_offset;
+            _symbol.address       = symbol.address;
+            _symbol.size          = symbol.size;
+            _symbol.section_index = symbol.symbol_index;
+            _symbol.info          = symbol.info;
+            _symbol.other         = symbol.other;
+
+            symbols.pushBack(_symbol);
+        }
+    }
+
+    void ELF::loadRelocations() {
+        if (_header.bitness == bitness_t::BITS64)
+            loadRelocations64();
+    }
+
+    void ELF::loadRelocations64() {
+        for (int i = 0; i < section_headers.count(); i++) {
+            auto section_header = section_headers[i];
+
+            if (section_header.type == ELF::sc_type_t::SC_RELOC)
+                kpanic("%s: reloc\n", section_header.name);
+
+            if (section_header.type != ELF::sc_type_t::SC_RELOCA)
+                continue;
+
+            loadRelocationsFromSection64(section_header);
+        }
+    }
+
+    void ELF::loadRelocationsFromSection64(section_header_agnostic section) {
+        _file->seek(section.file_offset);
+
+        int symbol_table_id = 0;
+
+        for (int i = 0; i < section_headers.count(); i++) {
+            auto header = section_headers[i];
+            if (strcmp(header.name, ".symtab") != 0)
+                continue;
+
+            symbol_table_id = i;
+            break;
+        }
+
+        for (size_t i = 0; i < section.size / sizeof(relocation_addend64); i++) {
+            relocation_addend64 relocation64;
+            _file->read(&relocation64, sizeof(relocation64));
+
+            uint32_t symbol_id = (relocation64.info >> 32);
+            if (symbol_id == 0)
+                continue;
+
+            if (section.link != symbol_table_id)
+                kpanic("section link doesnt match");
+
+            auto _relocation = relocation();
+
+            _relocation.addr      = relocation64.addr;
+            _relocation.arch_info = relocation64.info;
+            _relocation.addend    = relocation64.addend;
+
+            _relocation.target_section_id = section.info;
+            _relocation.symbol_id         = symbol_id;
+
+            relocations.pushBack(_relocation);
+        }
     }
 }

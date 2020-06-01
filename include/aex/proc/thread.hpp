@@ -21,6 +21,9 @@ namespace AEX::Proc {
 
     class Thread {
       public:
+        static constexpr auto USER_STACK_SIZE   = 16384;
+        static constexpr auto KERNEL_STACK_SIZE = 16384;
+
         enum status_t : uint8_t {
             FRESH    = 0,
             RUNNABLE = 1,
@@ -165,9 +168,7 @@ namespace AEX::Proc {
          * Subtracts 1 from the thread's critical counter. If _critical is greater than 0, the
          * thread cannot be interrupted or killed.
          */
-        inline void subCritical() {
-            Mem::atomic_sub(&_critical, (uint16_t) 1);
-        }
+        void subCritical();
 
         /**
          * Checks the thread's critical counter. If _critical is greater than 0, the thread cannot

@@ -159,4 +159,10 @@ namespace AEX::Proc {
     void Thread::announceExit() {
         _exit_event->defunct();
     }
+
+    void Thread::subCritical() {
+        if (Mem::atomic_sub_fetch(&_critical, (uint16_t) 1) == 0 && Sys::CPU::getCurrentCPU()->should_yield) {
+            Proc::Thread::yield();
+        } 
+    }
 }

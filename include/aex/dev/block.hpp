@@ -1,7 +1,6 @@
 #pragma once
 
 #include "aex/dev/device.hpp"
-#include "aex/printk.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -11,6 +10,7 @@ namespace AEX::Dev {
       public:
         Block(const char* name, uint16_t sector_size, uint64_t sector_count,
               uint16_t max_sectors_at_once);
+
         virtual ~Block();
 
         int     init();
