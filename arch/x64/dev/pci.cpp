@@ -4,7 +4,9 @@
 #include "aex/dev/tree/device.hpp"
 #include "aex/dev/tree/tree.hpp"
 #include "aex/mem/pmem.hpp"
+#include "aex/module.hpp"
 #include "aex/printk.hpp"
+#include "aex/proc/thread.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
 
@@ -73,6 +75,15 @@ namespace AEX::Dev::PCI {
         Dev::Tree::register_driver("main", driver);
     }
 
+    int PCIDevice::getIRQ() {
+        uint8_t (*set_pin)(uint8_t, uint8_t, uint8_t, uint8_t);
+
+        while (!(set_pin = (typeof(set_pin)) get_global_symbol("acpi_set_pci_pin")))
+            Proc::Thread::sleep(250);
+
+        return set_pin(bus, device, function, interrupt_pin);
+    }
+
     uint16_t read_word(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
     uint8_t  read_byte(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
 
@@ -85,6 +96,9 @@ namespace AEX::Dev::PCI {
     uint8_t get_class(uint16_t bus, uint8_t device, uint8_t function);
     uint8_t get_subclass(uint16_t bus, uint8_t device, uint8_t function);
     uint8_t get_prog_if(uint16_t bus, uint8_t device, uint8_t function);
+
+    uint8_t get_interrupt_pin(uint16_t bus, uint8_t device, uint8_t function);
+    void    set_interrupt_pin(uint16_t bus, uint8_t device, uint8_t function, uint8_t pin);
 
     uint32_t read_dword(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset) {
         uint32_t address = 0x00;
@@ -240,6 +254,8 @@ namespace AEX::Dev::PCI {
         if (get_vendor_id(bus, device, 0x00) == 0xFFFF)
             return;
 
+        int int_pin = 1;
+
         for (uint8_t function = 0; function < 8; function++) {
             if (get_vendor_id(bus, device, function) == 0xFFFF)
                 continue;
@@ -263,7 +279,19 @@ namespace AEX::Dev::PCI {
             dev_device->subclass = get_subclass(bus, device, function);
             dev_device->prog_if  = get_prog_if(bus, device, function);
 
+            dev_device->interrupt_pin = 0;
+
             fill_bars(bus, device, function, dev_device);
+
+            if (get_interrupt_pin(bus, device, function)) {
+                set_interrupt_pin(bus, device, function, int_pin);
+
+                dev_device->interrupt_pin = int_pin;
+
+                int_pin++;
+                if (int_pin > 4)
+                    int_pin = 1;
+            }
 
             dev_bus->registerDevice(dev_device);
         }
@@ -302,5 +330,13 @@ namespace AEX::Dev::PCI {
 
     uint8_t get_prog_if(uint16_t bus, uint8_t device, uint8_t function) {
         return read_byte(bus, device, function, 0x09);
+    }
+
+    uint8_t get_interrupt_pin(uint16_t bus, uint8_t device, uint8_t function) {
+        return read_byte(bus, device, function, 0x3C);
+    }
+
+    void set_interrupt_pin(uint16_t bus, uint8_t device, uint8_t function, uint8_t pin) {
+        write_byte(bus, device, function, 0x3C, pin);
     }
 }

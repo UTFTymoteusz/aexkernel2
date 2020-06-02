@@ -42,7 +42,10 @@ namespace AEX {
         }
     };
 
-    Mem::SmartArray<Module> modules;
+    Mem::SmartArray<Module>    modules;
+    Mem::Vector<module_symbol> global_symbols;
+
+    Spinlock symbol_lock;
 
     error_t load_module(const char* path) {
         auto file_try = FS::File::open(path);
@@ -362,5 +365,37 @@ namespace AEX {
         *delta_ret = delta;
 
         return name;
+    }
+
+    void register_global_symbol(const char* name, void* addr) {
+        auto scopeLock = ScopeSpinlock(symbol_lock);
+
+        if ((size_t) strlen(name) > sizeof(module_symbol::name) - 1)
+            kpanic("register_global_symbol: name length > 31\n");
+
+        for (int i = 0; i < global_symbols.count(); i++) {
+            if (strcmp(name, global_symbols[i].name) == 0) {
+                global_symbols[i].addr = addr;
+                return;
+            }
+        }
+
+        auto symbol = module_symbol();
+
+        strncpy(symbol.name, name, sizeof(symbol.name));
+        symbol.addr = addr;
+
+        global_symbols.pushBack(symbol);
+    }
+
+    void* get_global_symbol(const char* name) {
+        auto scopeLock = ScopeSpinlock(symbol_lock);
+
+        for (int i = 0; i < global_symbols.count(); i++) {
+            if (strcmp(name, global_symbols[i].name) == 0)
+                return global_symbols[i].addr;
+        }
+
+        return nullptr;
     }
 }

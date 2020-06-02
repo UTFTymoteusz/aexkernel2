@@ -7,13 +7,13 @@
 #include <stddef.h>
 
 namespace AEX::Dev {
-    struct incrementation {
+    struct letter_incrementation {
         char pattern[32];
         char current[32];
 
         int start = 0;
 
-        incrementation(const char* pattern) {
+        letter_incrementation(const char* pattern) {
             memset(this->current, '\0', sizeof(this->current));
 
             strncpy(this->pattern, pattern, sizeof(this->pattern));
@@ -53,27 +53,70 @@ namespace AEX::Dev {
             }
         }
     };
-    Mem::Vector<incrementation> incrementations;
+
+    struct number_incrementation {
+        char pattern[32];
+        char base[32];
+
+        int current = 0;
+
+        number_incrementation(const char* pattern) {
+            strncpy(this->pattern, pattern, sizeof(this->pattern));
+            strncpy(this->base, pattern, sizeof(this->base));
+
+            for (size_t i = 0; i < sizeof(this->base); i++)
+                if (this->base[i] == '%')
+                    this->base[i] = '\0';
+        }
+
+        void get(char* buffer, size_t len) {
+            snprintf(buffer, len, "%s%i", base, current);
+            current++;
+        }
+    };
+
+    Mem::Vector<letter_incrementation> letter_incrementations;
+    Mem::Vector<number_incrementation> number_incrementations;
 
     Spinlock name_lock;
 
     void name_letter_increment(char* buffer, size_t buffer_len, const char* pattern) {
         auto scopeLock = ScopeSpinlock(name_lock);
 
-        for (int i = 0; i < incrementations.count(); i++) {
-            auto incrementation = incrementations[i];
+        for (int i = 0; i < letter_incrementations.count(); i++) {
+            auto incrementation = letter_incrementations[i];
             if (strcmp(incrementation.pattern, pattern) != 0)
                 continue;
 
-            incrementations[i].get(buffer, buffer_len);
+            letter_incrementations[i].get(buffer, buffer_len);
 
             return;
         }
 
-        auto new_incrementation = incrementation(pattern);
+        auto new_incrementation = letter_incrementation(pattern);
 
-        int index = incrementations.pushBack(new_incrementation);
+        int index = letter_incrementations.pushBack(new_incrementation);
 
-        incrementations[index].get(buffer, buffer_len);
+        letter_incrementations[index].get(buffer, buffer_len);
+    }
+
+    void name_number_increment(char* buffer, size_t buffer_len, const char* pattern) {
+        auto scopeLock = ScopeSpinlock(name_lock);
+
+        for (int i = 0; i < number_incrementations.count(); i++) {
+            auto incrementation = number_incrementations[i];
+            if (strcmp(incrementation.pattern, pattern) != 0)
+                continue;
+
+            number_incrementations[i].get(buffer, buffer_len);
+
+            return;
+        }
+
+        auto new_incrementation = number_incrementation(pattern);
+
+        int index = number_incrementations.pushBack(new_incrementation);
+
+        number_incrementations[index].get(buffer, buffer_len);
     }
 }

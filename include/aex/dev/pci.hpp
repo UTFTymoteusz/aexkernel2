@@ -12,7 +12,15 @@ namespace AEX::Dev::PCI {
 
         uint8_t bus, device, function;
 
+        uint8_t interrupt_pin;
+
         PCIDevice(const char* name) : Device(name) {}
+
+        /**
+         * Gets the IRQ of the device.
+         * @returns IRQ number or 255 on failure.
+         */
+        int getIRQ();
 
       private:
     };

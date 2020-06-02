@@ -104,6 +104,11 @@ namespace AEX::Sys::IRQ {
         set_mask(0, true);
         set_destination(0, 0);
 
+        for (int j = 9; j < 24; j++) {
+            set_mask(j, false);
+            set_vector(j, 32 + j);
+        }
+
         printk(PRINTK_OK "irq: Initialized\n");
     }
 
