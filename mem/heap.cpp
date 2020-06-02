@@ -81,7 +81,7 @@ namespace AEX::Heap {
             auto header = (alloc_block*) ((size_t) data + start * ALLOC_SIZE);
             header->len = pieces;
 
-            Mem::atomic_sub(&heap_free, (size / ALLOC_SIZE) * ALLOC_SIZE);
+            Mem::atomic_sub(&heap_free, (uint64_t) pieces * ALLOC_SIZE);
 
             return (void*) ((size_t) data + start * ALLOC_SIZE + ALLOC_SIZE);
         }

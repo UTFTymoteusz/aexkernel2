@@ -101,7 +101,7 @@ namespace AEX {
             if (!(section_header.flags & ELF::sc_flags_t::SC_ALLOC))
                 continue;
 
-            // 6 hours of debugging for this god forsaken thing
+            // 6 hours of debugging for this god forsaken thing (the if)
             if (section_header.type != ELF::sc_type_t::SC_NO_DATA)
                 file->read(ptr, section_header.size);
 
@@ -149,6 +149,7 @@ namespace AEX {
 
             size_t S = 0;
 
+            // Gotta make weaklings work properly
             // if ((symbol.info >> 4) == 2)
             //    printk(PRINTK_WARN "module: %s: Weak\n", symbol.name);
 
@@ -188,10 +189,10 @@ namespace AEX {
                 S = (uint64_t) Debug::symbol_name2addr(symbol.name);
 
             if (!S) {
-                printk(PRINTK_WARN "module: Unresolved symbol: %s\n", symbol.name);
+                printk(PRINTK_WARN "module: %s: Unresolved symbol: %s\n", path, symbol.name);
                 fail = true;
 
-                break;
+                continue;
             }
 
             size_t self_addr =
@@ -312,7 +313,7 @@ namespace AEX {
             list.pushBack(entry);
         }
 
-        // No need for anything fancy atm
+        // No need for a fancy algorithm atm
         for (int i = 0; i < list.count() - 1; i++) {
             for (int j = 0; j < list.count() - 1; j++) {
                 if (list[j].order > list[j + 1].order) {
@@ -362,5 +363,4 @@ namespace AEX {
 
         return name;
     }
-
 }

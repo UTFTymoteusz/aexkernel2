@@ -88,6 +88,9 @@ namespace AEX {
     ELF::~ELF() {
         if (section_names)
             delete section_names;
+
+        if (strings)
+            delete strings;
     }
 
     bool ELF::isValid(bitness_t desired_bitness, endianiness_t desired_endianiness,

@@ -35,10 +35,6 @@ namespace AEX::Init {
     void init_print_header();
 }
 
-namespace AEX {
-    void lai_init();
-}
-
 void main_threaded();
 
 void main(multiboot_info_t* mbinfo) {
