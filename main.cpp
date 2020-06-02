@@ -9,6 +9,7 @@
 #include "aex/module.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc/thread.hpp"
+#include "aex/sys/time.hpp"
 
 #include "boot/mboot.h"
 #include "cpu/idt.hpp"
@@ -93,6 +94,9 @@ void main(multiboot_info_t* mbinfo) {
     if (res != error_t::ENONE)
         printk("Failed to mount iso9660: %s\n", strerror((error_t) res));
 
+    Debug::load_kernel_symbols("/sys/aexkrnl.elf");
+    load_core_modules();
+
     // Let's get to it
     main_threaded();
 }
@@ -112,9 +116,6 @@ void secondary_threaded() {
 }
 
 void main_threaded() {
-    Debug::load_kernel_symbols("/sys/aexkrnl.elf");
-    load_core_modules();
-
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrentThread()->getProcess();
 
@@ -130,7 +131,7 @@ void main_threaded() {
     printk("joined\n");
 
     while (true) {
-        uint64_t ns = IRQ::get_uptime();
+        uint64_t ns = get_uptime();
 
         printk("cpu%i: %16li ns (%li ms, %li s, %li min)\n", CPU::getCurrentCPUID(), ns,
                ns / 1000000, ns / 1000000000, ns / 1000000000 / 60);

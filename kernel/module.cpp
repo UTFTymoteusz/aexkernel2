@@ -45,8 +45,6 @@ namespace AEX {
     Mem::SmartArray<Module> modules;
 
     error_t load_module(const char* path) {
-        printk("loading module: %s\n", path);
-
         auto file_try = FS::File::open(path);
         if (!file_try.has_value)
             return file_try.error_code;
@@ -60,9 +58,9 @@ namespace AEX {
         elf.loadStrings();
         elf.loadSymbols();
 
-        ELF::symbol_agnostic entry_symbol;
-        ELF::symbol_agnostic exit_symbol;
-        ELF::symbol_agnostic name_symbol;
+        ELF::symbol_agnostic entry_symbol = {};
+        ELF::symbol_agnostic exit_symbol  = {};
+        ELF::symbol_agnostic name_symbol  = {};
 
         for (int i = 0; i < elf.symbols.count(); i++) {
             auto symbol = elf.symbols[i];
@@ -111,7 +109,8 @@ namespace AEX {
             section_info[i].size = section_header.size;
 
             module->sections.pushBack(section_info[i]);
-            // printk("%s [%i] is full'o'program data (0x%p + 0x%p)\n", section_header.name, i, ptr, section_header.size);
+            // printk("%s [%i] is full'o'program data (0x%p + 0x%p)\n", section_header.name, i, ptr,
+            // section_header.size);
         }
 
         for (int i = 0; i < elf.section_headers.count(); i++) {
@@ -131,7 +130,8 @@ namespace AEX {
             auto _symbol = module_symbol();
 
             strncpy(_symbol.name, symbol.name, sizeof(_symbol.name));
-            _symbol.addr = section_info[symbol.section_index].addr + symbol.address;
+            _symbol.addr =
+                (void*) ((size_t) section_info[symbol.section_index].addr + symbol.address);
 
             module->symbols.pushBack(_symbol);
         }
@@ -230,8 +230,8 @@ namespace AEX {
 
         modules.addRef(module);
 
-        module->name =
-            *((const char**) (section_info[name_symbol.section_index].addr + name_symbol.address));
+        module->name = *((const char**) ((size_t) section_info[name_symbol.section_index].addr +
+                                         name_symbol.address));
 
         module->enter = (void (*)())((size_t) section_info[entry_symbol.section_index].addr +
                                      entry_symbol.address);

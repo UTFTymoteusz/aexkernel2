@@ -11,8 +11,9 @@ extern "C" void common_irq_handler(AEX::Sys::CPU::irq_info* info);
 namespace AEX::Sys::IRQ {
     volatile bool irq_mark = false;
 
-    extern "C" void common_irq_handler(CPU::irq_info*) {
-        // AEX::printk("%i: irq: %i\n", CPU::getCurrentCPUID(), info->irq_no);
+    extern "C" void common_irq_handler(CPU::irq_info* info) {
+        if (info->irq_no > 0)
+            AEX::printk("%i: irq: %i\n", CPU::getCurrentCPUID(), info->irq_no);
 
         APIC::eoi();
     }
