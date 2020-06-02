@@ -39,28 +39,35 @@ namespace AEX {
         return dst;
     }
 
-    void memset(void* mem, char c, size_t len) {
+    void __attribute((weak)) memset(void* mem, char c, size_t len) {
         char* _mem = (char*) mem;
 
         for (size_t i = 0; i < len; i++)
             _mem[i] = c;
     }
 
-    void memset32(void* mem, uint32_t n, size_t count) {
+    void __attribute((weak)) memset16(void* mem, uint16_t n, size_t count) {
+        uint16_t* _mem = (uint16_t*) mem;
+
+        for (size_t i = 0; i < count; i++)
+            _mem[i] = n;
+    }
+
+    void __attribute((weak)) memset32(void* mem, uint32_t n, size_t count) {
         uint32_t* _mem = (uint32_t*) mem;
 
         for (size_t i = 0; i < count; i++)
             _mem[i] = n;
     }
 
-    void memset64(void* mem, uint64_t n, size_t count) {
+    void __attribute((weak)) memset64(void* mem, uint64_t n, size_t count) {
         uint64_t* _mem = (uint64_t*) mem;
 
         for (size_t i = 0; i < count; i++)
             _mem[i] = n;
     }
 
-    void memcpy(void* dst, const void* src, size_t size) {
+    void __attribute((weak)) memcpy(void* dst, const void* src, size_t size) {
         size_t aligned = size / 8;
 
         uint64_t* dst64 = (uint64_t*) dst;
