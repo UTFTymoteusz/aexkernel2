@@ -1,10 +1,10 @@
 #include "proc/proc.hpp"
 
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/printk.hpp"
 
 #include "cpu/idt.hpp"
 #include "sys/apic.hpp"
-#include "sys/cpu.hpp"
 #include "sys/irq.hpp"
 
 namespace AEX::Proc {

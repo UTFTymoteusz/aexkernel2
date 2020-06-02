@@ -1,5 +1,6 @@
 #include "sys/mcore.hpp"
 
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/string.hpp"
 
@@ -8,7 +9,6 @@
 #include "cpu/tss.hpp"
 #include "kernel/acpi/acpi.hpp"
 #include "sys/apic.hpp"
-#include "sys/cpu.hpp"
 
 #define TRAMPOLINE_ADDR 0x1000 // Must be page aligned!
 

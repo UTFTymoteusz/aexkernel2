@@ -1,5 +1,6 @@
 #include "aex/dev/pci.hpp"
 
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/dev/tree/bus.hpp"
 #include "aex/dev/tree/device.hpp"
 #include "aex/dev/tree/tree.hpp"
@@ -9,8 +10,6 @@
 #include "aex/proc/thread.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
-
-#include "sys/cpu.hpp"
 
 #include <stdint.h>
 

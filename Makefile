@@ -24,7 +24,7 @@ ARCH = arch/x64/
 
 GFLAGS = -O2 -Wall -Wextra -nostdlib -pipe
 
-INCLUDES := -I. -I$(ARCH) -Iinclude/ -Iinclude/libc/ -I../lai/include/
+INCLUDES := -I. -I$(ARCH) -I$(ARCH)include/ -Iinclude/ -Iinclude/libc/ -I../lai/include/
 
 CCFLAGS := $(GFLAGS) \
 	-lgcc      \
@@ -84,4 +84,4 @@ iso:
 	@grub-mkrescue -o $(BIN)aex.iso $(ISO) 2> /dev/null
 
 qemu:
-	qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso -netdev tap,id=net0,ifname=TAP -device rtl8139,netdev=net0,mac=a9:a7:a2:00:00:00
+	qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso -netdev tap,id=net0,ifname=TAP -device rtl8139,netdev=net0,mac=a8:a7:a2:00:00:00

@@ -1,5 +1,6 @@
 #include "proc/proc.hpp"
 
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/debug.hpp"
 #include "aex/ipc/messagequeue.hpp"
 #include "aex/mem/heap.hpp"
@@ -12,7 +13,6 @@
 #include "aex/spinlock.hpp"
 
 #include "proc/context.hpp"
-#include "sys/cpu.hpp"
 #include "sys/irq.hpp"
 #include "sys/mcore.hpp"
 

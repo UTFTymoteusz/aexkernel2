@@ -1,12 +1,12 @@
 #include "aex/proc/thread.hpp"
 
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/ipc/event.hpp"
 #include "aex/mem/smartptr.hpp"
 #include "aex/printk.hpp"
 
 #include "proc/context.hpp"
 #include "proc/proc.hpp"
-#include "sys/cpu.hpp"
 #include "sys/irq.hpp"
 
 #include <stddef.h>
@@ -31,6 +31,9 @@ namespace AEX::Proc {
                    VMem::Pagemap* pagemap, bool usermode, bool dont_add) {
         if (!parent)
             parent = processes.get(1).get();
+
+        if (!pagemap)
+            pagemap = parent->pagemap;
 
         if (usermode)
             context = new Context(entry, stack, stack_size, pagemap, usermode);

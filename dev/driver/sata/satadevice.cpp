@@ -1,9 +1,8 @@
 #include "dev/driver/sata/satadevice.hpp"
 
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/byte.hpp"
 #include "aex/mem/vmem.hpp"
-
-#include "sys/cpu.hpp"
 
 // For some reason math.hpp didn't wanna work
 #define min(a, b) (a < b ? a : b)

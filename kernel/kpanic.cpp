@@ -1,9 +1,8 @@
 #include "aex/kpanic.hpp"
 
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/debug.hpp"
 #include "aex/printk.hpp"
-
-#include "sys/cpu.hpp"
 
 #include <stdarg.h>
 

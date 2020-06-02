@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/cpu.hpp"
+#include "aex/arch/sys/cpu.hpp"
 
 #include <stdint.h>
 

@@ -1,7 +1,13 @@
 #pragma once
 
-#include <stddef.h>
+#include "aex/spinlock.hpp"
+
 #include <stdint.h>
+
+namespace AEX::Proc {
+    class Context;
+    class Thread;
+}
 
 namespace AEX::Sys {
     extern "C" void ipi_handle();
@@ -12,6 +18,35 @@ namespace AEX::Sys {
      */
     class CPU {
       public:
+        enum ipp_type : uint8_t {
+            HALT     = 0,
+            RESHED   = 1,
+            CALL     = 2,
+            PG_FLUSH = 3,
+            PG_INV   = 4,
+        };
+
+        static constexpr int PAGE_SIZE = 4096;
+
+        struct fault_info {
+            uint64_t r15, r14, r13, r12, r11, r10, r9, r8, rbp, rdi, rsi, rdx, rcx, rbx, rax;
+            uint64_t int_no, err;
+            uint64_t rip, cs, rflags, rsp, ss;
+        } __attribute((packed));
+
+        struct irq_info {
+            uint64_t r15, r14, r13, r12, r11, r10, r9, r8, rbp, rdi, rsi, rdx, rcx, rbx, rax;
+            uint64_t irq_no;
+            uint64_t rip, cs, rflags, rsp, ss;
+        } __attribute((packed));
+
+        CPU(int id);
+
+        /**
+         * Inits the local CPU using the class.
+         */
+        void initLocal();
+
         /**
          * Halts the local CPU.
          */
@@ -52,6 +87,83 @@ namespace AEX::Sys {
         static uint32_t inportd(uint16_t _port);
         static void     outportd(uint16_t _port, uint32_t _data);
 
+        /**
+         * Writes to a model specific register.
+         * @param reg  The register in question.
+         * @param data Value to write.
+         */
+        static void wrmsr(uint32_t reg, uint64_t data);
+
+        /**
+         * Reads a model specific register.
+         * @param reg  The register in question.
+         * @returns Value read.
+         */
+        static uint64_t rdmsr(uint32_t reg);
+
+        /**
+         * Gets the ID of the executing CPU.
+         */
+        static int getCurrentCPUID();
+
+        /**
+         * Gets a pointer to the class of the executing CPU.
+         */
+        static CPU* getCurrentCPU();
+
+        /**
+         * Broadcasts a packet to all processors (except the local one, unless you specify
+         * otherwise) and IPIs them.
+         * @param type Type of the packet.
+         * @param data Optional data pointer.
+         * @param ignore_self If true, the executing CPU will not receive this packet.
+         */
+        static void broadcastPacket(ipp_type type, void* data = nullptr, bool ignore_self = true);
+
+        /**
+         * Triple faults the executing processor.
+         */
+        static void tripleFault();
+
+        /**
+         * Sends a packet to a processor and IPIs it.
+         * @param type Type of the packet.
+         * @param data Optional data pointer.
+         */
+        void sendPacket(ipp_type type, void* data = nullptr);
+
+        // Don't change the order of these or the kernel will go boom boom
+        int id;
+        int apic_id;
+
+        CPU* self;
+
+        AEX::Proc::Context* currentContext;
+
+        // Safe to change again
+        bool should_yield = false;
+
+        int                current_tid;
+        AEX::Proc::Thread* currentThread;
+
+        uint64_t measurement_start_ns;
+
+        char name[48];
+
       private:
+        struct ipi_packet {
+            ipp_type type;
+            void*    data;
+        };
+
+        Spinlock      _ipi_lock;
+        volatile bool _ipi_ack;
+        ipi_packet    _ipi_packet;
+
+        void fillAndCleanName();
+
+        void handleIPP();
+
+        friend void ipi_handle();
     };
 }

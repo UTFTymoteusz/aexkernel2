@@ -1,8 +1,7 @@
 #include "txtty.hpp"
 
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/string.hpp"
-
-#include "sys/cpu.hpp"
 
 namespace AEX::TTY {
     struct TxTTY::vga_char {

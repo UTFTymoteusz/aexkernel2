@@ -1,9 +1,8 @@
 #include "aex/printk.hpp"
 
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/string.hpp"
 #include "aex/tty.hpp"
-
-#include "sys/cpu.hpp"
 
 #include <stdarg.h>
 #include <stdint.h>

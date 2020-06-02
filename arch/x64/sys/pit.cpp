@@ -1,6 +1,6 @@
 #include "sys/pit.hpp"
 
-#include "sys/cpu.hpp"
+#include "aex/arch/sys/cpu.hpp"
 
 namespace AEX::Sys {
     void PIT::setHz(int hz) {

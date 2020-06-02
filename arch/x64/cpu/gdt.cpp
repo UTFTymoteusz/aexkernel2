@@ -1,11 +1,11 @@
 #include "cpu/gdt.hpp"
 
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/debug.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
 
 #include "cpu/tss.hpp"
-#include "sys/cpu.hpp"
 #include "sys/mcore.hpp"
 
 namespace AEX::Sys {

@@ -1,11 +1,10 @@
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/debug.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc/proc.hpp"
 #include "aex/proc/process.hpp"
 #include "aex/proc/thread.hpp"
-
-#include "sys/cpu.hpp"
 
 #include <stddef.h>
 

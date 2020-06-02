@@ -1,13 +1,12 @@
 #include "aex/mem/heap.hpp"
 
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/mem/atomic.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
-
-#include "sys/cpu.hpp"
 
 #include <stdint.h>
 

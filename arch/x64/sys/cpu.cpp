@@ -1,4 +1,4 @@
-#include "sys/cpu.hpp"
+#include "aex/arch/sys/cpu.hpp"
 
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"

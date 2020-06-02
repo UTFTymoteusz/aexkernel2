@@ -1,3 +1,4 @@
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/debug.hpp"
 #include "aex/fs/fs.hpp"
 #include "aex/mem/heap.hpp"
@@ -9,6 +10,7 @@
 #include "aex/module.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc/thread.hpp"
+#include "aex/sys/irq.hpp"
 #include "aex/sys/time.hpp"
 #include "aex/tty.hpp"
 
@@ -20,8 +22,8 @@
 #include "kernel/module.hpp"
 #include "mem/memory.hpp"
 #include "proc/proc.hpp"
-#include "sys/cpu.hpp"
 #include "sys/irq.hpp"
+#include "sys/irq_i.hpp"
 #include "sys/mcore.hpp"
 
 // clang-format off
@@ -81,6 +83,8 @@ void main(multiboot_info_t* mbinfo) {
 
     VMem::cleanup_bootstrap();
     printk("\n");
+
+    IRQ::init_proc();
 
     FS::init();
     FS::mount(nullptr, "/dev/", "devfs");

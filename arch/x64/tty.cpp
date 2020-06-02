@@ -1,10 +1,10 @@
 #include "aex/tty.hpp"
 
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/string.hpp"
 
 #include "boot/mboot.h"
 #include "grtty.hpp"
-#include "sys/cpu.hpp"
 #include "txtty.hpp"
 
 #include <new>

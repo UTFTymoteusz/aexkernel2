@@ -1,5 +1,6 @@
 #include "sys/irq.hpp"
 
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/mem/atomic.hpp"
 #include "aex/mem/vector.hpp"
@@ -10,7 +11,6 @@
 #include "cpu/irq.hpp"
 #include "kernel/acpi/acpi.hpp"
 #include "sys/apic.hpp"
-#include "sys/cpu.hpp"
 #include "sys/mcore.hpp"
 #include "sys/pic.hpp"
 #include "sys/pit.hpp"
@@ -104,7 +104,7 @@ namespace AEX::Sys::IRQ {
         set_mask(0, true);
         set_destination(0, 0);
 
-        for (int j = 9; j < 24; j++) {
+        for (int j = 16; j < 24; j++) {
             set_mask(j, false);
             set_vector(j, 32 + j);
         }

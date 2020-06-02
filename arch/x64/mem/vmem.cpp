@@ -1,5 +1,6 @@
 #include "aex/mem/vmem.hpp"
 
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/mem/pmem.hpp"
 #include "aex/printk.hpp"
@@ -7,7 +8,6 @@
 #include "aex/string.hpp"
 
 #include "mem/memory.hpp"
-#include "sys/cpu.hpp"
 
 #include <stdint.h>
 

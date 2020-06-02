@@ -2,9 +2,10 @@
 
 #include "aex/spinlock.hpp"
 
-#include "boot/mboot.h"
-
 #include <stdint.h>
+
+extern "C" struct multiboot_info;
+typedef struct multiboot_info multiboot_info_t;
 
 namespace AEX::TTY {
     constexpr auto ROOT_TTY   = 0;

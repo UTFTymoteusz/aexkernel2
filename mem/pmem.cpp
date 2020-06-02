@@ -1,5 +1,6 @@
 #include "aex/mem/pmem.hpp"
 
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/math.hpp"
 #include "aex/printk.hpp"
@@ -9,7 +10,6 @@
 #include "boot/mboot.h"
 #include "mem/frame_piece.hpp"
 #include "mem/memory.hpp"
-#include "sys/cpu.hpp"
 
 #include <stddef.h>
 #include <stdint.h>

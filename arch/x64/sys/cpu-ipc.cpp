@@ -1,7 +1,7 @@
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/printk.hpp"
 
 #include "sys/apic.hpp"
-#include "sys/cpu.hpp"
 #include "sys/mcore.hpp"
 
 namespace AEX::Sys {
