@@ -1,7 +1,6 @@
 #include "aex/math.hpp"
 #include "aex/string.hpp"
-
-#include "tty.hpp"
+#include "aex/tty.hpp"
 
 #include <stdarg.h>
 #include <stdint.h>

@@ -1,7 +1,8 @@
 #pragma once
 
+#include "aex/tty.hpp"
+
 #include "boot/mboot.h"
-#include "tty.hpp"
 
 #include <stdint.h>
 

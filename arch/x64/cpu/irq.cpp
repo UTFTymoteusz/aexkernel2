@@ -1,10 +1,10 @@
 #include "cpu/irq.hpp"
 
 #include "aex/printk.hpp"
+#include "aex/tty.hpp"
 
 #include "sys/apic.hpp"
 #include "sys/cpu.hpp"
-#include "tty.hpp"
 
 extern "C" void common_irq_handler(AEX::Sys::CPU::irq_info* info);
 

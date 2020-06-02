@@ -1,9 +1,9 @@
 #include "aex/printk.hpp"
 
 #include "aex/string.hpp"
+#include "aex/tty.hpp"
 
 #include "sys/cpu.hpp"
-#include "tty.hpp"
 
 #include <stdarg.h>
 #include <stdint.h>

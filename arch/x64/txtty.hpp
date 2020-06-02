@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tty.hpp"
+#include "aex/tty.hpp"
 
 namespace AEX::TTY {
     class TxTTY : public VTTY {

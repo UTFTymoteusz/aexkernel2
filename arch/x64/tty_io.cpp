@@ -1,6 +1,5 @@
 #include "aex/string.hpp"
-
-#include "tty.hpp"
+#include "aex/tty.hpp"
 
 namespace AEX::TTY {
     VTTY& VTTY::operator<<(bool val) {

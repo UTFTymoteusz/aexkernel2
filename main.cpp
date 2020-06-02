@@ -10,6 +10,7 @@
 #include "aex/printk.hpp"
 #include "aex/proc/thread.hpp"
 #include "aex/sys/time.hpp"
+#include "aex/tty.hpp"
 
 #include "boot/mboot.h"
 #include "cpu/idt.hpp"
@@ -22,7 +23,6 @@
 #include "sys/cpu.hpp"
 #include "sys/irq.hpp"
 #include "sys/mcore.hpp"
-#include "tty.hpp"
 
 // clang-format off
 #include "aex/ipc/messagequeue.hpp"
@@ -108,8 +108,6 @@ void secondary_threaded() {
     // while (true)
     //   Proc::Thread::sleep(1200);
 
-    printk("joined %s\n", nullptr);
-
     Proc::Thread::sleep(100);
 }
 
@@ -125,8 +123,8 @@ void main_threaded() {
 
     mqueue->writeObject("abcdefghi");
 
-    // thread->join();
-    // printk("joined\n");
+    thread->join();
+    printk("joined\n");
 
     while (true) {
         uint64_t ns = get_uptime();
