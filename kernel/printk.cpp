@@ -2,6 +2,7 @@
 
 #include "aex/string.hpp"
 
+#include "sys/cpu.hpp"
 #include "tty.hpp"
 
 #include <stdarg.h>
@@ -16,6 +17,8 @@ namespace AEX {
 
     Spinlock lock;
 
+    int faulted_cpu = -1;
+
     void printk(const char* format, ...) {
         va_list args;
         va_start(args, format);
@@ -26,7 +29,10 @@ namespace AEX {
     }
 
     void printk(const char* format, va_list args) {
-        auto scopeLock = ScopeSpinlock(lock);
+        if (faulted_cpu == -1)
+            lock.acquire();
+        else if (Sys::CPU::getCurrentCPUID() != faulted_cpu)
+            return;
 
         auto rootTTY = TTY::VTTYs[TTY::ROOT_TTY];
 
@@ -225,5 +231,19 @@ namespace AEX {
 
             *rootTTY << c;
         } while (*++format != '\0');
+
+        if (faulted_cpu == -1)
+            lock.release();
+    }
+
+    void printk_fault() {
+        bool ints = Sys::CPU::checkInterrupts();
+
+        Sys::CPU::nointerrupts();
+
+        faulted_cpu = Sys::CPU::getCurrentCPUID();
+
+        if (ints)
+            Sys::CPU::interrupts();
     }
 } // namespace AEX

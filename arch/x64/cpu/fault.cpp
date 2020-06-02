@@ -47,6 +47,8 @@ namespace AEX::Sys {
         if (!name)
             name = "no idea";
 
+        printk_fault();
+
         AEX::printk(PRINTK_FAIL "cpu%i: %93$%s%$ Exception (%i) (%91$%i%$)\n",
                     CPU::getCurrentCPUID(), exception_names[info->int_no], info->int_no, info->err);
         AEX::printk("RIP: 0x%016lx <%s+0x%x>\n", info->rip, name, delta);

@@ -108,6 +108,8 @@ void secondary_threaded() {
     // while (true)
     //   Proc::Thread::sleep(1200);
 
+    printk("joined %s\n", nullptr);
+
     Proc::Thread::sleep(100);
 }
 
@@ -123,8 +125,8 @@ void main_threaded() {
 
     mqueue->writeObject("abcdefghi");
 
-    thread->join();
-    printk("joined\n");
+    // thread->join();
+    // printk("joined\n");
 
     while (true) {
         uint64_t ns = get_uptime();

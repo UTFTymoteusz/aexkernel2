@@ -10,4 +10,9 @@
 namespace AEX {
     void printk(const char* format, ...);
     void printk(const char* format, va_list args);
+
+    /**
+     * Makes printk() not care about spinlocks and ignore prints from other processors.
+     */
+    void printk_fault();
 }
