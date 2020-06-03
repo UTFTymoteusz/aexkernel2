@@ -2,6 +2,8 @@
 
 #include "aex/dev/device.hpp"
 #include "aex/errno.hpp"
+#include "aex/net/ethernet.hpp"
+#include "aex/net/ipv4.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -13,8 +15,15 @@ namespace AEX::Dev {
             ETHERNET = 0x01,
         };
 
-        int     address_len;
-        uint8_t address[16];
+        union {
+            uint8_t            hardware_address[16];
+            AEX::Net::mac_addr ethernet_mac;
+        };
+
+        union {
+            uint8_t             protocol_address[16];
+            AEX::Net::ipv4_addr ipv4_addr;
+        };
 
         net_type_t net_type;
 
@@ -36,7 +45,7 @@ namespace AEX::Dev {
          * @param buffer Buffer.
          * @param buffer Buffer length.
          */
-        static void receive(const void* buffer, size_t len);
+        void receive(const void* buffer, size_t len);
 
       private:
     };

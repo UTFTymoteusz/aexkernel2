@@ -141,7 +141,8 @@ namespace AEX::Sys {
         AEX::Proc::Context* currentContext;
 
         // Safe to change again
-        bool should_yield = false;
+        bool should_yield      = false;
+        bool willingly_yielded = false;
 
         int                current_tid;
         AEX::Proc::Thread* currentThread;

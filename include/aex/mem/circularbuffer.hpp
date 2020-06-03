@@ -12,11 +12,14 @@ namespace AEX::Mem {
         CircularBuffer(int size);
         ~CircularBuffer();
 
-        void read(uint8_t* buffer, int len);
-        void write(const uint8_t* buffer, int len);
+        void read(void* buffer, int len);
+        void write(const void* buffer, int len);
 
         int readAvailable();
         int writeAvailable();
+
+        int getReadPos();
+        int getWritePos();
 
       private:
         Spinlock   _lock;
@@ -29,5 +32,8 @@ namespace AEX::Mem {
         int _writePos = 0;
 
         int findDistance(int a, int b);
+
+        int readAvailableCut();
+        int writeAvailableCut();
     };
 }

@@ -73,6 +73,7 @@ namespace AEX::Proc {
         if (Thread::getCurrentThread()->isCritical())
             return;
 
+        Sys::CPU::getCurrentCPU()->willingly_yielded = true;
         proc_reshed();
     }
 
@@ -103,7 +104,9 @@ namespace AEX::Proc {
         if (thread->isBusy())
             kpanic("Attempt to exit a thread while it's still busy\n");
 
+        Mem::atomic_compare_and_swap(&thread->_finished, (uint8_t) 0, (uint8_t) 1);
         Mem::atomic_compare_and_swap(&thread->_abort, (uint8_t) 0, (uint8_t) 1);
+
         abort_thread(thread);
 
         while (true)
@@ -131,6 +134,8 @@ namespace AEX::Proc {
         Mem::atomic_compare_and_swap(&_abort, (uint8_t) 0, (uint8_t) 1);
 
         if (!sp->isBusy()) {
+            Mem::atomic_compare_and_swap(&sp->_finished, (uint8_t) 0, (uint8_t) 1);
+
             sp->lock.release();
             abort_thread(sp.get());
 
@@ -167,7 +172,13 @@ namespace AEX::Proc {
     void Thread::subCritical() {
         if (Mem::atomic_sub_fetch(&_critical, (uint16_t) 1) == 0 &&
             Sys::CPU::getCurrentCPU()->should_yield) {
+            Mem::atomic_sub(&_busy, (uint16_t) 1);
+
             Proc::Thread::yield();
+
+            return;
         }
+
+        Mem::atomic_sub(&_busy, (uint16_t) 1);
     }
 }

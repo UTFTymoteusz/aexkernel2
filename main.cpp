@@ -21,6 +21,7 @@
 #include "kernel/acpi/acpi.hpp"
 #include "kernel/module.hpp"
 #include "mem/memory.hpp"
+#include "net/net.hpp"
 #include "proc/proc.hpp"
 #include "sys/irq.hpp"
 #include "sys/irq_i.hpp"
@@ -93,6 +94,8 @@ void main(multiboot_info_t* mbinfo) {
     auto res = FS::mount("/dev/sra", "/", nullptr);
     if (res != error_t::ENONE)
         printk("Failed to mount iso9660: %s\n", strerror((error_t) res));
+
+    Net::init();
 
     Debug::load_kernel_symbols("/sys/aexkrnl.elf");
     load_core_modules();

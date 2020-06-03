@@ -20,13 +20,13 @@ namespace AEX::Mem {
         delete _buffer;
     }
 
-    void CircularBuffer::read(uint8_t* buffer, int len) {
+    void CircularBuffer::read(void* buffer, int len) {
         _lock.acquire();
 
         int offset = 0;
 
         while (len > 0) {
-            int clen = min(len, readAvailable());
+            int clen = min(len, readAvailableCut());
             if (clen == 0) {
                 _event.wait();
                 _lock.release();
@@ -38,7 +38,7 @@ namespace AEX::Mem {
                 continue;
             }
 
-            memcpy(buffer + offset, _buffer + _readPos, clen);
+            memcpy((uint8_t*) buffer + offset, _buffer + _readPos, clen);
 
             _readPos += clen;
             _event.raise();
@@ -53,13 +53,13 @@ namespace AEX::Mem {
         _lock.release();
     }
 
-    void CircularBuffer::write(const uint8_t* buffer, int len) {
+    void CircularBuffer::write(const void* buffer, int len) {
         _lock.acquire();
 
         int offset = 0;
 
         while (len > 0) {
-            int clen = min(len, writeAvailable());
+            int clen = min(len, writeAvailableCut());
             if (clen == 0) {
                 _event.wait();
                 _lock.release();
@@ -71,7 +71,7 @@ namespace AEX::Mem {
                 continue;
             }
 
-            memcpy(_buffer + _writePos, buffer + offset, clen);
+            memcpy(_buffer + _writePos, (uint8_t*) buffer + offset, clen);
 
             _writePos += clen;
             _event.raise();
@@ -87,21 +87,19 @@ namespace AEX::Mem {
     }
 
     int CircularBuffer::readAvailable() {
-        int len = _size;
-
-        len = min(len, _size - _readPos);
-        len = min(len, findDistance(_readPos, _writePos));
-
-        return len;
+        return min(_size, findDistance(_readPos, _writePos));
     }
 
     int CircularBuffer::writeAvailable() {
-        int len = _size;
+        return min(_size, findDistance(_writePos, _readPos - 1));
+    }
 
-        len = min(len, _size - _writePos);
-        len = min(len, findDistance(_writePos, _readPos - 1));
+    int CircularBuffer::getReadPos() {
+        return _readPos;
+    }
 
-        return len;
+    int CircularBuffer::getWritePos() {
+        return _writePos;
     }
 
     int CircularBuffer::findDistance(int a, int b) {
@@ -111,11 +109,29 @@ namespace AEX::Mem {
         if (b < 0)
             b += _size;
 
-        int c = a - b;
+        int c = b - a;
 
         if (c < 0)
-            c *= -1;
+            c += _size;
 
         return c;
+    }
+
+    int CircularBuffer::readAvailableCut() {
+        int len = _size;
+
+        len = min(len, _size - _readPos);
+        len = min(len, findDistance(_readPos, _writePos));
+
+        return len;
+    }
+
+    int CircularBuffer::writeAvailableCut() {
+        int len = _size;
+
+        len = min(len, _size - _writePos);
+        len = min(len, findDistance(_writePos, _readPos - 1));
+
+        return len;
     }
 }

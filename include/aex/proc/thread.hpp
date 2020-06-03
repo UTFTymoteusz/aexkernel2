@@ -143,7 +143,7 @@ namespace AEX::Proc {
         inline void subBusy() {
             uint16_t busy = Mem::atomic_sub_fetch(&_busy, (uint16_t) 1);
 
-            if (Mem::atomic_read(&_abort) == 1 && busy == 0)
+            if (Mem::atomic_read(&_abort) == 1 && !isFinished() && busy == 0)
                 Thread::exit();
         }
 
@@ -153,7 +153,7 @@ namespace AEX::Proc {
          * @returns Whenever the thread is "busy".
          */
         inline bool isBusy() {
-            return Mem::atomic_read(&_busy) > 0 || Mem::atomic_read(&_critical) > 0;
+            return Mem::atomic_read(&_busy) > 0;
         }
 
         /**
@@ -161,6 +161,7 @@ namespace AEX::Proc {
          * cannot be interrupted or killed.
          */
         inline void addCritical() {
+            Mem::atomic_add(&_busy, (uint16_t) 1);
             Mem::atomic_add(&_critical, (uint16_t) 1);
         }
 
