@@ -65,8 +65,7 @@ namespace AEX::Sys::IRQ {
     void irq_handler();
 
     void init_proc() {
-        auto thread = new Proc::Thread(nullptr, (void*) irq_handler,
-                                       VMem::kernel_pagemap->alloc(1024), 1024, nullptr);
+        auto thread = new Proc::Thread(nullptr, (void*) irq_handler, 1024, nullptr);
 
         handler_thread = thread->getSmartPointer();
         handler_thread->start();

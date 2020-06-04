@@ -145,7 +145,7 @@ namespace AEX::Mem {
             for (int i = 0; i < _element_count; i++) {
                 if (!_elements[i].ptr || !_elements[i].refs ||
                     _elements[i].refs->ref_count() == 0) {
-                    printk("!present slot: %i\n", i);
+                    // printk("!present slot: %i\n", i);
                     return i;
                 }
             }

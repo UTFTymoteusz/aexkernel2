@@ -89,13 +89,15 @@ void main(multiboot_info_t* mbinfo) {
 
     FS::init();
     FS::mount(nullptr, "/dev/", "devfs");
-    printk("\n");
 
     auto res = FS::mount("/dev/sra", "/", nullptr);
     if (res != error_t::ENONE)
         printk("Failed to mount iso9660: %s\n", strerror((error_t) res));
 
+    printk("\n");
+
     Net::init();
+    printk("\n");
 
     Debug::load_kernel_symbols("/sys/aexkrnl.elf");
     load_core_modules();
@@ -104,34 +106,11 @@ void main(multiboot_info_t* mbinfo) {
     main_threaded();
 }
 
-IPC::MessageQueue* mqueue;
-
-void secondary_threaded() {
-    char buffer[16];
-    mqueue->readArray(buffer, 9);
-
-    printk("received: %s\n", buffer);
-
-    // while (true)
-    //   Proc::Thread::sleep(1200);
-
-    Proc::Thread::sleep(100);
-}
-
 void main_threaded() {
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrentThread()->getProcess();
 
-    mqueue = new IPC::MessageQueue();
-
-    auto thread = new Proc::Thread(process.get(), (void*) secondary_threaded, new uint8_t[8192],
-                                   8192, process->pagemap);
-    thread->start();
-
-    mqueue->writeObject("abcdefghi");
-
-    thread->join();
-    printk("joined\n");
+    Proc::Thread::sleep(2000);
 
     while (true) {
         uint64_t ns = get_uptime();

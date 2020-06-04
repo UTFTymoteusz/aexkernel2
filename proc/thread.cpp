@@ -3,6 +3,7 @@
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/ipc/event.hpp"
 #include "aex/mem/smartptr.hpp"
+#include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
 
 #include "proc/context.hpp"
@@ -27,18 +28,20 @@ namespace AEX::Proc {
         this->_exit_event = new IPC::Event();
     }
 
-    Thread::Thread(Process* parent, void* entry, void* stack, size_t stack_size,
-                   VMem::Pagemap* pagemap, bool usermode, bool dont_add) {
+    Thread::Thread(Process* parent, void* entry, size_t stack_size, VMem::Pagemap* pagemap,
+                   bool usermode, bool dont_add) {
         if (!parent)
             parent = processes.get(1).get();
 
         if (!pagemap)
             pagemap = parent->pagemap;
 
+        _stack = pagemap->alloc(stack_size, PAGE_WRITE);
+
         if (usermode)
-            context = new Context(entry, stack, stack_size, pagemap, usermode);
+            context = new Context(entry, _stack, stack_size, pagemap, usermode);
         else
-            context = new Context(entry, stack, stack_size, pagemap, usermode, Thread::exit);
+            context = new Context(entry, _stack, stack_size, pagemap, usermode, Thread::exit);
 
         status = FRESH;
 
@@ -59,14 +62,16 @@ namespace AEX::Proc {
     }
 
     Thread::~Thread() {
-        // delete refs;
-        // delete _exit_event;
-        // cleanup the context too pls
+        delete refs;
+        delete _exit_event;
 
-        // this is the issue
         delete context;
 
-        printk("thread cleaned\n");
+        // unalloc da stack pls
+        // if (stack)
+        //    parent->pagemap->;
+
+        // printk("thread cleaned\n");
     }
 
     void Thread::yield() {

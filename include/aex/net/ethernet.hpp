@@ -12,6 +12,10 @@ namespace AEX::Net {
             memcpy(bytes, mac, 6);
         }
 
+        bool isBroadcast() {
+            return bytes[0] & 0x01;
+        }
+
         uint8_t& operator[](int index) {
             return bytes[index];
         }

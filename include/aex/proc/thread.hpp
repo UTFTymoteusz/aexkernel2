@@ -48,7 +48,7 @@ namespace AEX::Proc {
 
         Thread();
         Thread(Process* parent);
-        Thread(Process* parent, void* entry, void* stack, size_t stack_size, VMem::Pagemap* pagemap,
+        Thread(Process* parent, void* entry, size_t stack_size, VMem::Pagemap* pagemap,
                bool usermode = false, bool dont_add = false);
 
         ~Thread();
@@ -190,5 +190,7 @@ namespace AEX::Proc {
 
         uint8_t _abort    = 0;
         uint8_t _finished = 0;
+
+        void* _stack = nullptr;
     };
 }

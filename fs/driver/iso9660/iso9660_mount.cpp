@@ -62,6 +62,9 @@ namespace AEX::FS {
       private:
         int64_t _pos = 0;
 
+        uint64_t _cached_sector = 0xFFFFFFFFFFFFFFFF;
+        uint8_t  _buffer[BLOCK_SIZE];
+
         Mem::SmartPointer<Dev::Block> _block_dev;
 
         iso9660_dentry _dentry;

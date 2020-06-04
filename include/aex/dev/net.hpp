@@ -2,6 +2,7 @@
 
 #include "aex/dev/device.hpp"
 #include "aex/errno.hpp"
+#include "aex/mem/smartptr.hpp"
 #include "aex/net/ethernet.hpp"
 #include "aex/net/ipv4.hpp"
 
@@ -23,6 +24,11 @@ namespace AEX::Dev {
         union {
             uint8_t             protocol_address[16];
             AEX::Net::ipv4_addr ipv4_addr;
+        };
+
+        union {
+            uint8_t             protocol_extra[16];
+            AEX::Net::ipv4_addr ipv4_mask;
         };
 
         net_type_t net_type;
@@ -49,4 +55,6 @@ namespace AEX::Dev {
 
       private:
     };
+
+    Mem::SmartPointer<Net> get_net_device(int id);
 }

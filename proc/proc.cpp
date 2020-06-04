@@ -58,9 +58,8 @@ namespace AEX::Proc {
         bsp_thread->refs->increment();
         kernel_process->threads.addRef(bsp_thread, bsp_thread->refs);
 
-        auto thread_reaper_thread = new Thread(kernel_process, (void*) thread_reaper,
-                                               VMem::kernel_pagemap->alloc(8192, PAGE_WRITE), 8192,
-                                               kernel_process->pagemap);
+        auto thread_reaper_thread =
+            new Thread(kernel_process, (void*) thread_reaper, 8192, kernel_process->pagemap);
         thread_reaper_thread->start();
 
         setup_idle_threads(idle_process);
@@ -238,8 +237,8 @@ namespace AEX::Proc {
         for (int i = 0; i < Sys::MCore::cpu_count; i++) {
             void* stack = new uint8_t[1024];
 
-            idle_threads[i] = new Thread(idle_process, (void*) idle, stack, 1024,
-                                         VMem::kernel_pagemap, false, true);
+            idle_threads[i] =
+                new Thread(idle_process, (void*) idle, 1024, VMem::kernel_pagemap, false, true);
         }
     }
 

@@ -1,8 +1,7 @@
 #include "aex/net/net.hpp"
 
 #include "aex/net/linklayer.hpp"
-
-// The physical layer marks the buffer as busy\n
+#include "aex/printk.hpp"
 
 namespace AEX::Net {
     LinkLayer* link_layers[16];
@@ -13,6 +12,8 @@ namespace AEX::Net {
 
         for (size_t i = 0; i < sizeof(link_layers) / sizeof(LinkLayer*); i++)
             link_layers[i] = null_link_layer;
+
+        printk(PRINTK_OK "net: Link layer initialized\n");
     }
 
     error_t register_link_layer(llayer_type_t type, LinkLayer* layer) {
@@ -21,7 +22,7 @@ namespace AEX::Net {
         return error_t::ENONE;
     }
 
-    void parse(llayer_type_t type, const void* packet, size_t len) {
-        link_layers[type]->parse(packet, len);
+    void parse(int device_id, llayer_type_t type, const void* packet, size_t len) {
+        link_layers[type]->parse(device_id, packet, len);
     }
 }

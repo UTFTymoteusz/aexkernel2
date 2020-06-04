@@ -4,6 +4,7 @@
 #include "aex/dev/device.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/math.hpp"
+#include "aex/mem/smartptr.hpp"
 #include "aex/proc/process.hpp"
 #include "aex/proc/thread.hpp"
 #include "aex/string.hpp"
@@ -131,5 +132,13 @@ namespace AEX::Dev {
             return false;
 
         return true;
+    }
+
+    Mem::SmartPointer<Block> get_block_device(int id) {
+        auto device = devices.get(id);
+        if (!device.isValid() || device->type != Device::type_t::BLOCK)
+            return devices.get(-1);
+
+        return device;
     }
 }

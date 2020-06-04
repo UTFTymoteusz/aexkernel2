@@ -245,9 +245,8 @@ namespace AEX {
         printk(PRINTK_OK "Loaded module '%s'\n", module->name);
 
         // 2 goddamned hours + sleep for this goddamned thing (stack size)
-        auto thread =
-            new Proc::Thread(Proc::processes.get(1).get(), (void*) module->enter,
-                             VMem::kernel_pagemap->alloc(16384), 16384, VMem::kernel_pagemap);
+        auto thread = new Proc::Thread(Proc::processes.get(1).get(), (void*) module->enter, 16384,
+                                       VMem::kernel_pagemap);
         thread->start();
 
         delete section_info;
@@ -333,6 +332,8 @@ namespace AEX {
             FS::Path::canonize_path(list[i].name, "/sys/core/", buffer, sizeof(buffer));
 
             load_module(buffer);
+
+            Proc::Thread::sleep(75);
         }
 
         dir->close();

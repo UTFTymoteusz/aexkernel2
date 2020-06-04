@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aex/dev/device.hpp"
+#include "aex/mem/smartptr.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -35,4 +36,6 @@ namespace AEX::Dev {
         bool isAligned(uint8_t* addr);
         bool isPerfectFit(uint64_t start, uint32_t len);
     };
+
+    Mem::SmartPointer<Block> get_block_device(int id);
 }

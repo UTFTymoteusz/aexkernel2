@@ -11,12 +11,13 @@ namespace AEX::Net {
         // virtual void encapsulate(void* buffer, size_t len);
 
         /**
-         * Called by the network stack to parse a packet.
+         * Called by Net::parse() to parse a packet.
+         * @param device_id The recipient device ID.
          * @param packet_ptr Packet parse pointer.
          * @param len Remaining parse length.
          * @returns The result.
          */
-        virtual error_t parse(const void* packet_ptr, size_t len);
+        virtual error_t parse(int device_id, const void* packet_ptr, size_t len);
 
       private:
     };

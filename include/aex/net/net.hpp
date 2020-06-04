@@ -23,9 +23,10 @@ namespace AEX::Net {
 
     /**
      * Parses a packet.
+     * @param device_id Recipient device ID.
      * @param type Layer type to start with.
      * @param packet Pointer to the packet.
      * @param len Packet length.
      */
-    void parse(llayer_type_t type, const void* packet, size_t len);
+    void parse(int device_id, llayer_type_t type, const void* packet, size_t len);
 }
