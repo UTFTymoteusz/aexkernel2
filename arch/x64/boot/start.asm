@@ -104,6 +104,7 @@ bootstrap64:
 
 	xor rax, rax
 	mov gs, rax
+	mov fs, rax
 
 	; Let's fake the CPU structure
 	mov rcx, 0xC0000101
@@ -127,6 +128,7 @@ bootstrap64:
 	mov rsi, rax
 
 	xor rbp, rbp
+	sub rsp, 8 ; Gotta align the stack to 16 bytes or SSE explodes
 
     call main
 

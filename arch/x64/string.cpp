@@ -4,19 +4,33 @@
 #include <stdint.h>
 
 namespace AEX {
-    // rep movsq didn't work properly
-    /*void memcpy(void* dst, const void* src, size_t size) {
-        size_t aligned = size / 8;
-
-        asm volatile("cld; mov rcx, %2; rep movsq;" : : "D"(dst), "S"(src), "r"(aligned));
-
-        size_t remainder = size - aligned * 8;
-
-        uint8_t* dst8 = (uint8_t*) dst + aligned * 8;
-        uint8_t* src8 = (uint8_t*) src + aligned * 8;
-
-        asm volatile("mov rcx, %2; rep movsb;" : : "D"(dst8), "S"(src8), "r"(remainder));
-    }*/
+    void memcpy(void* dst, const void* src, size_t size) {
+        asm volatile("     \
+            cld;           \
+            \
+            mov r8, rdi;   \
+            mov r9, rsi;   \
+            \
+            mov rcx, rdx;  \
+            shr rcx, 0x03; \
+            \
+            rep movsq;     \
+            \
+            mov rdi, r8;   \
+            mov rsi, r9;   \
+            \
+            mov rcx, rdx;  \
+            and rcx, 0x07; \
+            and rdx, ~0x7; \
+            \
+            add rdi, rdx;  \
+            add rsi, rdx;  \
+            \
+            rep movsb;     \
+            "
+                     :
+                     : "D"(dst), "S"(src), "d"(size));
+    }
 
     void memset(void* mem, char c, size_t len) {
         asm volatile("cld; mov al, %1; mov rcx, %2; rep stosb;" : : "D"(mem), "r"(c), "r"(len));

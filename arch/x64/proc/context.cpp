@@ -13,6 +13,9 @@ namespace AEX::Proc {
         cr3 = (uint64_t) pagemap->pageRoot;
 
         if (on_exit) {
+            rsp -= 8; // Gotta align it so SSE doesn't go boom boom (the thread will push rbp most
+                      // likely)
+
             rsp -= sizeof(uint64_t);
             *((uint64_t*) rsp) = usermode ? Debug::entry_type::USER : Debug::entry_type::KERNEL;
 
