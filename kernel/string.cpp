@@ -68,21 +68,21 @@ namespace AEX {
     }
 
     void __attribute((weak)) memcpy(void* dst, const void* src, size_t size) {
-        size_t aligned = size / 8;
+        size_t aligned = size / sizeof(size_t);
 
-        uint64_t* dst64 = (uint64_t*) dst;
-        uint64_t* src64 = (uint64_t*) src;
+        size_t* dst_st = (size_t*) dst;
+        size_t* src_st = (size_t*) src;
 
         for (size_t i = 0; i < aligned; i++)
-            dst64[i] = src64[i];
+            dst_st[i] = src_st[i];
 
-        size_t remainder = size - aligned * 8;
+        size_t remainder = size - aligned * sizeof(size_t);
 
-        uint8_t* dst8 = (uint8_t*) dst + aligned * 8;
-        uint8_t* src8 = (uint8_t*) src + aligned * 8;
+        uint8_t* dst_b = (uint8_t*) dst + aligned * sizeof(size_t);
+        uint8_t* src_b = (uint8_t*) src + aligned * sizeof(size_t);
 
         for (size_t i = 0; i < remainder; i++)
-            dst8[i] = src8[i];
+            dst_b[i] = src_b[i];
     }
 
     int memcmp(const void* a, const void* b, size_t num) {

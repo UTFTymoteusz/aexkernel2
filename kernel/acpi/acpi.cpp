@@ -29,8 +29,7 @@ namespace AEX::ACPI {
 
         tables.pushBack(table);
 
-        printk("acpi: Found table %s, len %i (put it at 0x%p, was at 0x%p)\n", buffer,
-               header->length, table, VMem::kernel_pagemap->paddrof(table));
+        printk("acpi: Found table %s, len %i\n", buffer, header->length);
 
         return true;
     }

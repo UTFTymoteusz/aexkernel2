@@ -26,16 +26,15 @@ GFLAGS = -O2 -Wall -Wextra -nostdlib -pipe
 
 INCLUDES := -I. -I$(ARCH) -I$(ARCH)include/ -Iinclude/ -Iinclude/libc/ -I../lai/include/
 
-CCFLAGS := $(GFLAGS) \
-	-lgcc      \
-	-fno-rtti  \
-	-fno-exceptions \
-	-ffreestanding  \
-	-masm=intel     \
-	-mcmodel=kernel \
-	-mno-red-zone   \
-	-fno-pic        \
-	-fno-stack-protector    \
+CCFLAGS := $(GFLAGS)     \
+	-lgcc                \
+	-fno-rtti            \
+	-fno-exceptions      \
+	-ffreestanding       \
+	-masm=intel          \
+	-mcmodel=kernel      \
+	-fno-pic             \
+	-fno-stack-protector \
 	-fno-omit-frame-pointer \
 	$(INCLUDES)
 

@@ -18,17 +18,41 @@ namespace AEX::FS {
             _block_dev = block;
         }
 
+        // Make this not read the last sector two times
         optional<uint32_t> read(void* buf, uint32_t count) {
-            count = min(_dentry.data_len.le - _pos, count);
+            uint32_t requested_count = count;
+            uint64_t start_sector    = _dentry.data_lba.le * BLOCK_SIZE;
+
+            count = min<uint32_t>(_dentry.data_len.le - _pos, count);
             if (count == 0)
                 return 0;
 
-            _block_dev->read((uint8_t*) buf,
-                             (uint64_t) _dentry.data_lba.le * BLOCK_SIZE + (uint64_t) _pos, count);
+            if (_cached_sector != 0xFFFFFFFFFFFFFFFF &&
+                ((start_sector + _pos) / BLOCK_SIZE) == _cached_sector) {
+                uint16_t offset = _pos & (BLOCK_SIZE - 1);
+                uint16_t len    = min<uint32_t>((uint32_t) BLOCK_SIZE - offset, count);
+
+                memcpy((uint8_t*) buf, _buffer + offset, len);
+
+                count -= len;
+                _pos += len;
+                buf = (void*) ((uint8_t*) buf + len);
+            }
+
+            if (count == 0)
+                return requested_count;
+
+            _block_dev->read((uint8_t*) buf, start_sector + (uint64_t) _pos, count);
 
             _pos += count;
 
-            return count;
+            uint64_t last_sector = (start_sector + (uint64_t) _pos) / BLOCK_SIZE;
+            if (last_sector != _cached_sector)
+                _block_dev->read(_buffer, last_sector * BLOCK_SIZE, BLOCK_SIZE);
+
+            _cached_sector = last_sector;
+
+            return requested_count;
         }
 
         optional<dir_entry> readdir() {
@@ -96,7 +120,7 @@ namespace AEX::FS {
 
                 uint8_t len = ldentry->len;
                 if (len == 0) {
-                    _pos = ((_pos + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;
+                    _pos = int_floor<int64_t>(_pos + BLOCK_SIZE, BLOCK_SIZE);
                     if (_pos >= _dentry.data_len.le)
                         return {};
 
@@ -111,7 +135,8 @@ namespace AEX::FS {
                     (ldentry->name[0] == '\0' || ldentry->name[0] == '\1'))
                     continue;
 
-                memcpy(name_buffer, ldentry->name, min(sizeof(name_buffer) - 1, ldentry->name_len));
+                memcpy(name_buffer, ldentry->name,
+                       min<size_t>(sizeof(name_buffer) - 1, ldentry->name_len));
                 name_buffer[ldentry->name_len] = '\0';
 
                 clean_name(name_buffer);
@@ -182,8 +207,6 @@ namespace AEX::FS {
     }
 
     optional<file_info> ISO9660Mount::info(const char* lpath) {
-        printk("iso9660: info(%s)\n", lpath);
-
         auto dentry_try = findDentry(lpath);
         if (!dentry_try.has_value)
             return dentry_try.error_code;
@@ -213,12 +236,12 @@ namespace AEX::FS {
             bool found = false;
 
             for (uint32_t pos = 0; pos < dentry.data_len.le;) {
-                uint32_t floored = (pos / BLOCK_SIZE) * BLOCK_SIZE;
+                uint32_t floored = int_floor<uint32_t>(pos, BLOCK_SIZE);
                 auto     ldentry = (iso9660_dentry*) &buffer[pos - floored];
 
                 uint8_t len = ldentry->len;
                 if (len == 0) {
-                    pos = ((pos + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE;
+                    pos = int_floor<uint32_t>(pos + BLOCK_SIZE, BLOCK_SIZE);
                     continue;
                 }
 
@@ -228,7 +251,8 @@ namespace AEX::FS {
                     (ldentry->name[0] == '\0' || ldentry->name[0] == '\1'))
                     continue;
 
-                memcpy(name_buffer, ldentry->name, min(sizeof(name_buffer) - 1, ldentry->name_len));
+                memcpy(name_buffer, ldentry->name,
+                       min<size_t>(sizeof(name_buffer) - 1, ldentry->name_len));
                 name_buffer[ldentry->name_len] = '\0';
 
                 clean_name(name_buffer);

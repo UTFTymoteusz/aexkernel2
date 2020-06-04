@@ -31,18 +31,36 @@ namespace AEX::Dev {
     }
 
     int64_t Block::read(uint8_t* buffer, uint64_t start, uint32_t len) {
-        if (!isAligned(buffer) && word_align)
-            kpanic("Implement misaligned block reads pls\n");
+        auto current_usage = &Proc::Thread::getCurrentThread()->getProcess()->usage;
+
+        // this needs to be checked properly
+        while (!isAligned(buffer) && word_align) {
+            uint8_t misaligned_sector[_sector_size];
+            readBlock(misaligned_sector, start / _sector_size, 1);
+
+            current_usage->block_bytes_read += _sector_size;
+
+            uint16_t misaligned_len = min<uint64_t>(start & (_sector_size - 1), len);
+            if (misaligned_len == 0) // If this is the case, we're aligned sector-wise
+                misaligned_len = min<uint16_t>(len, _sector_size);
+
+            memcpy(buffer, misaligned_sector, misaligned_len);
+
+            buffer += misaligned_len;
+            start += misaligned_len;
+            len -= misaligned_len;
+
+            if (len == 0)
+                return 0;
+        }
 
         bool combo = false;
-
-        auto current_usage = &Proc::Thread::getCurrentThread()->getProcess()->usage;
 
         uint64_t combo_start = 0;
         uint32_t combo_count = 0;
 
         while (len > 0) {
-            uint32_t offset = start - (start / _sector_size) * _sector_size;
+            uint32_t offset = start - int_floor<uint64_t>(start, _sector_size);
             uint32_t llen   = min(_sector_size - offset, len);
 
             if (combo && combo_count == _max_sectors_at_once) {

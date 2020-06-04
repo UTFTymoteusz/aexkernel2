@@ -84,9 +84,6 @@ namespace AEX::Proc {
                 return;
         }
 
-        // printk("exited from 0x%p (%i)\n", cpu->currentContext->rip,
-        // threads[cpu->current_tid]->tid);
-
         int i = cpu->current_tid;
 
         uint64_t curtime = Sys::IRQ::get_uptime();
@@ -148,8 +145,6 @@ namespace AEX::Proc {
             cpu->currentThread  = threads[i];
             cpu->currentContext = threads[i]->context;
 
-            // printk("entering 0x%p (%i)\n", cpu->currentContext->rip, threads[i]->tid);
-
             lock.releaseRaw();
 
             return;
@@ -158,8 +153,6 @@ namespace AEX::Proc {
         cpu->current_tid    = 0;
         cpu->currentThread  = idle_threads[cpu->id];
         cpu->currentContext = idle_threads[cpu->id]->context;
-
-        // printk("entering 0x%p (%i)\n", cpu->currentContext->rip, idle_threads[cpu->id]->tid);
 
         cpu->currentThread->lock.tryAcquireRaw();
 

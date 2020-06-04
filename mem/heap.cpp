@@ -207,6 +207,17 @@ namespace AEX::Heap {
     Piece* rootPiece;
 
     void* malloc(size_t size) {
+        static Spinlock malloc_lock;
+
+        if (size == 0)
+            return nullptr;
+
+        if (size > 67108864) {
+            printk(PRINTK_WARN "heap: Tried to malloc(%li)\n", size);
+            return nullptr;
+        }
+
+    again:
         Piece* piece = rootPiece;
 
         do {
@@ -217,7 +228,24 @@ namespace AEX::Heap {
             piece = piece->next;
         } while (piece != nullptr);
 
-        // kpanic("AEX::Heap::alloc() failed");
+        if (!malloc_lock.tryAcquire())
+            goto again;
+
+        piece = rootPiece;
+
+        while (true) {
+            if (!piece->next)
+                piece->next = new Piece(min<size_t>(size * 2, 0x100000));
+
+            piece = piece->next;
+        }
+
+        malloc_lock.release();
+
+        printk(PRINTK_WARN "heap: malloc(%li) failed\n", size);
+
+        goto again;
+
         return nullptr;
     }
 
