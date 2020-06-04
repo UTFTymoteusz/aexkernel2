@@ -235,8 +235,6 @@ namespace AEX::Proc {
         idle_threads = (Thread**) new Thread*[Sys::MCore::cpu_count];
 
         for (int i = 0; i < Sys::MCore::cpu_count; i++) {
-            void* stack = new uint8_t[1024];
-
             idle_threads[i] =
                 new Thread(idle_process, (void*) idle, 1024, VMem::kernel_pagemap, false, true);
         }

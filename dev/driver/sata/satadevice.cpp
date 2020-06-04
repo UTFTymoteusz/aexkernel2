@@ -2,10 +2,8 @@
 
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/byte.hpp"
+#include "aex/math.hpp"
 #include "aex/mem/vmem.hpp"
-
-// For some reason math.hpp didn't wanna work
-#define min(a, b) (a < b ? a : b)
 
 namespace AEX::Dev::SATA {
     bool SATADevice::init() {
@@ -137,7 +135,7 @@ namespace AEX::Dev::SATA {
         int index = 0;
 
         while (len > 0) {
-            size_t aligned_next = (dsti + page_size) / page_size * page_size;
+            size_t aligned_next = int_floor<size_t>(dsti + page_size, page_size);
             size_t llen         = min(aligned_next - dsti, len);
 
             table->entries[index].bytes        = llen - 1;

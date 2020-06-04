@@ -31,7 +31,7 @@ namespace AEX::PMem {
 
     static void _createPieces(size_t addr, uint32_t frames) {
         if (current_piece == first_piece) {
-            int amnt = min((sizeof(root_piece_memory) - sizeof(frame_piece)) * 8, frames);
+            int amnt = min<int>((sizeof(root_piece_memory) - sizeof(frame_piece)) * 8, frames);
             frames -= amnt;
 
             first_piece->init((phys_addr) addr, amnt);

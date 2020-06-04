@@ -78,7 +78,7 @@ void main(multiboot_info_t* mbinfo) {
     MCore::init();
 
     CPU::interrupts();
-    IRQ::setup_timers_mcore(250);
+    IRQ::setup_timers_mcore(500);
 
     Proc::init();
 

@@ -2,6 +2,7 @@
 
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/kpanic.hpp"
+#include "aex/math.hpp"
 #include "aex/mem/atomic.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
@@ -15,7 +16,7 @@
 namespace AEX::Heap {
     template <typename T>
     T ceilToAllocSize(T val) {
-        return (val + ALLOC_SIZE - 1) / ALLOC_SIZE * ALLOC_SIZE;
+        return int_ceil<T>(val, ALLOC_SIZE);
     }
 
     template <typename T>

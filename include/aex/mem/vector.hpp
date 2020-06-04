@@ -1,11 +1,12 @@
 #pragma once
 
+#include "aex/math.hpp"
 #include "aex/mem/heap.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 
 namespace AEX::Mem {
-    template <typename T>
+    template <typename T, int chunk_count = 16>
     class Vector {
       public:
         Vector() = default;
@@ -36,7 +37,12 @@ namespace AEX::Mem {
 
         int pushBack(T val) {
             _count++;
-            _array = (T*) Heap::realloc((void*) _array, _count * sizeof(T));
+
+            int new_mem_count = int_ceil(_count, chunk_count);
+            if (new_mem_count != _mem_count) {
+                _mem_count = new_mem_count;
+                _array     = (T*) Heap::realloc((void*) _array, _mem_count * sizeof(T));
+            }
 
             _array[_count - 1] = val;
 
@@ -51,10 +57,14 @@ namespace AEX::Mem {
 
             _count--;
 
-            int copy_amount = _count - index;
+            int copy_amount = _mem_count - index;
             memcpy(&_array[index], &_array[index + 1], copy_amount * sizeof(T));
 
-            _array = (T*) Heap::realloc((void*) _array, _count * sizeof(T));
+            int new_mem_count = int_ceil(_count, chunk_count);
+            if (new_mem_count != _mem_count) {
+                _mem_count = new_mem_count;
+                _array     = (T*) Heap::realloc((void*) _array, _mem_count * sizeof(T));
+            }
         }
 
         int count() {
@@ -62,8 +72,10 @@ namespace AEX::Mem {
         }
 
       private:
-        int _count = 0;
-        T*  _array = nullptr;
+        int _mem_count = 0;
+        int _count     = 0;
+
+        T* _array = nullptr;
 
         template <typename T1>
         void pushRecursive(T1 bong) {
