@@ -8,7 +8,7 @@ namespace AEX::Proc {
     class Thread;
 
     extern Mem::SmartArray<Process> processes;
-    extern Mem::Vector<Thread*>     threads;
+    extern Thread**                 threads;
 
     int add_process(Process* process);
     int add_thread(Thread* thread);
