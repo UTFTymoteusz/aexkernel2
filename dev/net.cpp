@@ -23,6 +23,16 @@ namespace AEX::Dev {
         }
     }
 
+    void Net::setIPv4Address(AEX::Net::ipv4_addr addr) {
+        ipv4_addr      = addr;
+        ipv4_broadcast = ipv4_addr | ~ipv4_mask;
+    }
+
+    void Net::setIPv4Mask(AEX::Net::ipv4_addr addr) {
+        ipv4_mask      = addr;
+        ipv4_broadcast = ipv4_addr | ~ipv4_mask;
+    }
+
     Mem::SmartPointer<Net> get_net_device(int id) {
         auto device = devices.get(id);
         if (!device.isValid() || device->type != Device::type_t::NET)

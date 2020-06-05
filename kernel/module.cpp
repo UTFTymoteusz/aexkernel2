@@ -156,8 +156,6 @@ namespace AEX {
             // if ((symbol.info >> 4) == 2)
             //    printk(PRINTK_WARN "module: %s: Weak\n", symbol.name);
 
-            // printk("%s: %i\n", symbol.name, symbol.info >> 4);
-
             if (!S)
                 for (int i = 0; i < elf.section_headers.count(); i++) {
                     auto section_header = elf.section_headers[i];

@@ -22,12 +22,34 @@ namespace AEX {
     }
 
     template <typename T>
-    inline T fromBigEndian(T x) {
+    inline T from_big_endian(T x) {
         return bswap(x);
     }
 
     template <typename T>
-    inline T toBigEndian(T x) {
+    inline T to_big_endian(T x) {
         return bswap(x);
     }
+
+    template <typename T>
+    struct big_endian {
+        T _value;
+
+        T get() {
+            return from_big_endian<T>(_value);
+        }
+
+        void set(T value) {
+            _value = to_big_endian<T>(value);
+        }
+
+        operator T() {
+            return get();
+        }
+
+        big_endian& operator=(const T& value) {
+            set(value);
+            return *this;
+        }
+    } __attribute__((packed));
 }

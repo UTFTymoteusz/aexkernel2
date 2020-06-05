@@ -1,7 +1,7 @@
 #include "dev/driver/sata/satadevice.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
-#include "aex/byte.hpp"
+#include "aex/endian.hpp"
 #include "aex/math.hpp"
 #include "aex/mem/vmem.hpp"
 

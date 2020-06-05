@@ -21,15 +21,9 @@ namespace AEX::Dev {
             AEX::Net::mac_addr ethernet_mac;
         };
 
-        union {
-            uint8_t             protocol_address[16];
-            AEX::Net::ipv4_addr ipv4_addr;
-        };
-
-        union {
-            uint8_t             protocol_extra[16];
-            AEX::Net::ipv4_addr ipv4_mask;
-        };
+        AEX::Net::ipv4_addr ipv4_addr;
+        AEX::Net::ipv4_addr ipv4_mask;
+        AEX::Net::ipv4_addr ipv4_broadcast;
 
         net_type_t net_type;
 
@@ -52,6 +46,18 @@ namespace AEX::Dev {
          * @param buffer Buffer length.
          */
         void receive(const void* buffer, size_t len);
+
+        /**
+         * Sets the IPv4 address of the network interface and update the broadcast address.
+         * @param addr IPv4 address.
+         */
+        void setIPv4Address(AEX::Net::ipv4_addr addr);
+
+        /**
+         * Sets the IPv4 mask of the network interface and update the broadcast address.
+         * @param addr IPv4 mask.
+         */
+        void setIPv4Mask(AEX::Net::ipv4_addr addr);
 
       private:
     };
