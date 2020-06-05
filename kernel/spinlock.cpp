@@ -18,8 +18,13 @@ namespace AEX {
             count++;
 
             if (count > 4212222) {
-                kpanic("spinlock 0x%p hung (val: %i, cpu: %i)\n", this, _lock,
-                       Sys::CPU::getCurrentCPUID());
+                int  delta = 0;
+                auto name  = Debug::symbol_addr2name((void*) this, &delta);
+                if (!name)
+                    name = "no idea";
+
+                kpanic("spinlock 0x%p <%s+0x%x> hung (val: %i, cpu: %i)\n", this, name, delta,
+                       _lock, Sys::CPU::getCurrentCPUID());
             }
 
             Proc::Thread::getCurrentThread()->addCritical();

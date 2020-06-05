@@ -112,6 +112,8 @@ void main_threaded() {
 
     Proc::Thread::sleep(2000);
 
+    auto cbuf = Mem::CircularBuffer(2323);
+
     while (true) {
         uint64_t ns = get_uptime();
 
@@ -122,6 +124,7 @@ void main_threaded() {
         printk("us  : %16li ns (%li ms) cpu time (pid %i)\n", process->usage.cpu_time_ns,
                process->usage.cpu_time_ns / 1000000, process->pid);
         printk("bytes read: %li\n", process->usage.block_bytes_read);
+        printk("heap free : %li\n", Heap::heap_free);
 
         printk("tid: %i\n", Proc::Thread::getCurrentTID());
 

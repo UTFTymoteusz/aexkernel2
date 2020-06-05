@@ -15,7 +15,7 @@
 
 namespace AEX {
     struct module_symbol {
-        char  name[32];
+        char  name[64];
         void* addr;
     };
 
@@ -130,6 +130,26 @@ namespace AEX {
             if (!symbol.name)
                 continue;
 
+            if (symbol.name[0] == '.')
+                continue;
+
+            auto _symbol = module_symbol();
+
+            strncpy(_symbol.name, symbol.name, sizeof(_symbol.name));
+            _symbol.addr =
+                (void*) ((size_t) section_info[symbol.section_index].addr + symbol.address);
+
+            module->symbols.pushBack(_symbol);
+        }
+
+        for (int i = 0; i < elf.symbols.count(); i++) {
+            auto symbol = elf.symbols[i];
+            if (!symbol.name)
+                continue;
+
+            if (symbol.name[0] != '.')
+                continue;
+
             auto _symbol = module_symbol();
 
             strncpy(_symbol.name, symbol.name, sizeof(_symbol.name));
@@ -239,6 +259,14 @@ namespace AEX {
                                      entry_symbol.address);
         module->exit  = (void (*)())((size_t) section_info[exit_symbol.section_index].addr +
                                     exit_symbol.address);
+
+        for (int i = 0; i < module->symbols.count(); i++) {
+            char buffer[sizeof(module->symbols[i].name)];
+
+            strncpy(buffer, module->symbols[i].name, sizeof(buffer));
+            snprintf(module->symbols[i].name, sizeof(module->symbols[i].name), "%s%c%s",
+                     module->name, ':', buffer);
+        }
 
         printk(PRINTK_OK "Loaded module '%s'\n", module->name);
 

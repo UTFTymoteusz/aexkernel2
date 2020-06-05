@@ -180,7 +180,6 @@ namespace AEX::Proc {
             Mem::atomic_sub(&_busy, (uint16_t) 1);
 
             Proc::Thread::yield();
-
             return;
         }
 

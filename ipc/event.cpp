@@ -34,11 +34,10 @@ namespace AEX::IPC {
         _lock.acquire();
 
         int total = _tiddies.count();
-        for (int i = 0; i < total; i++) {
+        for (int i = 0; i < total; i++)
             _tiddies.at(i)->setStatus(Thread::status_t::RUNNABLE);
-            _tiddies.erase(i);
-        }
 
+        _tiddies.clear();
         _lock.release();
 
         return total;
@@ -50,11 +49,10 @@ namespace AEX::IPC {
         _defunct = true;
 
         int total = _tiddies.count();
-        for (int i = 0; i < total; i++) {
+        for (int i = 0; i < total; i++)
             _tiddies.at(i)->setStatus(Thread::status_t::RUNNABLE);
-            _tiddies.erase(i);
-        }
 
+        _tiddies.clear();
         _lock.release();
 
         return total;

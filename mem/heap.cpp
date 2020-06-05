@@ -1,6 +1,7 @@
 #include "aex/mem/heap.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/debug.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/math.hpp"
 #include "aex/mem/atomic.hpp"
@@ -228,6 +229,10 @@ namespace AEX::Heap {
             piece = piece->next;
         } while (piece != nullptr);
 
+        printk(PRINTK_WARN "heap: malloc(%li) failed [t%li, f%li]\n", size, heap_allocated,
+               heap_free);
+        Debug::stack_trace();
+
         if (!malloc_lock.tryAcquire())
             goto again;
 
@@ -235,14 +240,12 @@ namespace AEX::Heap {
 
         while (true) {
             if (!piece->next)
-                piece->next = new Piece(min<size_t>(size * 2, 0x100000));
+                piece->next = Piece::createFromVMem(min<size_t>(size * 2, 0x100000));
 
             piece = piece->next;
         }
 
         malloc_lock.release();
-
-        printk(PRINTK_WARN "heap: malloc(%li) failed\n", size);
 
         goto again;
 
@@ -265,6 +268,9 @@ namespace AEX::Heap {
     }
 
     size_t msize(void* ptr) {
+        if (!ptr)
+            return 0;
+
         Piece* piece = rootPiece;
 
         do {
@@ -280,7 +286,7 @@ namespace AEX::Heap {
     }
 
     void* realloc(void* ptr, size_t size) {
-        if (ptr == nullptr || size == 0)
+        if (!ptr)
             return malloc(size);
 
         void*  newptr  = malloc(size);

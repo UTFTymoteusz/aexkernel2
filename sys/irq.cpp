@@ -52,7 +52,7 @@ namespace AEX::Sys::IRQ {
     };
 
     size_t  queue_waiting = 0;
-    uint8_t queue[1024];
+    uint8_t queue[8192];
 
     handler_array immediate_handlers[24] = {};
     handler_array threaded_handlers[24]  = {};

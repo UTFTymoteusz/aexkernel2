@@ -6,7 +6,7 @@
 #include "aex/string.hpp"
 
 namespace AEX::Mem {
-    template <typename T, int chunk_count = 16>
+    template <typename T, int chunk_count = 16, int minimum_allocation = -1>
     class Vector {
       public:
         Vector() = default;
@@ -45,7 +45,6 @@ namespace AEX::Mem {
             }
 
             _array[_count - 1] = val;
-
             return _count - 1;
         }
 
@@ -54,17 +53,24 @@ namespace AEX::Mem {
                 return;
 
             _array[index].~T();
-
             _count--;
 
             int copy_amount = _mem_count - index;
             memcpy(&_array[index], &_array[index + 1], copy_amount * sizeof(T));
 
-            int new_mem_count = int_ceil(_count, chunk_count);
-            if (new_mem_count != _mem_count) {
-                _mem_count = new_mem_count;
-                _array     = (T*) Heap::realloc((void*) _array, _mem_count * sizeof(T));
-            }
+            deallocCheck();
+        }
+
+        void clear() {
+            for (int i = 0; i < _count; i++)
+                _array[i].~T();
+
+            _count = 0;
+
+            deallocCheck();
+
+            if (_array)
+                memset(_array, '\0', _mem_count * sizeof(T));
         }
 
         int count() {
@@ -86,6 +92,14 @@ namespace AEX::Mem {
         void pushRecursive(T1 bong, T2... rest) {
             pushBack(bong);
             pushRecursive(rest...);
+        }
+
+        inline void deallocCheck() {
+            int new_mem_count = int_ceil(_count, chunk_count);
+            if (new_mem_count != _mem_count && new_mem_count > minimum_allocation) {
+                _mem_count = new_mem_count;
+                _array     = (T*) Heap::realloc((void*) _array, _mem_count * sizeof(T));
+            }
         }
     };
 }
