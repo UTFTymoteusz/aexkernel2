@@ -47,7 +47,7 @@ namespace AEX::FS {
     };
 
     class File {
-      public:
+        public:
         enum seek_mode {
             SET     = 0,
             CURRENT = 1,
@@ -70,6 +70,6 @@ namespace AEX::FS {
 
         virtual void close();
 
-      private:
+        private:
     };
 }

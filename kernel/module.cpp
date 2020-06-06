@@ -27,7 +27,7 @@ namespace AEX {
     };
 
     class Module {
-      public:
+        public:
         const char* name = nullptr;
 
         void (*enter)();
@@ -100,11 +100,11 @@ namespace AEX {
 
             file->seek(section_header.file_offset);
 
-            void* ptr = VMem::kernel_pagemap->alloc(section_header.size, PAGE_WRITE);
+            void* ptr = VMem::kernel_pagemap->alloc(section_header.size, PAGE_WRITE | PAGE_EXEC);
             if (!(section_header.flags & ELF::sc_flags_t::SC_ALLOC))
                 continue;
 
-            // 6 hours of debugging for this god forsaken thing (the if)
+            // 6 hours of debugging for this god forsaken thing (the entire if)
             if (section_header.type != ELF::sc_type_t::SC_NO_DATA)
                 file->read(ptr, section_header.size);
 

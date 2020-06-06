@@ -110,9 +110,7 @@ void main_threaded() {
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrentThread()->getProcess();
 
-    Proc::Thread::sleep(2000);
-
-    auto cbuf = Mem::CircularBuffer(2323);
+    Proc::Thread::sleep(1000);
 
     while (true) {
         uint64_t ns = get_uptime();

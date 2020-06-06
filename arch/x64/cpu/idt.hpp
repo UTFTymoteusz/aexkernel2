@@ -5,7 +5,7 @@
 
 namespace AEX::Sys {
     class IDTEntry {
-      public:
+        public:
         uint16_t offset_0;
 
         uint16_t selector;

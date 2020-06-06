@@ -1,6 +1,6 @@
 #include "iso9660.hpp"
 
-#include "aex/dev/block.hpp"
+#include "aex/dev/blockdevice.hpp"
 #include "aex/dev/dev.hpp"
 #include "aex/fs/file.hpp"
 #include "aex/printk.hpp"
@@ -34,7 +34,7 @@ namespace AEX::FS {
         if (!info.value.is_block())
             return error_t::ENOTBLK;
 
-        auto block = (Mem::SmartPointer<Dev::Block>) Dev::devices.get(info.value.dev_id);
+        auto block = (Mem::SmartPointer<Dev::BlockDevice>) Dev::devices.get(info.value.dev_id);
         if (!block.isValid())
             return error_t::ENOENT;
 

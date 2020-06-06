@@ -1,4 +1,4 @@
-#include "aex/dev/block.hpp"
+#include "aex/dev/blockdevice.hpp"
 #include "aex/dev/tree/driver.hpp"
 #include "aex/dev/tree/tree.hpp"
 #include "aex/endian.hpp"
@@ -6,14 +6,14 @@
 #include "dev/driver/sata/satadevice.hpp"
 
 namespace AEX::Dev::SATA {
-    class SRBlock : public Block {
-      public:
+    class SRBlock : public BlockDevice {
+        public:
         SRBlock(SATADevice* device)
-            : Block(device->name, SECTOR_SIZE, device->sector_count, device->max_page_burst) {
+            : BlockDevice(device->name, SECTOR_SIZE, device->sector_count, device->max_page_burst) {
             _device = device;
         }
 
-      private:
+        private:
         static constexpr auto SECTOR_SIZE = 2048;
 
         SATADevice* _device;
@@ -39,7 +39,7 @@ namespace AEX::Dev::SATA {
     };
 
     class SRDriver : public Tree::Driver {
-      public:
+        public:
         SRDriver() : Driver("sr") {}
 
         bool check(Tree::Device* _device) {
@@ -57,7 +57,7 @@ namespace AEX::Dev::SATA {
             }
         }
 
-      private:
+        private:
         static constexpr auto SECTOR_SIZE = 2048;
     };
 

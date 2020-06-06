@@ -8,7 +8,7 @@
 
 namespace AEX::Mem {
     class CircularBuffer {
-      public:
+        public:
         CircularBuffer(int size);
         ~CircularBuffer();
 
@@ -21,7 +21,7 @@ namespace AEX::Mem {
         int getReadPos();
         int getWritePos();
 
-      private:
+        private:
         Spinlock   _lock;
         IPC::Event _event;
 

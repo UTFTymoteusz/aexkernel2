@@ -119,6 +119,8 @@ namespace AEX::PMem {
             if (start == -1)
                 continue;
 
+            frames_available -= frames;
+
             piece->alloc(start, frames);
             spinlock.release();
 
@@ -132,8 +134,6 @@ namespace AEX::PMem {
     }
 
     void free(phys_addr addr, int32_t amount) {
-        printk("Frame::free(0x%x, %i)\n", addr, amount);
-
         if (addr < first_piece->start)
             return;
 
@@ -143,10 +143,12 @@ namespace AEX::PMem {
         spinlock.acquire();
 
         do {
-            if (addr / Sys::CPU::PAGE_SIZE >= first_piece->size) {
-                addr -= first_piece->size * Sys::CPU::PAGE_SIZE;
+            if (piece->start > addr)
                 continue;
-            }
+
+            addr -= piece->start;
+
+            frames_available += frames;
 
             piece->free(addr / Sys::CPU::PAGE_SIZE, frames);
             spinlock.release();

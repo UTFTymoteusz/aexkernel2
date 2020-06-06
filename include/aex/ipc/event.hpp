@@ -7,7 +7,7 @@
 
 namespace AEX::IPC {
     class Event {
-      public:
+        public:
         /**
          * Blocks the currently executing thread on this event.
          */
@@ -26,7 +26,7 @@ namespace AEX::IPC {
          */
         int defunct();
 
-      private:
+        private:
         Spinlock _lock;
 
         Mem::Vector<Mem::SmartPointer<Proc::Thread>, 8, 8> _tiddies;

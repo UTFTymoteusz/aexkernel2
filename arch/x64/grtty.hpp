@@ -8,7 +8,7 @@
 
 namespace AEX::TTY {
     class GrTTY : public VTTY {
-      public:
+        public:
         struct vga_char;
 
         GrTTY();
@@ -20,7 +20,7 @@ namespace AEX::TTY {
 
         void fillFromEGA(vga_char* ega_buffer);
 
-      private:
+        private:
         enum color {
             BLACK        = 0x050808,
             BLUE         = 0x0000AA,
@@ -55,7 +55,7 @@ namespace AEX::TTY {
 
         void put_glyph(char c, uint32_t x, uint32_t y, uint32_t fg, uint32_t bg);
 
-      protected:
+        protected:
         void _writeChar(char c);
     };
 }

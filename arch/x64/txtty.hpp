@@ -4,7 +4,7 @@
 
 namespace AEX::TTY {
     class TxTTY : public VTTY {
-      public:
+        public:
         struct vga_char;
 
         TxTTY();
@@ -18,7 +18,7 @@ namespace AEX::TTY {
 
         vga_char* getOutputPointer();
 
-      private:
+        private:
         enum vga_color {
             VGA_BLACK        = 0,
             VGA_BLUE         = 1,
@@ -43,7 +43,7 @@ namespace AEX::TTY {
 
         vga_char* volatile _output;
 
-      protected:
+        protected:
         void _writeChar(char c);
     };
 }

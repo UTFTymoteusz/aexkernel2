@@ -5,7 +5,7 @@
 
 namespace AEX::Dev::SATA {
     class SDDriver : public Tree::Driver {
-      public:
+        public:
         SDDriver() : Driver("sd") {}
 
         bool check(Tree::Device* _device) {

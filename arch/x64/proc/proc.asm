@@ -1,5 +1,7 @@
 [BITS 64]
 
+section .text
+
 global proc_timer_tick
 global proc_reshed
 

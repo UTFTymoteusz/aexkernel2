@@ -8,7 +8,7 @@ namespace AEX::FS::Path {
     constexpr auto MAX_DEPTH        = 256;
 
     class Walker {
-      public:
+        public:
         Walker(const char* path);
 
         const char* next();
@@ -17,7 +17,7 @@ namespace AEX::FS::Path {
         bool isPieceTooLong();
         bool isFinal();
 
-      private:
+        private:
         char _buffer[MAX_FILENAME_LEN];
 
         int         _index = 0;

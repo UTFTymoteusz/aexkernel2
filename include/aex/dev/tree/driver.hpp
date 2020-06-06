@@ -4,7 +4,7 @@ namespace AEX::Dev::Tree {
     class Device;
 
     class Driver {
-      public:
+        public:
         char name[32];
 
         Driver(const char* name);

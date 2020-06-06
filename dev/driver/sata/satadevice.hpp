@@ -15,7 +15,7 @@ namespace AEX::Dev::SATA {
     };
 
     class SATADevice : public Tree::Device {
-      public:
+        public:
         static constexpr auto PxCMD_CR  = 0x8000;
         static constexpr auto PxCMD_FR  = 0x4000;
         static constexpr auto PxCMD_FRE = 0x0010;
@@ -54,7 +54,7 @@ namespace AEX::Dev::SATA {
 
         void scsiPacket(uint8_t* packet, void* buffer, int len);
 
-      private:
+        private:
         volatile uint32_t _command_slots;
 
         AHCI::hba_command_header* getHeader(int slot);

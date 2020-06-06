@@ -7,7 +7,7 @@
 
 namespace AEX::IPC {
     class MessageQueue {
-      public:
+        public:
         static constexpr auto MAX_WAITING_SIZE = 65536 - 1;
 
         MessageQueue();
@@ -39,7 +39,7 @@ namespace AEX::IPC {
 
         void writeMessage(const void* ptr, int len);
 
-      private:
+        private:
         struct message_header {
             Proc::pid_t pid;
             int         len;

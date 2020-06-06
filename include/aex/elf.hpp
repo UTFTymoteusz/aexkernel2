@@ -8,7 +8,7 @@
 
 namespace AEX {
     class ELF {
-      public:
+        public:
         enum relocation_type {
             R_X86_64_NONE  = 0,
             R_X86_64_64    = 1,
@@ -389,7 +389,7 @@ namespace AEX {
 
         void loadRelocations();
 
-      private:
+        private:
         header                      _header;
         Mem::SmartPointer<FS::File> _file;
 

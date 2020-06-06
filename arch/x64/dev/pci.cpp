@@ -22,7 +22,7 @@ namespace AEX::Dev::PCI {
     Tree::Bus* dev_bus;
 
     class PCI : public Tree::Driver {
-      public:
+        public:
         PCI() : Driver("pci") {}
         ~PCI() {}
 

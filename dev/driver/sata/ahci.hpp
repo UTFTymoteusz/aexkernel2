@@ -4,7 +4,7 @@
 
 namespace AEX::Dev::SATA {
     class AHCI {
-      public:
+        public:
         typedef volatile uint32_t vuint32_t;
         typedef volatile uint64_t vuint64_t;
 
@@ -258,7 +258,7 @@ namespace AEX::Dev::SATA {
 
         AHCI(void* addr, int index);
 
-      private:
+        private:
         static constexpr auto POWER_MANAGEMENT_ACTIVE = 0x01;
         static constexpr auto DETECTION_PRESENT       = 0x03;
 

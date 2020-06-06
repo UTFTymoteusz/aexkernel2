@@ -5,7 +5,7 @@
 
 namespace AEX::Net {
     class LinkLayer {
-      public:
+        public:
         virtual ~LinkLayer();
 
         // virtual void encapsulate(void* buffer, size_t len);
@@ -19,6 +19,6 @@ namespace AEX::Net {
          */
         virtual error_t parse(int device_id, const void* packet_ptr, size_t len);
 
-      private:
+        private:
     };
 }

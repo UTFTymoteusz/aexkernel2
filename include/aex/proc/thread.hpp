@@ -20,7 +20,7 @@ namespace AEX::Proc {
     class Context;
 
     class Thread {
-      public:
+        public:
         static constexpr auto USER_STACK_SIZE   = 16384;
         static constexpr auto KERNEL_STACK_SIZE = 16384;
 
@@ -182,7 +182,7 @@ namespace AEX::Proc {
 
         void announceExit();
 
-      private:
+        private:
         IPC::Event* _exit_event = nullptr;
 
         uint16_t _busy     = 0;
@@ -191,6 +191,7 @@ namespace AEX::Proc {
         uint8_t _abort    = 0;
         uint8_t _finished = 0;
 
-        void* _stack = nullptr;
+        void*  _stack      = nullptr;
+        size_t _stack_size = 0;
     };
 }

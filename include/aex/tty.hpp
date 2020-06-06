@@ -15,7 +15,7 @@ namespace AEX::TTY {
      * A basic virtual terminal class.
      */
     class VTTY {
-      public:
+        public:
         int width, height;
 
         VTTY();
@@ -81,11 +81,11 @@ namespace AEX::TTY {
 
         VTTY& operator<<(const char* str);
 
-      private:
+        private:
         int _bgColor;
         int _fgColor;
 
-      protected:
+        protected:
         int _cursorx = 0;
         int _cursory = 0;
 

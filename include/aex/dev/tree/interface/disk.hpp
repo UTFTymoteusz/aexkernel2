@@ -8,9 +8,9 @@ namespace AEX::Dev::Tree {
     class Device;
 
     class Disk : public Interface {
-      public:
+        public:
         bool bind(Device* device);
 
-      private:
+        private:
     };
 };

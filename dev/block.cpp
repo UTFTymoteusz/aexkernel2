@@ -1,5 +1,4 @@
-#include "aex/dev/block.hpp"
-
+#include "aex/dev/blockdevice.hpp"
 #include "aex/dev/dev.hpp"
 #include "aex/dev/device.hpp"
 #include "aex/kpanic.hpp"
@@ -12,8 +11,8 @@
 #include <stdint.h>
 
 namespace AEX::Dev {
-    Block::Block(const char* name, uint16_t sector_size, uint64_t sector_count,
-                 uint16_t max_sectors_at_once)
+    BlockDevice::BlockDevice(const char* name, uint16_t sector_size, uint64_t sector_count,
+                             uint16_t max_sectors_at_once)
         : Device(name, type_t::BLOCK) {
         _overflow_buffer = new uint8_t[sector_size];
 
@@ -22,15 +21,15 @@ namespace AEX::Dev {
         _max_sectors_at_once = max_sectors_at_once;
     }
 
-    Block::~Block() {
+    BlockDevice::~BlockDevice() {
         delete _overflow_buffer;
     }
 
-    int Block::init() {
+    int BlockDevice::init() {
         return initBlock();
     }
 
-    int64_t Block::read(uint8_t* buffer, uint64_t start, uint32_t len) {
+    int64_t BlockDevice::read(uint8_t* buffer, uint64_t start, uint32_t len) {
         auto current_usage = &Proc::Thread::getCurrentThread()->getProcess()->usage;
 
         // this needs to be checked properly
@@ -114,35 +113,35 @@ namespace AEX::Dev {
         return 0;
     }
 
-    int64_t Block::write(uint8_t*, uint64_t, uint32_t) {
+    int64_t BlockDevice::write(uint8_t*, uint64_t, uint32_t) {
         kpanic("Block::write is unimplemented, I'm too lazy atm\n");
     }
 
-    void Block::release() {
+    void BlockDevice::release() {
         releaseBlock();
     }
 
-    int Block::initBlock() {
+    int BlockDevice::initBlock() {
         return 0;
     }
 
-    int64_t Block::readBlock(uint8_t*, uint64_t, uint32_t) {
+    int64_t BlockDevice::readBlock(uint8_t*, uint64_t, uint32_t) {
         return -1;
     }
 
-    int64_t Block::writeBlock(uint8_t*, uint64_t, uint32_t) {
+    int64_t BlockDevice::writeBlock(uint8_t*, uint64_t, uint32_t) {
         return -1;
     }
 
-    void Block::releaseBlock() {
+    void BlockDevice::releaseBlock() {
         return;
     }
 
-    bool Block::isAligned(uint8_t* addr) {
+    bool BlockDevice::isAligned(uint8_t* addr) {
         return ((size_t) addr & 0x01) == 0;
     }
 
-    bool Block::isPerfectFit(uint64_t start, uint32_t len) {
+    bool BlockDevice::isPerfectFit(uint64_t start, uint32_t len) {
         if (start % _sector_size != 0)
             return false;
 
@@ -152,7 +151,7 @@ namespace AEX::Dev {
         return true;
     }
 
-    Mem::SmartPointer<Block> get_block_device(int id) {
+    Mem::SmartPointer<BlockDevice> get_block_device(int id) {
         auto device = devices.get(id);
         if (!device.isValid() || device->type != Device::type_t::BLOCK)
             return devices.get(-1);

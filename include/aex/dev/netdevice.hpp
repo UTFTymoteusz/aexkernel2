@@ -10,26 +10,23 @@
 #include <stdint.h>
 
 namespace AEX::Dev {
-    class Net : public Device {
-      public:
+    class NetDevice : public Device {
+        public:
         enum net_type_t : uint8_t {
             ETHERNET = 0x01,
         };
 
-        union {
-            uint8_t            hardware_address[16];
-            AEX::Net::mac_addr ethernet_mac;
-        };
+        Net::mac_addr ethernet_mac;
 
-        AEX::Net::ipv4_addr ipv4_addr;
-        AEX::Net::ipv4_addr ipv4_mask;
-        AEX::Net::ipv4_addr ipv4_broadcast;
+        Net::ipv4_addr ipv4_addr;
+        Net::ipv4_addr ipv4_mask;
+        Net::ipv4_addr ipv4_broadcast;
 
         net_type_t net_type;
 
-        Net(const char* name, net_type_t net_type);
+        NetDevice(const char* name, net_type_t net_type);
 
-        virtual ~Net();
+        virtual ~NetDevice();
 
         /**
          * Called by the network stack to send a packet.
@@ -51,16 +48,16 @@ namespace AEX::Dev {
          * Sets the IPv4 address of the network interface and update the broadcast address.
          * @param addr IPv4 address.
          */
-        void setIPv4Address(AEX::Net::ipv4_addr addr);
+        void setIPv4Address(Net::ipv4_addr addr);
 
         /**
          * Sets the IPv4 mask of the network interface and update the broadcast address.
          * @param addr IPv4 mask.
          */
-        void setIPv4Mask(AEX::Net::ipv4_addr addr);
+        void setIPv4Mask(Net::ipv4_addr addr);
 
-      private:
+        private:
     };
 
-    Mem::SmartPointer<Net> get_net_device(int id);
+    Mem::SmartPointer<NetDevice> get_net_device(int id);
 }

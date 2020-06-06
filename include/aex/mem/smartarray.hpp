@@ -6,9 +6,9 @@
 namespace AEX::Mem {
     template <typename T>
     class SmartArray {
-      public:
+        public:
         class Iterator {
-          public:
+            public:
             Iterator(SmartArray<T>* base, int start = 0) {
                 _index = start;
                 _base  = base;
@@ -44,7 +44,7 @@ namespace AEX::Mem {
                 return _current;
             }
 
-          private:
+            private:
             int _index = 0;
 
             Spinlock*      _lock;
@@ -108,7 +108,7 @@ namespace AEX::Mem {
             return Iterator(this, start);
         }
 
-      private:
+        private:
         struct element {
             T*           ptr;
             ref_counter* refs;

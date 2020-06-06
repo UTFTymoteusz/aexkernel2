@@ -39,10 +39,11 @@ CCFLAGS := $(GFLAGS)     \
 	-fno-omit-frame-pointer \
 	$(INCLUDES)
 
-ASFLAGS := -felf64
+ASFLAGS := -felf64 \
+	-wall
 
 LDFLAGS := $(GFLAGS) \
-	-ffreestanding \
+	-ffreestanding   \
 	-z max-page-size=0x1000 \
 	-no-pie
 
@@ -84,4 +85,5 @@ iso:
 	@grub-mkrescue -o $(BIN)aex.iso $(ISO) 2> /dev/null
 
 qemu:
-	qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso -netdev tap,id=net0,ifname=TAP -device rtl8139,netdev=net0,mac=00:01:e3:00:00:00
+	# qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso -netdev tap,id=net0,ifname=TAP -device rtl8139,netdev=net0,mac=00:01:e3:00:00:00
+	qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso --enable-kvm

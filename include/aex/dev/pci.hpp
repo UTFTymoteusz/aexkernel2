@@ -6,7 +6,7 @@
 
 namespace AEX::Dev::PCI {
     class PCIDevice : public Tree::Device {
-      public:
+        public:
         uint16_t p_class, subclass, prog_if;
         uint16_t device_id, vendor_id;
 
@@ -17,12 +17,10 @@ namespace AEX::Dev::PCI {
         PCIDevice(const char* name) : Device(name) {}
 
         /**
-         * Gets the IRQ of the device.
+         * Gets the IRQ number of the device.
          * @returns IRQ number or 255 on failure.
          */
         int getIRQ();
-
-      private:
     };
 
     void set_busmaster(Tree::Device* device, bool on);

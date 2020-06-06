@@ -6,7 +6,7 @@
 
 namespace AEX::Proc {
     struct affinity {
-      public:
+        public:
         affinity() {
             _mask = 0x00000000;
         }
@@ -26,7 +26,7 @@ namespace AEX::Proc {
                 _mask &= ~(1 << cpuid);
         }
 
-      private:
+        private:
         uint32_t _mask;
     };
 }

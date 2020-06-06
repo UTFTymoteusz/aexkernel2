@@ -15,7 +15,7 @@ namespace AEX::Dev::SATA {
     extern void sr_init();
 
     class SATA : public Tree::Driver {
-      public:
+        public:
         SATA() : Driver("sata") {}
         ~SATA() {}
 
@@ -54,7 +54,7 @@ namespace AEX::Dev::SATA {
             device->driver_data = ahci;
         }
 
-      private:
+        private:
         int index = 0;
 
         void init() {

@@ -4,7 +4,7 @@
 
 namespace AEX::Sys {
     class PIC {
-      public:
+        public:
         int command;
         int data;
 

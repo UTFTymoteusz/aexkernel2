@@ -3,14 +3,14 @@
 #include "aex/optional.hpp"
 
 namespace AEX::Dev {
-    class Block;
+    class BlockDevice;
 }
 
 namespace AEX::FS {
     class Mount;
 
     class Filesystem {
-      public:
+        public:
         char name[32];
 
         Filesystem(const char* name);
@@ -18,6 +18,6 @@ namespace AEX::FS {
 
         virtual optional<Mount*> mount(const char* source) = 0;
 
-      private:
+        private:
     };
 }

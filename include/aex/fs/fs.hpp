@@ -3,7 +3,7 @@
 #include "aex/mem/smartarray.hpp"
 
 namespace AEX::Dev {
-    class Block;
+    class BlockDevice;
 }
 
 namespace AEX::FS {

@@ -64,11 +64,11 @@ namespace AEX::PMem {
                 tmp = 1 << ib;
 
                 if (!(_bitmap[ii] & tmp))
-                    kpanic("frame_piece::Free(%i, %u) tried to free a unalloced "
+                    kpanic("frame_piece::free(%i, %u) tried to free a unalloced "
                            "frame.",
                            lid, amount);
 
-                _bitmap[ii] = _bitmap[ii] & ~tmp;
+                _bitmap[ii] &= ~tmp;
 
                 ib++;
                 if (ib >= sizeof(uint32_t) * 8) {
@@ -116,7 +116,6 @@ namespace AEX::PMem {
             return -1;
         }
 
-      private:
         uint32_t _bitmap[];
     };
 }

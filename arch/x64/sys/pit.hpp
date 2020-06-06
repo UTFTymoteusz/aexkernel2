@@ -2,7 +2,7 @@
 
 namespace AEX::Sys {
     class PIT {
-      public:
+        public:
         static void setHz(int hz);
         static void setInterval(double ms);
 

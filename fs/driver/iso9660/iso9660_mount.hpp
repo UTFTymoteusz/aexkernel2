@@ -1,6 +1,6 @@
 #pragma once
 
-#include "aex/dev/block.hpp"
+#include "aex/dev/blockdevice.hpp"
 #include "aex/errno.hpp"
 #include "aex/fs/mount.hpp"
 #include "aex/optional.hpp"
@@ -11,8 +11,8 @@
 
 namespace AEX::FS {
     class ISO9660Mount : public Mount {
-      public:
-        ISO9660Mount(Mem::SmartPointer<Dev::Block> block, const iso9660_dentry& root_dentry) {
+        public:
+        ISO9660Mount(Mem::SmartPointer<Dev::BlockDevice> block, const iso9660_dentry& root_dentry) {
             _root_dentry = root_dentry;
             _block_dev   = block;
         }
@@ -22,9 +22,9 @@ namespace AEX::FS {
 
         optional<file_info> info(const char* lpath);
 
-      private:
-        Mem::SmartPointer<Dev::Block> _block_dev;
-        iso9660_dentry                _root_dentry;
+        private:
+        Mem::SmartPointer<Dev::BlockDevice> _block_dev;
+        iso9660_dentry                      _root_dentry;
 
         optional<iso9660_dentry> findDentry(const char* lpath);
     };

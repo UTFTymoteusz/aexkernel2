@@ -7,7 +7,7 @@
 namespace AEX::Mem {
     template <typename T, T nullboi>
     class LazyVector {
-      public:
+        public:
         LazyVector() = default;
 
         template <typename... T2>
@@ -61,7 +61,7 @@ namespace AEX::Mem {
             return _count;
         }
 
-      private:
+        private:
         int _count = 0;
         T*  _array = nullptr;
 

@@ -10,7 +10,7 @@
 
 namespace AEX::Dev::Tree {
     class Bus : public Device {
-      public:
+        public:
         Bus(const char* name);
 
         /**
@@ -25,7 +25,7 @@ namespace AEX::Dev::Tree {
          */
         void registerDriver(Driver* driver);
 
-      private:
+        private:
         Mem::SmartArray<Driver> _drivers;
 
         Spinlock _lock;

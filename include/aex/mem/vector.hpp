@@ -8,7 +8,7 @@
 namespace AEX::Mem {
     template <typename T, int chunk_count = 16, int minimum_allocation = -1>
     class Vector {
-      public:
+        public:
         Vector() = default;
 
         ~Vector() {
@@ -77,7 +77,7 @@ namespace AEX::Mem {
             return _count;
         }
 
-      private:
+        private:
         int _mem_count = 0;
         int _count     = 0;
 

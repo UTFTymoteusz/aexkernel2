@@ -1,6 +1,6 @@
 #include "devfs.hpp"
 
-#include "aex/dev/block.hpp"
+#include "aex/dev/blockdevice.hpp"
 #include "aex/dev/dev.hpp"
 #include "aex/dev/device.hpp"
 #include "aex/printk.hpp"
@@ -8,7 +8,7 @@
 
 namespace AEX::FS {
     class DevFSDirectory : public File {
-      public:
+        public:
         DevFSDirectory() : File() {}
 
         optional<dir_entry> readdir() {
@@ -19,7 +19,7 @@ namespace AEX::FS {
             return dir_entry(device->name);
         }
 
-      private:
+        private:
         Mem::SmartArray<Dev::Device>::Iterator _iterator = Dev::devices.getIterator();
     };
 

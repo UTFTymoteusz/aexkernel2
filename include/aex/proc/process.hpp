@@ -14,7 +14,7 @@ namespace AEX::Proc {
     typedef int pid_t;
 
     class Process {
-      public:
+        public:
         pid_t pid;
         pid_t parent_pid;
 
@@ -41,6 +41,6 @@ namespace AEX::Proc {
         Process(const char* image_path, pid_t parent_pid, VMem::Pagemap* pagemap,
                 const char* name = nullptr);
 
-      private:
+        private:
     };
 }

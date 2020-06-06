@@ -6,7 +6,7 @@
 
 namespace AEX::FS {
     class ISO9660 : public Filesystem {
-      public:
+        public:
         static void init();
 
         ISO9660();
@@ -14,6 +14,6 @@ namespace AEX::FS {
 
         optional<Mount*> mount(const char* source);
 
-      private:
+        private:
     };
 }

@@ -11,7 +11,7 @@
 
 namespace AEX::Dev::Tree {
     class Device {
-      public:
+        public:
         struct resource {
             enum type_t : uint8_t {
                 MEMORY = 0,
@@ -56,7 +56,7 @@ namespace AEX::Dev::Tree {
 
         virtual void registerDevice(Device* device);
 
-      private:
+        private:
         Spinlock _lock;
 
         Mem::Vector<resource> _resources;

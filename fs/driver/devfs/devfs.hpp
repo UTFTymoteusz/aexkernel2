@@ -6,7 +6,7 @@
 
 namespace AEX::FS {
     class DevFS : public Filesystem {
-      public:
+        public:
         static void init();
 
         DevFS();
@@ -14,15 +14,15 @@ namespace AEX::FS {
 
         optional<Mount*> mount(const char* source);
 
-      private:
+        private:
     };
 
     class DevFSMount : public Mount {
-      public:
+        public:
         optional<Mem::SmartPointer<File>> opendir(const char* lpath);
 
         virtual optional<file_info> info(const char* lpath);
 
-      private:
+        private:
     };
 }

@@ -73,6 +73,11 @@ namespace AEX::Sys {
             asm volatile("mov rax, cr3; mov cr3, rax;");
 
             break;
+        case CPU::ipp_type::PG_INV:
+            asm volatile("invlpg [%0]" : : "r"(_ipi_packet.data));
+            _ipi_ack = true;
+
+            break;
         default:
             _ipi_ack = true;
             printk(PRINTK_WARN "cpu%i: Received an IPP with an unknown type (%i)\n",

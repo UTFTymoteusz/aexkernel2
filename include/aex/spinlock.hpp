@@ -2,7 +2,7 @@
 
 namespace AEX {
     class Spinlock {
-      public:
+        public:
         void acquire();
         void release();
 
@@ -13,12 +13,12 @@ namespace AEX {
 
         bool tryAcquireRaw();
 
-      private:
+        private:
         volatile int _lock = 0;
     };
 
     class ScopeSpinlock {
-      public:
+        public:
         ScopeSpinlock(Spinlock& lock) {
             lock.acquire();
 
@@ -29,7 +29,7 @@ namespace AEX {
             _lock->release();
         }
 
-      private:
+        private:
         Spinlock* _lock;
     };
 }

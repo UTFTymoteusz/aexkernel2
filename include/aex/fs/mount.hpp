@@ -8,7 +8,7 @@
 
 namespace AEX::FS {
     class Mount {
-      public:
+        public:
         char path[Path::MAX_PATH_LEN];
 
         virtual ~Mount();
@@ -20,6 +20,6 @@ namespace AEX::FS {
 
         virtual optional<file_info> info(const char* lpath);
 
-      private:
+        private:
     };
 }

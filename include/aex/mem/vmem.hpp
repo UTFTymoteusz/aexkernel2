@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 extern const int _page_present, _page_write, _page_user, _page_through, _page_nocache,
-    _page_combine, _page_nophys;
+    _page_combine, _page_nophys, _page_exec;
 
 #define PAGE_PRESENT _page_present
 #define PAGE_WRITE _page_write
@@ -15,6 +15,7 @@ extern const int _page_present, _page_write, _page_user, _page_through, _page_no
 #define PAGE_NOCACHE _page_nocache
 #define PAGE_COMBINE _page_combine
 #define PAGE_NOPHYS _page_nophys
+#define PAGE_EXEC _page_exec
 
 namespace AEX::VMem {
     typedef size_t phys_addr;
@@ -23,7 +24,7 @@ namespace AEX::VMem {
      * The pagemap class. Contains the methods required to allocate virtual memory.
      */
     class Pagemap {
-      public:
+        public:
         void* vstart;
         void* vend;
 
@@ -77,16 +78,24 @@ namespace AEX::VMem {
         void* map(size_t bytes, phys_addr paddr, uint16_t flags);
 
         /**
+         * Frees the specified size from the address space. Automatically frees physical memory.
+         * @param virt  Virtual address.
+         * @param bytes Size.
+         */
+        void free(void* addr, size_t bytes);
+
+        /**
          * Gets the physical address of a virtual address. Respects non-page-aligned addresses.
          * @param vaddr The virtual address.
          * @returns The physical address or 0 on failure.
          */
         phys_addr paddrof(void* vaddr);
 
-      private:
+        private:
         Spinlock spinlock;
 
         void assign(int pptr, void* virt, phys_addr phys, uint16_t flags);
+        void unassign(int pptr, void* virt);
 
         uint64_t* findTable(int pptr, uint64_t virt_addr) {
             uint64_t skip_by;
@@ -96,7 +105,7 @@ namespace AEX::VMem {
 
         uint64_t* findTableEnsure(int pptr, uint64_t virt_addr);
 
-        void* findContiguous(int pptr, size_t amount);
+        void* findContiguous(int pptr, size_t amount, bool executable = false);
     };
 
     /**

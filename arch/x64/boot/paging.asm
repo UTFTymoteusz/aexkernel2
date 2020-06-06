@@ -1,11 +1,11 @@
 [BITS 32]
 
+SECTION .bootstrap
+
 global paging_init
 global pml4
 
 PAGE_FLAGS equ 0x003
-
-SECTION .bootstrap
 
 paging_init:
     mov ecx, pml4

@@ -6,7 +6,7 @@
 
 namespace AEX::Sys {
     class APIC {
-      public:
+        public:
         static void* addr;
 
         static void map(PMem::phys_addr phys);
@@ -31,7 +31,7 @@ namespace AEX::Sys {
     };
 
     class IOAPIC {
-      public:
+        public:
         enum irq_mode {
             NORMAL       = 0,
             LOW_PRIORITY = 1,
@@ -55,7 +55,7 @@ namespace AEX::Sys {
 
         void setMode(int irq, uint8_t mode);
 
-      private:
+        private:
         volatile uint32_t* addr_reg;
         volatile uint32_t* data_reg;
 

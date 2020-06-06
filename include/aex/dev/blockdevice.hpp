@@ -7,19 +7,19 @@
 #include <stdint.h>
 
 namespace AEX::Dev {
-    class Block : public Device {
-      public:
-        Block(const char* name, uint16_t sector_size, uint64_t sector_count,
-              uint16_t max_sectors_at_once);
+    class BlockDevice : public Device {
+        public:
+        BlockDevice(const char* name, uint16_t sector_size, uint64_t sector_count,
+                    uint16_t max_sectors_at_once);
 
-        virtual ~Block();
+        virtual ~BlockDevice();
 
         int     init();
         int64_t read(uint8_t* buffer, uint64_t start, uint32_t len);
         int64_t write(uint8_t* buffer, uint64_t start, uint32_t len);
         void    release();
 
-      private:
+        private:
         uint8_t* _overflow_buffer;
 
         uint16_t _sector_size         = 512;
@@ -37,5 +37,5 @@ namespace AEX::Dev {
         bool isPerfectFit(uint64_t start, uint32_t len);
     };
 
-    Mem::SmartPointer<Block> get_block_device(int id);
+    Mem::SmartPointer<BlockDevice> get_block_device(int id);
 }

@@ -28,7 +28,7 @@ namespace AEX::Mem {
 
     template <typename T>
     class SmartPointer {
-      public:
+        public:
         SmartPointer() {
             _val  = nullptr;
             _refs = nullptr;
@@ -109,7 +109,7 @@ namespace AEX::Mem {
             return _val != nullptr;
         }
 
-      private:
+        private:
         ref_counter* _refs;
         T*           _val;
 

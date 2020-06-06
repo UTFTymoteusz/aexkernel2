@@ -17,7 +17,7 @@ namespace AEX::Sys {
      * functionality.
      */
     class CPU {
-      public:
+        public:
         enum ipp_type : uint8_t {
             HALT     = 0,
             RESHED   = 1,
@@ -151,7 +151,7 @@ namespace AEX::Sys {
 
         char name[48];
 
-      private:
+        private:
         struct ipi_packet {
             ipp_type type;
             void*    data;

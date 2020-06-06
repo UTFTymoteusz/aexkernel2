@@ -63,7 +63,7 @@ namespace AEX::ACPI {
     } __attribute((packed));
 
     class MADT {
-      public:
+        public:
         enum entry_type {
             LAPIC      = 0,
             IOAPIC     = 1,
@@ -133,7 +133,7 @@ namespace AEX::ACPI {
             return (T) findEntry(type, index);
         }
 
-      private:
+        private:
         void* findEntry(int type, int index);
     } __attribute((packed));
 

@@ -13,6 +13,7 @@
 #include <stdint.h>
 
 #define ALLOC_SIZE 16
+#define SANITY_XOR 0x28AC829B1F5231EC
 
 // Idea: Make heap hybrid - use the heap itself for smaller things and paging for larger things
 
@@ -31,7 +32,7 @@ namespace AEX::Heap {
     uint64_t heap_free      = 0;
 
     class Piece {
-      public:
+        public:
         size_t pieces;
         size_t free_pieces;
 
@@ -83,8 +84,9 @@ namespace AEX::Heap {
 
             memset((void*) ((size_t) data + start * ALLOC_SIZE), '\0', pieces * ALLOC_SIZE);
 
-            auto header = (alloc_block*) ((size_t) data + start * ALLOC_SIZE);
-            header->len = pieces;
+            auto header    = (alloc_block*) ((size_t) data + start * ALLOC_SIZE);
+            header->len    = pieces;
+            header->sanity = ((size_t) data + start * ALLOC_SIZE + ALLOC_SIZE) ^ SANITY_XOR;
 
             Mem::atomic_sub(&heap_free, (uint64_t) pieces * ALLOC_SIZE);
 
@@ -94,6 +96,9 @@ namespace AEX::Heap {
         void free(void* ptr) {
             void* block  = (void*) ((size_t) ptr - ALLOC_SIZE);
             auto  header = (alloc_block*) block;
+
+            if (header->sanity != (((size_t) ptr) ^ SANITY_XOR))
+                kpanic("heap: free(0x%p) sanity check failed", ptr);
 
             spinlock.acquire();
             unmark((uint32_t)((size_t) block - (size_t) data) / ALLOC_SIZE, header->len);
@@ -112,10 +117,12 @@ namespace AEX::Heap {
             return header->len * ALLOC_SIZE;
         }
 
-      private:
+        private:
         struct alloc_block {
             uint32_t len; // This is the piece count including this header
-        } __attribute((packed));
+            bool     page;
+            size_t   sanity;
+        };
 
         void*    data;
         uint32_t bitmap[];

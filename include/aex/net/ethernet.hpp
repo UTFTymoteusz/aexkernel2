@@ -8,6 +8,8 @@ namespace AEX::Net {
     struct mac_addr {
         uint8_t bytes[6];
 
+        mac_addr() {}
+
         mac_addr(const uint8_t mac[6]) {
             memcpy(bytes, mac, 6);
         }

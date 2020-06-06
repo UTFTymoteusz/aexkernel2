@@ -11,8 +11,14 @@ namespace AEX::Proc {
 
     void init();
 
+    /**
+     * Setups the interrupts for preemptive multitasking.
+     */
     void setup_irq();
 
+    /**
+     * Picks the next thread to run on the local CPU.
+     */
     void schedule();
 
     pid_t add_process(Process* process);

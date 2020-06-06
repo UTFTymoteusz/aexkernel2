@@ -36,7 +36,8 @@ namespace AEX::Proc {
         if (!pagemap)
             pagemap = parent->pagemap;
 
-        _stack = pagemap->alloc(stack_size, PAGE_WRITE);
+        _stack      = pagemap->alloc(stack_size, PAGE_WRITE);
+        _stack_size = stack_size;
 
         if (usermode)
             context = new Context(entry, _stack, stack_size, pagemap, usermode);
@@ -67,9 +68,8 @@ namespace AEX::Proc {
 
         delete context;
 
-        // unalloc da stack pls
-        // if (stack)
-        //    parent->pagemap->;
+        if (_stack)
+            parent->pagemap->free(_stack, _stack_size);
 
         // printk("thread cleaned\n");
     }
@@ -114,8 +114,18 @@ namespace AEX::Proc {
 
         abort_thread(thread);
 
-        while (true)
-            ;
+        // A while(true) is boring
+
+        volatile size_t a = 0;
+        volatile size_t b = 1;
+        volatile size_t c;
+
+        while (true) {
+            c = a + b;
+
+            a = b;
+            b = c;
+        }
     }
 
     Mem::SmartPointer<Process> Thread::getProcess() {
