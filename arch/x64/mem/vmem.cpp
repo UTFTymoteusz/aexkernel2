@@ -2,6 +2,7 @@
 
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/kpanic.hpp"
+#include "aex/math.hpp"
 #include "aex/mem/pmem.hpp"
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
@@ -99,7 +100,7 @@ namespace AEX::VMem {
         for (size_t i = 0; i < amount; i++) {
             phys = AEX::PMem::alloc(Sys::CPU::PAGE_SIZE);
 
-            // printk("alloc 0x%016x >> 0x%016x\n", virt, phys);
+            // printk("alloc 0x%016x >> 0x%016x (%i)\n", virt, phys, amount - i);
 
             assign(pptr, (void*) virt, phys, flags);
 

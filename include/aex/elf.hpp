@@ -76,6 +76,10 @@ namespace AEX {
             SB_WEAK   = 2,
         };
 
+        enum sym_special {
+            SHN_ABS = 0xFFF1,
+        };
+
 
         struct header {
             enum type_t : uint16_t {

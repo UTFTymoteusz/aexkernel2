@@ -17,7 +17,7 @@ namespace AEX {
             asm volatile("pause");
             count++;
 
-            if (count > 4212222) {
+            if (count > 12212222) {
                 int  delta = 0;
                 auto name  = Debug::symbol_addr2name((void*) this, &delta);
                 if (!name)

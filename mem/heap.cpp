@@ -14,6 +14,8 @@
 
 #define ALLOC_SIZE 16
 
+// Idea: Make heap hybrid - use the heap itself for smaller things and paging for larger things
+
 namespace AEX::Heap {
     template <typename T>
     T ceilToAllocSize(T val) {
@@ -42,7 +44,7 @@ namespace AEX::Heap {
         }
 
         static Piece* createFromVMem(size_t size) {
-            size_t pieces      = size / ALLOC_SIZE;
+            size_t pieces      = int_floor<size_t>(size / ALLOC_SIZE, sizeof(uint32_t) * 8);
             size_t data_offset = ceilToAllocSize(sizeof(Piece) + ceilToAllocSize(pieces / 8));
 
             size += data_offset;
@@ -71,8 +73,10 @@ namespace AEX::Heap {
 
             size_t  pieces = ceilToPiece(size);
             int64_t start  = findFree(pieces);
-            if (start == -1)
+            if (start == -1) {
+                spinlock.release();
                 return nullptr;
+            }
 
             mark(start, pieces);
             spinlock.release();
@@ -163,46 +167,49 @@ namespace AEX::Heap {
                 return -1;
 
             uint32_t index = 0;
-
-            uint32_t ii = 0;
-            uint32_t ib = 0;
-            uint32_t tmp;
-
-            uint32_t buffer = bitmap[ii];
+            uint32_t ii    = 0;
 
             uint32_t combo = 0;
             int64_t  start = -1;
 
+            uint32_t buffer;
+
             while (index <= pieces) {
-                tmp = 1 << ib;
+                buffer = bitmap[ii];
+                if (buffer == 0xFFFFFFFF) {
+                    index += sizeof(uint32_t) * 8;
 
-                if (!(buffer & tmp)) {
-                    combo++;
-
-                    if (start == -1)
-                        start = index;
-
-                    if (combo == amount)
-                        return start;
-                }
-                else {
-                    start = -1;
-                    combo = 0;
-                }
-
-                index++;
-                ib++;
-
-                if (ib >= sizeof(uint32_t) * 8) {
                     ii++;
-                    ib = 0;
-
-                    buffer = bitmap[ii];
+                    continue;
                 }
+
+                size_t left = min<size_t>(pieces - index, sizeof(uint32_t) * 8);
+
+                for (size_t i = 0; i < left; i++) {
+                    if (!(buffer & (1 << i))) {
+                        combo++;
+
+                        if (start == -1)
+                            start = index;
+
+                        if (combo == amount)
+                            return start;
+                    }
+                    else {
+                        start = -1;
+                        combo = 0;
+                    }
+
+                    index++;
+                }
+
+                ii++;
             }
 
             return -1;
         }
+
+        friend void free(void*);
     };
 
     Piece* rootPiece;
@@ -218,7 +225,6 @@ namespace AEX::Heap {
             return nullptr;
         }
 
-    again:
         Piece* piece = rootPiece;
 
         do {
@@ -226,30 +232,22 @@ namespace AEX::Heap {
             if (addr != nullptr)
                 return addr;
 
+            if (!piece->next) {
+                malloc_lock.acquire();
+
+                if (piece->next) {
+                    malloc_lock.release();
+                    continue;
+                }
+
+                piece->next = Piece::createFromVMem(max<size_t>(size * 2, 0x100000));
+                malloc_lock.release();
+            }
+
             piece = piece->next;
         } while (piece != nullptr);
 
-        printk(PRINTK_WARN "heap: malloc(%li) failed [t%li, f%li]\n", size, heap_allocated,
-               heap_free);
-        Debug::stack_trace();
-
-        if (!malloc_lock.tryAcquire())
-            goto again;
-
-        piece = rootPiece;
-
-        while (true) {
-            if (!piece->next)
-                piece->next = Piece::createFromVMem(min<size_t>(size * 2, 0x100000));
-
-            piece = piece->next;
-        }
-
-        malloc_lock.release();
-
-        goto again;
-
-        return nullptr;
+        kpanic("heap: malloc(%li) failed [t%li, f%li]\n", size, heap_allocated, heap_free);
     }
 
     void free(void* ptr) {
@@ -264,7 +262,15 @@ namespace AEX::Heap {
             piece = piece->next;
         } while (piece != nullptr);
 
-        kpanic("AEX::Heap::free(0x%p) failed", ptr);
+        piece = rootPiece;
+
+        do {
+            printk("mmm: 0x%p-0x%p\n", piece->data,
+                   (size_t) piece->data + piece->pieces * ALLOC_SIZE);
+            piece = piece->next;
+        } while (piece != nullptr);
+
+        kpanic("heap: free(0x%p) failed", ptr);
     }
 
     size_t msize(void* ptr) {
