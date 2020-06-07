@@ -6,6 +6,7 @@
 #include "aex/proc/thread.hpp"
 #include "aex/string.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
 
 using namespace AEX::Proc;

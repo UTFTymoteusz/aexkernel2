@@ -10,8 +10,8 @@
 #include "sys/irq.hpp"
 #include "sys/irq_i.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
-
 
 namespace AEX::Sys::IRQ {
     struct handler_array {
@@ -23,10 +23,10 @@ namespace AEX::Sys::IRQ {
             if (!funcs) {
                 count = 1;
 
-                funcs    = (typeof(funcs)) Heap::malloc(sizeof(func) * count);
+                funcs    = (decltype(funcs)) Heap::malloc(sizeof(func) * count);
                 funcs[0] = func;
 
-                args    = (typeof(args)) Heap::malloc(sizeof(arg) * count);
+                args    = (decltype(args)) Heap::malloc(sizeof(arg) * count);
                 args[0] = arg;
 
                 return;
@@ -37,10 +37,10 @@ namespace AEX::Sys::IRQ {
                     return;
 
             count++;
-            funcs            = (typeof(funcs)) Heap::realloc(funcs, sizeof(func) * count);
+            funcs            = (decltype(funcs)) Heap::realloc(funcs, sizeof(func) * count);
             funcs[count - 1] = func;
 
-            args            = (typeof(args)) Heap::realloc(args, sizeof(arg) * count);
+            args            = (decltype(args)) Heap::realloc(args, sizeof(arg) * count);
             args[count - 1] = arg;
         }
 

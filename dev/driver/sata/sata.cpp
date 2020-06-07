@@ -7,8 +7,8 @@
 
 #include "dev/driver/sata/ahci.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
-
 
 namespace AEX::Dev::SATA {
     extern void sd_init();

@@ -4,6 +4,7 @@
 
 #include "boot/mboot.h"
 
+#include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::TTY {

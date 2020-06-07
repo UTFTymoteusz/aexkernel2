@@ -2,8 +2,6 @@
 
 #include "kernel/icxxabi.h"
 
-#include <stddef.h>
-
 void* __dso_handle = 0;
 
 size_t            __atexit_func_count = 0;

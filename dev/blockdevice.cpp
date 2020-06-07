@@ -9,6 +9,7 @@
 #include "aex/proc/thread.hpp"
 #include "aex/string.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Dev {

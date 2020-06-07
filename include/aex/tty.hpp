@@ -2,8 +2,8 @@
 
 #include "aex/spinlock.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
-
 extern "C" struct multiboot_info;
 typedef struct multiboot_info multiboot_info_t;
 

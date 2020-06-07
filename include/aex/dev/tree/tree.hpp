@@ -7,6 +7,7 @@
 #include "aex/mem/vector.hpp"
 #include "aex/optional.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Dev::Tree {

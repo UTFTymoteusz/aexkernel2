@@ -10,8 +10,6 @@
 #include "proc/proc.hpp"
 #include "sys/irq.hpp"
 
-#include <stddef.h>
-
 namespace AEX::Proc {
     extern "C" void proc_reshed();
 

@@ -10,6 +10,7 @@
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
 
 #define BITMAP_TYPE uint32_t

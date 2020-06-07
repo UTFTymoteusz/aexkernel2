@@ -2,6 +2,7 @@
 
 #include "aex/mem/pmem.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Sys {

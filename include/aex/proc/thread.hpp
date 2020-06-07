@@ -6,8 +6,6 @@
 #include "aex/proc/resource_usage.hpp"
 #include "aex/spinlock.hpp"
 
-#include <stddef.h>
-
 namespace AEX::IPC {
     class Event;
 }

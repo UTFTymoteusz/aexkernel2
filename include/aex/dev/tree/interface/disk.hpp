@@ -2,6 +2,7 @@
 
 #include "aex/dev/tree/interface.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Dev::Tree {

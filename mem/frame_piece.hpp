@@ -4,6 +4,7 @@
 #include "aex/mem/pmem.hpp"
 #include "aex/string.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::PMem {

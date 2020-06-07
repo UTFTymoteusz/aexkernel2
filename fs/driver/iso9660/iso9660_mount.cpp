@@ -7,7 +7,6 @@
 
 #include "types.hpp"
 
-
 namespace AEX::FS {
     void clean_name(char* buffer);
 

@@ -4,8 +4,6 @@
 #include "aex/mem/vmem.hpp"
 #include "aex/string.hpp"
 
-#include <stddef.h>
-
 namespace AEX::ACPI {
     void* _find_rsdptr(size_t start, size_t length) {
         for (size_t i = start; i < start + length; i += 0x10) {

@@ -8,25 +8,31 @@ BOOT := boot/
 DEP_DEST := $(BIN)dep/
 OBJ_DEST := $(BIN)obj/
 
+ARCH = arch/x64/
+
+#CFILES    := $(shell find . -type f -name '*.cpp'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.cpp')
+#HFILES    := $(shell find . -type f -name '*.hpp'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.hpp')
+#ASMFILES  := $(shell find . -type f -name '*.asm'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.asm')
+#PSFFILES  := $(shell find . -type f -name '*.psf'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.psf')
+#ASMRFILES := $(shell find . -type f -name '*.asmr' -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.asmr')
+
 CFILES    := $(shell find . -type f -name '*.cpp')
 HFILES    := $(shell find . -type f -name '*.hpp')
 ASMFILES  := $(shell find . -type f -name '*.asm')
 PSFFILES  := $(shell find . -type f -name '*.psf')
 ASMRFILES := $(shell find . -type f -name '*.asmr')
-OBJS      := $(patsubst %.o, $(OBJ_DEST)%.o, $(CFILES:.cpp=.cpp.o) $(ASMFILES:.asm=.asm.o) $(PSFFILES:.psf=.psf.o) $(ASMRFILES:.asmr=.asmr.o))
 
-OBJS := $(OBJS)
+OBJS := $(patsubst %.o, $(OBJ_DEST)%.o, $(CFILES:.cpp=.cpp.o) $(ASMFILES:.asm=.asm.o) $(PSFFILES:.psf=.psf.o) $(ASMRFILES:.asmr=.asmr.o))
 
 ISO  = $(BIN)grubiso/
 SYS  = $(ISO)sys/
 
-ARCH = arch/x64/
-
-GFLAGS = -O2 -Wall -Wextra -nostdlib -pipe
+GFLAGS = -O3 -Wall -Wextra -nostdlib -pipe
 
 INCLUDES := -I. -I$(ARCH) -I$(ARCH)include/ -Iinclude/ -Iinclude/libc/ -I../lai/include/
 
 CCFLAGS := $(GFLAGS)     \
+	-std=c++17           \
 	-fno-rtti            \
 	-fno-exceptions      \
 	-ffreestanding       \

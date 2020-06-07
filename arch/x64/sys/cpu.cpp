@@ -7,8 +7,6 @@
 #include "cpu/idt.hpp"
 #include "sys/apic.hpp"
 
-#include <stddef.h>
-
 // For some reason g++ adds 8 to the offset
 #define CURRENT_CPU                                            \
     ((AEX::Sys::CPU*) ({                                       \

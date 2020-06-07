@@ -3,6 +3,7 @@
 #include "aex/endian.hpp"
 #include "aex/string.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Net {

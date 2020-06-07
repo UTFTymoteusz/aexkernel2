@@ -4,6 +4,7 @@
 #include "aex/mem/smartptr.hpp"
 #include "aex/mem/vector.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
 
 namespace AEX {

@@ -2,6 +2,7 @@
 
 #include "aex/arch/sys/cpu.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Proc {

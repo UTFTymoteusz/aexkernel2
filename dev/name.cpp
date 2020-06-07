@@ -4,8 +4,6 @@
 #include "aex/mem/vector.hpp"
 #include "aex/spinlock.hpp"
 
-#include <stddef.h>
-
 namespace AEX::Dev {
     struct letter_incrementation {
         char pattern[32];

@@ -2,6 +2,7 @@
 
 #include "sys/irq.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Sys {

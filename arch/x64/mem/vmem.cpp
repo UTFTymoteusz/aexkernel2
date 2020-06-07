@@ -10,6 +10,7 @@
 
 #include "mem/memory.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
 
 #define PPTR_AMOUNT 16

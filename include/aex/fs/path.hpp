@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 
 namespace AEX::FS::Path {
     constexpr auto MAX_PATH_LEN     = 2048;

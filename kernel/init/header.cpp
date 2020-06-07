@@ -1,7 +1,5 @@
 #include "aex/tty.hpp"
 
-#include <stddef.h>
-
 #define COLOR0 94
 #define COLOR1 97
 

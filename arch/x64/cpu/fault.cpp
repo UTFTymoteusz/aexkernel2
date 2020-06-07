@@ -6,8 +6,6 @@
 #include "aex/proc/process.hpp"
 #include "aex/proc/thread.hpp"
 
-#include <stddef.h>
-
 #define EXC_PAGE_FAULT 14
 
 extern "C" void common_fault_handler(void* info);

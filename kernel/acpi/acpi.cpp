@@ -8,8 +8,6 @@
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 
-#include <stddef.h>
-
 namespace AEX::ACPI {
     Mem::Vector<acpi_table*> tables;
     uint8_t                  revision;
