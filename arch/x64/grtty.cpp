@@ -3,14 +3,11 @@
 #include "aex/mem/vmem.hpp"
 #include "aex/string.hpp"
 
-#include "psf.hpp"
+#include "boot/font.hpp"
 
 #define GLYPH_WIDTH 8
 
 namespace AEX::TTY {
-    extern "C" void* _binary_boot_font_psf_start;
-    psf1*            font = nullptr;
-
     uint32_t* volatile GrTTY::_output = nullptr;
 
     struct GrTTY::vga_char {
@@ -39,10 +36,8 @@ namespace AEX::TTY {
         _double_buffer = (uint32_t*) VMem::kernel_pagemap->alloc(total_len);
         memset32(_double_buffer, _bgColor, _px_width * _px_height);
 
-        font = (psf1*) &_binary_boot_font_psf_start;
-
         width  = _px_width / GLYPH_WIDTH;
-        height = _px_height / font->size;
+        height = _px_height / psf_font->size;
     }
 
     void GrTTY::fillFromEGA(vga_char* ega_buffer) {
@@ -56,12 +51,12 @@ namespace AEX::TTY {
     }
 
     void GrTTY::put_glyph(char c, uint32_t x, uint32_t y, uint32_t fg, uint32_t bg) {
-        int height = font->size;
+        int height = psf_font->size;
 
         x *= GLYPH_WIDTH;
         y *= height;
 
-        uint8_t* current = font->data + c * height;
+        uint8_t* current = psf_font->data + c * height;
 
         for (int cy = 0; cy < height; cy++) {
             uint32_t* dst = _output + x + _px_width * (y + cy);
@@ -102,12 +97,12 @@ namespace AEX::TTY {
 
     void GrTTY::scrollDown(int amnt) {
         for (int i = 0; i < amnt; i++) {
-            memcpy(_double_buffer, &_double_buffer[_px_width * font->size],
-                   _px_width * (_px_height - font->size) * sizeof(uint32_t));
+            memcpy(_double_buffer, &_double_buffer[_px_width * psf_font->size],
+                   _px_width * (_px_height - psf_font->size) * sizeof(uint32_t));
         }
 
-        memset32(&_double_buffer[_px_width * (_px_height - font->size)], _bgColor,
-                 _px_width * font->size);
+        memset32(&_double_buffer[_px_width * (_px_height - psf_font->size)], _bgColor,
+                 _px_width * psf_font->size);
 
         memcpy(_output, _double_buffer, _px_width * _px_height * sizeof(uint32_t));
     }

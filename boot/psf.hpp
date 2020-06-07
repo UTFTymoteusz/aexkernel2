@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-namespace AEX::TTY {
+namespace AEX {
     struct psf1 {
         uint16_t magic;
         uint8_t  mode;
