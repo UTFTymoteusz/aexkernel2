@@ -39,11 +39,11 @@ namespace AEX::ACPI {
         if (!_fadt)
             kpanic("This system has no FADT, what the hell?");
 
-        // unmap the header once you bother enough to implement unmap in VMem
-
         auto table_hdr =
             (sdt_header*) VMem::kernel_pagemap->map(sizeof(sdt_header), _fadt->dsdt, 0);
         auto table = (acpi_table*) VMem::kernel_pagemap->map(table_hdr->length, _fadt->dsdt, 0);
+
+        VMem::kernel_pagemap->free(table_hdr, sizeof(sdt_header));
 
         add_table(table);
     }
@@ -70,7 +70,7 @@ namespace AEX::ACPI {
                     (sdt_header*) VMem::kernel_pagemap->map(sizeof(sdt_header), addr, 0);
                 auto table = (acpi_table*) VMem::kernel_pagemap->map(table_hdr->length, addr, 0);
 
-                // unmap the header once you bother enough to implement unmap in VMem
+                VMem::kernel_pagemap->free(table_hdr, sizeof(sdt_header));
 
                 add_table(table);
             }

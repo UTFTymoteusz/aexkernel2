@@ -27,7 +27,6 @@ GFLAGS = -O2 -Wall -Wextra -nostdlib -pipe
 INCLUDES := -I. -I$(ARCH) -I$(ARCH)include/ -Iinclude/ -Iinclude/libc/ -I../lai/include/
 
 CCFLAGS := $(GFLAGS)     \
-	-lgcc                \
 	-fno-rtti            \
 	-fno-exceptions      \
 	-ffreestanding       \
