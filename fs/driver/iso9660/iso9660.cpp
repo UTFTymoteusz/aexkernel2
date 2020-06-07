@@ -34,7 +34,7 @@ namespace AEX::FS {
         if (!info.value.is_block())
             return error_t::ENOTBLK;
 
-        auto block = (Mem::SmartPointer<Dev::BlockDevice>) Dev::devices.get(info.value.dev_id);
+        auto block = (Dev::BlockDevice_SP) Dev::devices.get(info.value.dev_id);
         if (!block.isValid())
             return error_t::ENOENT;
 

@@ -5,6 +5,7 @@
 #include "aex/mem/smartptr.hpp"
 #include "aex/net/ethernet.hpp"
 #include "aex/net/ipv4.hpp"
+#include "aex/net/net.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -12,19 +13,16 @@
 namespace AEX::Dev {
     class NetDevice : public Device {
         public:
-        enum net_type_t : uint8_t {
-            ETHERNET = 0x01,
-        };
-
         Net::mac_addr ethernet_mac;
 
         Net::ipv4_addr ipv4_addr;
         Net::ipv4_addr ipv4_mask;
         Net::ipv4_addr ipv4_broadcast;
+        Net::ipv4_addr ipv4_gateway;
 
-        net_type_t net_type;
+        Net::link_type_t link_type;
 
-        NetDevice(const char* name, net_type_t net_type);
+        NetDevice(const char* name, Net::link_type_t link_type);
 
         virtual ~NetDevice();
 
@@ -59,5 +57,7 @@ namespace AEX::Dev {
         private:
     };
 
-    Mem::SmartPointer<NetDevice> get_net_device(int id);
+    typedef Mem::SmartPointer<NetDevice> NetDevice_SP;
+
+    NetDevice_SP get_net_device(int id);
 }

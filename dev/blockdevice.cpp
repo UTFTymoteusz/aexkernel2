@@ -1,4 +1,5 @@
 #include "aex/dev/blockdevice.hpp"
+
 #include "aex/dev/dev.hpp"
 #include "aex/dev/device.hpp"
 #include "aex/kpanic.hpp"
@@ -151,7 +152,7 @@ namespace AEX::Dev {
         return true;
     }
 
-    Mem::SmartPointer<BlockDevice> get_block_device(int id) {
+    Dev::BlockDevice_SP get_block_device(int id) {
         auto device = devices.get(id);
         if (!device.isValid() || device->type != Device::type_t::BLOCK)
             return devices.get(-1);

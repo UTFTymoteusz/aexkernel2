@@ -13,8 +13,7 @@ namespace AEX::FS {
 
     class ISO9660File : public File {
         public:
-        ISO9660File(Mem::SmartPointer<Dev::BlockDevice> block, const iso9660_dentry& dentry)
-            : File() {
+        ISO9660File(Dev::BlockDevice_SP block, const iso9660_dentry& dentry) : File() {
             _dentry    = dentry;
             _block_dev = block;
         }
@@ -90,15 +89,14 @@ namespace AEX::FS {
         uint64_t _cached_sector = 0xFFFFFFFFFFFFFFFF;
         uint8_t  _buffer[BLOCK_SIZE];
 
-        Mem::SmartPointer<Dev::BlockDevice> _block_dev;
+        Dev::BlockDevice_SP _block_dev;
 
         iso9660_dentry _dentry;
     };
 
     class ISO9660Directory : public File {
         public:
-        ISO9660Directory(Mem::SmartPointer<Dev::BlockDevice> block, const iso9660_dentry& dentry)
-            : File() {
+        ISO9660Directory(Dev::BlockDevice_SP block, const iso9660_dentry& dentry) : File() {
             _dentry    = dentry;
             _block_dev = block;
 
@@ -178,7 +176,7 @@ namespace AEX::FS {
         uint8_t _buffer[2048];
         int64_t _pos = 0;
 
-        Mem::SmartPointer<Dev::BlockDevice> _block_dev;
+        Dev::BlockDevice_SP _block_dev;
 
         iso9660_dentry _dentry;
     };

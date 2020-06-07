@@ -16,13 +16,13 @@ namespace AEX::Net {
         printk(PRINTK_OK "net: Link layer initialized\n");
     }
 
-    error_t register_link_layer(llayer_type_t type, LinkLayer* layer) {
+    error_t register_link_layer(link_type_t type, LinkLayer* layer) {
         link_layers[type] = layer;
 
         return error_t::ENONE;
     }
 
-    void parse(int device_id, llayer_type_t type, const void* packet, size_t len) {
+    void parse(int device_id, link_type_t type, const void* packet, size_t len) {
         link_layers[type]->parse(device_id, packet, len);
     }
 }

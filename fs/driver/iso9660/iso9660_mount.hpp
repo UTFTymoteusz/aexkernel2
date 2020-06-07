@@ -12,7 +12,7 @@
 namespace AEX::FS {
     class ISO9660Mount : public Mount {
         public:
-        ISO9660Mount(Mem::SmartPointer<Dev::BlockDevice> block, const iso9660_dentry& root_dentry) {
+        ISO9660Mount(Dev::BlockDevice_SP block, const iso9660_dentry& root_dentry) {
             _root_dentry = root_dentry;
             _block_dev   = block;
         }
@@ -23,8 +23,8 @@ namespace AEX::FS {
         optional<file_info> info(const char* lpath);
 
         private:
-        Mem::SmartPointer<Dev::BlockDevice> _block_dev;
-        iso9660_dentry                      _root_dentry;
+        Dev::BlockDevice_SP _block_dev;
+        iso9660_dentry      _root_dentry;
 
         optional<iso9660_dentry> findDentry(const char* lpath);
     };

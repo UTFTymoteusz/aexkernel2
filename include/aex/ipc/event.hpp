@@ -10,8 +10,10 @@ namespace AEX::IPC {
         public:
         /**
          * Blocks the currently executing thread on this event.
+         * @param ms_timeout If this is more than 0, the thread will automatically wake up after the
+         * specified amount of milliseconds.
          */
-        void wait();
+        void wait(int ms_timeout = 0);
 
         /**
          * Unblocks all threads on waiting on this event.
@@ -30,6 +32,34 @@ namespace AEX::IPC {
         Spinlock _lock;
 
         Mem::Vector<Mem::SmartPointer<Proc::Thread>, 8, 8> _tiddies;
+
+        bool _defunct = false;
+    };
+
+    class SimpleEvent {
+        public:
+        /**
+         * Blocks the currently executing thread on this event.
+         * @param ms_timeout If this is more than 0, the thread will automatically wake up after the
+         * specified amount of milliseconds.
+         */
+        void wait(int ms_timeout = 0);
+
+        /**
+         * Unblocks the thread waiting on this event
+         */
+        void raise();
+
+        /**
+         * Unblocks the thread waiting on this event and marks it as defunct, disallowing any
+         * future blocks.
+         */
+        void defunct();
+
+        private:
+        Spinlock _lock;
+
+        Mem::SmartPointer<Proc::Thread> _tiddie;
 
         bool _defunct = false;
     };

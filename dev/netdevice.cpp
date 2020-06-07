@@ -1,10 +1,11 @@
-#include "aex/dev/dev.hpp"
 #include "aex/dev/netdevice.hpp"
+
+#include "aex/dev/dev.hpp"
 #include "aex/net/linklayer.hpp"
 
 namespace AEX::Dev {
-    NetDevice::NetDevice(const char* name, net_type_t net_type) : Device(name, type_t::NET) {
-        this->net_type = net_type;
+    NetDevice::NetDevice(const char* name, Net::link_type_t link_type) : Device(name, type_t::NET) {
+        this->link_type = link_type;
     }
 
     NetDevice::~NetDevice() {}
@@ -14,11 +15,7 @@ namespace AEX::Dev {
     }
 
     void NetDevice::receive(const void* buffer, size_t len) {
-        switch (net_type) {
-        case net_type_t::ETHERNET:
-            Net::parse(id, Net::llayer_type_t::ETHERNET, buffer, len);
-            break;
-        }
+        Net::parse(id, link_type, buffer, len);
     }
 
     void NetDevice::setIPv4Address(Net::ipv4_addr addr) {

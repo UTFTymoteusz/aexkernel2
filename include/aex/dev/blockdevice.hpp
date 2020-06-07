@@ -37,5 +37,7 @@ namespace AEX::Dev {
         bool isPerfectFit(uint64_t start, uint32_t len);
     };
 
-    Mem::SmartPointer<BlockDevice> get_block_device(int id);
+    typedef Mem::SmartPointer<BlockDevice> BlockDevice_SP;
+
+    BlockDevice_SP get_block_device(int id);
 }
