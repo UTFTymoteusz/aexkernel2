@@ -14,8 +14,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-//#include <new>
-
 namespace AEX::PMem {
     typedef size_t phys_addr;
 

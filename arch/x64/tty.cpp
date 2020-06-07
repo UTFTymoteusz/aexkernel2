@@ -1,13 +1,13 @@
 #include "aex/tty.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/mem/cpp.hpp"
 #include "aex/string.hpp"
 
 #include "boot/mboot.h"
 #include "grtty.hpp"
 #include "txtty.hpp"
 
-#include <new>
 #include <stddef.h>
 #include <stdint.h>
 

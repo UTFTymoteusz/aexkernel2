@@ -3,6 +3,7 @@
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/debug.hpp"
 #include "aex/ipc/messagequeue.hpp"
+#include "aex/mem/cpp.hpp"
 #include "aex/mem/heap.hpp"
 #include "aex/mem/smartarray.hpp"
 #include "aex/mem/vector.hpp"
@@ -15,8 +16,6 @@
 #include "proc/context.hpp"
 #include "sys/irq.hpp"
 #include "sys/mcore.hpp"
-
-#include <new>
 
 namespace AEX::Proc {
     Mem::SmartArray<Process> processes;
