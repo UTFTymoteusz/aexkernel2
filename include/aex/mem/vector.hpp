@@ -2,7 +2,6 @@
 
 #include "aex/math.hpp"
 #include "aex/mem/heap.hpp"
-#include "aex/printk.hpp"
 #include "aex/string.hpp"
 
 namespace AEX::Mem {

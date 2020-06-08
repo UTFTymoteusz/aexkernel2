@@ -20,4 +20,4 @@ namespace AEX {
     inline T int_ceil(T val, T alignment) {
         return ((val + alignment - 1) / alignment) * alignment;
     }
-} // namespace AEX
+}

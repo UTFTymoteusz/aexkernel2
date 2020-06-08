@@ -177,4 +177,4 @@ namespace AEX {
 
         *buffer = '\0';
     }
-} // namespace AEX
+}

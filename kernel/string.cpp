@@ -97,4 +97,4 @@ namespace AEX {
 
         return 0;
     }
-} // namespace AEX::String
+}

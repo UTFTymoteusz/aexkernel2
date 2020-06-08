@@ -2,6 +2,7 @@
 
 #include "aex/dev/tree/tree.hpp"
 #include "aex/optional.hpp"
+#include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
 

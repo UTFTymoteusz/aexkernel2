@@ -128,6 +128,6 @@ void main_threaded() {
 
         Proc::debug_print_cpu_jobs();
 
-        Proc::Thread::sleep(5000);
+        Proc::Thread::sleep(500000);
     }
 }

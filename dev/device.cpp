@@ -1,6 +1,7 @@
 #include "aex/dev/device.hpp"
 
 #include "aex/dev/dev.hpp"
+#include "aex/printk.hpp"
 #include "aex/string.hpp"
 
 namespace AEX::Dev {

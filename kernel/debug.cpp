@@ -5,6 +5,7 @@
 #include "aex/errno.hpp"
 #include "aex/fs/file.hpp"
 #include "aex/mem/vector.hpp"
+#include "aex/printk.hpp"
 #include "aex/string.hpp"
 
 #include "boot/mboot.h"
@@ -115,7 +116,7 @@ namespace AEX::Debug {
         return (void*) match.address;
     }
 
-    void dumb_bytes(void* addr, size_t len) {
+    void dump_bytes(void* addr, size_t len) {
         uint8_t* _addr = (uint8_t*) addr;
         uint16_t cap   = 17;
 

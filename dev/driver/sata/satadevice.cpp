@@ -4,6 +4,7 @@
 #include "aex/endian.hpp"
 #include "aex/math.hpp"
 #include "aex/mem/vmem.hpp"
+#include "aex/printk.hpp"
 
 namespace AEX::Dev::SATA {
     bool SATADevice::init() {

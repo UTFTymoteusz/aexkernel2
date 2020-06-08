@@ -4,6 +4,7 @@
 #include "aex/dev/tree/tree.hpp"
 #include "aex/mem/pmem.hpp"
 #include "aex/mem/vmem.hpp"
+#include "aex/printk.hpp"
 
 #include "dev/driver/sata/ahci.hpp"
 

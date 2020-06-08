@@ -108,4 +108,4 @@ namespace AEX::TTY {
      * Initializes all terminals and makes them actually appear if in framebuffer mode.
      */
     void init_mem(multiboot_info_t* mbinfo);
-} // namespace AEX::TTY
+}

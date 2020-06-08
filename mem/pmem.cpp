@@ -157,4 +157,4 @@ namespace AEX::PMem {
         kpanic("Failed to AEX::PMem::free()");
         spinlock.release();
     }
-} // namespace AEX::Frame
+}

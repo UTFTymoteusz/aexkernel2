@@ -246,4 +246,4 @@ namespace AEX {
         if (ints)
             Sys::CPU::interrupts();
     }
-} // namespace AEX
+}

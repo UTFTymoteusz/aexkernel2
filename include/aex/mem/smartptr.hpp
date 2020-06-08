@@ -2,7 +2,6 @@
 
 #include "aex/kpanic.hpp"
 #include "aex/mem/atomic.hpp"
-#include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
 
 namespace AEX::Mem {

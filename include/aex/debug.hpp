@@ -21,5 +21,5 @@ namespace AEX::Debug {
 
     char* demangle_name(const char* symbol, char* buffer, size_t buffer_len);
 
-    void dumb_bytes(void* addr, size_t len);
+    void dump_bytes(void* addr, size_t len);
 }

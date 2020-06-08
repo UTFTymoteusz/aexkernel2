@@ -6,6 +6,7 @@
 #include "aex/fs/fs.hpp"
 #include "aex/mem/smartarray.hpp"
 #include "aex/mem/vmem.hpp"
+#include "aex/printk.hpp"
 #include "aex/proc/proc.hpp"
 #include "aex/proc/process.hpp"
 #include "aex/proc/thread.hpp"

@@ -2,6 +2,7 @@
 
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/mem/vmem.hpp"
+#include "aex/printk.hpp"
 #include "aex/string.hpp"
 
 #include "cpu/gdt.hpp"
