@@ -28,6 +28,10 @@ namespace AEX::Dev {
         ipv4_broadcast = ipv4_addr | ~ipv4_mask;
     }
 
+    void NetDevice::setIPv4Gateway(Net::ipv4_addr addr) {
+        ipv4_gateway = addr;
+    }
+
     Mem::SmartPointer<NetDevice> get_net_device(int id) {
         auto device = devices.get(id);
         if (!device.isValid() || device->type != Device::type_t::NET)

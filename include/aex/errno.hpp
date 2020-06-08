@@ -18,18 +18,20 @@ namespace AEX {
         EPROTONOSUPPORT, // Protocol not supported
         ESOCKTNOSUPPORT, // Socket type not supported
 
-        ENETDOWN,     // Network is down
-        ENETUNREACH,  // Network is unreachable
-        ENETRESET,    // Network dropped connection because of reset
-        ECONNABORTED, // Software caused connection abort
-        ECONNRESET,   // Connection reset by peer
-        EISCONN,      // Transport endpoint is already connected
-        ENOTCONN,     // Transport endpoint is not connected
-        ESHUTDOWN,    // Cannot send after transport endpoint shutdown
-        ETIMEDOUT,    // Connection timed out
-        ECONNREFUSED, // Connection refused
-        EHOSTDOWN,    // Host is down
-        EHOSTUNREACH, // No route to host
+        EADDRINUSE,    // Address already in use
+        EADDRNOTAVAIL, // Cannot assign requested address
+        ENETDOWN,      // Network is down
+        ENETUNREACH,   // Network is unreachable
+        ENETRESET,     // Network dropped connection because of reset
+        ECONNABORTED,  // Software caused connection abort
+        ECONNRESET,    // Connection reset by peer
+        EISCONN,       // Transport endpoint is already connected
+        ENOTCONN,      // Transport endpoint is not connected
+        ESHUTDOWN,     // Cannot send after transport endpoint shutdown
+        ETIMEDOUT,     // Connection timed out
+        ECONNREFUSED,  // Connection refused
+        EHOSTDOWN,     // Host is down
+        EHOSTUNREACH,  // No route to host
     };
 
     const char* strerror(error_t code);

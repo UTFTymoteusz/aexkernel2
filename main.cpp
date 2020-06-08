@@ -113,24 +113,41 @@ void main_threaded() {
         auto socket_try =
             Net::Socket::create(Net::socket_domain_t::AF_INET, Net::socket_type_t::SOCK_DGRAM,
                                 Net::socket_protocol_t::IPROTO_UDP);
-
         if (!socket_try.has_value)
             kpanic("socket failed: %s\n", strerror(socket_try.error_code));
 
-        auto    socket   = socket_try.value;
-        error_t bind_res = socket->bind(Net::ipv4_addr(0, 0, 0, 0), 2578);
+        auto socket = socket_try.value;
+        // error_t bind_res = socket->bind(Net::ipv4_addr(0, 0, 0, 0), 7654);
 
-        printk("bind: %s\n", strerror(bind_res));
+        // printk("bind: %s\n", strerror(bind_res));
 
         uint8_t buffer[64] = {};
+
+        Net::sockaddr_inet boii;
+        boii.domain = Net::socket_domain_t::AF_INET;
+        boii.addr   = Net::ipv4_addr(0, 0, 0, 0);
+        boii.port   = 27015;
 
         while (true) {
             Net::sockaddr_inet addr;
 
-            socket->recvfrom(buffer, sizeof(buffer), 0, (Net::sockaddr*) &addr);
+            memcpy(buffer, "\xFF\xFF\xFF\xFFTSource Engine Query", 25);
+
+            auto send_res = socket->sendto(buffer, 25, 0, (Net::sockaddr*) &boii);
+            printk("send: %s\n", strerror(send_res.error_code));
+
+            auto ret                   = socket->recvfrom(buffer, 64, 0, (Net::sockaddr*) &addr);
             buffer[sizeof(buffer) - 1] = '\0';
 
-            printk("received: %s\n", buffer);
+            auto ip_addr = addr.addr;
+
+            printk("received from %i.%i.%i.%i:%i: %s\n", ip_addr[0], ip_addr[1], ip_addr[2],
+                   ip_addr[3], addr.port, buffer);
+
+            // socket->sendto(buffer, min<size_t>(ret.value, 64), 0, (Net::sockaddr*) &addr);
+            // printk("sent: %s\n", buffer);
+
+            Proc::Thread::sleep(5000);
         }
     }
 

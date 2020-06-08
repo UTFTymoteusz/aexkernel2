@@ -43,16 +43,22 @@ namespace AEX::Dev {
         void receive(const void* buffer, size_t len);
 
         /**
-         * Sets the IPv4 address of the network interface and update the broadcast address.
+         * Sets the IPv4 address of the network interface and updates the broadcast address.
          * @param addr IPv4 address.
          */
         void setIPv4Address(Net::ipv4_addr addr);
 
         /**
-         * Sets the IPv4 mask of the network interface and update the broadcast address.
+         * Sets the IPv4 mask of the network interface and updates the broadcast address.
          * @param addr IPv4 mask.
          */
         void setIPv4Mask(Net::ipv4_addr addr);
+
+        /**
+         * Sets the IPv4 gateway of the network interface.
+         * @param addr IPv4 gateway.
+         */
+        void setIPv4Gateway(Net::ipv4_addr addr);
 
         private:
     };

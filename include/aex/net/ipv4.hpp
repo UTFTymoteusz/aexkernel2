@@ -36,5 +36,24 @@ namespace AEX::Net {
         operator uint32_t() {
             return from_big_endian<uint32_t>(*((uint32_t*) bytes));
         }
+
     } __attribute__((packed));
+
+    // Make these more efficient pls
+
+    inline ipv4_addr operator|(ipv4_addr a, ipv4_addr b) {
+        return to_big_endian(*((uint32_t*) a.bytes) | *((uint32_t*) b.bytes));
+    }
+
+    inline ipv4_addr operator&(ipv4_addr a, ipv4_addr b) {
+        return to_big_endian(*((uint32_t*) a.bytes) & *((uint32_t*) b.bytes));
+    }
+
+    inline ipv4_addr operator^(ipv4_addr a, ipv4_addr b) {
+        return to_big_endian(*((uint32_t*) a.bytes) ^ *((uint32_t*) b.bytes));
+    }
+
+    inline ipv4_addr operator~(ipv4_addr a) {
+        return ~(*((uint32_t*) a.bytes));
+    }
 }
