@@ -8,6 +8,8 @@
 #include "aex/mem/vector.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/module.hpp"
+#include "aex/net/ipv4.hpp"
+#include "aex/net/socket.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc/thread.hpp"
 #include "aex/sys/irq.hpp"
@@ -107,6 +109,31 @@ void main(multiboot_info_t* mbinfo) {
 }
 
 void main_threaded() {
+    {
+        auto socket_try =
+            Net::Socket::create(Net::socket_domain_t::AF_INET, Net::socket_type_t::SOCK_DGRAM,
+                                Net::socket_protocol_t::IPROTO_UDP);
+
+        if (!socket_try.has_value)
+            kpanic("socket failed: %s\n", strerror(socket_try.error_code));
+
+        auto    socket   = socket_try.value;
+        error_t bind_res = socket->bind(Net::ipv4_addr(0, 0, 0, 0), 2578);
+
+        printk("bind: %s\n", strerror(bind_res));
+
+        uint8_t buffer[64] = {};
+
+        while (true) {
+            Net::sockaddr_inet addr;
+
+            socket->recvfrom(buffer, sizeof(buffer), 0, (Net::sockaddr*) &addr);
+            buffer[sizeof(buffer) - 1] = '\0';
+
+            printk("received: %s\n", buffer);
+        }
+    }
+
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrentThread()->getProcess();
 

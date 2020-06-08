@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aex/errno.hpp"
+#include "aex/net/socket.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -12,6 +13,9 @@ namespace AEX::Net {
     };
 
     class LinkLayer;
+    class INetProtocol;
+
+    extern INetProtocol** inet_protocols;
 
     /**
      * Registers a link layer in the network subsystem.
@@ -29,4 +33,12 @@ namespace AEX::Net {
      * @param len Packet length.
      */
     void parse(int device_id, link_type_t type, const void* packet, size_t len);
+
+    /**
+     * Registers an inet protocol in the network subsystem.
+     * @param id Protocol ID.
+     * @param protocol Pointer to the protocol class.
+     * @returns Preferably ENONE, an error otherwise.
+     */
+    error_t register_inet_protocol(socket_protocol_t id, INetProtocol* protocol);
 }

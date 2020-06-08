@@ -2,15 +2,34 @@
 
 namespace AEX {
     const char* error_names[64] = {
-        "None",
-        "Not implemented",
-        "No such file or directory",
-        "Out of memory",
-        "Invalid argument",
-        "Interrupted system call",
-        "Not a directory",
-        "Is a directory",
-        "Block device required",
+        [ENONE]   = "None",
+        [ENOSYS]  = "Not implemented",
+        [ENOENT]  = "No such file or directory",
+        [ENOMEM]  = "Out of memory",
+        [EINVAL]  = "Invalid argument",
+        [EINTR]   = "Interrupted system call",
+        [ENOTDIR] = "Not a directory",
+        [EISDIR]  = "Is a directory",
+        [ENOTBLK] = "Block device required",
+        [ENOEXEC] = "Exec format error",
+
+        [EPROTOTYPE]      = "Protocol wrong type for socket",
+        [ENOPROTOOPT]     = "Protocol not available",
+        [EPROTONOSUPPORT] = "Protocol not supported",
+        [ESOCKTNOSUPPORT] = "Socket type not supported",
+
+        [ENETDOWN]     = "Network is down",
+        [ENETUNREACH]  = "Network is unreachable",
+        [ENETRESET]    = "Network dropped connection because of reset",
+        [ECONNABORTED] = "Software caused connection abort",
+        [ECONNRESET]   = "Connection reset by peer",
+        [EISCONN]      = "Transport endpoint is already connected",
+        [ENOTCONN]     = "Transport endpoint is not connected",
+        [ESHUTDOWN]    = "Cannot send after transport endpoint shutdown",
+        [ETIMEDOUT]    = "Connection timed out",
+        [ECONNREFUSED] = "Connection refused",
+        [EHOSTDOWN]    = "Host is down",
+        [EHOSTUNREACH] = "No route to host",
     };
 
     const char* strerror(error_t code) {

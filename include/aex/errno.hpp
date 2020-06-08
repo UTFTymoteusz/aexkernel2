@@ -2,28 +2,34 @@
 
 namespace AEX {
     enum error_t {
-        ENONE        = 0,
-        ENOSYS       = 1,
-        ENOENT       = 2,
-        ENOMEM       = 3,
-        EINVAL       = 4,
-        EINTR        = 5,
-        ENOTDIR      = 6,
-        EISDIR       = 7,
-        ENOTBLK      = 8,
-        ENOEXEC      = 9,
-        ENETDOWN     = 10,
-        ENETUNREACH  = 11,
-        ENETRESET    = 12,
-        ECONNABORTED = 13,
-        ECONNRESET   = 14,
-        EISCONN      = 15,
-        ENOTCONN     = 16,
-        ESHUTDOWN    = 17,
-        ETIMEDOUT    = 18,
-        ECONNREFUSED = 19,
-        EHOSTDOWN    = 20,
-        EHOSTUNREACH = 21,
+        ENONE = 0, // None
+        ENOSYS,    // Not implemented
+        ENOENT,    // No such file or directory
+        ENOMEM,    // Out of memory
+        EINVAL,    // Invalid argument
+        EINTR,     // Interrupted system call
+        ENOTDIR,   // Not a directory
+        EISDIR,    // Is a directory
+        ENOTBLK,   // Block device required
+        ENOEXEC,   // Exec format error
+
+        EPROTOTYPE,      // Protocol wrong type for socket
+        ENOPROTOOPT,     // Protocol not available
+        EPROTONOSUPPORT, // Protocol not supported
+        ESOCKTNOSUPPORT, // Socket type not supported
+
+        ENETDOWN,     // Network is down
+        ENETUNREACH,  // Network is unreachable
+        ENETRESET,    // Network dropped connection because of reset
+        ECONNABORTED, // Software caused connection abort
+        ECONNRESET,   // Connection reset by peer
+        EISCONN,      // Transport endpoint is already connected
+        ENOTCONN,     // Transport endpoint is not connected
+        ESHUTDOWN,    // Cannot send after transport endpoint shutdown
+        ETIMEDOUT,    // Connection timed out
+        ECONNREFUSED, // Connection refused
+        EHOSTDOWN,    // Host is down
+        EHOSTUNREACH, // No route to host
     };
 
     const char* strerror(error_t code);
