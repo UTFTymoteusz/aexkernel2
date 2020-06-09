@@ -24,7 +24,7 @@ namespace AEX::Dev {
     }
 
     void NetDevice::setIPv4Mask(Net::ipv4_addr addr) {
-        info.ipv4.mask       = addr;
+        info.ipv4.mask      = addr;
         info.ipv4.broadcast = info.ipv4.addr | ~info.ipv4.mask;
     }
 

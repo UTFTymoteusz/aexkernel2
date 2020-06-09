@@ -89,8 +89,10 @@ iso:
 	@$(MKDIR) $(ISO)bin/ $(ISO)dev/ $(ISO)mnt/
 	@grub-mkrescue -o $(BIN)aex.iso $(ISO) 2> /dev/null
 
-qemu:
+qemunet:
 	qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso \
 	-netdev tap,id=net0,ifname=TAP -device rtl8139,netdev=net0,mac=00:01:e3:00:00:00 	   \
 	--enable-kvm
-	# qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso --enable-kvm
+	
+qemu:
+	qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso --enable-kvm

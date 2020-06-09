@@ -24,6 +24,20 @@ namespace AEX::Net {
         }
     }
 
+    error_t Socket::connect(const sockaddr*) {
+        return error_t::EINVAL;
+    }
+
+    error_t Socket::connect(ipv4_addr addr, uint16_t port) {
+        sockaddr_inet aaa = {};
+
+        aaa.domain = socket_domain_t::AF_INET;
+        aaa.addr   = addr;
+        aaa.port   = port;
+
+        return connect((sockaddr*) &aaa);
+    }
+
     error_t Socket::bind(const sockaddr*) {
         return error_t::EINVAL;
     }
@@ -38,11 +52,19 @@ namespace AEX::Net {
         return bind((sockaddr*) &aaa);
     }
 
-    optional<size_t> Socket::sendto(const void*, size_t, int, const sockaddr*) {
+    optional<size_t> Socket::sendTo(const void*, size_t, int, const sockaddr*) {
         return error_t::ENOSYS;
     }
 
-    optional<size_t> Socket::recvfrom(void*, size_t, int, sockaddr*) {
+    optional<size_t> Socket::receiveFrom(void*, size_t, int, sockaddr*) {
         return error_t::ENOSYS;
+    }
+
+    optional<size_t> Socket::send(const void* buffer, size_t len, int flags) {
+        return sendTo(buffer, len, flags, nullptr);
+    }
+
+    optional<size_t> Socket::receive(void* buffer, size_t len, int flags) {
+        return receiveFrom(buffer, len, flags, nullptr);
     }
 }

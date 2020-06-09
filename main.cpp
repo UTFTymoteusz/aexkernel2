@@ -116,24 +116,28 @@ void main_threaded() {
         if (!socket_try.has_value)
             kpanic("socket failed: %s\n", strerror(socket_try.error_code));
 
-        auto    socket   = socket_try.value;
-        error_t bind_res = socket->bind(Net::ipv4_addr(0, 0, 0, 0), 7654);
+        auto    socket      = socket_try.value;
+        error_t connect_res = socket->connect(Net::ipv4_addr(127, 0, 0, 1), 7654);
+        printk("connect: %s\n", strerror(connect_res));
 
+        error_t bind_res = socket->bind(Net::ipv4_addr(0, 0, 0, 0), 7654);
         printk("bind: %s\n", strerror(bind_res));
 
         uint8_t buffer[64] = {};
 
-        Net::sockaddr_inet boii = Net::sockaddr_inet(Net::ipv4_addr(127, 0, 0, 1), 7654);
+        // Net::sockaddr_inet boii = Net::sockaddr_inet(Net::ipv4_addr(127, 0, 0, 1), 7654);
 
         while (true) {
             Net::sockaddr_inet addr;
 
             memcpy(buffer, "\xFF\xFF\xFF\xFFTSource Engine Query", 25);
 
-            auto send_res = socket->sendto(buffer, 25, 0, (Net::sockaddr*) &boii);
+            auto send_res = socket->send(buffer, 25, 0);
             printk("send: %s\n", strerror(send_res.error_code));
 
-            auto ret                   = socket->recvfrom(buffer, 64, 0, (Net::sockaddr*) &addr);
+            // auto ret                   = socket->receiveFrom(buffer, 64, 0, (Net::sockaddr*)
+            // &addr);
+            auto ret                   = socket->receive(buffer, 64, 0);
             buffer[sizeof(buffer) - 1] = '\0';
 
             auto ip_addr = addr.addr;

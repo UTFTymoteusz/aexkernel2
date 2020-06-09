@@ -57,12 +57,19 @@ namespace AEX::Net {
         static optional<Socket_SP> create(socket_domain_t domain, socket_type_t type,
                                           socket_protocol_t protocol);
 
+        virtual error_t connect(const sockaddr* addr);
+        error_t         connect(ipv4_addr addr, uint16_t port);
+
         virtual error_t bind(const sockaddr* addr);
         error_t         bind(ipv4_addr addr, uint16_t port);
 
-        virtual optional<size_t> sendto(const void* buffer, size_t len, int flags,
+        virtual optional<size_t> sendTo(const void* buffer, size_t len, int flags,
                                         const sockaddr* dst_addr);
-        virtual optional<size_t> recvfrom(void* buffer, size_t len, int flags, sockaddr* src_addr);
+        virtual optional<size_t> receiveFrom(void* buffer, size_t len, int flags,
+                                             sockaddr* src_addr);
+
+        optional<size_t> send(const void* buffer, size_t len, int flags);
+        optional<size_t> receive(void* buffer, size_t len, int flags);
 
         private:
     };
