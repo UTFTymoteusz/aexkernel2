@@ -10,7 +10,9 @@ namespace AEX::Net {
     struct ipv4_addr {
         uint8_t bytes[4];
 
-        ipv4_addr() {}
+        ipv4_addr() {
+            memset32(bytes, 0, 1);
+        }
 
         ipv4_addr(const uint8_t ipv4[4]) {
             memcpy(bytes, ipv4, 4);

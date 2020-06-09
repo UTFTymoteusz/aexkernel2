@@ -116,17 +116,14 @@ void main_threaded() {
         if (!socket_try.has_value)
             kpanic("socket failed: %s\n", strerror(socket_try.error_code));
 
-        auto socket = socket_try.value;
-        // error_t bind_res = socket->bind(Net::ipv4_addr(0, 0, 0, 0), 7654);
+        auto    socket   = socket_try.value;
+        error_t bind_res = socket->bind(Net::ipv4_addr(0, 0, 0, 0), 7654);
 
-        // printk("bind: %s\n", strerror(bind_res));
+        printk("bind: %s\n", strerror(bind_res));
 
         uint8_t buffer[64] = {};
 
-        Net::sockaddr_inet boii;
-        boii.domain = Net::socket_domain_t::AF_INET;
-        boii.addr   = Net::ipv4_addr(0, 0, 0, 0);
-        boii.port   = 27015;
+        Net::sockaddr_inet boii = Net::sockaddr_inet(Net::ipv4_addr(127, 0, 0, 1), 7654);
 
         while (true) {
             Net::sockaddr_inet addr;
@@ -143,9 +140,6 @@ void main_threaded() {
 
             printk("received from %i.%i.%i.%i:%i: %s\n", ip_addr[0], ip_addr[1], ip_addr[2],
                    ip_addr[3], addr.port, buffer);
-
-            // socket->sendto(buffer, min<size_t>(ret.value, 64), 0, (Net::sockaddr*) &addr);
-            // printk("sent: %s\n", buffer);
 
             Proc::Thread::sleep(5000);
         }

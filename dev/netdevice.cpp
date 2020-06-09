@@ -19,17 +19,21 @@ namespace AEX::Dev {
     }
 
     void NetDevice::setIPv4Address(Net::ipv4_addr addr) {
-        ipv4_addr      = addr;
-        ipv4_broadcast = ipv4_addr | ~ipv4_mask;
+        info.ipv4.addr      = addr;
+        info.ipv4.broadcast = info.ipv4.addr | ~info.ipv4.mask;
     }
 
     void NetDevice::setIPv4Mask(Net::ipv4_addr addr) {
-        ipv4_mask      = addr;
-        ipv4_broadcast = ipv4_addr | ~ipv4_mask;
+        info.ipv4.mask       = addr;
+        info.ipv4.broadcast = info.ipv4.addr | ~info.ipv4.mask;
     }
 
     void NetDevice::setIPv4Gateway(Net::ipv4_addr addr) {
-        ipv4_gateway = addr;
+        info.ipv4.gateway = addr;
+    }
+
+    void NetDevice::setMetric(int metric) {
+        this->metric = metric;
     }
 
     Mem::SmartPointer<NetDevice> get_net_device(int id) {

@@ -11,16 +11,28 @@
 #include <stdint.h>
 
 namespace AEX::Dev {
+    struct ipv4_info {
+        Net::mac_addr  mac;
+        Net::ipv4_addr addr;
+        Net::ipv4_addr mask;
+        Net::ipv4_addr broadcast;
+        Net::ipv4_addr gateway;
+    };
+
+    struct netdev_info {
+        ipv4_info ipv4;
+        char      boi[234];
+    };
+
+    static_assert(sizeof(netdev_info) == 256);
+
     class NetDevice : public Device {
         public:
-        Net::mac_addr ethernet_mac;
-
-        Net::ipv4_addr ipv4_addr;
-        Net::ipv4_addr ipv4_mask;
-        Net::ipv4_addr ipv4_broadcast;
-        Net::ipv4_addr ipv4_gateway;
-
         Net::link_type_t link_type;
+
+        netdev_info info;
+
+        int metric;
 
         NetDevice(const char* name, Net::link_type_t link_type);
 
@@ -28,7 +40,7 @@ namespace AEX::Dev {
 
         /**
          * Called by the network stack to send a packet.
-         * @param buffer Source buffer, this should be copied over.
+         * @param buffer Source buffer, the device should copy this over.
          * @param buffer Buffer length.
          * @returns Error code.
          */
@@ -59,6 +71,8 @@ namespace AEX::Dev {
          * @param addr IPv4 gateway.
          */
         void setIPv4Gateway(Net::ipv4_addr addr);
+
+        void setMetric(int metric);
 
         private:
     };

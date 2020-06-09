@@ -31,9 +31,17 @@ namespace AEX::Net {
         uint16_t        port;
         ipv4_addr       addr;
         char            idk[8];
+
+        sockaddr_inet() {}
+
+        sockaddr_inet(ipv4_addr addr, uint16_t port) {
+            this->addr = addr;
+            this->port = port;
+        }
     };
 
     static_assert(sizeof(sockaddr) == sizeof(sockaddr_inet));
+    static_assert(sizeof(sockaddr) == 16);
 
     class Socket;
 

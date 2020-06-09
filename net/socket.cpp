@@ -18,9 +18,9 @@ namespace AEX::Net {
             return Socket_SP(sock_try.value);
         }
         case socket_domain_t::AF_UNIX:
-            return error_t::ENOPROTOOPT;
+            return error_t::EINVAL;
         default:
-            return error_t::EPROTONOSUPPORT;
+            return error_t::EINVAL;
         }
     }
 
