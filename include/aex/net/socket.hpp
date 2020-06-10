@@ -71,6 +71,8 @@ namespace AEX::Net {
         optional<size_t> send(const void* buffer, size_t len, int flags);
         optional<size_t> receive(void* buffer, size_t len, int flags);
 
+        virtual error_t close();
+
         private:
     };
 }

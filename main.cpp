@@ -111,16 +111,35 @@ void main(multiboot_info_t* mbinfo) {
 void main_threaded() {
     {
         auto socket_try =
-            Net::Socket::create(Net::socket_domain_t::AF_INET, Net::socket_type_t::SOCK_DGRAM,
-                                Net::socket_protocol_t::IPROTO_UDP);
+            Net::Socket::create(Net::socket_domain_t::AF_INET, Net::socket_type_t::SOCK_STREAM,
+                                Net::socket_protocol_t::IPROTO_TCP);
         if (!socket_try.has_value)
             kpanic("socket failed: %s\n", strerror(socket_try.error_code));
 
         auto    socket      = socket_try.value;
-        error_t connect_res = socket->connect(Net::ipv4_addr(127, 0, 0, 1), 7654);
+        error_t connect_res = socket->connect(Net::ipv4_addr(192, 168, 0, 11), 80);
         printk("connect: %s\n", strerror(connect_res));
 
-        error_t bind_res = socket->bind(Net::ipv4_addr(0, 0, 0, 0), 7654);
+        while (true) {
+            uint8_t buffer[1024] = {};
+
+            socket->send("GET / HTTP/1.1\r\nHost: 192.168.0.11\r\n\r\n", 38, 0);
+
+            auto rx_try = socket->receive(buffer, sizeof(buffer) - 1, 0);
+            if (!rx_try.has_value) {
+                printk("receive: %s\n", strerror(rx_try.error_code));
+
+                Proc::Thread::sleep(10000);
+                continue;
+            }
+
+            printk("got: %s\n", buffer);
+
+            Proc::Thread::sleep(10000);
+        }
+
+
+        /*error_t bind_res = socket->bind(Net::ipv4_addr(0, 0, 0, 0), 7654);
         printk("bind: %s\n", strerror(bind_res));
 
         uint8_t buffer[64] = {};
@@ -146,7 +165,7 @@ void main_threaded() {
                    ip_addr[3], addr.port, buffer);
 
             Proc::Thread::sleep(5000);
-        }
+        }*/
     }
 
     auto idle    = Proc::processes.get(0);

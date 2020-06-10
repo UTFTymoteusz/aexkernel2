@@ -67,4 +67,8 @@ namespace AEX::Net {
     optional<size_t> Socket::receive(void* buffer, size_t len, int flags) {
         return receiveFrom(buffer, len, flags, nullptr);
     }
+
+    error_t Socket::close() {
+        return error_t::ENOSYS;
+    }
 }
