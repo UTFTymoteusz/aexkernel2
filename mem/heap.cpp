@@ -99,8 +99,14 @@ namespace AEX::Heap {
             void* block  = (void*) ((size_t) ptr - ALLOC_SIZE);
             auto  header = (alloc_block*) block;
 
-            if (header->sanity != (((size_t) ptr) ^ SANITY_XOR))
-                kpanic("heap: free(0x%p) sanity check failed", ptr);
+            if (header->sanity != (((size_t) ptr) ^ SANITY_XOR)) {
+                printk_fault();
+
+                Debug::dump_bytes((uint8_t*) header - 64, 128);
+
+                kpanic("heap: free(0x%p) sanity check failed (sanity was 0x%x)", ptr,
+                       header->sanity);
+            }
 
             spinlock.acquire();
             unmark((uint32_t)((size_t) block - (size_t) data) / ALLOC_SIZE, header->len);
@@ -125,6 +131,8 @@ namespace AEX::Heap {
             bool     page;
             size_t   sanity;
         };
+
+        static_assert(sizeof(alloc_block) <= ALLOC_SIZE);
 
         void*       data;
         BITMAP_TYPE bitmap[];
@@ -187,6 +195,9 @@ namespace AEX::Heap {
                 buffer = bitmap[ii];
                 if (buffer == (BITMAP_TYPE) -1) {
                     index += sizeof(BITMAP_TYPE) * 8;
+
+                    start = -1;
+                    combo = 0;
 
                     ii++;
                     continue;
