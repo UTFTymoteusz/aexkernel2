@@ -10,17 +10,11 @@ OBJ_DEST := $(BIN)obj/
 
 ARCH = arch/x64/
 
-#CFILES    := $(shell find . -type f -name '*.cpp'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.cpp')
-#HFILES    := $(shell find . -type f -name '*.hpp'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.hpp')
-#ASMFILES  := $(shell find . -type f -name '*.asm'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.asm')
-#PSFFILES  := $(shell find . -type f -name '*.psf'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.psf')
-#ASMRFILES := $(shell find . -type f -name '*.asmr' -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.asmr')
-
-CFILES    := $(shell find . -type f -name '*.cpp')
-HFILES    := $(shell find . -type f -name '*.hpp')
-ASMFILES  := $(shell find . -type f -name '*.asm')
-PSFFILES  := $(shell find . -type f -name '*.psf')
-ASMRFILES := $(shell find . -type f -name '*.asmr')
+CFILES    := $(shell find . -type f -name '*.cpp'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.cpp')
+HFILES    := $(shell find . -type f -name '*.hpp'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.hpp')
+ASMFILES  := $(shell find . -type f -name '*.asm'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.asm')
+PSFFILES  := $(shell find . -type f -name '*.psf'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.psf')
+ASMRFILES := $(shell find . -type f -name '*.asmr' -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.asmr')
 
 OBJS := $(patsubst %.o, $(OBJ_DEST)%.o, $(CFILES:.cpp=.cpp.o) $(ASMFILES:.asm=.asm.o) $(PSFFILES:.psf=.psf.o) $(ASMRFILES:.asmr=.asmr.o))
 
@@ -95,4 +89,4 @@ qemunet:
 	--enable-kvm
 	
 qemu:
-	qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso --enable-kvm
+	qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso

@@ -6,6 +6,7 @@
 #include "aex/proc/process.hpp"
 #include "aex/proc/thread.hpp"
 
+#define EXC_DEBUG 1
 #define EXC_PAGE_FAULT 14
 
 extern "C" void common_fault_handler(void* info);
@@ -69,6 +70,15 @@ namespace AEX::Sys {
                    (info->err & 0x01) ? "Present" : "Not Present");
 
             printk("CR2: 0x%016lx  CR3: 0x%016lx\n", cr2, cr3);
+        }
+
+        if (info->int_no == EXC_DEBUG) {
+            Debug::stack_trace();
+
+            for (volatile size_t i = 0; i < 84354325; i++)
+                ;
+
+            return;
         }
 
         printk("RAX: 0x%016lx  RBX: 0x%016lx  RCX: 0x%016lx  RDX: 0x%016lx\n", info->rax, info->rbx,

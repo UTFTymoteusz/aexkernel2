@@ -2,6 +2,7 @@
 
 #include "aex/fs/path.hpp"
 #include "aex/math.hpp"
+#include "aex/printk.hpp"
 #include "aex/proc/thread.hpp"
 #include "aex/string.hpp"
 

@@ -113,17 +113,6 @@ namespace AEX {
             section_info[i].size = section_header.size;
 
             module->sections.pushBack(section_info[i]);
-            // printk("%s [%i] is full'o'program data (0x%p + 0x%p)\n", section_header.name, i, ptr,
-            // section_header.size);
-        }
-
-        for (int i = 0; i < elf.section_headers.count(); i++) {
-            auto section_header = elf.section_headers[i];
-
-            if (strcmp(section_header.name, ".rodata") != 0)
-                continue;
-
-            break;
         }
 
         for (int i = 0; i < elf.symbols.count(); i++) {

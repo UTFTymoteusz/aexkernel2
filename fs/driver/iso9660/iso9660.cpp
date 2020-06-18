@@ -45,18 +45,18 @@ namespace AEX::FS {
         for (int i = 0; i <= 64; i++) {
             if (i == 64) {
                 printk(PRINTK_WARN "iso9660: Too many volume descriptors\n");
-                return EINVAL;
+                return error_t::EINVAL;
             }
 
             block->read(buffer, ISO_START + BLOCK_SIZE * i, BLOCK_SIZE);
 
             auto header = (iso9660_vd_header*) buffer;
             if (memcmp(header->identifier, IDENTIFIER, 5) != 0)
-                return EINVAL;
+                return error_t::EINVAL;
 
             switch (header->type) {
             case ios9960_vd_type::TERMINATOR:
-                i = 666; // a quick and dirty way to break out of this for in a switch
+                i = 666; // a quick and dirty way to break out of this for loop in a switch
                 break;
             case ios9960_vd_type::PRIMARY_VOLUME_DESCRIPTOR: {
                 auto pvd = (iso9660_primary_volume_descriptor*) buffer;

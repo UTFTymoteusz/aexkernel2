@@ -192,4 +192,6 @@ namespace AEX::Proc {
         void*  _stack      = nullptr;
         size_t _stack_size = 0;
     };
+
+    typedef Mem::SmartPointer<Thread> Thread_SP;
 }

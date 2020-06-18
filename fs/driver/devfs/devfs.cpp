@@ -46,7 +46,7 @@ namespace AEX::FS {
             return Mem::SmartPointer<File>(dir);
         }
 
-        return ENOENT;
+        return error_t::ENOENT;
     }
 
     optional<file_info> DevFSMount::info(const char* lpath) {
@@ -55,7 +55,7 @@ namespace AEX::FS {
 
         lpath++;
         if (*lpath == '\0')
-            return ENOENT;
+            return error_t::ENOENT;
 
         for (auto iterator = Dev::devices.getIterator(); auto device = iterator.next();) {
             if (strcmp(device->name, lpath) != 0)
@@ -80,6 +80,6 @@ namespace AEX::FS {
             return info;
         }
 
-        return ENOENT;
+        return error_t::ENOENT;
     }
 }

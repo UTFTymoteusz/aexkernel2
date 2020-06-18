@@ -371,8 +371,8 @@ namespace AEX {
         Mem::Vector<program_header_agnostic> program_headers;
         Mem::Vector<section_header_agnostic> section_headers;
 
-        Mem::Vector<symbol_agnostic, 64> symbols;
-        Mem::Vector<relocation, 64>      relocations;
+        Mem::Vector<symbol_agnostic, 256> symbols;
+        Mem::Vector<relocation, 256>      relocations;
 
         const char* section_names = nullptr;
         const char* strings       = nullptr;

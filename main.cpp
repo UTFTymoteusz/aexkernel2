@@ -109,65 +109,6 @@ void main(multiboot_info_t* mbinfo) {
 }
 
 void main_threaded() {
-    {
-        auto socket_try =
-            Net::Socket::create(Net::socket_domain_t::AF_INET, Net::socket_type_t::SOCK_STREAM,
-                                Net::socket_protocol_t::IPROTO_TCP);
-        if (!socket_try.has_value)
-            kpanic("socket failed: %s\n", strerror(socket_try.error_code));
-
-        auto    socket      = socket_try.value;
-        error_t connect_res = socket->connect(Net::ipv4_addr(192, 168, 0, 11), 80);
-        printk("connect: %s\n", strerror(connect_res));
-
-        while (true) {
-            uint8_t buffer[1024] = {};
-
-            socket->send("GET / HTTP/1.1\r\nHost: 192.168.0.11\r\n\r\n", 38, 0);
-
-            auto rx_try = socket->receive(buffer, sizeof(buffer) - 1, 0);
-            if (!rx_try.has_value) {
-                printk("receive: %s\n", strerror(rx_try.error_code));
-
-                Proc::Thread::sleep(10000);
-                continue;
-            }
-
-            printk("got: %s\n", buffer);
-
-            Proc::Thread::sleep(10000);
-        }
-
-
-        /*error_t bind_res = socket->bind(Net::ipv4_addr(0, 0, 0, 0), 7654);
-        printk("bind: %s\n", strerror(bind_res));
-
-        uint8_t buffer[64] = {};
-
-        // Net::sockaddr_inet boii = Net::sockaddr_inet(Net::ipv4_addr(127, 0, 0, 1), 7654);
-
-        while (true) {
-            Net::sockaddr_inet addr;
-
-            memcpy(buffer, "\xFF\xFF\xFF\xFFTSource Engine Query", 25);
-
-            auto send_res = socket->send(buffer, 25, 0);
-            printk("send: %s\n", strerror(send_res.error_code));
-
-            // auto ret                   = socket->receiveFrom(buffer, 64, 0, (Net::sockaddr*)
-            // &addr);
-            auto ret                   = socket->receive(buffer, 64, 0);
-            buffer[sizeof(buffer) - 1] = '\0';
-
-            auto ip_addr = addr.addr;
-
-            printk("received from %i.%i.%i.%i:%i: %s\n", ip_addr[0], ip_addr[1], ip_addr[2],
-                   ip_addr[3], addr.port, buffer);
-
-            Proc::Thread::sleep(5000);
-        }*/
-    }
-
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrentThread()->getProcess();
 

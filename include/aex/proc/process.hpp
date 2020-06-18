@@ -43,4 +43,6 @@ namespace AEX::Proc {
 
         private:
     };
+
+    typedef Mem::SmartPointer<Process> Process_SP;
 }

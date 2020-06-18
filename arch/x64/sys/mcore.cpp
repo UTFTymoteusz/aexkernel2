@@ -16,8 +16,8 @@
 namespace AEX::Sys::MCore {
     using MADT = AEX::ACPI::MADT;
 
-    extern "C" char _binary_bin_obj___arch_x64_boot_mcore_asmr_o_start;
-    void*           trampoline = (void*) &_binary_bin_obj___arch_x64_boot_mcore_asmr_o_start;
+    extern "C" char _binary_bin_obj___arch_x64___boot_mcore_asmr_o_start;
+    void*           trampoline = (void*) &_binary_bin_obj___arch_x64___boot_mcore_asmr_o_start;
 
     int  cpu_count = 0;
     CPU* CPUs[64];
