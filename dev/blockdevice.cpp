@@ -31,7 +31,7 @@ namespace AEX::Dev {
         return initBlock();
     }
 
-    int64_t BlockDevice::read(uint8_t* buffer, uint64_t start, uint32_t len) {
+    int64_t BlockDevice::read(void* buffer, uint64_t start, uint32_t len) {
         auto current_usage = &Proc::Thread::getCurrentThread()->getProcess()->usage;
 
         // this needs to be checked properly
@@ -115,7 +115,7 @@ namespace AEX::Dev {
         return 0;
     }
 
-    int64_t BlockDevice::write(uint8_t*, uint64_t, uint32_t) {
+    int64_t BlockDevice::write(const void*, uint64_t, uint32_t) {
         kpanic("Block::write is unimplemented, I'm too lazy atm\n");
     }
 
@@ -127,11 +127,11 @@ namespace AEX::Dev {
         return 0;
     }
 
-    int64_t BlockDevice::readBlock(uint8_t*, uint64_t, uint32_t) {
+    int64_t BlockDevice::readBlock(void*, uint64_t, uint32_t) {
         return -1;
     }
 
-    int64_t BlockDevice::writeBlock(uint8_t*, uint64_t, uint32_t) {
+    int64_t BlockDevice::writeBlock(const void*, uint64_t, uint32_t) {
         return -1;
     }
 
@@ -139,7 +139,7 @@ namespace AEX::Dev {
         return;
     }
 
-    bool BlockDevice::isAligned(uint8_t* addr) {
+    bool BlockDevice::isAligned(void* addr) {
         return ((size_t) addr & 0x01) == 0;
     }
 

@@ -7,7 +7,7 @@ namespace AEX::Dev {
 }
 
 namespace AEX::FS {
-    class Mount;
+    class ControlBlock;
 
     class Filesystem {
         public:
@@ -16,7 +16,7 @@ namespace AEX::FS {
         Filesystem(const char* name);
         virtual ~Filesystem();
 
-        virtual optional<Mount*> mount(const char* source) = 0;
+        virtual optional<ControlBlock*> mount(const char* source) = 0;
 
         private:
     };

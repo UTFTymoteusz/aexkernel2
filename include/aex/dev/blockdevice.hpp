@@ -15,8 +15,8 @@ namespace AEX::Dev {
         virtual ~BlockDevice();
 
         int     init();
-        int64_t read(uint8_t* buffer, uint64_t start, uint32_t len);
-        int64_t write(uint8_t* buffer, uint64_t start, uint32_t len);
+        int64_t read(void* buffer, uint64_t start, uint32_t len);
+        int64_t write(const void* buffer, uint64_t start, uint32_t len);
         void    release();
 
         private:
@@ -29,11 +29,11 @@ namespace AEX::Dev {
         bool word_align = true;
 
         virtual int     initBlock();
-        virtual int64_t readBlock(uint8_t* buffer, uint64_t sector, uint32_t sector_count)  = 0;
-        virtual int64_t writeBlock(uint8_t* buffer, uint64_t sector, uint32_t sector_count) = 0;
+        virtual int64_t readBlock(void* buffer, uint64_t sector, uint32_t sector_count)        = 0;
+        virtual int64_t writeBlock(const void* buffer, uint64_t sector, uint32_t sector_count) = 0;
         virtual void    releaseBlock();
 
-        bool isAligned(uint8_t* addr);
+        bool isAligned(void* addr);
         bool isPerfectFit(uint64_t start, uint32_t len);
     };
 

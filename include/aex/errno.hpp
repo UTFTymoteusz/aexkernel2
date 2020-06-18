@@ -12,6 +12,7 @@ namespace AEX {
         EISDIR,    // Is a directory
         ENOTBLK,   // Block device required
         ENOEXEC,   // Exec format error
+        EROFS,     // Read-only filesystem
 
         EPROTOTYPE,      // Protocol wrong type for socket
         ENOPROTOOPT,     // Protocol not available
@@ -32,6 +33,8 @@ namespace AEX {
         ECONNREFUSED,  // Connection refused
         EHOSTDOWN,     // Host is down
         EHOSTUNREACH,  // No route to host
+
+        EBOTHER, // Cannot be bothered to implement
     };
 
     const char* strerror(error_t code);

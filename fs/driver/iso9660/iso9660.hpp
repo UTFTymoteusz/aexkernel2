@@ -1,7 +1,7 @@
 #pragma once
 
+#include "aex/fs/controlblock.hpp"
 #include "aex/fs/filesystem.hpp"
-#include "aex/fs/mount.hpp"
 #include "aex/optional.hpp"
 
 namespace AEX::FS {
@@ -12,7 +12,7 @@ namespace AEX::FS {
         ISO9660();
         ~ISO9660();
 
-        optional<Mount*> mount(const char* source);
+        optional<ControlBlock*> mount(const char* source);
 
         private:
     };

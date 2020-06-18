@@ -6,7 +6,7 @@
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 
-#include "iso9660_mount.hpp"
+#include "controlblock.hpp"
 #include "types.hpp"
 
 #define BLOCK_SIZE 2048
@@ -21,7 +21,7 @@ namespace AEX::FS {
     ISO9660::ISO9660() : Filesystem("iso9660") {}
     ISO9660::~ISO9660() {}
 
-    optional<Mount*> ISO9660::mount(const char* source) {
+    optional<ControlBlock*> ISO9660::mount(const char* source) {
         printk("iso9660: Mount attempt from %s\n", source);
 
         if (!source)
@@ -68,6 +68,6 @@ namespace AEX::FS {
             }
         }
 
-        return new ISO9660Mount(block, root_dentry);
+        return new ISO9660ControlBlock(block, root_dentry);
     }
 }

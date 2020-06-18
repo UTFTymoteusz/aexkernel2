@@ -21,7 +21,7 @@ OBJS := $(patsubst %.o, $(OBJ_DEST)%.o, $(CFILES:.cpp=.cpp.o) $(ASMFILES:.asm=.a
 ISO  = $(BIN)grubiso/
 SYS  = $(ISO)sys/
 
-GFLAGS = -O3 -Wall -Wextra -nostdlib -pipe
+GFLAGS = -O0 -Wall -Wextra -nostdlib -pipe
 
 INCLUDES := -I. -I$(ARCH) -I$(ARCH)include/ -Iinclude/ -Iinclude/libc/ -I../lai/include/
 
@@ -89,4 +89,4 @@ qemunet:
 	--enable-kvm
 	
 qemu:
-	qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso
+	qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso --enable-kvm

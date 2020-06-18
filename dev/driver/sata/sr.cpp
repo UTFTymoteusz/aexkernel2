@@ -19,16 +19,16 @@ namespace AEX::Dev::SATA {
 
         SATADevice* _device;
 
-        int64_t readBlock(uint8_t* buffer, uint64_t sector, uint32_t sector_count) {
+        int64_t readBlock(void* buffer, uint64_t sector, uint32_t sector_count) {
             readWrite(buffer, sector, sector_count, false);
             return sector_count * SECTOR_SIZE;
         }
-        int64_t writeBlock(uint8_t* buffer, uint64_t sector, uint32_t sector_count) {
-            readWrite(buffer, sector, sector_count, true);
+        int64_t writeBlock(const void* buffer, uint64_t sector, uint32_t sector_count) {
+            readWrite((void*) buffer, sector, sector_count, true);
             return sector_count * SECTOR_SIZE;
         }
 
-        void readWrite(uint8_t* buffer, uint32_t sector, uint32_t sector_count, bool write) {
+        void readWrite(void* buffer, uint32_t sector, uint32_t sector_count, bool write) {
             uint8_t packet[12] = {write ? AHCI::scsi_command::WRITE_12
                                         : AHCI::scsi_command::READ_12};
 

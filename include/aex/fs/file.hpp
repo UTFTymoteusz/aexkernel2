@@ -9,21 +9,21 @@
 
 namespace AEX::FS {
     struct file_info {
-        Dev::devid_t containing_dev_id = -1;
-        FS::type_t   type              = type_t::UNKNOWN;
-        Dev::devid_t dev_id            = -1;
-        uint64_t     total_size        = 0;
+        Dev::devid_t  containing_dev_id = -1;
+        FS::fs_type_t type              = fs_type_t::UNKNOWN;
+        Dev::devid_t  dev_id            = -1;
+        uint64_t      total_size        = 0;
 
         bool is_regular() {
-            return (type & FS::type_t::REGULAR) == FS::type_t::REGULAR;
+            return (type & FS::fs_type_t::REGULAR) == FS::fs_type_t::REGULAR;
         }
 
         bool is_directory() {
-            return (type & FS::type_t::DIRECTORY) == FS::type_t::DIRECTORY;
+            return (type & FS::fs_type_t::DIRECTORY) == FS::fs_type_t::DIRECTORY;
         }
 
         bool is_block() {
-            return (type & FS::type_t::BLOCK) == FS::type_t::BLOCK;
+            return (type & FS::fs_type_t::BLOCK) == FS::fs_type_t::BLOCK;
         }
     };
 
@@ -53,4 +53,6 @@ namespace AEX::FS {
 
         private:
     };
+
+    typedef Mem::SmartPointer<File> File_SP;
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aex/errno.hpp"
 #include "aex/mem/smartarray.hpp"
 
 namespace AEX::Dev {
@@ -7,7 +8,7 @@ namespace AEX::Dev {
 }
 
 namespace AEX::FS {
-    enum type_t {
+    enum fs_type_t {
         UNKNOWN   = 0x0000,
         REGULAR   = 0x0001,
         DIRECTORY = 0x0010,
@@ -22,5 +23,5 @@ namespace AEX::FS {
     extern Mem::SmartArray<Filesystem> filesystems;
     extern Mem::SmartArray<Mount>      mounts;
 
-    int mount(const char* source, const char* path, const char* type);
+    error_t mount(const char* source, const char* path, const char* type);
 }

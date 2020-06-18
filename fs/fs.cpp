@@ -25,7 +25,7 @@ namespace AEX::FS {
         printk(PRINTK_OK "fs: Initialized\n");
     }
 
-    int mount(const char* source, const char* path, const char* type) {
+    error_t mount(const char* source, const char* path, const char* type) {
         if (!path || !Path::is_valid(path))
             return error_t::EINVAL;
 
@@ -40,11 +40,14 @@ namespace AEX::FS {
             if (!res.has_value)
                 continue;
 
-            printk(PRINTK_OK "fs: Mounted '%s' at %s\n", fs->name, path);
-            strncpy(res.value->path, path, sizeof(res.value->path));
+            auto mount = new Mount();
 
-            mounts.addRef(res.value);
-            return 0;
+            printk(PRINTK_OK "fs: Mounted '%s' at %s\n", fs->name, path);
+            strncpy(mount->path, path, sizeof(mount->path));
+            mount->control_block = res.value;
+
+            mounts.addRef(mount);
+            return error_t::ENONE;
         }
 
         return error_t::EINVAL;

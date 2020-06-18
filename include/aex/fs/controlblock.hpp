@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aex/dev/blockdevice.hpp"
 #include "aex/fs/directory.hpp"
 #include "aex/mem/smartptr.hpp"
 #include "aex/optional.hpp"
@@ -16,19 +17,16 @@ namespace AEX::FS {
         public:
         char label[64];
 
-        int root_inode_id;
+        int      root_inode_id;
+        uint16_t block_size;
 
-        virtual optional<INode_SP> getINode(INode_SP dir, int id);
+        Dev::BlockDevice_SP block_dev = Dev::BlockDevice_SP::getNull();
 
-        virtual error_t readINodeBlocks(INode_SP inode, uint8_t* buffer, uint64_t block,
-                                        uint16_t count);
-        virtual error_t writeINodeBlocks(INode_SP inode, const uint8_t* buffer, uint64_t block,
-                                         uint16_t count);
+        virtual ~ControlBlock();
 
-        virtual error_t updateINode(INode_SP inode);
+        virtual optional<INode_SP> getINode(INode_SP dir, dir_entry dentry, int id);
 
-
-        virtual optional<dir_entry> readINodeDir(INode_SP inode, dir_context* ctx);
+        optional<INode_SP> findINode(const char* lpath);
 
         private:
     };

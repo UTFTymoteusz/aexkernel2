@@ -1,5 +1,7 @@
 #include "aex/elf.hpp"
 
+#include "aex/printk.hpp"
+
 namespace AEX {
     ELF::ELF(Mem::SmartPointer<FS::File> file) {
         _file = file;
