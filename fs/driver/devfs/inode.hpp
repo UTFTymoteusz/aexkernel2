@@ -8,7 +8,7 @@ namespace AEX::FS {
     class DevFSRootINode : public INode {
         public:
         optional<dir_entry> readDir(dir_context* ctx) {
-            while (ctx->pos < Dev::devices.count()) {
+            while ((int) ctx->pos < Dev::devices.count()) {
                 auto device = Dev::devices.get(ctx->pos);
                 if (!device.isValid())
                     continue;

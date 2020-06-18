@@ -74,7 +74,7 @@ namespace AEX::FS {
                 break;
             }
 
-            if (new_pos < 0 || new_pos > _inode->size)
+            if (new_pos < 0 || (uint64_t) new_pos > _inode->size)
                 return error_t::EINVAL;
 
             _pos = new_pos;
@@ -106,7 +106,7 @@ namespace AEX::FS {
                 if (!isPerfectFit(start, llen)) {
                     if (combo) {
                         _inode->readBlocks(buffer, combo_start, combo_count);
-                        buffer += combo_count * _block_size;
+                        buffer = (void*) ((uint8_t*) buffer + combo_count * _block_size);
 
                         combo = false;
                     }
@@ -114,7 +114,7 @@ namespace AEX::FS {
                     _inode->readBlocks(_overflow_buffer, start / _block_size, 1);
                     memcpy(buffer, _overflow_buffer + offset, llen);
 
-                    buffer += llen;
+                    buffer = (void*) ((uint8_t*) buffer + llen);
                 }
                 else {
                     if (!combo) {
@@ -133,7 +133,7 @@ namespace AEX::FS {
 
             if (combo) {
                 _inode->readBlocks(buffer, combo_start, combo_count);
-                buffer += combo_count * _block_size;
+                buffer = (void*) ((uint8_t*) buffer + combo_count * _block_size);
 
                 combo = false;
             }

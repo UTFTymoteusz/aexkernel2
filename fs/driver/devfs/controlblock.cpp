@@ -3,7 +3,7 @@
 #include "inode.hpp"
 
 namespace AEX::FS {
-    optional<INode_SP> DevFSControlBlock::getINode(INode_SP dir, dir_entry, int id) {
+    optional<INode_SP> DevFSControlBlock::getINode(INode_SP, dir_entry, int id) {
         if (id == root_inode_id)
             return INode_SP(new DevFSRootINode());
 

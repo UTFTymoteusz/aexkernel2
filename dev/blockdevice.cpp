@@ -47,7 +47,7 @@ namespace AEX::Dev {
 
             memcpy(buffer, misaligned_sector, misaligned_len);
 
-            buffer += misaligned_len;
+            buffer = (void*) ((uint8_t*) buffer + misaligned_len);
             start += misaligned_len;
             len -= misaligned_len;
 
@@ -66,7 +66,7 @@ namespace AEX::Dev {
 
             if (combo && combo_count == _max_sectors_at_once) {
                 readBlock(buffer, combo_start, combo_count);
-                buffer += combo_count * _sector_size;
+                buffer = (void*) ((uint8_t*) buffer + combo_count * _sector_size);
 
                 current_usage->block_bytes_read += combo_count * _sector_size;
 
@@ -76,7 +76,7 @@ namespace AEX::Dev {
             if (!isPerfectFit(start, llen)) {
                 if (combo) {
                     readBlock(buffer, combo_start, combo_count);
-                    buffer += combo_count * _sector_size;
+                    buffer = (void*) ((uint8_t*) buffer + combo_count * _sector_size);
 
                     combo = false;
                 }
@@ -86,7 +86,7 @@ namespace AEX::Dev {
 
                 current_usage->block_bytes_read += _sector_size;
 
-                buffer += llen;
+                buffer = (void*) ((uint8_t*) buffer + llen);
             }
             else {
                 if (!combo) {
@@ -105,7 +105,7 @@ namespace AEX::Dev {
 
         if (combo) {
             readBlock(buffer, combo_start, combo_count);
-            buffer += combo_count * _sector_size;
+            buffer = (void*) ((uint8_t*) buffer + combo_count * _sector_size);
 
             current_usage->block_bytes_read += combo_count * _sector_size;
 
