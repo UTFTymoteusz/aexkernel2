@@ -1,12 +1,13 @@
 #include "aex/string.hpp"
 
+#include "aex/macros.hpp"
 #include "aex/math.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX {
-    int strlen(const char* str) {
+    int WEAK strlen(const char* str) {
         int len = 0;
 
         while (*str++ != '\0')
@@ -15,7 +16,7 @@ namespace AEX {
         return len;
     }
 
-    int strcmp(const char* a, const char* b) {
+    int WEAK strcmp(const char* a, const char* b) {
         do {
             if (*a < *b)
                 return -1;
@@ -26,7 +27,7 @@ namespace AEX {
         return 0;
     }
 
-    char* strncpy(char* dst, const char* src, size_t num) {
+    char* WEAK strncpy(char* dst, const char* src, size_t num) {
         int len = min((size_t) strlen(src), num - 1);
         if (len < 0)
             return dst;
@@ -39,35 +40,35 @@ namespace AEX {
         return dst;
     }
 
-    void __attribute((weak)) memset(void* mem, char c, size_t len) {
+    void WEAK memset(void* mem, char c, size_t len) {
         char* _mem = (char*) mem;
 
         for (size_t i = 0; i < len; i++)
             _mem[i] = c;
     }
 
-    void __attribute((weak)) memset16(void* mem, uint16_t n, size_t count) {
+    void WEAK memset16(void* mem, uint16_t n, size_t count) {
         uint16_t* _mem = (uint16_t*) mem;
 
         for (size_t i = 0; i < count; i++)
             _mem[i] = n;
     }
 
-    void __attribute((weak)) memset32(void* mem, uint32_t n, size_t count) {
+    void WEAK memset32(void* mem, uint32_t n, size_t count) {
         uint32_t* _mem = (uint32_t*) mem;
 
         for (size_t i = 0; i < count; i++)
             _mem[i] = n;
     }
 
-    void __attribute((weak)) memset64(void* mem, uint64_t n, size_t count) {
+    void WEAK memset64(void* mem, uint64_t n, size_t count) {
         uint64_t* _mem = (uint64_t*) mem;
 
         for (size_t i = 0; i < count; i++)
             _mem[i] = n;
     }
 
-    void __attribute((weak)) memcpy(void* dst, const void* src, size_t size) {
+    void WEAK memcpy(void* dst, const void* src, size_t size) {
         size_t aligned = size / sizeof(size_t);
 
         size_t* dst_st = (size_t*) dst;
@@ -85,7 +86,7 @@ namespace AEX {
             dst_b[i] = src_b[i];
     }
 
-    int memcmp(const void* a, const void* b, size_t num) {
+    int WEAK memcmp(const void* a, const void* b, size_t num) {
         uint8_t* _a = (uint8_t*) a;
         uint8_t* _b = (uint8_t*) b;
 

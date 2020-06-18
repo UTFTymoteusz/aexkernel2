@@ -43,6 +43,8 @@ namespace AEX::Init {
 void main_threaded();
 
 void main(multiboot_info_t* mbinfo) {
+    memcmp("aaa", "aab", 3);
+
     TTY::init(mbinfo);
 
     Init::init_print_header();

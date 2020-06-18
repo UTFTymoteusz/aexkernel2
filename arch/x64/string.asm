@@ -1,3 +1,9 @@
+global _ZN3AEX6memcpyEPvPKvm
+global _ZN3AEX6memsetEPvcm
+global _ZN3AEX8memset16EPvtm
+global _ZN3AEX8memset32EPvjm
+global _ZN3AEX8memset64EPvmm
+
 _ZN3AEX6memcpyEPvPKvm:
     cld
 
