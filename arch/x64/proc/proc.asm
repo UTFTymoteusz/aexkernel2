@@ -120,6 +120,8 @@ proc_reshed_manual:
 
 
 proc_reshed:
+    push rbp
+
     mov rdi, rsp
 
     mov  rax, ss
@@ -139,4 +141,5 @@ proc_reshed:
     jmp proc_reshed_manual
 
     .ret:
+        pop rbp
         ret

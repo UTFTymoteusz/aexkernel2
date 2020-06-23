@@ -1,4 +1,5 @@
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/kpanic.hpp"
 #include "aex/printk.hpp"
 
 #include "sys/apic.hpp"
@@ -34,8 +35,14 @@ namespace AEX::Sys {
 
         APIC::sendInterrupt(apic_id, 32 + 13);
 
-        while (!_ipi_ack)
-            ;
+        volatile size_t counter = 0;
+
+        while (!_ipi_ack) {
+            counter++;
+
+            if (counter > 80000000)
+                kpanic("ipi to cpu%i stuck\n", this->id);
+        }
 
         _ipi_lock.release();
     }
@@ -46,7 +53,9 @@ namespace AEX::Sys {
     extern "C" void ipi_handle() {
         auto us = CPU::getCurrentCPU();
 
+        us->in_interrupt++;
         us->handleIPP();
+        us->in_interrupt--;
     }
 
     void CPU::handleIPP() {

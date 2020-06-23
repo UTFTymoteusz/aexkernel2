@@ -37,6 +37,8 @@ namespace AEX::Sys {
     };
 
     extern "C" void common_fault_handler(void* _info) {
+        Sys::CPU::getCurrentCPU()->in_interrupt++;
+
         auto info = (AEX::Sys::CPU::fault_info*) _info;
         auto cpu  = CPU::getCurrentCPU();
 
@@ -78,6 +80,7 @@ namespace AEX::Sys {
             for (volatile size_t i = 0; i < 84354325; i++)
                 ;
 
+            Sys::CPU::getCurrentCPU()->in_interrupt--;
             return;
         }
 
@@ -94,5 +97,7 @@ namespace AEX::Sys {
         printk("RFLAGS: 0x%016lx\n", info->rflags);
 
         kpanic("Unrecoverable processor exception occured in CPU %i", CPU::getCurrentCPUID());
+
+        Sys::CPU::getCurrentCPU()->in_interrupt--;
     }
 }

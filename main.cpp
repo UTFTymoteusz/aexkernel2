@@ -43,7 +43,7 @@ namespace AEX::Init {
 void main_threaded();
 
 void main(multiboot_info_t* mbinfo) {
-    memcmp("aaa", "aab", 3);
+    Sys::CPU::getCurrentCPU()->in_interrupt++;
 
     TTY::init(mbinfo);
 
@@ -83,6 +83,8 @@ void main(multiboot_info_t* mbinfo) {
 
     CPU::interrupts();
     IRQ::setup_timers_mcore(500);
+
+    bsp->in_interrupt--;
 
     Proc::init();
 
@@ -132,6 +134,6 @@ void main_threaded() {
 
         Proc::debug_print_cpu_jobs();
 
-        Proc::Thread::sleep(500000);
+        Proc::Thread::sleep(10000);
     }
 }

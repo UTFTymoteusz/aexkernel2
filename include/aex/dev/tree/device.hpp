@@ -16,6 +16,7 @@ namespace AEX::Dev::Tree {
             enum type_t : uint8_t {
                 MEMORY = 0,
                 IO     = 1,
+                IRQ    = 2,
             };
 
             type_t type;

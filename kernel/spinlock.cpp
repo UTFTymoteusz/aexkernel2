@@ -49,7 +49,6 @@ namespace AEX {
         Proc::Thread::getCurrentThread()->addCritical();
 
         bool ret = __sync_bool_compare_and_swap(&_lock, false, true);
-
         if (!ret)
             Proc::Thread::getCurrentThread()->subCritical();
 

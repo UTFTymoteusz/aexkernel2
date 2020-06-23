@@ -69,7 +69,7 @@ namespace AEX::Proc {
     void schedule() {
         auto cpu = Sys::CPU::getCurrentCPU();
 
-        if (cpu->currentThread->isCritical()) {
+        if (cpu->currentThread->isCritical() && !cpu->willingly_yielded) {
             cpu->should_yield = true;
             return;
         }
@@ -265,9 +265,16 @@ namespace AEX::Proc {
     void debug_print_cpu_jobs() {
         for (int i = 0; i < Sys::MCore::cpu_count; i++) {
             auto cpu = Sys::MCore::CPUs[i];
-            printk("cpu%i: PID %8i, TID %8i @ 0x%p %s\n", i, cpu->currentThread->parent->pid,
-                   cpu->current_tid, cpu->currentThread->context->rip,
-                   cpu->currentThread->isCritical() ? "critical" : "");
+
+            void* addr = (void*) cpu->currentThread->context->rip;
+
+            int         delta = 0;
+            const char* name  = Debug::symbol_addr2name(addr, &delta);
+
+            printk("cpu%i: PID %8i, TID %8i @ 0x%p <%s+0x%x> (b%i, c%i, i%i)\n", i,
+                   cpu->currentThread->parent->pid, cpu->current_tid, addr, name ? name : "no idea",
+                   delta, cpu->currentThread->_busy, cpu->currentThread->_critical,
+                   cpu->in_interrupt);
         }
     }
 }

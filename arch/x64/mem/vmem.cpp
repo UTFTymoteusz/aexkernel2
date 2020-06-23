@@ -81,6 +81,21 @@ namespace AEX::VMem {
         return pptr_vaddr[index];
     }
 
+    Pagemap::Pagemap() {
+        pageRoot = PMem::alloc(1);
+
+        int pptr_a = alloc_pptr();
+        int pptr_b = alloc_pptr();
+
+        uint64_t* a = aim_pptr(pptr_a, pageRoot);
+        uint64_t* b = aim_pptr(pptr_b, kernel_pagemap->pageRoot);
+
+        memcpy(&a[256], &b[256], sizeof(uint64_t) * 256);
+
+        free_pptr(pptr_b);
+        free_pptr(pptr_a);
+    }
+
     Pagemap::Pagemap(phys_addr rootAddr) {
         pageRoot = rootAddr;
     }
@@ -392,6 +407,8 @@ namespace AEX::VMem {
         return paddr;
     }
 
+    void create_first_levels();
+
     void init() {
         _kernel_pagemap = Pagemap((phys_addr) &pml4);
 
@@ -423,6 +440,8 @@ namespace AEX::VMem {
         }
 
         ready = true;
+
+        create_first_levels();
     }
 
     void cleanup_bootstrap() {
@@ -436,5 +455,25 @@ namespace AEX::VMem {
         Sys::CPU::broadcastPacket(Sys::CPU::ipp_type::PG_FLUSH, nullptr, true);
 
         printk(PRINTK_OK "vmem: Bootstrap necessities cleaned\n");
+    }
+
+    void create_first_levels() {
+        int pptr   = alloc_pptr();
+        int pptr_s = alloc_pptr();
+
+        uint64_t* bong = aim_pptr(pptr, kernel_pagemap->pageRoot);
+
+        for (int i = 256; i < 512; i++) {
+            if (bong[i])
+                continue;
+
+            bong[i] = PMem::alloc(4096);
+
+            uint64_t* bong_s = aim_pptr(pptr_s, bong[i]);
+            memset64(bong_s, 0, 512);
+        }
+
+        free_pptr(pptr_s);
+        free_pptr(pptr);
     }
 }

@@ -13,8 +13,6 @@ namespace AEX {
         va_list args;
         va_start(args, format);
 
-        CPU::broadcastPacket(CPU::ipp_type::HALT);
-
         printk_fault();
         printk(PRINTK_FAIL "Kernel Panic\n", args);
         printk(format, args);
@@ -25,6 +23,7 @@ namespace AEX {
 
         va_end(args);
 
+        CPU::broadcastPacket(CPU::ipp_type::HALT);
         CPU::halt();
     }
 }

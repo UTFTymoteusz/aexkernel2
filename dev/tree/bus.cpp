@@ -21,8 +21,6 @@ namespace AEX::Dev::Tree {
     }
 
     void Bus::registerDevice(Device* device) {
-        auto scopeLock = ScopeSpinlock(_lock);
-
         children.addRef(device);
 
         printk("dev: %s: Registered tree device '%s'\n", this->name, device->name);
@@ -32,8 +30,6 @@ namespace AEX::Dev::Tree {
     }
 
     void Bus::registerDriver(Driver* driver) {
-        auto scopeLock = ScopeSpinlock(_lock);
-
         _drivers.addRef(driver);
 
         printk("dev: %s: Registered tree driver '%s'\n", this->name, driver->name);

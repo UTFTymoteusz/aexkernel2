@@ -74,8 +74,8 @@ namespace AEX::Sys::IRQ {
     void handle_irq(uint8_t irq) {
         static size_t append_pos = 0;
 
-        if (irq > 24)
-            kpanic("irq > 24 wtf");
+        if (irq >= 24)
+            kpanic("irq >= 24 wtf");
 
         Proc::Thread::getCurrentThread()->addCritical();
         immediate_handlers[irq].callAll();
@@ -99,7 +99,7 @@ namespace AEX::Sys::IRQ {
         // register_threaded_handler
     }
 
-    void register_immediate_handler(uint8_t irq, void (*func)(void* arg), void* arg) {
+    void register_handler(uint8_t irq, void (*func)(void* arg), void* arg) {
         immediate_handlers[irq].addFunc(func, arg);
     }
 

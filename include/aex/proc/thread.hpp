@@ -158,10 +158,7 @@ namespace AEX::Proc {
          * Adds 1 to the thread's critical counter. If _critical is greater than 0, the thread
          * cannot be interrupted or killed.
          */
-        inline void addCritical() {
-            Mem::atomic_add(&_busy, (uint16_t) 1);
-            Mem::atomic_add(&_critical, (uint16_t) 1);
-        }
+        void addCritical();
 
         /**
          * Subtracts 1 from the thread's critical counter. If _critical is greater than 0, the
@@ -183,6 +180,7 @@ namespace AEX::Proc {
         private:
         IPC::Event* _exit_event = nullptr;
 
+        public:
         uint16_t _busy     = 0;
         uint16_t _critical = 0;
 

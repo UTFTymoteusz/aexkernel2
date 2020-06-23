@@ -135,12 +135,15 @@ namespace AEX::Sys::MCore {
 
         CPUs[id] = cpu;
 
-        CPU::interrupts();
-
         printk(PRINTK_OK "mcore: cpu%i: Ready\n", CPU::getCurrentCPUID());
     }
 
     void ap_wait() {
+        auto cpu = CPU::getCurrentCPU();
+
+        CPU::interrupts();
+        cpu->in_interrupt--;
+
         while (true)
             CPU::waitForInterrupt();
     }

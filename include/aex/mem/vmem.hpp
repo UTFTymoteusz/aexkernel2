@@ -30,6 +30,7 @@ namespace AEX::VMem {
 
         phys_addr pageRoot;
 
+        Pagemap();
         Pagemap(phys_addr pageRoot);
 
         /**

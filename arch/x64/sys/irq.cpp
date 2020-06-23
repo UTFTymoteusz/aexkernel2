@@ -100,14 +100,15 @@ namespace AEX::Sys::IRQ {
         APIC::map(addr);
         APIC::init();
 
+        for (int j = 1; j < 24; j++) {
+            set_vector(j, 32 + j);
+            set_mask(j, false);
+            set_destination(j, 0);
+        }
+
         set_vector(0, 0x20 + 2);
         set_mask(0, true);
         set_destination(0, 0);
-
-        for (int j = 16; j < 24; j++) {
-            set_mask(j, false);
-            set_vector(j, 32 + j);
-        }
 
         printk(PRINTK_OK "irq: Initialized\n");
     }
@@ -129,14 +130,19 @@ namespace AEX::Sys::IRQ {
     }
 
     void irq_sleep(double ms) {
+        // printk("iaaa\n");
         if (apic_tps == 0)
             apic_tps = find_apic_tps();
 
         irq_mark = false;
+        // printk("ibbb\n");
         APIC::setupTimer(0x20 + 31, (size_t)(apic_tps * (ms / 1000.0)), false);
+        // printk("iccc %i\n", CPU::checkInterrupts());
 
         while (!irq_mark)
             CPU::waitForInterrupt();
+
+        // printk("iddd\n");
     }
 
     double timer_hz = 0;
@@ -146,18 +152,24 @@ namespace AEX::Sys::IRQ {
     }
 
     void setup_timers_mcore(double hz) {
+        // printk("raaa\n");
         timer_hz = hz;
 
         double interval = (1000.0 / timer_hz) / MCore::cpu_count;
 
         for (int i = 0; i < MCore::cpu_count; i++) {
             if (i == CPU::getCurrentCPUID()) {
+                // printk("rbbb\n");
                 irq_sleep(interval);
+                // printk("rccc\n");
                 continue;
             }
 
+            // printk("rddd\n");
             MCore::CPUs[i]->sendPacket(CPU::ipp_type::CALL, (void*) timer_sync);
+            // printk("reee\n");
             irq_sleep(interval);
+            // printk("efff\n");
         }
 
         apic_interval     = (double) ((1.0 / (double) apic_tps) * 1000000000.0);
@@ -166,7 +178,9 @@ namespace AEX::Sys::IRQ {
         ns_per_irq     = (uint64_t)(apic_interval * apic_tps / timer_hz);
         ns_per_irq_adj = ns_per_irq / MCore::cpu_count;
 
+        // printk("eggg\n");
         setup_timer(timer_hz);
+        // printk("ehhh\n");
     }
 
     void timer_tick() {

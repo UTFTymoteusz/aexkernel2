@@ -1,5 +1,6 @@
 #include "sys/apic.hpp"
 
+#include "aex/kpanic.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
 
@@ -59,8 +60,14 @@ namespace AEX::Sys {
         write(0x310, dst << 24);
         write(0x300, (1 << 14) | vector);
 
-        while (read(0x300) & (1 << 12))
-            ;
+        volatile size_t counter = 0;
+
+        while (read(0x300) & (1 << 12)) {
+            counter++;
+
+            if (counter > 2432432)
+                kpanic("apic stuck, apic stuck");
+        }
 
         if (ints)
             CPU::interrupts();

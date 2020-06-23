@@ -10,6 +10,8 @@
 #include "proc/proc.hpp"
 #include "sys/irq.hpp"
 
+using CPU = AEX::Sys::CPU;
+
 namespace AEX::Proc {
     extern "C" void proc_reshed();
 
@@ -68,15 +70,16 @@ namespace AEX::Proc {
 
         if (_stack)
             parent->pagemap->free(_stack, _stack_size);
-
-        // printk("thread cleaned\n");
     }
 
     void Thread::yield() {
         if (Thread::getCurrentThread()->isCritical())
             return;
 
-        Sys::CPU::getCurrentCPU()->willingly_yielded = true;
+        if (CPU::getCurrentCPU()->in_interrupt)
+            kpanic("attempt to yield() while in interrupts");
+
+        CPU::getCurrentCPU()->willingly_yielded = true;
         proc_reshed();
     }
 
@@ -90,7 +93,7 @@ namespace AEX::Proc {
     }
 
     Thread* Thread::getCurrentThread() {
-        return Sys::CPU::getCurrentCPU()->currentThread;
+        return CPU::getCurrentCPU()->currentThread;
     }
 
     tid_t Thread::getCurrentTID() {
@@ -182,15 +185,32 @@ namespace AEX::Proc {
         _exit_event->defunct();
     }
 
+    void Thread::addCritical() {
+        if (!CPU::getCurrentCPU()->in_interrupt)
+            CPU::nointerrupts();
+
+        Mem::atomic_add(&_busy, (uint16_t) 1);
+        Mem::atomic_add(&_critical, (uint16_t) 1);
+
+        // printk("interrupts are gone\n");
+    }
+
     void Thread::subCritical() {
-        if (Mem::atomic_sub_fetch(&_critical, (uint16_t) 1) == 0 &&
-            Sys::CPU::getCurrentCPU()->should_yield) {
+        uint16_t fetched = Mem::atomic_sub_fetch(&_critical, (uint16_t) 1);
+
+        if (fetched == 0 && CPU::getCurrentCPU()->should_yield) {
             Mem::atomic_sub(&_busy, (uint16_t) 1);
+
+            if (!CPU::getCurrentCPU()->in_interrupt)
+                CPU::interrupts();
 
             Proc::Thread::yield();
             return;
         }
 
         Mem::atomic_sub(&_busy, (uint16_t) 1);
+
+        if (fetched == 0 && !CPU::getCurrentCPU()->in_interrupt)
+            CPU::interrupts();
     }
 }
