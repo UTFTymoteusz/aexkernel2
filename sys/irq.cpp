@@ -54,8 +54,8 @@ namespace AEX::Sys::IRQ {
     size_t  queue_waiting = 0;
     uint8_t queue[8192];
 
-    handler_array immediate_handlers[24] = {};
-    handler_array threaded_handlers[24]  = {};
+    handler_array immediate_handlers[32] = {};
+    handler_array threaded_handlers[32]  = {};
 
     Mem::SmartPointer<Proc::Thread> handler_thread;
 
@@ -65,7 +65,7 @@ namespace AEX::Sys::IRQ {
     void irq_handler();
 
     void init_proc() {
-        auto thread = new Proc::Thread(nullptr, (void*) irq_handler, 1024, nullptr);
+        auto thread = new Proc::Thread(nullptr, (void*) irq_handler, 4096, nullptr);
 
         handler_thread = thread->getSmartPointer();
         handler_thread->start();
@@ -74,8 +74,8 @@ namespace AEX::Sys::IRQ {
     void handle_irq(uint8_t irq) {
         static size_t append_pos = 0;
 
-        if (irq >= 24)
-            kpanic("irq >= 24 wtf");
+        if (irq >= 32)
+            kpanic("irq >= 32 wtf");
 
         Proc::Thread::getCurrentThread()->addCritical();
         immediate_handlers[irq].callAll();
