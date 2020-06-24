@@ -28,6 +28,7 @@
 #include "sys/irq.hpp"
 #include "sys/irq_i.hpp"
 #include "sys/mcore.hpp"
+#include "sys/time.hpp"
 
 // clang-format off
 #include "aex/ipc/messagequeue.hpp"
@@ -67,6 +68,9 @@ void main(multiboot_info_t* mbinfo) {
     TTY::init_mem(mbinfo);
 
     ACPI::init();
+    printk("\n");
+
+    Sys::init_time();
     printk("\n");
 
     IRQ::init();
@@ -116,13 +120,19 @@ void main_threaded() {
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrentThread()->getProcess();
 
+    int64_t start_epoch = Sys::get_clock_time();
+
     Proc::Thread::sleep(1000);
 
     while (true) {
-        uint64_t ns = get_uptime();
+        uint64_t ns    = get_uptime();
+        uint64_t clock = Sys::get_clock_time();
 
-        printk("cpu%i: %16li ns (%li ms, %li s, %li min)\n", CPU::getCurrentCPUID(), ns,
-               ns / 1000000, ns / 1000000000, ns / 1000000000 / 60);
+        auto dt = Sys::from_unix_epoch(clock);
+
+        printk("cpu%i: %16li ns (%li ms, %li s, %li min), clock says %li s, %02i:%02i:%02i\n",
+               CPU::getCurrentCPUID(), ns, ns / 1000000, ns / 1000000000, ns / 1000000000 / 60,
+               clock - start_epoch, dt.hour, dt.minute, dt.second);
         printk("idle: %16li ns (%li ms) cpu time (pid %i)\n", idle->usage.cpu_time_ns,
                idle->usage.cpu_time_ns / 1000000, idle->pid);
         printk("us  : %16li ns (%li ms) cpu time (pid %i)\n", process->usage.cpu_time_ns,
@@ -134,6 +144,6 @@ void main_threaded() {
 
         Proc::debug_print_cpu_jobs();
 
-        Proc::Thread::sleep(10000);
+        Proc::Thread::sleep(5000);
     }
 }

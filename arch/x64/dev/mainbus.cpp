@@ -11,12 +11,14 @@ namespace AEX::Dev {
 
     void detect_pci();
     void detect_ps2();
+    void detect_rtc();
 
     void mainbus_init() {
         mainbus = new Tree::Bus("main");
 
         detect_pci();
         detect_ps2();
+        detect_rtc();
     }
 
     void detect_pci() {
@@ -48,5 +50,13 @@ namespace AEX::Dev {
                 break;
             }
         }
+    }
+
+    void detect_rtc() {
+        auto rtc = new Device("rtc");
+
+        rtc->addResource(Device::resource(Device::resource::IO, 0x70, 2));
+
+        mainbus->registerDevice(rtc);
     }
 }
