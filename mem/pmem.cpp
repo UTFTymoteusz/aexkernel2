@@ -46,7 +46,7 @@ namespace AEX::PMem {
 
         int frp_size = ceiltopg(sizeof(frame_piece) + (frames + 1) / 8) * Sys::CPU::PAGE_SIZE;
 
-        frame_piece* new_piece = (frame_piece*) (alloc(frp_size) + (size_t) &KERNEL_VMA);
+        frame_piece* new_piece = (frame_piece*) (alloc(frp_size) + (size_t) &KERNEL_EXEC_VMA);
 
         new_piece->init((phys_addr) addr, frames);
 

@@ -118,8 +118,6 @@ void main_threaded() {
 
     int64_t start_epoch = Sys::get_clock_time();
 
-    Proc::Thread::sleep(1000);
-
     while (true) {
         uint64_t ns    = get_uptime();
         uint64_t clock = Sys::get_clock_time();

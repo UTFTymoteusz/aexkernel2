@@ -1,6 +1,6 @@
 #pragma once
 
-extern void* KERNEL_VMA;
+extern void* KERNEL_EXEC_VMA;
 
 extern void *_start_text, *_end_text;
 extern void *_start_rodata, *_end_rodata;

@@ -71,7 +71,7 @@ namespace AEX::VMem {
 
     uint64_t* aim_pptr(int index, phys_addr at) {
         if (!ready)
-            return (uint64_t*) ((size_t) &KERNEL_VMA + at);
+            return (uint64_t*) ((size_t) &KERNEL_EXEC_VMA + at);
 
         debug_pptr_targets[index] = at;
         *pptr_entries[index]      = at | PAGE_WRITE | PAGE_PRESENT;

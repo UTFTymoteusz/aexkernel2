@@ -47,19 +47,21 @@ LDFLAGS := $(GFLAGS) \
 	-no-pie
 
 format:
-	@$(MKDIR) $(ISO) $(ISO)bin/ $(ISO)dev/ $(ISO)mnt/ $(ISO)sys/
+	@$(MKDIR) $(ISO) $(SYS)
 	clang-format -style=file -i ${CFILES} ${HFILES}
 
 all: $(OBJS)
-	@$(MKDIR) $(ISO) $(ISO)bin/ $(ISO)dev/ $(ISO)mnt/ $(ISO)sys/
+	@$(MKDIR) $(ISO) $(SYS)
 	@$(CC) $(OBJS) $(LDFLAGS) -T linker.ld -o $(SYS)aexkrnl.elf
+
+copy:
+	@cp $(SYS)aexkrnl.elf "$(SYSTEM_DIR)"
 
 include $(shell find $(DEP_DEST) -type f -name *.d)
 
 clean:
 	rm -rf $(DEP_DEST)
 	rm -rf $(OBJ_DEST)
-	rm -rf $(SYS)core/
 
 $(OBJ_DEST)%.cpp.o : %.cpp
 	@$(MKDIR) ${@D}

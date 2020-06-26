@@ -3,7 +3,7 @@ OUTPUT_FORMAT(elf64-x86-64)
 
 SECTIONS
 {
-    KERNEL_VMA = 0xFFFFFFFF80000000;
+    KERNEL_EXEC_VMA = 0xFFFFFFFF80000000;
 
     . += 1M;
 
@@ -21,37 +21,37 @@ SECTIONS
         *bootstrap.o(.bootstrap.bss)
     }
 
-    . += KERNEL_VMA;
+    . += KERNEL_EXEC_VMA;
 
-    .text ALIGN(4K) : AT(ADDR(.text) - KERNEL_VMA)
+    .text ALIGN(4K) : AT(ADDR(.text) - KERNEL_EXEC_VMA)
     {
         *(.text)
         *(.text.*)
-        _end_text = . - KERNEL_VMA;
+        _end_text = . - KERNEL_EXEC_VMA;
     }
 
-    .rodata ALIGN(4K) : AT(ADDR(.rodata) - KERNEL_VMA)
+    .rodata ALIGN(4K) : AT(ADDR(.rodata) - KERNEL_EXEC_VMA)
     {
-        _start_rodata = . - KERNEL_VMA;
+        _start_rodata = . - KERNEL_EXEC_VMA;
         *(.rodata)
         *(.rodata.*)
-        _end_rodata = . - KERNEL_VMA;
+        _end_rodata = . - KERNEL_EXEC_VMA;
     }
 
-    .data ALIGN(4K) : AT(ADDR(.data) - KERNEL_VMA)
+    .data ALIGN(4K) : AT(ADDR(.data) - KERNEL_EXEC_VMA)
     {
-        _start_data = . - KERNEL_VMA;
+        _start_data = . - KERNEL_EXEC_VMA;
         *(.data)
         *(.data.*)
-        _end_data = . - KERNEL_VMA;
+        _end_data = . - KERNEL_EXEC_VMA;
     }
 
-    .bss ALIGN(4K) : AT(ADDR(.bss) - KERNEL_VMA)
+    .bss ALIGN(4K) : AT(ADDR(.bss) - KERNEL_EXEC_VMA)
     {
-        _start_bss = . - KERNEL_VMA;
+        _start_bss = . - KERNEL_EXEC_VMA;
         *(COMMON)
         *(EXCLUDE_FILE("*bootstrap.o") .bss)
-        _end_bss = . - KERNEL_VMA;
+        _end_bss = . - KERNEL_EXEC_VMA;
     }
 
     .whocares :
