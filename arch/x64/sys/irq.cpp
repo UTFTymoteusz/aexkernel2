@@ -26,8 +26,6 @@ namespace AEX::Sys::IRQ {
     double apic_interval     = 0.0;
     double apic_interval_adj = 0.0;
 
-    uint64_t uptime_ns = 0;
-
     uint64_t ns_per_irq     = 0;
     uint64_t ns_per_irq_adj = 0;
 
@@ -124,25 +122,18 @@ namespace AEX::Sys::IRQ {
     }
 
     void setup_timer(double hz) {
-        uptime_ns = 100 * 1000000ul;
-
         APIC::setupTimer(0x20 + 0, (size_t)(apic_tps / hz), true);
     }
 
     void irq_sleep(double ms) {
-        // printk("iaaa\n");
         if (apic_tps == 0)
             apic_tps = find_apic_tps();
 
         irq_mark = false;
-        // printk("ibbb\n");
         APIC::setupTimer(0x20 + 31, (size_t)(apic_tps * (ms / 1000.0)), false);
-        // printk("iccc %i\n", CPU::checkInterrupts());
 
         while (!irq_mark)
             CPU::waitForInterrupt();
-
-        // printk("iddd\n");
     }
 
     double timer_hz = 0;
@@ -152,24 +143,18 @@ namespace AEX::Sys::IRQ {
     }
 
     void setup_timers_mcore(double hz) {
-        // printk("raaa\n");
         timer_hz = hz;
 
         double interval = (1000.0 / timer_hz) / MCore::cpu_count;
 
         for (int i = 0; i < MCore::cpu_count; i++) {
             if (i == CPU::getCurrentCPUID()) {
-                // printk("rbbb\n");
                 irq_sleep(interval);
-                // printk("rccc\n");
                 continue;
             }
 
-            // printk("rddd\n");
             MCore::CPUs[i]->sendPacket(CPU::ipp_type::CALL, (void*) timer_sync);
-            // printk("reee\n");
             irq_sleep(interval);
-            // printk("efff\n");
         }
 
         apic_interval     = (double) ((1.0 / (double) apic_tps) * 1000000000.0);
@@ -178,49 +163,7 @@ namespace AEX::Sys::IRQ {
         ns_per_irq     = (uint64_t)(apic_interval * apic_tps / timer_hz);
         ns_per_irq_adj = ns_per_irq / MCore::cpu_count;
 
-        // printk("eggg\n");
         setup_timer(timer_hz);
-        // printk("ehhh\n");
-    }
-
-    void timer_tick() {
-        Mem::atomic_add_fetch(&uptime_ns, ns_per_irq_adj);
-    }
-
-    uint64_t get_uptime() {
-        return Mem::atomic_read(&uptime_ns);
-
-        // I give up
-        /*static uint64_t last_time = 0;
-        static Spinlock lock;
-
-        bool ints = CPU::checkInterrupts();
-        CPU::nointerrupts();
-
-        auto cpu = CPU::getCurrentCPU();
-
-        uint64_t ticks = APIC::getTimerInitial() - APIC::getTimerCounter();
-
-        uint64_t time = Mem::atomic_read(&curtime_ns) + (uint64_t)(apic_interval * ticks) -
-                        ns_per_irq_adj * cpu->id;
-        uint64_t last = Mem::atomic_read(&last_time);
-
-        if (time > last)
-            last = time;
-
-        if (time < last) {
-            do
-                time += (uint64_t)(apic_interval_adj * APIC::getTimerInitial());
-            while (time < last);
-        }
-
-        if (time > Mem::atomic_read(&last_time))
-            last_time = time;
-
-        if (ints)
-            CPU::interrupts();
-
-        return time;*/
     }
 
     IOAPIC* find_ioapic(int irq) {

@@ -22,14 +22,21 @@ namespace AEX::Proc {
     }
 
     extern "C" void proc_timer_tick_ext() {
-        Sys::IRQ::timer_tick();
+        auto cpu = Sys::CPU::getCurrentCPU();
+        cpu->in_interrupt++;
 
         schedule();
-
         Sys::APIC::eoi();
+
+        cpu->in_interrupt--;
     }
 
     extern "C" void proc_reshed_manual_ext() {
+        auto cpu = Sys::CPU::getCurrentCPU();
+        cpu->in_interrupt++;
+
         schedule();
+
+        cpu->in_interrupt--;
     }
 }

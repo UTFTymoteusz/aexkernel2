@@ -15,7 +15,7 @@ namespace AEX::Sys {
     };
 
     /**
-     * Gets the amount of time passed since multicore timers were setup.
+     * Gets the amount of time passed since AEX has booted.
      * @returns Amount of time passed in nanoseconds.
      */
     uint64_t get_uptime();

@@ -5,10 +5,10 @@
 #include "aex/mem/smartptr.hpp"
 #include "aex/mem/vmem.hpp"
 #include "aex/printk.hpp"
+#include "aex/sys/time.hpp"
 
 #include "proc/context.hpp"
 #include "proc/proc.hpp"
-#include "sys/irq.hpp"
 
 using CPU = AEX::Sys::CPU;
 
@@ -86,7 +86,7 @@ namespace AEX::Proc {
     void Thread::sleep(int ms) {
         auto currentThread = Thread::getCurrentThread();
 
-        currentThread->wakeup_at = Sys::IRQ::get_uptime() + ((uint64_t) ms) * 1000000;
+        currentThread->wakeup_at = Sys::get_uptime() + ((uint64_t) ms) * 1000000;
         currentThread->status    = Thread::status_t::SLEEPING;
 
         yield();

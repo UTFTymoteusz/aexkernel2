@@ -10,6 +10,7 @@
 #include "cpu/tss.hpp"
 #include "kernel/acpi/acpi.hpp"
 #include "sys/apic.hpp"
+#include "sys/irq.hpp"
 
 #define TRAMPOLINE_ADDR 0x1000 // Must be page aligned!
 
@@ -97,6 +98,9 @@ namespace AEX::Sys::MCore {
             if (!start_ap(id, entry->apic_id))
                 printk(PRINTK_WARN "mcore: Failed to start cpu%i\n", id);
         }
+
+        for (int i = 0; i < 24; i++)
+            IRQ::set_destination(i, i % cpu_count);
 
         printk(PRINTK_OK "mcore: Initialized\n");
     }

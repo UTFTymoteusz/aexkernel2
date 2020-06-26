@@ -44,6 +44,9 @@ namespace AEX::ACPI {
         VMem::kernel_pagemap->free(table_hdr, sizeof(sdt_header));
 
         add_table(table);
+
+        if (_fadt->pm_timer_block == 0)
+            kpanic("acpi: no power management timer :(\n");
     }
 
     void init() {

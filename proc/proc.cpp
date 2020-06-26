@@ -12,9 +12,9 @@
 #include "aex/proc/process.hpp"
 #include "aex/proc/thread.hpp"
 #include "aex/spinlock.hpp"
+#include "aex/sys/time.hpp"
 
 #include "proc/context.hpp"
-#include "sys/irq.hpp"
 #include "sys/mcore.hpp"
 
 namespace AEX::Proc {
@@ -85,7 +85,7 @@ namespace AEX::Proc {
 
         int i = cpu->current_tid;
 
-        uint64_t curtime = Sys::IRQ::get_uptime();
+        uint64_t curtime = Sys::get_uptime();
         uint64_t delta   = curtime - cpu->measurement_start_ns;
 
         cpu->measurement_start_ns = curtime;

@@ -3,7 +3,11 @@
 #include "aex/arch/sys/cpu.hpp"
 
 namespace AEX::Sys {
+    Spinlock PIT::_lock;
+
     void PIT::setHz(int hz) {
+        auto scopeLock = ScopeSpinlock(_lock);
+
         int divisor = 1193181.66666666 / hz;
 
         CPU::outportb(0x43, 0x36);
@@ -16,6 +20,8 @@ namespace AEX::Sys {
     }
 
     void PIT::interruptIn(double ms) {
+        auto scopeLock = ScopeSpinlock(_lock);
+
         double hz      = 1000.0 / ms;
         int    divisor = 1193181.66666666 / hz;
 

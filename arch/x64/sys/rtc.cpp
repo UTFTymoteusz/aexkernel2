@@ -1,20 +1,22 @@
 #include "sys/rtc.hpp"
 
 #include "aex/byte.hpp"
+#include "aex/kpanic.hpp"
 #include "aex/mem/atomic.hpp"
-#include "aex/printk.hpp"
 #include "aex/sys/irq.hpp"
 #include "aex/sys/time.hpp"
 
+#include "kernel/acpi/acpi.hpp"
 #include "sys/cmos.hpp"
 
 namespace AEX::Sys {
     Spinlock RTC::_lock;
 
-    bool RTC::_normal_hour_format;
-    bool RTC::_retarded_bcd;
+    bool    RTC::_normal_hour_format;
+    bool    RTC::_retarded_bcd;
+    uint8_t RTC::_century_index;
 
-    volatile int64_t RTC::_epoch;
+    volatile int64_t RTC::_epoch = 0;
 
     void RTC::init() {
         auto scopeLock = ScopeSpinlock(_lock);
@@ -28,10 +30,20 @@ namespace AEX::Sys {
         _retarded_bcd       = !(status_b & CMOS::STATUS_B_BINARY_MODE);
 
         IRQ::register_handler(8, RTC::irq);
+
+        auto _fadt = (ACPI::fadt*) ACPI::find_table("FACP", 0);
+
+        RTC::_century_index = _fadt->century;
+        if (RTC::_century_index == 0)
+            kpanic("This computer's CMOS doesn't know what a century is");
     }
 
     int64_t RTC::get_epoch() {
-        return Mem::atomic_read(&_epoch);
+        int64_t ret = Mem::atomic_read(&_epoch);
+        while (!ret)
+            ret = Mem::atomic_read(&_epoch);
+
+        return ret;
     }
 
     void RTC::irq(void*) {
@@ -47,8 +59,7 @@ namespace AEX::Sys {
         uint8_t month = CMOS::read(0x08);
         uint8_t day   = CMOS::read(0x07);
 
-        // prob should check the ACPI tables
-        uint8_t century = CMOS::read(0x32);
+        uint8_t century = CMOS::read(_century_index);
 
         bool pm = (hours & 0x80);
 

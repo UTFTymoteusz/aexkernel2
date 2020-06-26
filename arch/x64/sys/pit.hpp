@@ -1,5 +1,9 @@
 #pragma once
 
+#include "aex/spinlock.hpp"
+
+#include <stdint.h>
+
 namespace AEX::Sys {
     class PIT {
         public:
@@ -7,5 +11,8 @@ namespace AEX::Sys {
         static void setInterval(double ms);
 
         static void interruptIn(double ms);
+
+        private:
+        static Spinlock _lock;
     };
 }

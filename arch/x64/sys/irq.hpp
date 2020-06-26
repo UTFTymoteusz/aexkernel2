@@ -46,15 +46,4 @@ namespace AEX::Sys::IRQ {
      * Setups the local CPU timers in a way that they are offset in phase nicely.
      */
     void setup_timers_mcore(double hz);
-
-    /**
-     * Signalizes a timer tick. This is used for get_uptime. Should not be called directly.
-     */
-    void timer_tick();
-
-    /**
-     * Gets the amount of time passed since multicore timers were setup.
-     * @returns Amount of time passed in nanoseconds.
-     */
-    uint64_t get_uptime();
 }

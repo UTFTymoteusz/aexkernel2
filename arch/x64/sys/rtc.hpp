@@ -16,8 +16,9 @@ namespace AEX::Sys {
         static Spinlock         _lock;
         static volatile int64_t _epoch;
 
-        static bool _normal_hour_format;
-        static bool _retarded_bcd;
+        static bool    _normal_hour_format;
+        static bool    _retarded_bcd;
+        static uint8_t _century_index;
 
         static void irq(void*);
     };
