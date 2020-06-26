@@ -15,10 +15,11 @@
 
 namespace AEX::Sys::IRQ {
     struct handler_array {
-        size_t count;
-        void (**funcs)(void*);
-        void** args;
+        size_t count          = 0;
+        void (**funcs)(void*) = nullptr;
+        void** args           = nullptr;
 
+        // need some locks here
         void addFunc(void (*func)(void*), void* arg) {
             if (!funcs) {
                 count = 1;

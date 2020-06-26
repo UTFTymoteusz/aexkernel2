@@ -30,10 +30,6 @@
 #include "sys/mcore.hpp"
 #include "sys/time.hpp"
 
-// clang-format off
-#include "aex/ipc/messagequeue.hpp"
-// clang-format on
-
 using namespace AEX;
 using namespace AEX::Sys;
 
@@ -144,6 +140,6 @@ void main_threaded() {
 
         Proc::debug_print_cpu_jobs();
 
-        Proc::Thread::sleep(5000);
+        Proc::Thread::sleep(20000);
     }
 }

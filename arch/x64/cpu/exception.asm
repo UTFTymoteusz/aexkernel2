@@ -102,8 +102,8 @@ exc_noerr 31
 
 exc_common:
     pusha
-    mov rdi, rsp
 
+    mov rdi, rsp
     call common_fault_handler
 
     popa

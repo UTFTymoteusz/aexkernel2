@@ -56,6 +56,7 @@ namespace AEX::Dev {
         auto rtc = new Device("rtc");
 
         rtc->addResource(Device::resource(Device::resource::IO, 0x70, 2));
+        rtc->addResource(Device::resource(Device::resource::IRQ, 8));
 
         mainbus->registerDevice(rtc);
     }

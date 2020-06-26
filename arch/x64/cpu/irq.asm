@@ -47,7 +47,7 @@ SECTION .text
 %macro irq 1
     global irq%1
     irq%1:
-        push byte %1
+        push qword %1
         jmp irq_common
 %endmacro
 
@@ -97,6 +97,7 @@ irq_common:
     pusha
     
     mov rdi, rsp
+    xor rbp, rbp
     call common_irq_handler
 
     popa
@@ -108,6 +109,7 @@ _irq_marker:
     pusha
 
     mov rdi, rsp
+    xor rbp, rbp
     call irq_marker
 
     popa
@@ -116,6 +118,7 @@ _irq_marker:
 irq_ipi:
     pusha
 
+    xor rbp, rbp
     call ipi_handle
 
     popa

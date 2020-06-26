@@ -27,7 +27,7 @@ namespace AEX::Heap {
 
     template <typename T>
     T ceilToPiece(T val) {
-        return (val + ALLOC_SIZE - 1) / ALLOC_SIZE;
+        return int_ceil<T>(val, ALLOC_SIZE) / ALLOC_SIZE;
     }
 
     uint64_t heap_allocated = 0;
@@ -60,6 +60,8 @@ namespace AEX::Heap {
             piece->data        = (void*) ((size_t) mem + data_offset);
             piece->next        = nullptr;
 
+            memset(piece->bitmap, '\0', pieces);
+
             Mem::atomic_add(&heap_allocated, pieces * ALLOC_SIZE);
             Mem::atomic_add(&heap_free, pieces * ALLOC_SIZE);
 
@@ -84,28 +86,32 @@ namespace AEX::Heap {
             mark(start, pieces);
             spinlock.release();
 
-            memset((void*) ((size_t) data + start * ALLOC_SIZE), '\0', pieces * ALLOC_SIZE);
+            void* addr = (void*) ((size_t) data + start * ALLOC_SIZE);
 
-            auto header    = (alloc_block*) ((size_t) data + start * ALLOC_SIZE);
-            header->len    = pieces;
-            header->sanity = ((size_t) data + start * ALLOC_SIZE + ALLOC_SIZE) ^ SANITY_XOR;
+            memset(addr, '\0', pieces * ALLOC_SIZE);
+
+            auto header         = (alloc_block*) addr;
+            header->len         = pieces;
+            header->sanity      = ((size_t) addr + ALLOC_SIZE) ^ SANITY_XOR;
+            header->recognition = 0x55AA;
 
             Mem::atomic_sub(&heap_free, (uint64_t) pieces * ALLOC_SIZE);
 
-            return (void*) ((size_t) data + start * ALLOC_SIZE + ALLOC_SIZE);
+            return (void*) ((size_t) addr + ALLOC_SIZE);
         }
 
         void free(void* ptr) {
             void* block  = (void*) ((size_t) ptr - ALLOC_SIZE);
             auto  header = (alloc_block*) block;
 
-            if (header->sanity != (((size_t) ptr) ^ SANITY_XOR)) {
+            if (header->sanity != ((size_t) ptr ^ SANITY_XOR)) {
                 printk_fault();
 
-                Debug::dump_bytes((uint8_t*) header - 64, 128);
+                Debug::dump_bytes((uint8_t*) header - 96, 128 + 80);
 
-                kpanic("heap: free(0x%p) sanity check failed (sanity was 0x%x)", ptr,
-                       header->sanity);
+                kpanic("heap: free(0x%p) sanity check failed (sanity was 0x%lx (0x%lx), should "
+                       "have been %p)",
+                       ptr, header->sanity, header->sanity ^ SANITY_XOR, (size_t) ptr ^ SANITY_XOR);
             }
 
             spinlock.acquire();
@@ -122,14 +128,16 @@ namespace AEX::Heap {
 
         size_t getAllocSize(void* ptr) {
             auto header = (alloc_block*) ((size_t) ptr - ALLOC_SIZE);
-            return header->len * ALLOC_SIZE;
+            return (header->len - 1) * ALLOC_SIZE;
         }
 
         private:
         struct alloc_block {
+            size_t sanity;
+
             uint32_t len; // This is the piece count including this header
             bool     page;
-            size_t   sanity;
+            uint16_t recognition;
         };
 
         static_assert(sizeof(alloc_block) <= ALLOC_SIZE);
@@ -144,18 +152,26 @@ namespace AEX::Heap {
             uint32_t ii = start / (sizeof(BITMAP_TYPE) * 8);
             uint32_t ib = start % (sizeof(BITMAP_TYPE) * 8);
 
+            BITMAP_TYPE buffer = bitmap[ii];
+
             while (amount > 0) {
-                bitmap[ii] |= 1 << ib;
+                buffer |= 1 << ib;
 
                 ib++;
 
                 if (ib >= sizeof(BITMAP_TYPE) * 8) {
+                    bitmap[ii] = buffer;
+
                     ii++;
                     ib = 0;
+
+                    buffer = bitmap[ii];
                 }
 
                 amount--;
             }
+
+            bitmap[ii] = buffer;
         }
 
         void unmark(uint32_t start, uint32_t amount) {
@@ -165,18 +181,26 @@ namespace AEX::Heap {
             uint32_t ii = start / (sizeof(BITMAP_TYPE) * 8);
             uint32_t ib = start % (sizeof(BITMAP_TYPE) * 8);
 
+            BITMAP_TYPE buffer = bitmap[ii];
+
             while (amount > 0) {
-                bitmap[ii] &= ~(1 << ib);
+                buffer &= ~(1 << ib);
 
                 ib++;
 
                 if (ib >= sizeof(BITMAP_TYPE) * 8) {
+                    bitmap[ii] = buffer;
+
                     ii++;
                     ib = 0;
+
+                    buffer = bitmap[ii];
                 }
 
                 amount--;
             }
+
+            bitmap[ii] = buffer;
         }
 
         int64_t findFree(uint32_t amount) {
@@ -271,6 +295,9 @@ namespace AEX::Heap {
     }
 
     void free(void* ptr) {
+        if (!ptr)
+            return;
+
         Piece* piece = rootPiece;
 
         do {
@@ -315,13 +342,20 @@ namespace AEX::Heap {
         if (!ptr)
             return malloc(size);
 
-        void*  newptr  = malloc(size);
+        if (size == 0) {
+            free(ptr);
+            return nullptr;
+        }
+
         size_t oldsize = msize(ptr);
+        void*  newptr  = malloc(size);
 
-        if (newptr && ptr)
-            memcpy(newptr, ptr, oldsize);
+        if (!newptr)
+            return nullptr;
 
-        if (oldsize < size && newptr)
+        memcpy(newptr, ptr, min(oldsize, size));
+
+        if (oldsize < size)
             memset((void*) ((size_t) newptr + oldsize), '\0', size - oldsize);
 
         free(ptr);

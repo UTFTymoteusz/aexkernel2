@@ -122,12 +122,17 @@ namespace AEX::Debug {
 
         while (len) {
             cap--;
+
             if (cap == 8) {
                 printk("  ");
             }
             else if (cap == 0) {
                 cap = 16;
                 printk("\n");
+            }
+
+            if (cap == 16) {
+                printk("%p: ", _addr);
             }
 
             printk("%02x ", *_addr);

@@ -7,6 +7,7 @@
 #include "aex/proc/thread.hpp"
 
 #define EXC_DEBUG 1
+#define EXC_NMI 2
 #define EXC_PAGE_FAULT 14
 
 extern "C" void common_fault_handler(void* info);
@@ -53,7 +54,8 @@ namespace AEX::Sys {
                     CPU::getCurrentCPUID(), exception_names[info->int_no], info->int_no, info->err);
         AEX::printk("RIP: 0x%016lx <%s+0x%x>\n", info->rip, name, delta);
 
-        AEX::printk("TID: %8i\n", cpu->current_tid);
+        AEX::printk("TID: %8i (b%i, c%i, i%i)\n", cpu->current_tid, cpu->currentThread->_busy,
+                    cpu->currentThread->_critical, cpu->in_interrupt);
 
         /*if (Proc::threads[cpu->current_tid] && Proc::threads[cpu->current_tid]->parent)
             AEX::printk("PID: %8i, TID: %8i\n", Proc::threads[cpu->current_tid]->parent->pid,
@@ -74,16 +76,6 @@ namespace AEX::Sys {
             printk("CR2: 0x%016lx  CR3: 0x%016lx\n", cr2, cr3);
         }
 
-        if (info->int_no == EXC_DEBUG) {
-            Debug::stack_trace();
-
-            for (volatile size_t i = 0; i < 84354325; i++)
-                ;
-
-            Sys::CPU::getCurrentCPU()->in_interrupt--;
-            return;
-        }
-
         printk("RAX: 0x%016lx  RBX: 0x%016lx  RCX: 0x%016lx  RDX: 0x%016lx\n", info->rax, info->rbx,
                info->rcx, info->rdx);
         printk("RSI: 0x%016lx  RDI: 0x%016lx  RSP: 0x%016lx  RBP: 0x%016lx\n", info->rsi, info->rdi,
@@ -95,6 +87,29 @@ namespace AEX::Sys {
                info->r14, info->r15);
 
         printk("RFLAGS: 0x%016lx\n", info->rflags);
+
+        if (info->int_no == EXC_DEBUG) {
+            Debug::stack_trace();
+
+            static int counter = 0;
+
+            printk("counter: %i\n", counter);
+
+            counter++;
+
+            for (volatile size_t i = 0; i < 84354325; i++)
+                ;
+
+            Sys::CPU::getCurrentCPU()->in_interrupt--;
+            return;
+        }
+
+        if (info->int_no == EXC_NMI) {
+            Debug::stack_trace();
+
+            Sys::CPU::getCurrentCPU()->in_interrupt--;
+            return;
+        }
 
         kpanic("Unrecoverable processor exception occured in CPU %i", CPU::getCurrentCPUID());
 

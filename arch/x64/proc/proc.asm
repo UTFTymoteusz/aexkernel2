@@ -107,6 +107,7 @@ enter_context:
 proc_timer_tick:
     save_context
 
+    xor rbp, rbp
     call proc_timer_tick_ext
     
     jmp enter_context
