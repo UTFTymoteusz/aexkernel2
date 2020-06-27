@@ -6,16 +6,26 @@
 #include <stdint.h>
 
 extern const int _page_present, _page_write, _page_user, _page_through, _page_nocache,
-    _page_combine, _page_nophys, _page_exec;
+    _page_combine, _page_nophys, _page_exec, _page_fixed, _page_arbitrary;
 
+// Specifies if a page is present.
 #define PAGE_PRESENT _page_present
+// Specifies if a page is writeable.
 #define PAGE_WRITE _page_write
+// Specifies if a page is accessible by userspace code.
 #define PAGE_USER _page_user
 #define PAGE_THROUGH _page_through
 #define PAGE_NOCACHE _page_nocache
+// Write-combining mode.
 #define PAGE_COMBINE _page_combine
+// Marks the page as not referencing physical memory.
 #define PAGE_NOPHYS _page_nophys
+// Puts the page in the executable space.
 #define PAGE_EXEC _page_exec
+// If set, the pages will be mapped at the source address.
+#define PAGE_FIXED _page_fixed
+// If set, the pages will raise page faults.
+#define PAGE_ARBITRARY _page_arbitrary
 
 namespace AEX::VMem {
     typedef size_t phys_addr;
@@ -71,12 +81,13 @@ namespace AEX::VMem {
 
         /**
          * Maps the specified size to a physical address.
-         * @param bytes Requested size in bytes.
-         * @param paddr The physical address.
-         * @param flags Flags.
+         * @param bytes  Requested size in bytes.
+         * @param paddr  The physical address.
+         * @param flags  Flags.
+         * @param source If PAGE_FIXED is used, source will be the virtual address.
          * @returns Virtual address or nullptr on failure.
          */
-        void* map(size_t bytes, phys_addr paddr, uint16_t flags);
+        void* map(size_t bytes, phys_addr paddr, uint16_t flags, void* source = nullptr);
 
         /**
          * Frees the specified size from the address space. Automatically frees physical memory.

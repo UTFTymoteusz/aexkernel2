@@ -21,15 +21,17 @@ using namespace AEX::PMem;
 
 extern void* pml4;
 
-const int _page_present = 0x01;
-const int _page_write   = 0x02;
-const int _page_user    = 0x04;
-const int _page_through = 0x08;
-const int _page_nocache = 0x10;
-const int _page_pat     = 0x80;
-const int _page_combine = _page_pat;
-const int _page_nophys  = 0x200;
-const int _page_exec    = 0x1000;
+const int _page_present   = 0x01;
+const int _page_write     = 0x02;
+const int _page_user      = 0x04;
+const int _page_through   = 0x08;
+const int _page_nocache   = 0x10;
+const int _page_pat       = 0x80;
+const int _page_combine   = _page_pat;
+const int _page_nophys    = 0x200;
+const int _page_exec      = 0x1000;
+const int _page_fixed     = 0x2000;
+const int _page_arbitrary = 0x4000;
 
 // I need to make invlpg clump together
 
@@ -115,6 +117,7 @@ namespace AEX::VMem {
         phys_addr phys;
 
         flags &= 0xFFF;
+        flags |= PAGE_PRESENT;
 
         for (size_t i = 0; i < amount; i++) {
             phys = AEX::PMem::alloc(Sys::CPU::PAGE_SIZE);
@@ -149,6 +152,7 @@ namespace AEX::VMem {
         size_t start = virt;
 
         flags &= 0xFFF;
+        flags |= PAGE_PRESENT;
 
         for (size_t i = 0; i < amount; i++) {
             // printk("alloc 0x%016x >> 0x%016x\n", virt, phys);
@@ -168,8 +172,8 @@ namespace AEX::VMem {
         return (void*) start;
     }
 
-    void* Pagemap::map(size_t bytes, phys_addr paddr, uint16_t flags) {
-        flags &= 0x0FFF;
+    void* Pagemap::map(size_t bytes, phys_addr paddr, uint16_t flags, void* source) {
+        flags |= PAGE_NOPHYS | PAGE_PRESENT;
 
         size_t    amount = ceiltopg(bytes);
         phys_addr offset = 0;
@@ -181,18 +185,35 @@ namespace AEX::VMem {
 
         spinlock.acquire();
 
-        int    pptr  = alloc_pptr();
-        size_t virt  = (size_t) findContiguous(pptr, amount);
+        int    pptr = alloc_pptr();
+        size_t virt;
+
+        if (flags & PAGE_FIXED)
+            virt = (size_t) source;
+        else
+            virt = (size_t) findContiguous(pptr, amount);
+
         size_t start = virt;
 
-        for (size_t i = 0; i < amount; i++) {
-            assign(pptr, (void*) virt, paddr - offset, flags | PAGE_NOPHYS);
+        bool arbitrary = flags & PAGE_ARBITRARY;
+        if (arbitrary)
+            flags &= ~PAGE_PRESENT;
 
-            // printk("map 0x%016p >> 0x%016x (+0x%04x)\n", virt, paddr - offset, offset);
+        flags &= 0x0FFF;
 
-            paddr += Sys::CPU::PAGE_SIZE;
-            virt += Sys::CPU::PAGE_SIZE;
-        }
+        if (!arbitrary)
+            for (size_t i = 0; i < amount; i++) {
+                assign(pptr, (void*) virt, paddr - offset, flags);
+
+                paddr += Sys::CPU::PAGE_SIZE;
+                virt += Sys::CPU::PAGE_SIZE;
+            }
+        else
+            for (size_t i = 0; i < amount; i++) {
+                assign(pptr, (void*) virt, 0x00AA000000000000, flags);
+
+                virt += Sys::CPU::PAGE_SIZE;
+            }
 
         free_pptr(pptr);
         spinlock.release();
@@ -231,7 +252,7 @@ namespace AEX::VMem {
         uint64_t* ptable = findTableEnsure(pptr, virt_addr);
         uint64_t  index  = (virt_addr >> 12) & 0x1FF;
 
-        ptable[index] = phys_addr | flags | PAGE_PRESENT;
+        ptable[index] = phys_addr | flags;
 
         Sys::CPU::broadcastPacket(Sys::CPU::ipp_type::PG_INV, virt);
 
@@ -333,8 +354,14 @@ namespace AEX::VMem {
             return nullptr;
 
         size_t _vstart = (size_t) vstart;
-        if (_vstart == 0xFFFF800000000000 && executable)
-            _vstart = 0xFFFFFFFF80000000;
+        size_t _vend   = (size_t) vend;
+
+        if (executable) {
+            if (_vstart == 0xFFFF800000000000)
+                _vstart = 0xFFFFFFFF80000000;
+            else if (_vend == 0x00007FFFFFFFFFFF)
+                _vstart = 0x00007FFF80000000;
+        }
 
         uint64_t index = ((size_t) _vstart >> 12) & 0x1FF;
         size_t   virt  = _vstart;
@@ -452,7 +479,7 @@ namespace AEX::VMem {
 
         free_pptr(pptr);
 
-        Sys::CPU::broadcastPacket(Sys::CPU::ipp_type::PG_FLUSH, nullptr, true);
+        Sys::CPU::broadcastPacket(Sys::CPU::ipp_type::PG_FLUSH, nullptr);
 
         printk(PRINTK_OK "vmem: Bootstrap necessities cleaned\n");
     }
