@@ -46,11 +46,9 @@ namespace AEX::Sys::IRQ {
         }
 
         void callAll() {
-            auto arg = args[i];
-
             for (size_t i = 0; i < count; i++)
                 if (funcs[i])
-                    funcs[i](arg);
+                    funcs[i](args[i]);
         }
     };
 
