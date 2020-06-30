@@ -1,6 +1,6 @@
 #pragma once
 
-#include "aex/mem/smartarray.hpp"
+#include "aex/mem.hpp"
 #include "aex/mem/vector.hpp"
 #include "aex/optional.hpp"
 #include "aex/spinlock.hpp"

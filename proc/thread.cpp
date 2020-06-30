@@ -2,9 +2,9 @@
 
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/ipc/event.hpp"
-#include "aex/mem/smartptr.hpp"
-#include "aex/mem/vmem.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
+#include "aex/proc.hpp"
 #include "aex/sys/time.hpp"
 
 #include "proc/context.hpp"
@@ -28,7 +28,7 @@ namespace AEX::Proc {
         this->_exit_event = new IPC::Event();
     }
 
-    Thread::Thread(Process* parent, void* entry, size_t stack_size, VMem::Pagemap* pagemap,
+    Thread::Thread(Process* parent, void* entry, size_t stack_size, Mem::Pagemap* pagemap,
                    bool usermode, bool dont_add) {
         if (!parent)
             parent = processes.get(1).get();
@@ -40,9 +40,9 @@ namespace AEX::Proc {
         _stack_size = stack_size;
 
         if (usermode)
-            context = new Context(entry, _stack, stack_size, pagemap, usermode);
+            context = new Context(entry, _stack, stack_size, pagemap, true);
         else
-            context = new Context(entry, _stack, stack_size, pagemap, usermode, Thread::exit);
+            context = new Context(entry, _stack, stack_size, pagemap, false, Thread::exit);
 
         status = FRESH;
 

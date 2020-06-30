@@ -2,7 +2,7 @@
 
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/debug.hpp"
-#include "aex/mem/vmem.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
 
 #include "cpu/tss.hpp"
@@ -65,8 +65,8 @@ namespace AEX::Sys {
 
             *((uint32_t*) &gdt[5 + i + 1]) = tss_addr >> 32;
 
-            _tss->ist1 = (size_t) VMem::kernel_pagemap->alloc(8192) + 8192;
-            _tss->ist2 = (size_t) VMem::kernel_pagemap->alloc(8192) + 8192;
+            _tss->ist1 = (size_t) Mem::kernel_pagemap->alloc(8192) + 8192;
+            _tss->ist2 = (size_t) Mem::kernel_pagemap->alloc(8192) + 8192;
         }
 
         load_gdt(gdt, 5 + MCore::cpu_count * 2);

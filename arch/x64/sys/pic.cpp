@@ -2,10 +2,10 @@
 
 #include "aex/arch/sys/cpu.hpp"
 
-#define ICW1_INIT 0x10
-#define ICW1_ICW4 0x01
+constexpr auto ICW1_INIT = 0x10;
+constexpr auto ICW1_ICW4 = 0x01;
 
-#define ICW4_8086 0x01
+constexpr auto ICW4_8086 = 0x01;
 
 namespace AEX::Sys {
     PIC pics[2];

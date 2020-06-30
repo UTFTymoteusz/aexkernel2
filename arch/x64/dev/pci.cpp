@@ -1,21 +1,19 @@
 #include "aex/dev/pci.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
-#include "aex/dev/tree/bus.hpp"
-#include "aex/dev/tree/device.hpp"
-#include "aex/dev/tree/tree.hpp"
-#include "aex/mem/pmem.hpp"
+#include "aex/dev/tree.hpp"
+#include "aex/mem.hpp"
 #include "aex/module.hpp"
 #include "aex/printk.hpp"
-#include "aex/proc/thread.hpp"
+#include "aex/proc.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
-#define CONFIG_ADDRESS 0xCF8
-#define CONFIG_DATA 0xCFC
+constexpr auto CONFIG_ADDRESS = 0xCF8;
+constexpr auto CONFIG_DATA    = 0xCFC;
 
 namespace AEX::Dev::PCI {
     void scan_all_buses();
@@ -187,10 +185,10 @@ namespace AEX::Dev::PCI {
     }
 
     void fill_bars(uint8_t bus, uint8_t device, uint8_t function, PCIDevice* dev_device) {
-        PMem::phys_addr bar0, bar1;
+        Mem::Phys::phys_addr bar0, bar1;
 
-        PMem::phys_addr addr;
-        size_t          len;
+        Mem::Phys::phys_addr addr;
+        size_t               len;
 
         uint32_t offset = 16;
         uint32_t mask   = 0;

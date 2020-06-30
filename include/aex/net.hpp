@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aex/errno.hpp"
+#include "aex/net/ipv4.hpp"
 #include "aex/net/socket.hpp"
 
 #include <stddef.h>
@@ -14,6 +15,8 @@ namespace AEX::Net {
 
     class LinkLayer;
     class INetProtocol;
+
+    struct ipv4_addr;
 
     extern INetProtocol** inet_protocols;
 

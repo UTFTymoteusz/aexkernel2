@@ -4,12 +4,14 @@
 #include "aex/elf.hpp"
 #include "aex/errno.hpp"
 #include "aex/fs/file.hpp"
-#include "aex/mem/vector.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 
 #include "boot/mboot.h"
 #include "kernel/module.hpp"
+
+using namespace AEX::Mem;
 
 extern void main(multiboot_info_t* mbinfo);
 

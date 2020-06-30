@@ -1,12 +1,11 @@
 #include "aex/dev/blockdevice.hpp"
 
-#include "aex/dev/dev.hpp"
+#include "aex/dev.hpp"
 #include "aex/dev/device.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/math.hpp"
-#include "aex/mem/smartptr.hpp"
-#include "aex/proc/process.hpp"
-#include "aex/proc/thread.hpp"
+#include "aex/mem.hpp"
+#include "aex/proc.hpp"
 #include "aex/string.hpp"
 
 #include <stddef.h>

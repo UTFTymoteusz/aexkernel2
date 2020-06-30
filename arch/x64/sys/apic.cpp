@@ -1,19 +1,19 @@
 #include "sys/apic.hpp"
 
 #include "aex/kpanic.hpp"
-#include "aex/mem/vmem.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
 
-#define IA32_APIC_BASE_MSR 0x1B
+constexpr auto IA32_APIC_BASE_MSR = 0x1B;
 
 namespace AEX::Sys {
     void* APIC::addr;
 
-    void APIC::map(PMem::phys_addr phys) {
+    void APIC::map(Mem::Phys::phys_addr phys) {
         if (addr != nullptr)
             return;
 
-        addr = VMem::kernel_pagemap->map(CPU::PAGE_SIZE, phys, PAGE_WRITE);
+        addr = Mem::kernel_pagemap->map(CPU::PAGE_SIZE, phys, PAGE_WRITE);
     }
 
     uint32_t APIC::read(int reg) {

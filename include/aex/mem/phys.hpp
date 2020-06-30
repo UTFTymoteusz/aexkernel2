@@ -8,17 +8,11 @@
 struct multiboot_info;
 typedef struct multiboot_info multiboot_info_t;
 
-namespace AEX::PMem {
+namespace AEX::Mem::Phys {
     typedef size_t phys_addr;
 
     extern size_t frames_available;
     extern size_t frames_taken_by_kernel;
-
-    /**
-     * Initializes the memory frame allocator.
-     * @param mbinfo The multiboot info struct.
-     */
-    void init(const multiboot_info_t* mbinfo);
 
     /**
      * Ceils the amount of bytes to the required amount of frames.

@@ -3,7 +3,7 @@
 #include "aex/ipc/event.hpp"
 #include "aex/mem/vector.hpp"
 #include "aex/optional.hpp"
-#include "aex/proc/thread.hpp"
+#include "aex/proc.hpp"
 #include "aex/spinlock.hpp"
 
 namespace AEX::IPC {

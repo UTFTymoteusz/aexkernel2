@@ -1,18 +1,18 @@
 #include "sys/mcore.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
-#include "aex/mem/vmem.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
+#include "aex/sys/acpi.hpp"
 
 #include "cpu/gdt.hpp"
 #include "cpu/idt.hpp"
 #include "cpu/tss.hpp"
-#include "kernel/acpi/acpi.hpp"
 #include "sys/apic.hpp"
 #include "sys/irq.hpp"
 
-#define TRAMPOLINE_ADDR 0x1000 // Must be page aligned!
+constexpr auto TRAMPOLINE_ADDR = 0x1000; // Must be page aligned!
 
 namespace AEX::Sys::MCore {
     using MADT = AEX::ACPI::MADT;
@@ -28,7 +28,7 @@ namespace AEX::Sys::MCore {
     void ap_wait();
 
     void setup_trampoline(int id) {
-        volatile size_t stack = (size_t) VMem::kernel_pagemap->alloc(4096, PAGE_WRITE) + 4096;
+        volatile size_t stack = (size_t) Mem::kernel_pagemap->alloc(4096, PAGE_WRITE) + 4096;
 
         // For some reason g++ offsets some of the addresses by 8
         asm volatile("    \

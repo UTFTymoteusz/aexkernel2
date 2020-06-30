@@ -1,10 +1,7 @@
-#include "kernel/acpi/acpi.hpp"
+#include "aex/sys/acpi.hpp"
 
-#include "aex/acpi.hpp"
 #include "aex/kpanic.hpp"
-#include "aex/mem/pmem.hpp"
-#include "aex/mem/vector.hpp"
-#include "aex/mem/vmem.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 
@@ -37,11 +34,10 @@ namespace AEX::ACPI {
         if (!_fadt)
             kpanic("This system has no FADT, what the hell?");
 
-        auto table_hdr =
-            (sdt_header*) VMem::kernel_pagemap->map(sizeof(sdt_header), _fadt->dsdt, 0);
-        auto table = (acpi_table*) VMem::kernel_pagemap->map(table_hdr->length, _fadt->dsdt, 0);
+        auto table_hdr = (sdt_header*) Mem::kernel_pagemap->map(sizeof(sdt_header), _fadt->dsdt, 0);
+        auto table     = (acpi_table*) Mem::kernel_pagemap->map(table_hdr->length, _fadt->dsdt, 0);
 
-        VMem::kernel_pagemap->free(table_hdr, sizeof(sdt_header));
+        Mem::kernel_pagemap->free(table_hdr, sizeof(sdt_header));
 
         add_table(table);
 
@@ -56,7 +52,7 @@ namespace AEX::ACPI {
         if (xsdp != nullptr) {
             printk("acpi: Found the xdsp\n");
 
-            auto _xsdt = (xsdt*) VMem::kernel_pagemap->map(xsdp->length, xsdp->xsdt_address, 0);
+            auto _xsdt = (xsdt*) Mem::kernel_pagemap->map(xsdp->length, xsdp->xsdt_address, 0);
 
             if (!add_table((acpi_table*) _xsdt)) {
                 printk("acpi: Failed\n");
@@ -68,10 +64,10 @@ namespace AEX::ACPI {
             for (size_t i = sizeof(xsdt); i < _xsdt->header.length; i += 8) {
                 uint64_t addr = *((uint64_t*) ((size_t) _xsdt + i));
                 auto     table_hdr =
-                    (sdt_header*) VMem::kernel_pagemap->map(sizeof(sdt_header), addr, 0);
-                auto table = (acpi_table*) VMem::kernel_pagemap->map(table_hdr->length, addr, 0);
+                    (sdt_header*) Mem::kernel_pagemap->map(sizeof(sdt_header), addr, 0);
+                auto table = (acpi_table*) Mem::kernel_pagemap->map(table_hdr->length, addr, 0);
 
-                VMem::kernel_pagemap->free(table_hdr, sizeof(sdt_header));
+                Mem::kernel_pagemap->free(table_hdr, sizeof(sdt_header));
 
                 add_table(table);
             }
@@ -86,7 +82,7 @@ namespace AEX::ACPI {
         if (rsdp != nullptr) {
             printk("acpi: Found the RSDP\n");
 
-            auto _rsdt = (rsdt*) VMem::kernel_pagemap->map(4096, rsdp->rsdt_address, 0);
+            auto _rsdt = (rsdt*) Mem::kernel_pagemap->map(4096, rsdp->rsdt_address, 0);
 
             if (!add_table((acpi_table*) _rsdt)) {
                 printk("acpi: Failed\n");
@@ -97,7 +93,7 @@ namespace AEX::ACPI {
 
             for (size_t i = sizeof(rsdt); i < _rsdt->header.length; i += 4) {
                 uint32_t addr  = *((uint32_t*) ((size_t) _rsdt + i));
-                auto     table = (acpi_table*) VMem::kernel_pagemap->map(4096, addr, 0);
+                auto     table = (acpi_table*) Mem::kernel_pagemap->map(4096, addr, 0);
 
                 add_table(table);
             }

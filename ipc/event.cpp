@@ -1,8 +1,6 @@
 #include "aex/ipc/event.hpp"
 
-#include "aex/proc/proc.hpp"
-#include "aex/proc/process.hpp"
-#include "aex/proc/thread.hpp"
+#include "aex/proc.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/sys/time.hpp"
 

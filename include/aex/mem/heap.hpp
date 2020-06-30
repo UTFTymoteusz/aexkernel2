@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace AEX::Heap {
+namespace AEX::Mem::Heap {
     extern uint64_t heap_allocated;
     extern uint64_t heap_free;
 
@@ -36,6 +36,4 @@ namespace AEX::Heap {
      * @returns Pointer to the reallocated memory.
      */
     void* realloc(void* ptr, size_t size);
-
-    void init();
 }

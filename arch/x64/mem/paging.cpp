@@ -1,23 +1,22 @@
-#include "aex/mem/vmem.hpp"
+#include "aex/mem/paging.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/math.hpp"
-#include "aex/mem/pmem.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
 
-#include "mem/memory.hpp"
+#include "mem/sections.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
-#define PPTR_AMOUNT 16
+using namespace AEX::Mem::Phys;
 
-#define MEM_PAGE_MASK ~0xFFF
-
-using namespace AEX::PMem;
+constexpr auto PPTR_AMOUNT   = 16;
+constexpr auto MEM_PAGE_MASK = ~0xFFF;
 
 extern void* pml4;
 
@@ -35,7 +34,7 @@ const int _page_arbitrary = 0x4000;
 
 // I need to make invlpg clump together
 
-namespace AEX::VMem {
+namespace AEX::Mem {
     Pagemap* kernel_pagemap;
     Pagemap  _kernel_pagemap = {0};
 
@@ -84,7 +83,7 @@ namespace AEX::VMem {
     }
 
     Pagemap::Pagemap() {
-        pageRoot = PMem::alloc(1);
+        pageRoot = Mem::Phys::alloc(1);
 
         int pptr_a = alloc_pptr();
         int pptr_b = alloc_pptr();
@@ -120,7 +119,7 @@ namespace AEX::VMem {
         flags |= PAGE_PRESENT;
 
         for (size_t i = 0; i < amount; i++) {
-            phys = AEX::PMem::alloc(Sys::CPU::PAGE_SIZE);
+            phys = AEX::Mem::Phys::alloc(Sys::CPU::PAGE_SIZE);
 
             // printk("alloc 0x%016x >> 0x%016x (%i)\n", virt, phys, amount - i);
 
@@ -148,7 +147,7 @@ namespace AEX::VMem {
 
         int    pptr  = alloc_pptr();
         size_t virt  = (size_t) findContiguous(pptr, amount, flags & PAGE_EXEC);
-        size_t phys  = AEX::PMem::alloc(bytes);
+        size_t phys  = AEX::Mem::Phys::alloc(bytes);
         size_t start = virt;
 
         flags &= 0xFFF;
@@ -281,7 +280,7 @@ namespace AEX::VMem {
         ptable[index] = 0x0000;
 
         Sys::CPU::broadcastPacket(Sys::CPU::ipp_type::PG_INV, virt);
-        PMem::free(addr, Sys::CPU::PAGE_SIZE);
+        Mem::Phys::free(addr, Sys::CPU::PAGE_SIZE);
 
         asm volatile("invlpg [%0]" : : "r"(virt));
     }
@@ -328,7 +327,7 @@ namespace AEX::VMem {
             index_shift -= 9;
 
             if (!(ptable[index] & PAGE_PRESENT)) {
-                phys_addr phys = AEX::PMem::alloc(Sys::CPU::PAGE_SIZE);
+                phys_addr phys = AEX::Mem::Phys::alloc(Sys::CPU::PAGE_SIZE);
 
                 // proot->dir_frames_used++;
 
@@ -473,7 +472,7 @@ namespace AEX::VMem {
 
     void cleanup_bootstrap() {
         int       pptr  = alloc_pptr();
-        uint64_t* table = find_table(VMem::kernel_pagemap->pageRoot, pptr, 0x0000, nullptr);
+        uint64_t* table = find_table(Mem::kernel_pagemap->pageRoot, pptr, 0x0000, nullptr);
 
         memset(table, '\0', 4096);
 
@@ -494,7 +493,7 @@ namespace AEX::VMem {
             if (bong[i])
                 continue;
 
-            bong[i] = PMem::alloc(4096);
+            bong[i] = Mem::Phys::alloc(4096);
 
             uint64_t* bong_s = aim_pptr(pptr_s, bong[i]);
             memset64(bong_s, 0, 512);

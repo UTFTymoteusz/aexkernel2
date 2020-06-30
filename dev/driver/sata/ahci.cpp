@@ -1,8 +1,8 @@
 #include "dev/driver/sata/ahci.hpp"
 
-#include "aex/dev/name.hpp"
-#include "aex/dev/tree/tree.hpp"
-#include "aex/mem/vmem.hpp"
+#include "aex/dev.hpp"
+#include "aex/dev/tree.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
 
 #include "dev/driver/sata/satadevice.hpp"
@@ -46,12 +46,12 @@ namespace AEX::Dev::SATA {
             return;
 
         int  max_cmd = command_slots;
-        auto headers = (hba_command_header*) VMem::kernel_pagemap->allocContinuous(
+        auto headers = (hba_command_header*) Mem::kernel_pagemap->allocContinuous(
             sizeof(hba_command_header) * command_slots, PAGE_WRITE | PAGE_NOCACHE);
-        auto tables = (hba_command_table*) VMem::kernel_pagemap->allocContinuous(
+        auto tables = (hba_command_table*) Mem::kernel_pagemap->allocContinuous(
             8192 * command_slots, PAGE_WRITE | PAGE_NOCACHE);
-        auto fis = (hba_fis*) VMem::kernel_pagemap->allocContinuous(sizeof(hba_fis),
-                                                                    PAGE_WRITE | PAGE_NOCACHE);
+        auto fis = (hba_fis*) Mem::kernel_pagemap->allocContinuous(sizeof(hba_fis),
+                                                                   PAGE_WRITE | PAGE_NOCACHE);
 
         memset(headers, '\0', sizeof(hba_command_header) * command_slots);
         memset(tables, '\0', 8192 * command_slots);
@@ -63,8 +63,8 @@ namespace AEX::Dev::SATA {
         fis->reg_d2h.fis_type   = fis_type::REG_D2H;
         fis->dev_bits[0]        = fis_type::DEV_BITS;
 
-        port->command_list_address = VMem::kernel_pagemap->paddrof(headers);
-        port->fis_address          = VMem::kernel_pagemap->paddrof(fis);
+        port->command_list_address = Mem::kernel_pagemap->paddrof(headers);
+        port->fis_address          = Mem::kernel_pagemap->paddrof(fis);
 
         port->interrupt_enable = 0x00000000;
         port->interrupt_status = 0xFFFFFFFF;
@@ -77,7 +77,7 @@ namespace AEX::Dev::SATA {
 
         for (int i = 0; i < command_slots; i++) {
             headers[i].command_table_addr =
-                VMem::kernel_pagemap->paddrof((void*) ((size_t) tables + 8192 * i));
+                Mem::kernel_pagemap->paddrof((void*) ((size_t) tables + 8192 * i));
 
             headers[i].phys_region_table_len = prdt_count;
         }

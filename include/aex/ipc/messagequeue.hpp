@@ -2,7 +2,7 @@
 
 #include "aex/ipc/event.hpp"
 #include "aex/mem/circularbuffer.hpp"
-#include "aex/proc/process.hpp"
+#include "aex/proc.hpp"
 #include "aex/spinlock.hpp"
 
 namespace AEX::IPC {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "aex/dev/device.hpp"
-#include "aex/mem/smartptr.hpp"
+#include "aex/mem.hpp"
 
 #include <stddef.h>
 #include <stdint.h>

@@ -1,10 +1,8 @@
 #include "aex/sys/irq.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
-#include "aex/mem/heap.hpp"
-#include "aex/mem/vmem.hpp"
-#include "aex/proc/proc.hpp"
-#include "aex/proc/thread.hpp"
+#include "aex/mem.hpp"
+#include "aex/proc.hpp"
 #include "aex/spinlock.hpp"
 
 #include "sys/irq.hpp"
@@ -12,6 +10,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
+
+using namespace AEX::Mem;
 
 namespace AEX::Sys::IRQ {
     struct handler_array {
@@ -46,9 +46,11 @@ namespace AEX::Sys::IRQ {
         }
 
         void callAll() {
+            auto arg = args[i];
+
             for (size_t i = 0; i < count; i++)
                 if (funcs[i])
-                    funcs[i](args[i]);
+                    funcs[i](arg);
         }
     };
 

@@ -2,8 +2,7 @@
 
 #include "aex/dev/device.hpp"
 #include "aex/fs/directory.hpp"
-#include "aex/fs/fs.hpp"
-#include "aex/fs/path.hpp"
+#include "aex/fs/type.hpp"
 #include "aex/mem/smartptr.hpp"
 #include "aex/optional.hpp"
 

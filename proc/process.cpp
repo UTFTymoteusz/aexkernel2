@@ -1,13 +1,14 @@
 #include "aex/proc/process.hpp"
 
-#include "aex/fs/path.hpp"
-#include "aex/mem/heap.hpp"
+#include "aex/fs.hpp"
+#include "aex/mem.hpp"
+#include "aex/proc.hpp"
 #include "aex/string.hpp"
 
 #include "proc/proc.hpp"
 
 namespace AEX::Proc {
-    Process::Process(const char* image_path, pid_t parent_pid, VMem::Pagemap* pagemap,
+    Process::Process(const char* image_path, pid_t parent_pid, Mem::Pagemap* pagemap,
                      const char* name) {
         if (name == nullptr)
             FS::Path::get_filename(this->name, image_path, sizeof(this->name));

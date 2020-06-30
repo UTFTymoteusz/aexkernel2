@@ -1,7 +1,6 @@
-#include "aex/dev/name.hpp"
-
+#include "aex/dev.hpp"
 #include "aex/kpanic.hpp"
-#include "aex/mem/vector.hpp"
+#include "aex/mem.hpp"
 #include "aex/spinlock.hpp"
 
 namespace AEX::Dev {

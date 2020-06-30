@@ -2,10 +2,9 @@
 
 #include "aex/dev/device.hpp"
 #include "aex/errno.hpp"
-#include "aex/mem/smartptr.hpp"
+#include "aex/mem.hpp"
+#include "aex/net.hpp"
 #include "aex/net/ethernet.hpp"
-#include "aex/net/ipv4.hpp"
-#include "aex/net/net.hpp"
 
 #include <stddef.h>
 #include <stdint.h>

@@ -1,9 +1,9 @@
 #include "controlblock.hpp"
 
-#include "aex/fs/path.hpp"
+#include "aex/fs.hpp"
 #include "aex/math.hpp"
 #include "aex/printk.hpp"
-#include "aex/proc/thread.hpp"
+#include "aex/proc.hpp"
 #include "aex/string.hpp"
 
 #include "inode.hpp"

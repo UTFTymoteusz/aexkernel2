@@ -1,6 +1,6 @@
 #pragma once
 
-#include "aex/dev/blockdevice.hpp"
+#include "aex/dev.hpp"
 #include "aex/errno.hpp"
 #include "aex/fs/controlblock.hpp"
 #include "aex/fs/file.hpp"
@@ -9,7 +9,7 @@
 
 #include "types.hpp"
 
-#define BLOCK_SIZE 2048
+constexpr auto BLOCK_SIZE = 2048;
 
 namespace AEX::FS {
     class ISO9660ControlBlock : public ControlBlock {

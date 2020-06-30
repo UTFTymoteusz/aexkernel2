@@ -3,7 +3,7 @@
 #include "aex/fs/file.hpp"
 #include "aex/fs/inode.hpp"
 #include "aex/math.hpp"
-#include "aex/mem/smartptr.hpp"
+#include "aex/mem.hpp"
 
 #include <stddef.h>
 #include <stdint.h>

@@ -2,11 +2,11 @@
 
 #include "aex/byte.hpp"
 #include "aex/kpanic.hpp"
-#include "aex/mem/atomic.hpp"
+#include "aex/mem.hpp"
+#include "aex/sys/acpi.hpp"
 #include "aex/sys/irq.hpp"
 #include "aex/sys/time.hpp"
 
-#include "kernel/acpi/acpi.hpp"
 #include "sys/cmos.hpp"
 
 namespace AEX::Sys {

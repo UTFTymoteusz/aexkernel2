@@ -1,17 +1,12 @@
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/debug.hpp"
-#include "aex/fs/fs.hpp"
-#include "aex/mem/heap.hpp"
-#include "aex/mem/pmem.hpp"
-#include "aex/mem/smartarray.hpp"
-#include "aex/mem/smartptr.hpp"
-#include "aex/mem/vector.hpp"
-#include "aex/mem/vmem.hpp"
+#include "aex/fs.hpp"
+#include "aex/mem.hpp"
 #include "aex/module.hpp"
-#include "aex/net/ipv4.hpp"
-#include "aex/net/socket.hpp"
+#include "aex/net.hpp"
 #include "aex/printk.hpp"
-#include "aex/proc/thread.hpp"
+#include "aex/proc.hpp"
+#include "aex/sys/acpi.hpp"
 #include "aex/sys/irq.hpp"
 #include "aex/sys/time.hpp"
 #include "aex/tty.hpp"
@@ -20,9 +15,10 @@
 #include "cpu/idt.hpp"
 #include "dev/dev.hpp"
 #include "fs/fs.hpp"
-#include "kernel/acpi/acpi.hpp"
 #include "kernel/module.hpp"
-#include "mem/memory.hpp"
+#include "mem/heap.hpp"
+#include "mem/phys.hpp"
+#include "mem/sections.hpp"
 #include "net/net.hpp"
 #include "proc/proc.hpp"
 #include "sys/irq.hpp"
@@ -31,6 +27,7 @@
 #include "sys/time.hpp"
 
 using namespace AEX;
+using namespace AEX::Mem;
 using namespace AEX::Sys;
 
 namespace AEX::Init {
@@ -56,8 +53,8 @@ void main(multiboot_info_t* mbinfo) {
     printk("\n");
     // clang-format on
 
-    PMem::init(mbinfo);
-    VMem::init();
+    Phys::init(mbinfo);
+    Mem::init();
     Heap::init();
     printk("\n");
 
@@ -88,7 +85,7 @@ void main(multiboot_info_t* mbinfo) {
 
     Proc::init();
 
-    VMem::cleanup_bootstrap();
+    Mem::cleanup_bootstrap();
     printk("\n");
 
     IRQ::init_proc();
@@ -116,13 +113,13 @@ void main_threaded() {
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrentThread()->getProcess();
 
-    int64_t start_epoch = Sys::get_clock_time();
+    int64_t start_epoch = get_clock_time();
 
     while (true) {
         uint64_t ns    = get_uptime();
-        uint64_t clock = Sys::get_clock_time();
+        uint64_t clock = get_clock_time();
 
-        auto dt = Sys::from_unix_epoch(clock);
+        auto dt = from_unix_epoch(clock);
 
         printk("cpu%i: %16li ns (%li ms, %li s, %li min), clock says %li s, %02i:%02i:%02i\n",
                CPU::getCurrentCPUID(), ns, ns / 1000000, ns / 1000000000, ns / 1000000000 / 60,

@@ -3,19 +3,15 @@
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/debug.hpp"
 #include "aex/ipc/messagequeue.hpp"
-#include "aex/mem/cpp.hpp"
-#include "aex/mem/heap.hpp"
-#include "aex/mem/smartarray.hpp"
-#include "aex/mem/vector.hpp"
-#include "aex/mem/vmem.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
-#include "aex/proc/process.hpp"
-#include "aex/proc/thread.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/sys/time.hpp"
 
 #include "proc/context.hpp"
 #include "sys/mcore.hpp"
+
+using namespace AEX::Mem;
 
 namespace AEX::Proc {
     Mem::SmartArray<Process> processes;
@@ -46,8 +42,8 @@ namespace AEX::Proc {
         threads           = (Thread**) new Thread*[1];
         thread_array_size = 1;
 
-        auto idle_process   = new Process("/sys/aexkrnl.elf", 0, VMem::kernel_pagemap, "idle");
-        auto kernel_process = new Process("/sys/aexkrnl.elf", 0, VMem::kernel_pagemap);
+        auto idle_process   = new Process("/sys/aexkrnl.elf", 0, Mem::kernel_pagemap, "idle");
+        auto kernel_process = new Process("/sys/aexkrnl.elf", 0, Mem::kernel_pagemap);
 
         auto bsp_thread = new Thread(kernel_process);
         bsp_thread->start();
@@ -228,7 +224,7 @@ namespace AEX::Proc {
 
         for (int i = 0; i < Sys::MCore::cpu_count; i++) {
             idle_threads[i] =
-                new Thread(idle_process, (void*) idle, 1024, VMem::kernel_pagemap, false, true);
+                new Thread(idle_process, (void*) idle, 1024, Mem::kernel_pagemap, false, true);
         }
     }
 

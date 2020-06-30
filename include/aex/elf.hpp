@@ -1,7 +1,7 @@
 #pragma once
 
 #include "aex/fs/file.hpp"
-#include "aex/mem/smartptr.hpp"
+#include "aex/mem.hpp"
 #include "aex/mem/vector.hpp"
 
 #include <stddef.h>
@@ -379,7 +379,7 @@ namespace AEX {
 
         size_t string_array_size = 0;
 
-        ELF(Mem::SmartPointer<FS::File> file);
+        ELF(FS::File_SP file);
         ~ELF();
 
         bool isValid(bitness_t desired_bitness, endianiness_t desired_endianiness,
@@ -391,8 +391,8 @@ namespace AEX {
         void loadRelocations();
 
         private:
-        header                      _header;
-        Mem::SmartPointer<FS::File> _file;
+        header      _header;
+        FS::File_SP _file;
 
         void loadSymbols64();
         void loadSymbols32();

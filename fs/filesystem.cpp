@@ -1,6 +1,6 @@
 #include "aex/fs/filesystem.hpp"
 
-#include "aex/fs/fs.hpp"
+#include "aex/fs.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 

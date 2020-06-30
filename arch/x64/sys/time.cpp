@@ -2,12 +2,12 @@
 
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/kpanic.hpp"
-#include "aex/mem/atomic.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
+#include "aex/sys/acpi.hpp"
 #include "aex/sys/irq.hpp"
 
-#include "kernel/acpi/acpi.hpp"
 #include "sys/irq.hpp"
 #include "sys/pit.hpp"
 #include "sys/rtc.hpp"

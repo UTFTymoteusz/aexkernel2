@@ -1,6 +1,10 @@
 #pragma once
 
 #include "aex/errno.hpp"
+#include "aex/fs/directory.hpp"
+#include "aex/fs/file.hpp"
+#include "aex/fs/path.hpp"
+#include "aex/fs/type.hpp"
 #include "aex/mem/smartarray.hpp"
 
 namespace AEX::Dev {
@@ -8,17 +12,13 @@ namespace AEX::Dev {
 }
 
 namespace AEX::FS {
-    enum fs_type_t {
-        UNKNOWN   = 0x0000,
-        REGULAR   = 0x0001,
-        DIRECTORY = 0x0010,
-        CHAR      = 0x0002,
-        BLOCK     = 0x0006,
-        NET       = 0x000A,
-    };
+    enum fs_type_t;
 
     class Filesystem;
     class Mount;
+
+    class File;
+    class Directory;
 
     extern Mem::SmartArray<Filesystem> filesystems;
     extern Mem::SmartArray<Mount>      mounts;

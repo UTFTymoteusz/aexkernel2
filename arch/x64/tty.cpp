@@ -1,7 +1,7 @@
 #include "aex/tty.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
-#include "aex/mem/cpp.hpp"
+#include "aex/mem.hpp"
 #include "aex/string.hpp"
 
 #include "boot/mboot.h"

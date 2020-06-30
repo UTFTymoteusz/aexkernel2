@@ -1,7 +1,7 @@
 #include "aex/tty.hpp"
 
-#define COLOR0 94
-#define COLOR1 97
+constexpr auto COLOR0 = 94;
+constexpr auto COLOR1 = 97;
 
 namespace AEX::Init {
     // clang-format off

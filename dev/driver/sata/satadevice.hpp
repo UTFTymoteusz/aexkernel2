@@ -1,6 +1,6 @@
 #pragma once
 
-#include "aex/dev/tree/device.hpp"
+#include "aex/dev/tree.hpp"
 
 #include "dev/driver/sata/ahci.hpp"
 

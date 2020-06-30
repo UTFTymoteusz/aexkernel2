@@ -1,10 +1,10 @@
 #include "proc/context.hpp"
 
 #include "aex/debug.hpp"
-#include "aex/mem/vmem.hpp"
+#include "aex/mem.hpp"
 
 namespace AEX::Proc {
-    Context::Context(void* entry, void* stack, size_t stack_size, VMem::Pagemap* pagemap,
+    Context::Context(void* entry, void* stack, size_t stack_size, Mem::Pagemap* pagemap,
                      bool usermode, void (*on_exit)()) {
         rip = (uint64_t) entry;
         rsp = (uint64_t) stack + stack_size;

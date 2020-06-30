@@ -1,6 +1,6 @@
 #pragma once
 
-#include "aex/endian.hpp"
+#include "aex/byte.hpp"
 #include "aex/string.hpp"
 
 #include <stddef.h>

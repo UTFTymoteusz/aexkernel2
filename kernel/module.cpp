@@ -3,13 +3,10 @@
 #include "aex/debug.hpp"
 #include "aex/elf.hpp"
 #include "aex/errno.hpp"
-#include "aex/fs/fs.hpp"
-#include "aex/mem/smartarray.hpp"
-#include "aex/mem/vmem.hpp"
+#include "aex/fs.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
-#include "aex/proc/proc.hpp"
-#include "aex/proc/process.hpp"
-#include "aex/proc/thread.hpp"
+#include "aex/proc.hpp"
 
 #include "elf.hpp"
 #include "kernel/module.hpp"
@@ -101,7 +98,7 @@ namespace AEX {
 
             file->seek(section_header.file_offset);
 
-            void* ptr = VMem::kernel_pagemap->alloc(section_header.size, PAGE_WRITE | PAGE_EXEC);
+            void* ptr = Mem::kernel_pagemap->alloc(section_header.size, PAGE_WRITE | PAGE_EXEC);
             if (!(section_header.flags & ELF::sc_flags_t::SC_ALLOC))
                 continue;
 
@@ -268,7 +265,7 @@ namespace AEX {
 
         // 2 goddamned hours + sleep for this goddamned thing (stack size)
         auto thread = new Proc::Thread(Proc::processes.get(1).get(), (void*) module->enter, 16384,
-                                       VMem::kernel_pagemap);
+                                       Mem::kernel_pagemap);
         thread->start();
 
         delete section_info;

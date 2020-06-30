@@ -2,14 +2,12 @@
 
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/kpanic.hpp"
-#include "aex/mem/atomic.hpp"
-#include "aex/mem/vector.hpp"
-#include "aex/mem/vmem.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
+#include "aex/sys/acpi.hpp"
 
 #include "cpu/idt.hpp"
 #include "cpu/irq.hpp"
-#include "kernel/acpi/acpi.hpp"
 #include "sys/apic.hpp"
 #include "sys/mcore.hpp"
 #include "sys/pic.hpp"
@@ -18,7 +16,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define CPUID_EDX_FEAT_APIC 0x100
+constexpr auto CPUID_EDX_FEAT_APIC = 0x100;
 
 namespace AEX::Sys::IRQ {
     bool   is_apic_present   = false;
@@ -78,7 +76,7 @@ namespace AEX::Sys::IRQ {
             if (!ioapic)
                 break;
 
-            void* mapped = VMem::kernel_pagemap->map(sizeof(IOAPIC), ioapic->addr, PAGE_WRITE);
+            void* mapped = Mem::kernel_pagemap->map(sizeof(IOAPIC), ioapic->addr, PAGE_WRITE);
 
             auto _ioapic = new IOAPIC(mapped, ioapic->global_interrupt_base);
 

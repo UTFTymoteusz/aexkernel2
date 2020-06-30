@@ -1,7 +1,6 @@
-#include "kernel/acpi/acpi.hpp"
+#include "aex/sys/acpi.hpp"
 
-#include "aex/mem/pmem.hpp"
-#include "aex/mem/vmem.hpp"
+#include "aex/mem.hpp"
 #include "aex/string.hpp"
 
 namespace AEX::ACPI {
@@ -35,22 +34,22 @@ namespace AEX::ACPI {
         if (!rsd_ptr)
             return nullptr;
 
-        auto _rsdp =
-            (rsdp*) VMem::kernel_pagemap->map(sizeof(rsdp), (PMem::phys_addr) rsd_ptr, PAGE_WRITE);
+        auto _rsdp = (rsdp*) Mem::kernel_pagemap->map(sizeof(rsdp), (Mem::Phys::phys_addr) rsd_ptr,
+                                                      PAGE_WRITE);
         auto _xsdp = (xsdp*) _rsdp;
 
         if (validate_table((void*) _xsdp, sizeof(xsdp)) && _xsdp->xsdt_address != 0x0000) {
-            VMem::kernel_pagemap->free(_rsdp, sizeof(rsdp));
+            Mem::kernel_pagemap->free(_rsdp, sizeof(rsdp));
             return nullptr;
         }
 
         if (!validate_table((void*) _rsdp, sizeof(rsdp))) {
-            VMem::kernel_pagemap->free(_rsdp, sizeof(rsdp));
+            Mem::kernel_pagemap->free(_rsdp, sizeof(rsdp));
             return nullptr;
         }
 
         if (_rsdp->rsdt_address == 0x0000) {
-            VMem::kernel_pagemap->free(_rsdp, sizeof(rsdp));
+            Mem::kernel_pagemap->free(_rsdp, sizeof(rsdp));
             return nullptr;
         }
 
@@ -62,16 +61,16 @@ namespace AEX::ACPI {
         if (!rsd_ptr)
             return nullptr;
 
-        auto _xsdp =
-            (xsdp*) VMem::kernel_pagemap->map(sizeof(xsdp), (PMem::phys_addr) rsd_ptr, PAGE_WRITE);
+        auto _xsdp = (xsdp*) Mem::kernel_pagemap->map(sizeof(xsdp), (Mem::Phys::phys_addr) rsd_ptr,
+                                                      PAGE_WRITE);
 
         if (!validate_table((void*) _xsdp, sizeof(xsdp))) {
-            VMem::kernel_pagemap->free(_xsdp, sizeof(xsdp));
+            Mem::kernel_pagemap->free(_xsdp, sizeof(xsdp));
             return nullptr;
         }
 
         if (_xsdp->xsdt_address == 0x0000) {
-            VMem::kernel_pagemap->free(_xsdp, sizeof(xsdp));
+            Mem::kernel_pagemap->free(_xsdp, sizeof(xsdp));
             return nullptr;
         }
 

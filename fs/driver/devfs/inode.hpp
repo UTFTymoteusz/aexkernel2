@@ -1,6 +1,6 @@
 #pragma once
 
-#include "aex/dev/dev.hpp"
+#include "aex/dev.hpp"
 #include "aex/fs/inode.hpp"
 #include "aex/printk.hpp"
 

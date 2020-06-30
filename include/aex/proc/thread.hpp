@@ -1,8 +1,8 @@
 #pragma once
 
 #include "aex/mem/atomic.hpp"
+#include "aex/mem/paging.hpp"
 #include "aex/mem/smartptr.hpp"
-#include "aex/mem/vmem.hpp"
 #include "aex/proc/resource_usage.hpp"
 #include "aex/spinlock.hpp"
 
@@ -46,7 +46,7 @@ namespace AEX::Proc {
 
         Thread();
         Thread(Process* parent);
-        Thread(Process* parent, void* entry, size_t stack_size, VMem::Pagemap* pagemap,
+        Thread(Process* parent, void* entry, size_t stack_size, Mem::Pagemap* pagemap,
                bool usermode = false, bool dont_add = false);
 
         ~Thread();

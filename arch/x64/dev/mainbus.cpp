@@ -1,6 +1,5 @@
 #include "aex/arch/sys/cpu.hpp"
-#include "aex/dev/tree/bus.hpp"
-#include "aex/dev/tree/tree.hpp"
+#include "aex/dev/tree.hpp"
 #include "aex/printk.hpp"
 
 using CPU    = AEX::Sys::CPU;

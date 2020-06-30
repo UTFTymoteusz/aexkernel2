@@ -27,7 +27,7 @@ extern const int _page_present, _page_write, _page_user, _page_through, _page_no
 // If set, the pages will raise page faults.
 #define PAGE_ARBITRARY _page_arbitrary
 
-namespace AEX::VMem {
+namespace AEX::Mem {
     typedef size_t phys_addr;
 
     /**

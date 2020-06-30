@@ -2,8 +2,8 @@
 
 #include "aex/dev/tree/bus.hpp"
 #include "aex/dev/tree/device.hpp"
-#include "aex/mem/smartarray.hpp"
-#include "aex/mem/smartptr.hpp"
+#include "aex/dev/tree/driver.hpp"
+#include "aex/mem.hpp"
 #include "aex/mem/vector.hpp"
 #include "aex/optional.hpp"
 

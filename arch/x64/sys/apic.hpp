@@ -1,6 +1,6 @@
 #pragma once
 
-#include "aex/mem/pmem.hpp"
+#include "aex/mem.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -10,7 +10,7 @@ namespace AEX::Sys {
         public:
         static void* addr;
 
-        static void map(PMem::phys_addr phys);
+        static void map(Mem::Phys::phys_addr phys);
 
         static uint32_t read(int reg);
         static void     write(int reg, uint32_t val);

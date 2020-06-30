@@ -1,7 +1,7 @@
 #include "aex/ipc/messagequeue.hpp"
 
 #include "aex/math.hpp"
-#include "aex/proc/thread.hpp"
+#include "aex/proc.hpp"
 
 using namespace AEX::Proc;
 

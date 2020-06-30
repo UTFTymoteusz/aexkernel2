@@ -1,4 +1,4 @@
-#include "aex/mem/heap.hpp"
+#include "aex/mem.hpp"
 
 #include "kernel/icxxabi.h"
 
@@ -8,27 +8,27 @@ size_t            __atexit_func_count = 0;
 atexit_func_entry __atexit_funcs[ATEXIT_MAX_FUNCS];
 
 void* operator new(size_t size) {
-    return AEX::Heap::malloc(size);
+    return AEX::Mem::Heap::malloc(size);
 }
 
 void* operator new[](size_t size) {
-    return AEX::Heap::malloc(size);
+    return AEX::Mem::Heap::malloc(size);
 }
 
 void operator delete(void* ptr) {
-    return AEX::Heap::free(ptr);
+    return AEX::Mem::Heap::free(ptr);
 }
 
 void operator delete[](void* ptr) {
-    return AEX::Heap::free(ptr);
+    return AEX::Mem::Heap::free(ptr);
 }
 
 void operator delete(void* ptr, size_t) {
-    return AEX::Heap::free(ptr);
+    return AEX::Mem::Heap::free(ptr);
 }
 
 void operator delete[](void* ptr, size_t) {
-    return AEX::Heap::free(ptr);
+    return AEX::Mem::Heap::free(ptr);
 }
 
 int __cxa_atexit(void (*f)(void*), void* objptr, void* dso) {

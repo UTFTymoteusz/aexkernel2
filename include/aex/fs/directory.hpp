@@ -1,7 +1,7 @@
 #pragma once
 
-#include "aex/fs/fs.hpp"
 #include "aex/fs/path.hpp"
+#include "aex/fs/type.hpp"
 
 #include <stddef.h>
 #include <stdint.h>

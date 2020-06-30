@@ -1,12 +1,12 @@
 #pragma once
 
+#include "aex/mem.hpp"
 #include "aex/mem/lazyvector.hpp"
-#include "aex/mem/smartarray.hpp"
+#include "aex/proc.hpp"
 #include "aex/proc/affinity.hpp"
 #include "aex/proc/resource_usage.hpp"
-#include "aex/proc/thread.hpp"
 
-namespace AEX::VMem {
+namespace AEX::Mem {
     class Pagemap;
 }
 
@@ -28,7 +28,7 @@ namespace AEX::Proc {
 
         Mem::SmartArray<Thread> threads;
 
-        VMem::Pagemap* pagemap;
+        Mem::Pagemap* pagemap;
 
         Process() = default;
 
@@ -38,7 +38,7 @@ namespace AEX::Proc {
          * @param name       Process name. Will get generated from the image path if not specified.
          * @param parent_pid PID of the parent process.
          */
-        Process(const char* image_path, pid_t parent_pid, VMem::Pagemap* pagemap,
+        Process(const char* image_path, pid_t parent_pid, Mem::Pagemap* pagemap,
                 const char* name = nullptr);
 
         private:

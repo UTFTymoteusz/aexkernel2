@@ -1,6 +1,6 @@
 #include "aex/dev/netdevice.hpp"
 
-#include "aex/dev/dev.hpp"
+#include "aex/dev.hpp"
 #include "aex/net/linklayer.hpp"
 
 namespace AEX::Dev {

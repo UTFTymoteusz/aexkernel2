@@ -1,7 +1,7 @@
 #pragma once
 
 #include "aex/errno.hpp"
-#include "aex/net/net.hpp"
+#include "aex/net.hpp"
 
 namespace AEX::Net {
     class LinkLayer {

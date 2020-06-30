@@ -2,8 +2,8 @@
 
 #include "aex/debug.hpp"
 #include "aex/math.hpp"
-#include "aex/mem/vmem.hpp"
-#include "aex/proc/thread.hpp"
+#include "aex/mem.hpp"
+#include "aex/proc.hpp"
 #include "aex/string.hpp"
 
 #include <stddef.h>

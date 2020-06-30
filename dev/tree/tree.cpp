@@ -1,7 +1,6 @@
-#include "aex/dev/tree/tree.hpp"
+#include "aex/dev/tree.hpp"
 
-#include "aex/mem/smartarray.hpp"
-#include "aex/mem/smartptr.hpp"
+#include "aex/mem.hpp"
 #include "aex/optional.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"

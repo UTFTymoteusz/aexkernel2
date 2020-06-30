@@ -1,20 +1,22 @@
-#include "aex/mem/pmem.hpp"
+#include "aex/mem/phys.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/math.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
 
 #include "boot/mboot.h"
 #include "mem/frame_piece.hpp"
-#include "mem/memory.hpp"
+#include "mem/phys.hpp"
+#include "mem/sections.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
-namespace AEX::PMem {
+namespace AEX::Mem::Phys {
     typedef size_t phys_addr;
 
     uint8_t      root_piece_memory[4096];
@@ -125,7 +127,7 @@ namespace AEX::PMem {
             return piece->start + start * Sys::CPU::PAGE_SIZE;
         } while ((piece = piece->next) != nullptr);
 
-        kpanic("Failed to AEX::PMem::alloc()");
+        kpanic("Failed to AEX::Mem::Phys::alloc()");
         spinlock.release();
 
         return 0;
@@ -154,7 +156,7 @@ namespace AEX::PMem {
             return;
         } while ((piece = piece->next) != nullptr);
 
-        kpanic("Failed to AEX::PMem::free()");
+        kpanic("Failed to AEX::Mem::Phys::free()");
         spinlock.release();
     }
 }

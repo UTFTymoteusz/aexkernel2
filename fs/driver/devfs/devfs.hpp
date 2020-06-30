@@ -1,7 +1,7 @@
 #pragma once
 
+#include "aex/fs.hpp"
 #include "aex/fs/filesystem.hpp"
-#include "aex/fs/fs.hpp"
 #include "aex/optional.hpp"
 
 namespace AEX::FS {

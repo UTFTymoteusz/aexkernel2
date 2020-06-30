@@ -2,13 +2,11 @@
 #include "aex/debug.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/printk.hpp"
-#include "aex/proc/proc.hpp"
-#include "aex/proc/process.hpp"
-#include "aex/proc/thread.hpp"
+#include "aex/proc.hpp"
 
-#define EXC_DEBUG 1
-#define EXC_NMI 2
-#define EXC_PAGE_FAULT 14
+constexpr auto EXC_DEBUG      = 1;
+constexpr auto EXC_NMI        = 2;
+constexpr auto EXC_PAGE_FAULT = 14;
 
 extern "C" void common_fault_handler(void* info);
 
@@ -35,6 +33,18 @@ namespace AEX::Sys {
         "Machine Check",
         "SIMD Floating-Point",
         "Virtualization",
+        "Reserved",
+        "Reserved",
+        "Reserved",
+        "Reserved",
+        "Reserved",
+        "Reserved",
+        "Reserved",
+        "Reserved",
+        "Reserved",
+        "Reserved",
+        "Security",
+        "Reserved",
     };
 
     extern "C" void common_fault_handler(void* _info) {

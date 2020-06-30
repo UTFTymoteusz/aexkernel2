@@ -2,7 +2,7 @@
 
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/printk.hpp"
-#include "aex/proc/thread.hpp"
+#include "aex/proc.hpp"
 #include "aex/sys/irq.hpp"
 #include "aex/tty.hpp"
 

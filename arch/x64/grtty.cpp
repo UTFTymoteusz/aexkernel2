@@ -1,11 +1,11 @@
 #include "grtty.hpp"
 
-#include "aex/mem/vmem.hpp"
+#include "aex/mem.hpp"
 #include "aex/string.hpp"
 
 #include "boot/font.hpp"
 
-#define GLYPH_WIDTH 8
+constexpr auto GLYPH_WIDTH = 8;
 
 namespace AEX::TTY {
     uint32_t* volatile GrTTY::_output = nullptr;
@@ -28,12 +28,12 @@ namespace AEX::TTY {
         uint32_t total_len = _px_width * _px_height * sizeof(uint32_t);
 
         if (!_output) {
-            _output = (uint32_t*) VMem::kernel_pagemap->map(total_len, mbinfo->framebuffer_addr,
-                                                            PAGE_COMBINE | PAGE_WRITE);
+            _output = (uint32_t*) Mem::kernel_pagemap->map(total_len, mbinfo->framebuffer_addr,
+                                                           PAGE_COMBINE | PAGE_WRITE);
             memset32(_output, _bgColor, _px_width * _px_height);
         }
 
-        _double_buffer = (uint32_t*) VMem::kernel_pagemap->alloc(total_len);
+        _double_buffer = (uint32_t*) Mem::kernel_pagemap->alloc(total_len);
         memset32(_double_buffer, _bgColor, _px_width * _px_height);
 
         width  = _px_width / GLYPH_WIDTH;

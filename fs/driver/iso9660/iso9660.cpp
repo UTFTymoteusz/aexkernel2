@@ -1,7 +1,6 @@
 #include "iso9660.hpp"
 
-#include "aex/dev/blockdevice.hpp"
-#include "aex/dev/dev.hpp"
+#include "aex/dev.hpp"
 #include "aex/fs/file.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
@@ -9,9 +8,9 @@
 #include "controlblock.hpp"
 #include "types.hpp"
 
-#define BLOCK_SIZE 2048
-#define ISO_START BLOCK_SIZE * 0x10
 #define IDENTIFIER "CD001"
+
+constexpr auto ISO_START = BLOCK_SIZE * 0x10;
 
 namespace AEX::FS {
     void ISO9660::init() {

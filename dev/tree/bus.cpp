@@ -1,6 +1,6 @@
 #include "aex/dev/tree/bus.hpp"
 
-#include "aex/dev/tree/tree.hpp"
+#include "aex/dev/tree.hpp"
 #include "aex/optional.hpp"
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"

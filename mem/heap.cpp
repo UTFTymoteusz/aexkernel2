@@ -4,22 +4,24 @@
 #include "aex/debug.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/math.hpp"
-#include "aex/mem/atomic.hpp"
-#include "aex/mem/vmem.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
+
+#include "mem/heap.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
 #define BITMAP_TYPE uint32_t
-#define ALLOC_SIZE 16
-#define SANITY_XOR 0x28AC829B1F5231EC
+
+constexpr auto ALLOC_SIZE = 16;
+constexpr auto SANITY_XOR = 0x28AC829B1F5231EC;
 
 // Idea: Make heap hybrid - use the heap itself for smaller things and paging for larger things
 
-namespace AEX::Heap {
+namespace AEX::Mem::Heap {
     template <typename T>
     T ceilToAllocSize(T val) {
         return int_ceil<T>(val, ALLOC_SIZE);
@@ -52,7 +54,7 @@ namespace AEX::Heap {
 
             size += data_offset;
 
-            void* mem   = AEX::VMem::kernel_pagemap->alloc(size, PAGE_WRITE);
+            void* mem   = Mem::kernel_pagemap->alloc(size, PAGE_WRITE);
             auto  piece = (Piece*) mem;
 
             piece->pieces      = pieces;

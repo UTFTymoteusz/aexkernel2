@@ -1,7 +1,7 @@
 #pragma once
 
 #include "aex/fs/mount.hpp"
-#include "aex/mem/smartptr.hpp"
+#include "aex/mem.hpp"
 #include "aex/optional.hpp"
 
 namespace AEX::FS {

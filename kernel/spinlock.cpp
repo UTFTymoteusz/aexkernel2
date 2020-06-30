@@ -4,7 +4,7 @@
 #include "aex/debug.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/printk.hpp"
-#include "aex/proc/thread.hpp"
+#include "aex/proc.hpp"
 
 namespace AEX {
     void Spinlock::acquire() {

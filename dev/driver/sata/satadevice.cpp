@@ -1,9 +1,9 @@
 #include "dev/driver/sata/satadevice.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
-#include "aex/endian.hpp"
+#include "aex/byte.hpp"
 #include "aex/math.hpp"
-#include "aex/mem/vmem.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
 
 namespace AEX::Dev::SATA {
@@ -140,7 +140,7 @@ namespace AEX::Dev::SATA {
             size_t llen         = min(aligned_next - dsti, len);
 
             table->entries[index].bytes        = llen - 1;
-            table->entries[index].data_address = VMem::kernel_pagemap->paddrof((void*) dsti);
+            table->entries[index].data_address = Mem::kernel_pagemap->paddrof((void*) dsti);
             index++;
 
             dsti += llen;

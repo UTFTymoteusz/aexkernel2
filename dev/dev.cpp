@@ -1,9 +1,9 @@
 #include "dev/dev.hpp"
 
+#include "aex/dev.hpp"
 #include "aex/dev/device.hpp"
-#include "aex/dev/name.hpp"
-#include "aex/dev/tree/tree.hpp"
-#include "aex/mem/smartarray.hpp"
+#include "aex/dev/tree.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
 
 namespace AEX::Dev {

@@ -1,13 +1,13 @@
 #pragma once
 
 #include "aex/kpanic.hpp"
-#include "aex/mem/pmem.hpp"
+#include "aex/mem.hpp"
 #include "aex/string.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
-namespace AEX::PMem {
+namespace AEX::Mem::Phys {
     struct frame_piece {
         phys_addr start;
 

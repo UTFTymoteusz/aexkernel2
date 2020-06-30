@@ -1,6 +1,6 @@
 #include "aex/arch/sys/cpu.hpp"
 
-#include "aex/mem/vmem.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 
@@ -15,17 +15,17 @@
         ret;                                                   \
     }))
 
-#define GSBase 0xC0000101
+constexpr auto GSBase = 0xC0000101;
 
-#define CPUID_NAME_STRING_1 0x80000002
-#define CPUID_NAME_STRING_2 0x80000003
-#define CPUID_NAME_STRING_3 0x80000004
+constexpr auto CPUID_NAME_STRING_1 = 0x80000002;
+constexpr auto CPUID_NAME_STRING_2 = 0x80000003;
+constexpr auto CPUID_NAME_STRING_3 = 0x80000004;
 
-#define MSR_PAT 0x0277
+constexpr auto MSR_PAT = 0x0277;
 
-#define PAT_COMBINE 0x01
+constexpr auto PAT_COMBINE = 0x01;
 
-#define CPUID_FEAT_PAT (1 << 16)
+constexpr auto CPUID_FEAT_PAT = (1 << 16);
 
 namespace AEX::Sys {
     CPU::CPU(int id) {

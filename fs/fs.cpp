@@ -1,10 +1,9 @@
-#include "aex/fs/fs.hpp"
+#include "aex/fs.hpp"
 
 #include "aex/errno.hpp"
 #include "aex/fs/mount.hpp"
 #include "aex/math.hpp"
-#include "aex/mem/smartarray.hpp"
-#include "aex/mem/smartptr.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 

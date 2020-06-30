@@ -1,7 +1,5 @@
-#include "aex/net/socket.hpp"
-
+#include "aex/net.hpp"
 #include "aex/net/inetprotocol.hpp"
-#include "aex/net/net.hpp"
 #include "aex/printk.hpp"
 
 namespace AEX::Net {

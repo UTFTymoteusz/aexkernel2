@@ -1,9 +1,6 @@
 #include "aex/dev/pci.hpp"
-#include "aex/dev/tree/device.hpp"
-#include "aex/dev/tree/driver.hpp"
-#include "aex/dev/tree/tree.hpp"
-#include "aex/mem/pmem.hpp"
-#include "aex/mem/vmem.hpp"
+#include "aex/dev/tree.hpp"
+#include "aex/mem.hpp"
 #include "aex/printk.hpp"
 
 #include "dev/driver/sata/ahci.hpp"
@@ -35,7 +32,7 @@ namespace AEX::Dev::SATA {
 
             PCI::set_busmaster(device, true);
 
-            PMem::phys_addr paddr = 0;
+            Mem::Phys::phys_addr paddr = 0;
 
             for (int i = 5; i >= 0; i--) {
                 auto resource = device->getResource(i);
@@ -47,7 +44,7 @@ namespace AEX::Dev::SATA {
                 break;
             }
 
-            void* addr = VMem::kernel_pagemap->map(0x1000, paddr, PAGE_NOCACHE | PAGE_WRITE);
+            void* addr = Mem::kernel_pagemap->map(0x1000, paddr, PAGE_NOCACHE | PAGE_WRITE);
             auto  ahci = new AHCI(addr, index);
 
             index++;

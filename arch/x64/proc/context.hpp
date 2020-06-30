@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace AEX::VMem {
+namespace AEX::Mem {
     class Pagemap;
 }
 
@@ -20,7 +20,7 @@ namespace AEX::Proc {
 
         Context() = default;
 
-        Context(void* entry, void* stack, size_t stack_size, VMem::Pagemap* pagemap,
+        Context(void* entry, void* stack, size_t stack_size, Mem::Pagemap* pagemap,
                 bool usermode = false, void (*on_exit)() = nullptr);
 
         template <typename T>
