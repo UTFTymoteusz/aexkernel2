@@ -107,21 +107,31 @@ enter_context:
 proc_timer_tick:
     save_context
 
-    xor rbp, rbp
+    push rbp
+    mov rbp, rsp
+
     call proc_timer_tick_ext
+
+    pop rbp
     
     jmp enter_context
 
 proc_reshed_manual:
     save_context
 
+    push rbp
+    mov rbp, rsp
+
     call proc_reshed_manual_ext
+
+    pop rbp
     
     jmp enter_context
 
 
 proc_reshed:
     push rbp
+    mov rbp, rsp
 
     mov rdi, rsp
 

@@ -226,7 +226,7 @@ namespace AEX {
                 continue;
             }
 
-            if (c == '\n')
+            if (c == '\n' || c == '\r')
                 newline = true;
 
             *rootTTY << c;

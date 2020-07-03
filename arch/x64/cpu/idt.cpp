@@ -34,6 +34,12 @@ namespace AEX::Sys {
     }
 
     void setup_idt() {
+        static bool ready = false;
+        if (ready)
+            return;
+
+        ready = true;
+
         memset(init_IDT, 0, sizeof(init_IDT));
 
         size_t* _exc_array = (size_t*) &exc_array;
@@ -43,7 +49,7 @@ namespace AEX::Sys {
             init_IDT[i].setSelector(0x08);
             init_IDT[i].setType(0x0E);
             init_IDT[i].setPresent(true);
-            init_IDT[i + 32].setIST(0);
+            init_IDT[i].setIST(0);
         }
 
         size_t* _irq_array = (size_t*) &irq_array;

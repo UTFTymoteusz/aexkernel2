@@ -1,11 +1,19 @@
 #pragma once
 
+#include "aex/dev/input.hpp"
+#include "aex/mem.hpp"
 #include "aex/spinlock.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
+
 extern "C" struct multiboot_info;
 typedef struct multiboot_info multiboot_info_t;
+
+namespace AEX::Dev::Input {
+    void init();
+    void tty_input_thread();
+}
 
 namespace AEX::TTY {
     constexpr auto ROOT_TTY   = 0;
@@ -20,6 +28,12 @@ namespace AEX::TTY {
 
         VTTY();
         VTTY(int width, int height);
+
+        /**
+         * Reads a character from the virtual terminal.
+         * @returns A character.
+         */
+        char readChar();
 
         /**
          * Writes a character to the virtual terminal.
@@ -44,6 +58,12 @@ namespace AEX::TTY {
          * @param amnt Amount of lines to scroll down by.
          */
         virtual void scrollDown(int amnt);
+
+        /**
+         * Sets the keymap of the virtual terminal.
+         * @param _keymap Pointer to the new keymap. Will be copied over.
+         */
+        void set_keymap(Dev::Input::keymap* _keymap);
 
         int getCursorX() {
             return _cursorx;
@@ -84,6 +104,15 @@ namespace AEX::TTY {
         private:
         int _bgColor;
         int _fgColor;
+
+        Mem::CircularBuffer* _inputBuffer;
+        Dev::Input::keymap   _keymap = Dev::Input::default_keymap;
+
+        void inputReady();
+        void inputKeyPress(Dev::Input::event _event);
+
+        friend void AEX::Dev::Input::init();
+        friend void AEX::Dev::Input::tty_input_thread();
 
         protected:
         int _cursorx = 0;

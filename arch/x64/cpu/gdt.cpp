@@ -67,6 +67,12 @@ namespace AEX::Sys {
 
             _tss->ist1 = (size_t) Mem::kernel_pagemap->alloc(8192) + 8192;
             _tss->ist2 = (size_t) Mem::kernel_pagemap->alloc(8192) + 8192;
+
+            //_tss->ist1 = 0xFFFFFFFF80400000 + (i + 0) * 8192;
+            //_tss->ist2 = 0xFFFFFFFF80400000 + (i + 1) * 8192;
+
+            printk("ist1 von %i: 0x%p\n", i / 2, _tss->ist1);
+            printk("ist2 von %i: 0x%p\n", i / 2, _tss->ist2);
         }
 
         load_gdt(gdt, 5 + MCore::cpu_count * 2);

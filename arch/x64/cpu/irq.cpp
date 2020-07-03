@@ -17,7 +17,7 @@ namespace AEX::Sys::IRQ {
         CPU::getCurrentCPU()->in_interrupt++;
 
         // if (info->irq_no > 0)
-        //    AEX::printk("%i: irq: %i\n", CPU::getCurrentCPUID(), info->irq_no);
+        //     AEX::printk("%i: irq: %i\n", CPU::getCurrentCPUID(), info->irq_no);
 
         handle_irq(info->irq_no);
 

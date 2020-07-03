@@ -1,5 +1,6 @@
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/debug.hpp"
+#include "aex/dev/input.hpp"
 #include "aex/fs.hpp"
 #include "aex/mem.hpp"
 #include "aex/module.hpp"
@@ -105,8 +106,23 @@ void main(multiboot_info_t* mbinfo) {
     Debug::load_kernel_symbols("/sys/aexkrnl.elf");
     load_core_modules();
 
+    Dev::Input::init();
+
     // Let's get to it
     main_threaded();
+}
+
+void boi() {
+    char c;
+    int  i;
+
+    while (true) {
+        i++;
+        c = TTY::VTTYs[TTY::ROOT_TTY]->readChar();
+
+        printk("%c", c);
+        // Proc::Thread::sleep(500);
+    }
 }
 
 void main_threaded() {
@@ -114,6 +130,9 @@ void main_threaded() {
     auto process = Proc::Thread::getCurrentThread()->getProcess();
 
     int64_t start_epoch = get_clock_time();
+
+    auto thread = new Proc::Thread(nullptr, (void*) boi, 8192, nullptr);
+    thread->start();
 
     while (true) {
         uint64_t ns    = get_uptime();

@@ -2,6 +2,7 @@
 
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/mem.hpp"
+#include "aex/printk.hpp"
 #include "aex/string.hpp"
 
 #include "boot/mboot.h"
@@ -32,6 +33,13 @@ namespace AEX::TTY {
         return *this;
     }
 
+    char VTTY::readChar() {
+        char c;
+        _inputBuffer->read(&c, 1);
+
+        return c;
+    }
+
     void VTTY::writeChar(char c) {
         _lock.acquire();
         _writeChar(c);
@@ -45,6 +53,21 @@ namespace AEX::TTY {
             _writeChar(*str++);
 
         _lock.release();
+    }
+
+    void VTTY::inputReady() {
+        _inputBuffer = new Mem::CircularBuffer(2048);
+    }
+
+    void VTTY::inputKeyPress(Dev::Input::event _event) {
+        if (!_inputBuffer->writeAvailable())
+            return;
+
+        char c = Dev::Input::translateEvent(&_keymap, _event);
+        if (!c)
+            return;
+
+        _inputBuffer->write(&c, 1);
     }
 
     VTTY* VTTYs[TTY_AMOUNT];
