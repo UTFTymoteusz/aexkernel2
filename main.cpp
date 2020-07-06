@@ -112,29 +112,16 @@ void main(multiboot_info_t* mbinfo) {
     main_threaded();
 }
 
-void boi() {
-    char c;
-    int  i;
-
-    while (true) {
-        i++;
-        c = TTY::VTTYs[TTY::ROOT_TTY]->readChar();
-
-        printk("%c", c);
-        // Proc::Thread::sleep(500);
-    }
-}
-
 void main_threaded() {
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrentThread()->getProcess();
 
-    int64_t start_epoch = get_clock_time();
+    // int64_t start_epoch = get_clock_time();
 
-    auto thread = new Proc::Thread(nullptr, (void*) boi, 8192, nullptr);
-    thread->start();
+    /*while (true) {
+        if (TTY::VTTYs[TTY::ROOT_TTY]->readChar() != 't')
+            continue;
 
-    while (true) {
         uint64_t ns    = get_uptime();
         uint64_t clock = get_clock_time();
 
@@ -153,7 +140,7 @@ void main_threaded() {
         printk("tid: %i\n", Proc::Thread::getCurrentTID());
 
         Proc::debug_print_cpu_jobs();
+    }*/
 
-        Proc::Thread::sleep(5000);
-    }
+    Proc::Thread::exit();
 }

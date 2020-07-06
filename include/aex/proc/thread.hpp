@@ -81,7 +81,7 @@ namespace AEX::Proc {
          */
         static bool shouldExit();
 
-        static void exit();
+        [[noreturn]] static void exit();
 
         /**
          * Gets the parent process of the thread.

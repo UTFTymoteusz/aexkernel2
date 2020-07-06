@@ -12,6 +12,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+using namespace AEX::Dev::Input;
+
 namespace AEX::TTY {
     VTTY::VTTY() {}
     VTTY::VTTY(int width, int height) {
@@ -59,11 +61,18 @@ namespace AEX::TTY {
         _inputBuffer = new Mem::CircularBuffer(2048);
     }
 
-    void VTTY::inputKeyPress(Dev::Input::event _event) {
+    void VTTY::inputKeyPress(event _event) {
         if (!_inputBuffer->writeAvailable())
             return;
 
-        char c = Dev::Input::translateEvent(&_keymap, _event);
+        if (_event.mod & KEYMOD_CTRL && _event.keycode >= KEY_A && _event.keycode <= KEY_Z) {
+            char cc = 1 + (_event.keycode - KEY_A);
+            _inputBuffer->write(&cc, 1);
+
+            return;
+        }
+
+        char c = translateEvent(&_keymap, _event);
         if (!c)
             return;
 

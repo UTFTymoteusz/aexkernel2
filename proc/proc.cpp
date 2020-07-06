@@ -197,7 +197,7 @@ namespace AEX::Proc {
 
         if (thread == Thread::getCurrentThread())
             while (true)
-                ;
+                Proc::Thread::yield();
     }
 
     void reap_thread(Thread* thread) {
