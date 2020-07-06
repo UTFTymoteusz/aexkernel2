@@ -10,10 +10,6 @@ constexpr auto PROCESSOR_ENABLED = 1 << 0;
 constexpr auto PROCESSOR_ONLINE  = 1 << 1;
 
 namespace AEX::ACPI {
-    enum madt_entryype {
-        APIC = 0,
-    };
-
     struct sdt_header {
         char signature[4];
 

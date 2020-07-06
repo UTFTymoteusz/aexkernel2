@@ -4,14 +4,14 @@
 #include "aex/net/linklayer.hpp"
 
 namespace AEX::Dev {
-    NetDevice::NetDevice(const char* name, Net::link_type_t link_type) : Device(name, type_t::NET) {
+    NetDevice::NetDevice(const char* name, Net::link_type_t link_type) : Device(name, DEV_NET) {
         this->link_type = link_type;
     }
 
     NetDevice::~NetDevice() {}
 
     error_t NetDevice::send(const void*, size_t) {
-        return error_t::ENOSYS;
+        return ENOSYS;
     }
 
     void NetDevice::receive(const void* buffer, size_t len) {
@@ -38,7 +38,7 @@ namespace AEX::Dev {
 
     Mem::SmartPointer<NetDevice> get_net_device(int id) {
         auto device = devices.get(id);
-        if (!device.isValid() || device->type != Device::type_t::NET)
+        if (!device.isValid() || device->type != DEV_NET)
             return devices.get(-1);
 
         return device;

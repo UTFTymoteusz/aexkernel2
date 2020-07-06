@@ -24,18 +24,18 @@ namespace AEX::FS {
         printk("iso9660: Mount attempt from %s\n", source);
 
         if (!source)
-            return error_t::EINVAL;
+            return EINVAL;
 
         auto info = File::info(source);
         if (!info.has_value)
             return info.error_code;
 
         if (!info.value.is_block())
-            return error_t::ENOTBLK;
+            return ENOTBLK;
 
         auto block = (Dev::BlockDevice_SP) Dev::devices.get(info.value.dev_id);
         if (!block.isValid())
-            return error_t::ENOENT;
+            return ENOENT;
 
         iso9660_dentry root_dentry;
 
@@ -44,14 +44,14 @@ namespace AEX::FS {
         for (int i = 0; i <= 64; i++) {
             if (i == 64) {
                 printk(PRINTK_WARN "iso9660: Too many volume descriptors\n");
-                return error_t::EINVAL;
+                return EINVAL;
             }
 
             block->read(buffer, ISO_START + BLOCK_SIZE * i, BLOCK_SIZE);
 
             auto header = (iso9660_vd_header*) buffer;
             if (memcmp(header->identifier, IDENTIFIER, 5) != 0)
-                return error_t::EINVAL;
+                return EINVAL;
 
             switch (header->type) {
             case ios9960_vd_type::TERMINATOR:

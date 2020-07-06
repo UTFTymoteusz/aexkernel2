@@ -32,7 +32,7 @@ namespace AEX::Net {
     error_t register_link_layer(link_type_t type, LinkLayer* layer) {
         link_layers[type] = layer;
 
-        return error_t::ENONE;
+        return ENONE;
     }
 
     void parse(int device_id, link_type_t type, const void* packet, size_t len) {
@@ -42,6 +42,6 @@ namespace AEX::Net {
     error_t register_inet_protocol(socket_protocol_t id, INetProtocol* protocol) {
         inet_protocols[(uint8_t) id] = protocol;
 
-        return error_t::ENONE;
+        return ENONE;
     }
 }

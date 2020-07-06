@@ -60,29 +60,29 @@ namespace AEX::Sys {
 
     void CPU::handleIPP() {
         switch (_ipi_packet.type) {
-        case CPU::ipp_type::HALT:
+        case CPU::IPP_HALT:
             _ipi_ack = true;
 
             APIC::eoi();
             CPU::halt();
 
             return;
-        case CPU::ipp_type::RESHED:
+        case CPU::IPP_RESHED:
             _ipi_ack = true;
             printk("cpu%i: Reshed\n", CPU::getCurrentCPUID());
 
             break;
-        case CPU::ipp_type::CALL:
+        case CPU::IPP_CALL:
             _ipi_ack = true;
             ((void (*)(void)) _ipi_packet.data)();
 
             break;
-        case CPU::ipp_type::PG_FLUSH:
+        case CPU::IPP_PG_FLUSH:
             _ipi_ack = true;
             asm volatile("mov rax, cr3; mov cr3, rax;");
 
             break;
-        case CPU::ipp_type::PG_INV:
+        case CPU::IPP_PG_INV:
             asm volatile("invlpg [%0]" : : "r"(_ipi_packet.data));
             _ipi_ack = true;
 

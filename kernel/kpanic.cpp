@@ -23,7 +23,7 @@ namespace AEX {
 
         va_end(args);
 
-        CPU::broadcastPacket(CPU::ipp_type::HALT);
+        CPU::broadcastPacket(CPU::IPP_HALT);
         CPU::halt();
     }
 }

@@ -7,7 +7,7 @@
 namespace AEX::Dev::SATA {
     class AHCI;
 
-    enum type_t {
+    enum sata_type_t {
         SATA   = 0,
         SATAPI = 1,
         SEMB   = 2,
@@ -21,8 +21,8 @@ namespace AEX::Dev::SATA {
         static constexpr auto PxCMD_FRE = 0x0010;
         static constexpr auto PxCMD_ST  = 0x0001;
 
-        type_t type;
-        bool   atapi;
+        sata_type_t type;
+        bool        atapi;
 
         int max_commands   = 1;
         int max_page_burst = 0;

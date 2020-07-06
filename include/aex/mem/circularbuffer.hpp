@@ -21,6 +21,8 @@ namespace AEX::Mem {
         int getReadPos();
         int getWritePos();
 
+        void resize(int new_size);
+
         private:
         Spinlock   _lock;
         IPC::Event _event;

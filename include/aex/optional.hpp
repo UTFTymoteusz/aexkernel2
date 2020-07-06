@@ -9,7 +9,7 @@ namespace AEX {
     template <typename T>
     struct optional {
         bool    has_value  = false;
-        error_t error_code = error_t::ENONE;
+        error_t error_code = ENONE;
         T       value;
 
         static optional error(error_t code) {

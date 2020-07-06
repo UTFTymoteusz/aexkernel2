@@ -195,8 +195,6 @@ namespace AEX::Dev::Input {
         auto handle = Handle::getHandle(1024);
         handle.begin();
 
-        auto thread = Proc::Thread::getCurrentThread();
-
         while (true) {
             auto event = handle.readEvent();
             if (event.mod & KEYMOD_RELEASE)

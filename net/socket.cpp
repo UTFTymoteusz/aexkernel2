@@ -16,14 +16,14 @@ namespace AEX::Net {
             return Socket_SP(sock_try.value);
         }
         case socket_domain_t::AF_UNIX:
-            return error_t::EINVAL;
+            return EINVAL;
         default:
-            return error_t::EINVAL;
+            return EINVAL;
         }
     }
 
     error_t Socket::connect(const sockaddr*) {
-        return error_t::EINVAL;
+        return EINVAL;
     }
 
     error_t Socket::connect(ipv4_addr addr, uint16_t port) {
@@ -37,7 +37,7 @@ namespace AEX::Net {
     }
 
     error_t Socket::bind(const sockaddr*) {
-        return error_t::EINVAL;
+        return EINVAL;
     }
 
     error_t Socket::bind(ipv4_addr addr, uint16_t port) {
@@ -51,11 +51,11 @@ namespace AEX::Net {
     }
 
     optional<size_t> Socket::sendTo(const void*, size_t, int, const sockaddr*) {
-        return error_t::ENOSYS;
+        return ENOSYS;
     }
 
     optional<size_t> Socket::receiveFrom(void*, size_t, int, sockaddr*) {
-        return error_t::ENOSYS;
+        return ENOSYS;
     }
 
     optional<size_t> Socket::send(const void* buffer, size_t len, int flags) {
@@ -67,6 +67,6 @@ namespace AEX::Net {
     }
 
     void Socket::close() {
-        // return error_t::ENOSYS;
+        // return ENOSYS;
     }
 }

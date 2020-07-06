@@ -6,19 +6,20 @@
 namespace AEX::Dev {
     typedef int32_t devid_t;
 
+    enum dev_type_t : uint8_t {
+        DEV_BLOCK = 0,
+        DEV_CHAR  = 1,
+        DEV_NET   = 2,
+    };
+
     class Device {
         public:
-        enum type_t : uint8_t {
-            BLOCK = 0,
-            CHAR  = 1,
-            NET   = 2,
-        };
+        dev_type_t type;
 
-        type_t type;
-        char   name[32];
-        int    id;
+        char name[32];
+        int  id;
 
-        Device(const char* name, type_t type);
+        Device(const char* name, dev_type_t type);
 
         /**
          * Registers the device.

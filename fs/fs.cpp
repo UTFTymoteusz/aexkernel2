@@ -26,10 +26,10 @@ namespace AEX::FS {
 
     error_t mount(const char* source, const char* path, const char* type) {
         if (!path || !Path::is_valid(path))
-            return error_t::EINVAL;
+            return EINVAL;
 
         if (source && !Path::is_valid(source))
-            return error_t::EINVAL;
+            return EINVAL;
 
         for (auto iterator = filesystems.getIterator(); auto fs = iterator.next();) {
             if (type && strcmp(type, fs->name) != 0)
@@ -46,15 +46,15 @@ namespace AEX::FS {
             mount->control_block = res.value;
 
             mounts.addRef(mount);
-            return error_t::ENONE;
+            return ENONE;
         }
 
-        return error_t::EINVAL;
+        return EINVAL;
     }
 
     mount_info find_mount(const char* path) {
         if (!path || !Path::is_valid(path))
-            return mount_info(optional<Mem::SmartPointer<Mount>>::error(error_t::EINVAL), nullptr);
+            return mount_info(optional<Mem::SmartPointer<Mount>>::error(EINVAL), nullptr);
 
         Mem::SmartPointer<Mount> ret;
 

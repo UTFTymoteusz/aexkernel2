@@ -41,7 +41,7 @@ namespace AEX::Mem::Heap {
         size_t free_pieces;
 
         Piece*   next;
-        Spinlock spinlock;
+        Spinlock lock;
 
         Piece(size_t size) {
             pieces      = size / ALLOC_SIZE;
@@ -76,17 +76,17 @@ namespace AEX::Mem::Heap {
 
             size += ALLOC_SIZE;
 
-            spinlock.acquire();
+            lock.acquire();
 
             size_t  pieces = ceilToPiece(size);
             int64_t start  = findFree(pieces);
             if (start == -1) {
-                spinlock.release();
+                lock.release();
                 return nullptr;
             }
 
             mark(start, pieces);
-            spinlock.release();
+            lock.release();
 
             void* addr = (void*) ((size_t) data + start * ALLOC_SIZE);
 
@@ -116,12 +116,12 @@ namespace AEX::Mem::Heap {
                        ptr, header->sanity, header->sanity ^ SANITY_XOR, (size_t) ptr ^ SANITY_XOR);
             }
 
-            spinlock.acquire();
+            lock.acquire();
             unmark((uint32_t)((size_t) block - (size_t) data) / ALLOC_SIZE, header->len);
             Mem::atomic_add(&heap_free, (uint64_t) header->len * ALLOC_SIZE);
 
             memset(block, '\0', header->len * ALLOC_SIZE);
-            spinlock.release();
+            lock.release();
         }
 
         bool owns(void* ptr) {

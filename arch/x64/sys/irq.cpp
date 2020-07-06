@@ -84,7 +84,7 @@ namespace AEX::Sys::IRQ {
                 _ioapic->setDestination(j, 0x00);
                 _ioapic->setVector(j, 0x20 + 30);
                 _ioapic->setMask(j, true);
-                _ioapic->setMode(j, IOAPIC::irq_mode::NORMAL);
+                _ioapic->setMode(j, IOAPIC::irq_mode::IRQ_NORMAL);
             }
 
             ioapics.pushBack(_ioapic);
@@ -151,7 +151,7 @@ namespace AEX::Sys::IRQ {
                 continue;
             }
 
-            MCore::CPUs[i]->sendPacket(CPU::ipp_type::CALL, (void*) timer_sync);
+            MCore::CPUs[i]->sendPacket(CPU::IPP_CALL, (void*) timer_sync);
             irq_sleep(interval);
         }
 

@@ -14,7 +14,7 @@
 namespace AEX::Dev {
     BlockDevice::BlockDevice(const char* name, uint16_t sector_size, uint64_t sector_count,
                              uint16_t max_sectors_at_once)
-        : Device(name, type_t::BLOCK) {
+        : Device(name, DEV_BLOCK) {
         _overflow_buffer = new uint8_t[sector_size];
 
         _sector_size         = sector_size;
@@ -154,7 +154,7 @@ namespace AEX::Dev {
 
     Dev::BlockDevice_SP get_block_device(int id) {
         auto device = devices.get(id);
-        if (!device.isValid() || device->type != Device::type_t::BLOCK)
+        if (!device.isValid() || device->type != DEV_BLOCK)
             return devices.get(-1);
 
         return device;

@@ -54,7 +54,7 @@ namespace AEX {
         auto elf  = ELF(file);
 
         if (!elf.isValid(ELF::bitness_t::BITS64, ELF::endianiness_t::LITTLE, ELF::isa_t::AMD64))
-            return error_t::ENOEXEC;
+            return ENOEXEC;
 
         elf.loadStrings();
         elf.loadSymbols();
@@ -84,7 +84,7 @@ namespace AEX {
 
         if (entry_symbol.section_index == 0 || exit_symbol.section_index == 0 ||
             name_symbol.section_index == 0) {
-            return error_t::ENOEXEC;
+            return ENOEXEC;
         }
 
         auto section_info = new module_section[elf.section_headers.count()];
@@ -240,7 +240,7 @@ namespace AEX {
             delete module;
             delete section_info;
 
-            return error_t::ENOSYS;
+            return ENOSYS;
         }
 
         modules.addRef(module);
@@ -272,7 +272,7 @@ namespace AEX {
 
         file->close();
 
-        return error_t::ENONE;
+        return ENONE;
     }
 
     // This will need to be changed in the future, though

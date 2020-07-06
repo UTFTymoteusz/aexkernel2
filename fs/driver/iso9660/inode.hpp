@@ -117,11 +117,11 @@ namespace AEX::FS {
             control_block->block_dev->read(
                 buffer, _dentry.data_lba.le * block_size + block * block_size, count * block_size);
 
-            return error_t::ENONE;
+            return ENONE;
         }
 
         error_t writeBlocks(const void*, uint64_t, uint16_t) {
-            return error_t::EROFS;
+            return EROFS;
         }
 
         private:

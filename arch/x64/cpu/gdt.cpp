@@ -29,29 +29,25 @@ namespace AEX::Sys {
 
         gdt[1].setBase(0);
         gdt[1].setLimit(0xFFFFF);
-        gdt[1].access = (gdt_entry::access_t)(gdt_entry::RING_0 | gdt_entry::EXECUTABLE |
-                                              gdt_entry::READ_WRITE | gdt_entry::CODE_DATA |
-                                              gdt_entry::PRESENT);
-        gdt[1].flags  = (gdt_entry::flags_t)(gdt_entry::GRANULARITY | gdt_entry::X64);
+        gdt[1].access = GDT_AC_RING_0 | GDT_AC_EXECUTABLE | GDT_AC_READ_WRITE | GDT_AC_CODE_DATA |
+                        GDT_AC_PRESENT;
+        gdt[1].flags = GDT_FL_GRANULARITY | GDT_FL_X64;
 
         gdt[2].setBase(0);
         gdt[2].setLimit(0xFFFFF);
-        gdt[2].access = (gdt_entry::access_t)(gdt_entry::RING_0 | gdt_entry::READ_WRITE |
-                                              gdt_entry::CODE_DATA | gdt_entry::PRESENT);
-        gdt[2].flags  = (gdt_entry::flags_t) 0;
+        gdt[2].access = GDT_AC_RING_0 | GDT_AC_READ_WRITE | GDT_AC_CODE_DATA | GDT_AC_PRESENT;
+        gdt[2].flags  = 0;
 
         gdt[3].setBase(0);
         gdt[3].setLimit(0xFFFFF);
-        gdt[3].access = (gdt_entry::access_t)(gdt_entry::RING_3 | gdt_entry::READ_WRITE |
-                                              gdt_entry::CODE_DATA | gdt_entry::PRESENT);
-        gdt[3].flags  = (gdt_entry::flags_t) 0;
+        gdt[3].access = GDT_AC_RING_3 | GDT_AC_READ_WRITE | GDT_AC_CODE_DATA | GDT_AC_PRESENT;
+        gdt[3].flags  = 0;
 
         gdt[4].setBase(0);
         gdt[4].setLimit(0xFFFFF);
-        gdt[4].access = (gdt_entry::access_t)(gdt_entry::RING_3 | gdt_entry::EXECUTABLE |
-                                              gdt_entry::READ_WRITE | gdt_entry::CODE_DATA |
-                                              gdt_entry::PRESENT);
-        gdt[4].flags  = (gdt_entry::flags_t)(gdt_entry::GRANULARITY | gdt_entry::X64);
+        gdt[4].access = GDT_AC_RING_3 | GDT_AC_EXECUTABLE | GDT_AC_READ_WRITE | GDT_AC_CODE_DATA |
+                        GDT_AC_PRESENT;
+        gdt[4].flags = GDT_FL_GRANULARITY | GDT_FL_X64;
 
         for (int i = 0; i < MCore::cpu_count * 2; i += 2) {
             auto     _tss     = new tss();
@@ -59,20 +55,14 @@ namespace AEX::Sys {
 
             gdt[5 + i].setLimit(sizeof(tss));
             gdt[5 + i].setBase(tss_addr);
-            gdt[5 + i].access = (gdt_entry::access_t)(gdt_entry::RING_3 | gdt_entry::EXECUTABLE |
-                                                      gdt_entry::ACCESSED | gdt_entry::PRESENT);
-            gdt[5 + i].flags  = (gdt_entry::flags_t)(gdt_entry::GRANULARITY | gdt_entry::X64);
+            gdt[5 + i].access =
+                GDT_AC_RING_3 | GDT_AC_EXECUTABLE | GDT_AC_ACCESSED | GDT_AC_PRESENT;
+            gdt[5 + i].flags = GDT_FL_GRANULARITY | GDT_FL_X64;
 
             *((uint32_t*) &gdt[5 + i + 1]) = tss_addr >> 32;
 
             _tss->ist1 = (size_t) Mem::kernel_pagemap->alloc(8192) + 8192;
             _tss->ist2 = (size_t) Mem::kernel_pagemap->alloc(8192) + 8192;
-
-            //_tss->ist1 = 0xFFFFFFFF80400000 + (i + 0) * 8192;
-            //_tss->ist2 = 0xFFFFFFFF80400000 + (i + 1) * 8192;
-
-            printk("ist1 von %i: 0x%p\n", i / 2, _tss->ist1);
-            printk("ist2 von %i: 0x%p\n", i / 2, _tss->ist2);
         }
 
         load_gdt(gdt, 5 + MCore::cpu_count * 2);

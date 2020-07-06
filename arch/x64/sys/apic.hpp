@@ -34,12 +34,12 @@ namespace AEX::Sys {
     class IOAPIC {
         public:
         enum irq_mode {
-            NORMAL       = 0,
-            LOW_PRIORITY = 1,
-            SMI          = 2,
-            NMI          = 4,
-            INIT         = 5,
-            EXTERNAL     = 7,
+            IRQ_NORMAL       = 0,
+            IRQ_LOW_PRIORITY = 1,
+            IRQ_SMI          = 2,
+            IRQ_NMI          = 4,
+            IRQ_INIT         = 5,
+            IRQ_EXTERNAL     = 7,
         };
 
         int irq_base;

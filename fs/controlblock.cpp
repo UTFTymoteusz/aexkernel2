@@ -9,7 +9,7 @@ namespace AEX::FS {
     ControlBlock::~ControlBlock() {}
 
     optional<INode_SP> ControlBlock::getINode(INode_SP, dir_entry, int) {
-        return error_t::ENOSYS;
+        return ENOSYS;
     }
 
     optional<INode_SP> ControlBlock::findINode(const char* lpath) {
@@ -36,7 +36,7 @@ namespace AEX::FS {
                 found = true;
 
                 if (!walker.isFinal() && !readd_try.value.is_directory())
-                    return error_t::ENOENT;
+                    return ENOENT;
 
                 inode_try = getINode(inode, readd_try.value, readd_try.value.inode_id);
                 if (!inode_try.has_value)
@@ -50,7 +50,7 @@ namespace AEX::FS {
             }
 
             if (!found)
-                return error_t::ENOENT;
+                return ENOENT;
         }
 
         return inode;

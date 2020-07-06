@@ -93,7 +93,7 @@ namespace AEX::Dev::SATA {
 
             sata_device             = new SATADevice(buffer);
             sata_device->controller = this;
-            sata_device->type       = type_t::SATAPI;
+            sata_device->type       = sata_type_t::SATAPI;
             sata_device->atapi      = true;
 
             sata_device->max_commands   = max_cmd;
@@ -121,7 +121,7 @@ namespace AEX::Dev::SATA {
 
             sata_device             = new SATADevice(buffer);
             sata_device->controller = this;
-            sata_device->type       = type_t::SATA;
+            sata_device->type       = sata_type_t::SATA;
             sata_device->atapi      = false;
 
             sata_device->max_commands   = max_cmd;

@@ -23,7 +23,7 @@ namespace AEX::Dev::SATA {
         memset((void*) &(table->fis_reg_h2d_data), '\0', sizeof(AHCI::fis_reg_h2d));
 
         table->fis_reg_h2d_data.command =
-            atapi ? AHCI::command::IDENTIFY_PACKET_DEVICE : AHCI::command::IDENTIFY_DEVICE;
+            atapi ? AHCI::ata_command::IDENTIFY_PACKET_DEVICE : AHCI::ata_command::IDENTIFY_DEVICE;
         table->fis_reg_h2d_data.command_control = true;
         table->fis_reg_h2d_data.fis_type        = AHCI::fis_type::REG_H2D;
 
@@ -166,7 +166,7 @@ namespace AEX::Dev::SATA {
 
         auto fis = &table->fis_reg_h2d_data;
 
-        fis->command         = AHCI::command::PACKET;
+        fis->command         = AHCI::ata_command::PACKET;
         fis->command_control = true;
         fis->fis_type        = AHCI::fis_type::REG_H2D;
 

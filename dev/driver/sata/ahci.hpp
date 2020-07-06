@@ -23,7 +23,7 @@ namespace AEX::Dev::SATA {
             DEV_BITS  = 0xA1,
         };
 
-        enum command {
+        enum ata_command {
             READ_DMA_EXT           = 0x25,
             WRITE_DMA_EXT          = 0x35,
             PACKET                 = 0xA0,

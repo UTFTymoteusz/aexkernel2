@@ -106,7 +106,6 @@ namespace AEX::Proc {
 
     void Thread::exit() {
         auto thread = Thread::getCurrentThread();
-
         if (thread->isBusy())
             kpanic("Attempt to exit a thread while it's still busy\n");
 
@@ -191,8 +190,6 @@ namespace AEX::Proc {
 
         Mem::atomic_add(&_busy, (uint16_t) 1);
         Mem::atomic_add(&_critical, (uint16_t) 1);
-
-        // printk("interrupts are gone\n");
     }
 
     void Thread::subCritical() {

@@ -10,11 +10,11 @@ namespace AEX::Dev::SATA {
 
         bool check(Tree::Device* _device) {
             auto device = (SATADevice*) _device;
-            return device->type == type_t::SATA;
+            return device->type == sata_type_t::SATA;
         }
 
-        void bind(Tree::Device* _device) {
-            auto device = (SATADevice*) _device;
+        void bind(Tree::Device*) {
+            // auto device = (SATADevice*) _device;
         }
     };
 

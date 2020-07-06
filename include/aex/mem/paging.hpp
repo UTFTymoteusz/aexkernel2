@@ -1,6 +1,6 @@
 #pragma once
 
-#include "aex/spinlock.hpp"
+#include "aex/mutex.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -104,7 +104,7 @@ namespace AEX::Mem {
         phys_addr paddrof(void* vaddr);
 
         private:
-        Spinlock spinlock;
+        Mutex _lock;
 
         void assign(int pptr, void* virt, phys_addr phys, uint16_t flags);
         void unassign(int pptr, void* virt);

@@ -35,5 +35,7 @@ namespace AEX::Dev::Input {
         friend void key_release(hid_keycode_t code);
     };
 
+    extern keymap default_keymap;
+
     char translateEvent(keymap* _keymap, event& _event);
 }

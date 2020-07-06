@@ -102,6 +102,17 @@ namespace AEX::Mem {
         return _writePos;
     }
 
+    void CircularBuffer::resize(int new_size) {
+        _lock.acquire();
+
+        _readPos  = 0;
+        _writePos = 0;
+
+        Heap::realloc(_buffer, new_size);
+
+        _lock.release();
+    }
+
     int CircularBuffer::findDistance(int a, int b) {
         if (a < 0)
             a += _size;

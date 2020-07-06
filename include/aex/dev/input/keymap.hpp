@@ -34,6 +34,4 @@ namespace AEX::Dev::Input {
     struct keymap {
         key keys[256];
     };
-
-    extern keymap default_keymap;
 }

@@ -17,7 +17,7 @@ namespace AEX::Proc {
     void setup_irq() {
         AEX::Sys::init_IDT[0x20 + 0].setOffset((size_t) proc_timer_tick);
 
-        Sys::CPU::broadcastPacket(Sys::CPU::ipp_type::CALL, (void*) reload);
+        Sys::CPU::broadcastPacket(Sys::CPU::IPP_CALL, (void*) reload);
         reload();
     }
 

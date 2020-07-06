@@ -95,7 +95,7 @@ void main(multiboot_info_t* mbinfo) {
     FS::mount(nullptr, "/dev/", "devfs");
 
     auto res = FS::mount("/dev/sra", "/", nullptr);
-    if (res != error_t::ENONE)
+    if (res != ENONE)
         kpanic("Failed to mount iso9660: %s\n", strerror((error_t) res));
 
     printk("\n");

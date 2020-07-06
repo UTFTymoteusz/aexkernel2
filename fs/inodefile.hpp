@@ -29,7 +29,7 @@ namespace AEX::FS {
             if (count == 0)
                 return 0;
 
-            if (((uint64_t) _pos / _block_size) == _cached_block) {
+            if ((uint64_t) _pos / _block_size == _cached_block) {
                 uint16_t offset = _pos & (_block_size - 1);
                 uint16_t len    = min<uint32_t>((uint32_t) _block_size - offset, count);
 
@@ -75,7 +75,7 @@ namespace AEX::FS {
             }
 
             if (new_pos < 0 || (uint64_t) new_pos > _inode->size)
-                return error_t::EINVAL;
+                return EINVAL;
 
             _pos = new_pos;
             return new_pos;

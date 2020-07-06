@@ -24,7 +24,7 @@ namespace AEX::Mem::Phys {
     frame_piece* current_piece;
     frame_piece* prev_piece = nullptr;
 
-    Spinlock spinlock;
+    Spinlock lock;
 
     size_t frames_available;
     size_t frames_taken_by_kernel;
@@ -107,7 +107,7 @@ namespace AEX::Mem::Phys {
         uint32_t     frames = ceiltopg(amount);
         frame_piece* piece  = first_piece;
 
-        spinlock.acquire();
+        lock.acquire();
 
         do {
             if (piece->frames_free < frames) {
@@ -122,13 +122,13 @@ namespace AEX::Mem::Phys {
             frames_available -= frames;
 
             piece->alloc(start, frames);
-            spinlock.release();
+            lock.release();
 
             return piece->start + start * Sys::CPU::PAGE_SIZE;
         } while ((piece = piece->next) != nullptr);
 
         kpanic("Failed to AEX::Mem::Phys::alloc()");
-        spinlock.release();
+        lock.release();
 
         return 0;
     }
@@ -140,7 +140,7 @@ namespace AEX::Mem::Phys {
         uint32_t     frames = ceiltopg(amount);
         frame_piece* piece  = first_piece;
 
-        spinlock.acquire();
+        lock.acquire();
 
         do {
             if (piece->start > addr)
@@ -151,12 +151,12 @@ namespace AEX::Mem::Phys {
             frames_available += frames;
 
             piece->free(addr / Sys::CPU::PAGE_SIZE, frames);
-            spinlock.release();
+            lock.release();
 
             return;
         } while ((piece = piece->next) != nullptr);
 
         kpanic("Failed to AEX::Mem::Phys::free()");
-        spinlock.release();
+        lock.release();
     }
 }

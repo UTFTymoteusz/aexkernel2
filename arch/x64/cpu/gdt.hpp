@@ -4,35 +4,35 @@
 #include <stdint.h>
 
 namespace AEX::Sys {
+    enum gdt_flags_t : uint8_t {
+        GDT_FL_X64         = 0x02,
+        GDT_FL_SIZE        = 0x04,
+        GDT_FL_GRANULARITY = 0x08,
+    };
+
+    enum gdt_access_t : uint8_t {
+        GDT_AC_ACCESSED    = 0x01,
+        GDT_AC_READ_WRITE  = 0x02,
+        GDT_AC_DIR_CONFORM = 0x04,
+        GDT_AC_EXECUTABLE  = 0x08,
+        GDT_AC_CODE_DATA   = 0x10,
+        GDT_AC_RING_0      = 0x00,
+        GDT_AC_RING_1      = 0x20,
+        GDT_AC_RING_2      = 0x40,
+        GDT_AC_RING_3      = 0x60,
+        GDT_AC_PRESENT     = 0x80,
+    };
+
     struct gdt_entry {
-        enum flags_t : uint8_t {
-            X64         = 0x02,
-            SIZE        = 0x04,
-            GRANULARITY = 0x08,
-        };
-
-        enum access_t : uint8_t {
-            ACCESSED    = 0x01,
-            READ_WRITE  = 0x02,
-            DIR_CONFORM = 0x04,
-            EXECUTABLE  = 0x08,
-            CODE_DATA   = 0x10,
-            RING_0      = 0x00,
-            RING_1      = 0x20,
-            RING_2      = 0x40,
-            RING_3      = 0x60,
-            PRESENT     = 0x80,
-        };
-
         uint16_t limit_low;
 
         uint16_t base_low;
         uint8_t  base_middle;
 
-        access_t access;
+        uint8_t access;
 
         uint8_t limit_high : 4;
-        flags_t flags : 4;
+        uint8_t flags : 4;
 
         uint8_t base_high;
 

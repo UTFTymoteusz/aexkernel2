@@ -29,12 +29,12 @@ namespace AEX::FS {
 
         auto inode = inode_try.value;
         if (inode->is_directory())
-            return error_t::EISDIR;
+            return EISDIR;
 
         if (inode->device_id != -1) {
             auto device = Dev::devices.get(inode->device_id);
             if (!device.isValid())
-                return error_t::ENOENT;
+                return ENOENT;
 
             return File_SP(new DevFile(device));
         }
@@ -53,7 +53,7 @@ namespace AEX::FS {
 
         auto inode = inode_try.value;
         if (!inode->is_directory())
-            return error_t::ENOTDIR;
+            return ENOTDIR;
 
         return File_SP(new INodeDirectory(inode));
     }
@@ -79,19 +79,19 @@ namespace AEX::FS {
     }
 
     optional<uint32_t> File::read(void*, uint32_t) {
-        return error_t::ENOSYS;
+        return ENOSYS;
     }
 
     optional<uint32_t> File::write(void*, uint32_t) {
-        return error_t::ENOSYS;
+        return ENOSYS;
     }
 
     optional<int64_t> File::seek(int64_t, seek_mode) {
-        return error_t::ENOSYS;
+        return ENOSYS;
     }
 
     optional<dir_entry> File::readdir() {
-        return error_t::ENOTDIR;
+        return ENOTDIR;
     }
 
     void File::close() {}

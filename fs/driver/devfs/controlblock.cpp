@@ -9,20 +9,20 @@ namespace AEX::FS {
 
         auto device = Dev::devices.get(id - 2);
         if (!device.isValid())
-            return error_t::ENOENT;
+            return ENOENT;
 
         auto inode = new INode();
 
         inode->device_id = id - 2;
 
         switch (device->type) {
-        case Dev::Device::type_t::BLOCK:
+        case Dev::dev_type_t::DEV_BLOCK:
             inode->type = fs_type_t::BLOCK;
             break;
-        case Dev::Device::type_t::CHAR:
+        case Dev::dev_type_t::DEV_CHAR:
             inode->type = fs_type_t::CHAR;
             break;
-        case Dev::Device::type_t::NET:
+        case Dev::dev_type_t::DEV_NET:
             inode->type = fs_type_t::NET;
             break;
         }

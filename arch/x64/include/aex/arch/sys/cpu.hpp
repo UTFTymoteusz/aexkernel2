@@ -20,11 +20,11 @@ namespace AEX::Sys {
     class CPU {
         public:
         enum ipp_type : uint8_t {
-            HALT     = 0,
-            RESHED   = 1,
-            CALL     = 2,
-            PG_FLUSH = 3,
-            PG_INV   = 4,
+            IPP_HALT     = 0,
+            IPP_RESHED   = 1,
+            IPP_CALL     = 2,
+            IPP_PG_FLUSH = 3,
+            IPP_PG_INV   = 4,
         };
 
         static constexpr int PAGE_SIZE = 4096;
