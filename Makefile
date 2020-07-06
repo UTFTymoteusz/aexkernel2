@@ -21,14 +21,12 @@ OBJS := $(patsubst %.o, $(OBJ_DEST)%.o, $(CFILES:.cpp=.cpp.o) $(ASMFILES:.asm=.a
 ISO  = $(BIN)grubiso/
 SYS  = $(ISO)sys/
 
-GFLAGS = -O3 -Wall -Wextra -Werror -nostdlib -pipe
+GFLAGS = -O3 -Wall -Wextra -Werror -nostdlib -pipe -lgcc
 
 INCLUDES := -I. -I$(ARCH) -I$(ARCH)include/ -Iinclude/ -Iinclude/libc/ -I../lai/include/
 
 CCFLAGS := $(GFLAGS)     \
 	-std=c++17           \
-	-fno-rtti            \
-	-fno-exceptions      \
 	-ffreestanding       \
 	-masm=intel          \
 	-mcmodel=kernel      \
