@@ -27,6 +27,8 @@ INCLUDES := -I. -I$(ARCH) -I$(ARCH)include/ -Iinclude/ -Iinclude/libc/ -I../lai/
 
 CCFLAGS := $(GFLAGS)     \
 	-std=c++17           \
+	-fno-rtti            \
+	-fno-exceptions      \
 	-ffreestanding       \
 	-masm=intel          \
 	-mcmodel=kernel      \
