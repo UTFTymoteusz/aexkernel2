@@ -24,4 +24,8 @@ namespace AEX::Proc {
         this->pid               = add_process(this);
         this->pagemap           = pagemap;
     }
+
+    Mem::SmartPointer<Process> Process::getCurrent() {
+        return Thread::getCurrent()->getProcess();
+    }
 }

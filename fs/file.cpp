@@ -94,5 +94,9 @@ namespace AEX::FS {
         return ENOTDIR;
     }
 
+    optional<File_SP> File::dup() {
+        kpanic("Attempt to call the default dup()");
+    }
+
     void File::close() {}
 }

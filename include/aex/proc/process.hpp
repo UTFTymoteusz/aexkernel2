@@ -29,8 +29,8 @@ namespace AEX::Proc {
 
         Mem::SmartArray<Thread> threads;
 
-        Mem::Pagemap*                pagemap;
-        Mem::Vector<Mem::MMapRegion> mmap_regions;
+        Mem::Pagemap*                 pagemap;
+        Mem::Vector<Mem::MMapRegion*> mmap_regions;
 
         Process() = default;
 
@@ -42,6 +42,12 @@ namespace AEX::Proc {
          */
         Process(const char* image_path, pid_t parent_pid, Mem::Pagemap* pagemap,
                 const char* name = nullptr);
+
+        /**
+         * Gets the current process.
+         * @returns The SmartPointer to the process.
+         */
+        static Mem::SmartPointer<Process> getCurrent();
 
         private:
     };

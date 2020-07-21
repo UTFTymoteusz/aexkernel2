@@ -50,8 +50,26 @@ namespace AEX {
         if (!file_try.has_value)
             return file_try.error_code;
 
-        auto file = file_try.value;
-        auto elf  = ELF(file);
+        auto    file = file_try.value;
+        int64_t size = file->seek(0, FS::File::END).value;
+
+        auto mmap_try = Mem::mmap(nullptr, size, Mem::PROT_READ, Mem::MAP_NONE, file, 0);
+        if (!mmap_try.has_value)
+            return mmap_try.error_code;
+
+        file->close();
+
+        void* addr = mmap_try.value;
+
+        auto error = load_module_from_memory(addr, size, path);
+        Mem::munmap(addr, size);
+
+        return error;
+    }
+
+    error_t load_module_from_memory(void* _addr, size_t, const char* path) {
+        uint8_t* addr = (uint8_t*) _addr;
+        auto     elf  = ELF(addr);
 
         if (!elf.isValid(ELF::bitness_t::BITS64, ELF::endianiness_t::LITTLE, ELF::isa_t::AMD64))
             return ENOEXEC;
@@ -83,9 +101,8 @@ namespace AEX {
         }
 
         if (entry_symbol.section_index == 0 || exit_symbol.section_index == 0 ||
-            name_symbol.section_index == 0) {
+            name_symbol.section_index == 0)
             return ENOEXEC;
-        }
 
         auto section_info = new module_section[elf.section_headers.count()];
         auto module       = new Module();
@@ -96,15 +113,13 @@ namespace AEX {
             if (!(section_header.flags & ELF::sc_flags_t::SC_ALLOC))
                 continue;
 
-            file->seek(section_header.file_offset);
-
             void* ptr = Mem::kernel_pagemap->alloc(section_header.size, PAGE_WRITE | PAGE_EXEC);
             if (!(section_header.flags & ELF::sc_flags_t::SC_ALLOC))
                 continue;
 
             // 6 hours of debugging for this god forsaken thing (the entire if)
             if (section_header.type != ELF::sc_type_t::SC_NO_DATA)
-                file->read(ptr, section_header.size);
+                memcpy(ptr, addr + section_header.file_offset, section_header.size);
 
             section_info[i].addr = ptr;
             section_info[i].size = section_header.size;
@@ -269,9 +284,6 @@ namespace AEX {
         thread->start();
 
         delete section_info;
-
-        file->close();
-
         return ENONE;
     }
 

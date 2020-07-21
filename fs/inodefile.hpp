@@ -81,6 +81,17 @@ namespace AEX::FS {
             return new_pos;
         }
 
+        optional<File_SP> dup() {
+            auto dupd = new INodeFile(_inode);
+
+            dupd->_pos          = _pos;
+            dupd->_cached_block = _cached_block;
+
+            memcpy(dupd->_cache_buffer, _cache_buffer, _block_size);
+
+            return File_SP(dupd);
+        }
+
         private:
         int64_t _pos = 0;
 

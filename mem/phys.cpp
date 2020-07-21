@@ -19,7 +19,7 @@
 namespace AEX::Mem::Phys {
     typedef size_t phys_addr;
 
-    uint8_t      root_piece_memory[4096];
+    uint8_t      root_piece_memory[8192];
     frame_piece* first_piece;
     frame_piece* current_piece;
     frame_piece* prev_piece = nullptr;

@@ -13,6 +13,7 @@ namespace AEX {
         [ENOTBLK] = "Block device required",
         [ENOEXEC] = "Exec format error",
         [EROFS]   = "Read-only filesystem",
+        [EBADF]   = "Bad file number",
 
         [EPROTOTYPE]      = "Protocol wrong type for socket",
         [ENOPROTOOPT]     = "Protocol not available",

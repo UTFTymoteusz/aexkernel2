@@ -127,13 +127,13 @@ void main_threaded() {
     // while (true)
     //     Proc::Thread::getCurrent();
 
-    uint64_t* boi = (uint64_t*) 0xFFFD;
+    /*uint64_t* boi = (uint64_t*) 0xFFFD;
     printk("aa %x\n", *boi);
-    printk("done\n");
+    printk("done\n");*/
 
-    // int64_t start_epoch = get_clock_time();
+    int64_t start_epoch = get_clock_time();
 
-    /*while (true) {
+    while (true) {
         if (TTY::VTTYs[TTY::ROOT_TTY]->readChar() != 't')
             continue;
 
@@ -143,7 +143,7 @@ void main_threaded() {
         auto dt = from_unix_epoch(clock);
 
         printk("cpu%i: %16li ns (%li ms, %li s, %li min), clock says %li s, %02i:%02i:%02i\n",
-               CPU::getCurrentCPUID(), ns, ns / 1000000, ns / 1000000000, ns / 1000000000 / 60,
+               CPU::getCurrentID(), ns, ns / 1000000, ns / 1000000000, ns / 1000000000 / 60,
                clock - start_epoch, dt.hour, dt.minute, dt.second);
         printk("idle: %16li ns (%li ms) cpu time (pid %i)\n", idle->usage.cpu_time_ns,
                idle->usage.cpu_time_ns / 1000000, idle->pid);
@@ -155,7 +155,7 @@ void main_threaded() {
         printk("tid: %i\n", Proc::Thread::getCurrentTID());
 
         Proc::debug_print_cpu_jobs();
-    }*/
+    }
 
     Proc::Thread::exit();
 }

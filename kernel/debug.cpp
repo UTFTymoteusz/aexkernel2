@@ -5,6 +5,7 @@
 #include "aex/errno.hpp"
 #include "aex/fs/file.hpp"
 #include "aex/mem.hpp"
+#include "aex/mem/mmap.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 
@@ -29,8 +30,18 @@ namespace AEX::Debug {
         if (!file_try.has_value)
             kpanic("Failed to load symbols: %s\n", strerror(file_try.error_code));
 
-        auto file = file_try.value;
-        auto elf  = ELF(file);
+        auto    file = file_try.value;
+        int64_t size = file->seek(0, FS::File::END).value;
+
+        auto mmap_try = Mem::mmap(nullptr, size, Mem::PROT_READ, Mem::MAP_NONE, file, 0);
+        if (!mmap_try.has_value)
+            kpanic("Failed to mmap the kernel image: %s\n", strerror(mmap_try.error_code));
+
+        file->close();
+
+        uint8_t* addr = (uint8_t*) mmap_try.value;
+
+        auto elf = ELF(addr);
 
         if (!elf.isValid(ELF::bitness_t::BITS64, ELF::endianiness_t::LITTLE, ELF::isa_t::AMD64))
             kpanic("Apparently our own ELF doesn't work on this machine");
@@ -58,7 +69,7 @@ namespace AEX::Debug {
             kernel_symbols.pushBack(_symbol);
         }
 
-        file->close();
+        Mem::munmap(addr, size);
     }
 
     const char* symbol_addr2name(void* addr, int* delta_ret, bool only_kernel) {

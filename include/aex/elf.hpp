@@ -379,7 +379,7 @@ namespace AEX {
 
         size_t string_array_size = 0;
 
-        ELF(FS::File_SP file);
+        ELF(void* preferably_mmaped);
         ~ELF();
 
         bool isValid(bitness_t desired_bitness, endianiness_t desired_endianiness,
@@ -391,8 +391,9 @@ namespace AEX {
         void loadRelocations();
 
         private:
-        header      _header;
-        FS::File_SP _file;
+        header _header;
+
+        uint8_t* _addr;
 
         void loadSymbols64();
         void loadSymbols32();

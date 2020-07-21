@@ -18,7 +18,7 @@ extern const int _page_present, _page_write, _page_user, _page_through, _page_no
 #define PAGE_NOCACHE _page_nocache
 // Write-combining mode.
 #define PAGE_COMBINE _page_combine
-// Marks the page as not referencing physical memory.
+// Marks the page as not being the owner of a physical memory frame.
 #define PAGE_NOPHYS _page_nophys
 // Puts the page in the executable space.
 #define PAGE_EXEC _page_exec

@@ -16,11 +16,19 @@ namespace AEX::FS {
         }
 
         optional<dir_entry> readdir() {
-            return _inode->readDir(&dir_ctx);
+            return _inode->readDir(&_dir_ctx);
+        }
+
+        optional<File_SP> dup() {
+            auto dupd = new INodeDirectory(_inode);
+
+            dupd->_dir_ctx = _dir_ctx;
+
+            return File_SP(dupd);
         }
 
         private:
-        dir_context dir_ctx = dir_context();
+        dir_context _dir_ctx = dir_context();
 
         Mem::SmartPointer<INode> _inode;
     };
