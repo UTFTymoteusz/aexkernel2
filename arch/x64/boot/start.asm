@@ -124,7 +124,7 @@ bootstrap64:
 	mov rsi, rax
 
 	xor rbp, rbp
-	; sub rsp, 8 ; Gotta align the stack to 16 bytes or SSE explodes
+	sub rsp, 8   ; Gotta align the stack to 16 bytes or SSE explodes
 
     call main
 

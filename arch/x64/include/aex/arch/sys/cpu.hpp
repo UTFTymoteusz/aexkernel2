@@ -11,7 +11,13 @@ namespace AEX::Proc {
 }
 
 namespace AEX::Sys {
+    namespace MCore {
+        void init();
+    }
+
     extern "C" void ipi_handle();
+
+    struct tss;
 
     /**
      * The base CPU class that represents a processor in the system and contains some CPU-dependant
@@ -105,12 +111,12 @@ namespace AEX::Sys {
         /**
          * Gets the ID of the executing CPU.
          */
-        static int getCurrentCPUID();
+        static int getCurrentID();
 
         /**
          * Gets a pointer to the class of the executing CPU.
          */
-        static CPU* getCurrentCPU();
+        static CPU* getCurrent();
 
         /**
          * Broadcasts a packet to all processors (except the local one, unless you specify
@@ -132,6 +138,8 @@ namespace AEX::Sys {
          * @param data Optional data pointer.
          */
         void sendPacket(ipp_type type, void* data = nullptr);
+
+        void updateStructures(Proc::Thread* thread);
 
         // Don't change the order of these or the kernel will go boom boom
         int id;
@@ -163,10 +171,13 @@ namespace AEX::Sys {
         volatile bool _ipi_ack;
         ipi_packet    _ipi_packet;
 
+        tss* _tss;
+
         void fillAndCleanName();
 
         void handleIPP();
 
         friend void ipi_handle();
+        friend void AEX::Sys::MCore::init();
     };
 }

@@ -22,7 +22,7 @@ namespace AEX::Proc {
     }
 
     extern "C" void proc_timer_tick_ext() {
-        auto cpu = Sys::CPU::getCurrentCPU();
+        auto cpu = Sys::CPU::getCurrent();
         cpu->in_interrupt++;
 
         schedule();
@@ -32,7 +32,7 @@ namespace AEX::Proc {
     }
 
     extern "C" void proc_reshed_manual_ext() {
-        auto cpu = Sys::CPU::getCurrentCPU();
+        auto cpu = Sys::CPU::getCurrent();
         cpu->in_interrupt++;
 
         schedule();

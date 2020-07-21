@@ -4,6 +4,8 @@
 #include "aex/debug.hpp"
 #include "aex/printk.hpp"
 
+#include "proc/proc.hpp"
+
 #include <stdarg.h>
 
 using CPU = AEX::Sys::CPU;
@@ -13,10 +15,14 @@ namespace AEX {
         va_list args;
         va_start(args, format);
 
+        CPU::nointerrupts();
+
         printk_fault();
-        printk(PRINTK_FAIL "Kernel Panic\n", args);
+        printk(PRINTK_FAIL "Kernel Panic (cpu%i)\n", CPU::getCurrentID());
         printk(format, args);
         printk("\n");
+
+        Proc::debug_print_cpu_jobs();
 
         printk("Stack trace:\n");
         Debug::stack_trace(1);

@@ -48,5 +48,24 @@ namespace AEX::Proc {
             rdx = (uint64_t) c;
             rcx = (uint64_t) d;
         }
+
+        template <typename T, typename T2, typename T3, typename T4, typename T5>
+        void setArguments(T a, T2 b, T3 c, T4 d, T5 e) {
+            rdi = (uint64_t) a;
+            rsi = (uint64_t) b;
+            rdx = (uint64_t) c;
+            rcx = (uint64_t) d;
+            r8  = (uint64_t) e;
+        }
+
+        template <typename T, typename T2, typename T3, typename T4, typename T5, typename T6>
+        void setArguments(T a, T2 b, T3 c, T4 d, T5 e, T6 f) {
+            rdi = (uint64_t) a;
+            rsi = (uint64_t) b;
+            rdx = (uint64_t) c;
+            rcx = (uint64_t) d;
+            r8  = (uint64_t) e;
+            r9  = (uint64_t) f;
+        }
     } __attribute__((packed));
 }

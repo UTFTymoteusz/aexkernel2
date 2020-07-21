@@ -13,7 +13,7 @@ namespace AEX::Proc {
         }
 
         bool isCurrentCPUMasked() {
-            return isMasked(Sys::CPU::getCurrentCPUID());
+            return isMasked(Sys::CPU::getCurrentID());
         }
 
         bool isMasked(int id) {

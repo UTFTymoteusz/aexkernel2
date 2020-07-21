@@ -21,7 +21,7 @@ namespace AEX::Sys {
         asm volatile("lgdt [%0]" : : "r"(&gdt_descriptor) : "memory");
     }
 
-    void init_gdt() {
+    void init_gdt(tss** tsses) {
         auto gdt = new gdt_entry[5 + MCore::cpu_count * 2];
 
         gdt[0].setBase(0);
@@ -61,13 +61,15 @@ namespace AEX::Sys {
 
             *((uint32_t*) &gdt[5 + i + 1]) = tss_addr >> 32;
 
-            _tss->ist1 = (size_t) Mem::kernel_pagemap->alloc(8192) + 8192;
-            _tss->ist2 = (size_t) Mem::kernel_pagemap->alloc(8192) + 8192;
+            // ist1 will get set on the first context switch
+            _tss->ist2 = (size_t) Mem::kernel_pagemap->alloc(16384) + 16384;
+
+            tsses[i / 2] = _tss;
         }
 
         load_gdt(gdt, 5 + MCore::cpu_count * 2);
 
         // We need to flush the TSS now
-        asm volatile("mov eax, %0; ltr ax;" : : "r"(0x28 + CPU::getCurrentCPUID() * 0x10));
+        asm volatile("mov eax, %0; ltr ax;" : : "r"(0x28 + CPU::getCurrentID() * 0x10));
     }
 }

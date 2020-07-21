@@ -13,6 +13,8 @@
 
 using namespace AEX::Mem;
 
+using Thread = AEX::Proc::Thread;
+
 namespace AEX::Sys::IRQ {
     struct handler_array {
         size_t count          = 0;
@@ -58,7 +60,7 @@ namespace AEX::Sys::IRQ {
     handler_array immediate_handlers[32] = {};
     handler_array threaded_handlers[32]  = {};
 
-    Mem::SmartPointer<Proc::Thread> handler_thread;
+    Mem::SmartPointer<Thread> handler_thread;
 
     Spinlock append_lock;
     Spinlock handler_lock;
@@ -66,7 +68,7 @@ namespace AEX::Sys::IRQ {
     void irq_handler();
 
     void init_proc() {
-        auto thread = new Proc::Thread(nullptr, (void*) irq_handler, 4096, nullptr);
+        auto thread = new Thread(nullptr, (void*) irq_handler, 4096, nullptr);
 
         handler_thread = thread->getSmartPointer();
         handler_thread->start();
@@ -78,7 +80,7 @@ namespace AEX::Sys::IRQ {
         if (irq >= 32)
             kpanic("irq >= 32 wtf");
 
-        Proc::Thread::getCurrentThread()->addCritical();
+        Thread::getCurrent()->addCritical();
         immediate_handlers[irq].callAll();
 
         append_lock.acquireRaw();
@@ -91,10 +93,10 @@ namespace AEX::Sys::IRQ {
 
         Mem::atomic_add(&queue_waiting, (size_t) 1);
 
-        handler_thread->setStatus(Proc::Thread::status_t::RUNNABLE);
+        handler_thread->setStatus(Proc::THREAD_RUNNABLE);
 
         append_lock.releaseRaw();
-        Proc::Thread::getCurrentThread()->subCritical();
+        Thread::getCurrent()->subCritical();
 
         // enqueue for the threaded one
         // register_threaded_handler
@@ -117,12 +119,12 @@ namespace AEX::Sys::IRQ {
             if (Mem::atomic_read(&queue_waiting) == 0) {
                 Sys::CPU::nointerrupts();
 
-                handler_thread->setStatus(Proc::Thread::status_t::BLOCKED);
+                handler_thread->setStatus(Proc::THREAD_BLOCKED);
 
                 handler_lock.release();
                 Sys::CPU::interrupts();
 
-                Proc::Thread::yield();
+                Thread::yield();
                 continue;
             }
 

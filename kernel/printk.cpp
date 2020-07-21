@@ -31,7 +31,7 @@ namespace AEX {
     void printk(const char* format, va_list args) {
         if (faulted_cpu == -1)
             lock.acquire();
-        else if (Sys::CPU::getCurrentCPUID() != faulted_cpu)
+        else if (Sys::CPU::getCurrentID() != faulted_cpu)
             return;
 
         auto rootTTY = TTY::VTTYs[TTY::ROOT_TTY];
@@ -241,7 +241,18 @@ namespace AEX {
 
         Sys::CPU::nointerrupts();
 
-        faulted_cpu = Sys::CPU::getCurrentCPUID();
+        faulted_cpu = Sys::CPU::getCurrentID();
+
+        if (ints)
+            Sys::CPU::interrupts();
+    }
+
+    void printk_nofault() {
+        bool ints = Sys::CPU::checkInterrupts();
+
+        Sys::CPU::nointerrupts();
+
+        faulted_cpu = -1;
 
         if (ints)
             Sys::CPU::interrupts();

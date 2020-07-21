@@ -1,5 +1,6 @@
 #include "proc/proc.hpp"
 
+#include "aex/arch/proc/context.hpp"
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/debug.hpp"
 #include "aex/ipc/messagequeue.hpp"
@@ -8,7 +9,6 @@
 #include "aex/spinlock.hpp"
 #include "aex/sys/time.hpp"
 
-#include "proc/context.hpp"
 #include "sys/mcore.hpp"
 
 using namespace AEX::Mem;
@@ -63,17 +63,18 @@ namespace AEX::Proc {
     }
 
     void schedule() {
-        auto cpu = Sys::CPU::getCurrentCPU();
+        auto cpu = Sys::CPU::getCurrent();
 
         if (cpu->currentThread->isCritical() && !cpu->willingly_yielded) {
             cpu->should_yield = true;
             return;
         }
 
-        cpu->should_yield = false;
+        cpu->willingly_yielded = false;
+        cpu->should_yield      = false;
 
         if (!lock.tryAcquireRaw()) {
-            if (cpu->currentThread->status != Thread::status_t::RUNNABLE)
+            if (cpu->currentThread->status != thread_status_t::THREAD_RUNNABLE)
                 lock.acquireRaw();
             else
                 return;
@@ -104,18 +105,18 @@ namespace AEX::Proc {
             }
 
             switch (threads[i]->status) {
-            case Thread::status_t::RUNNABLE:
+            case thread_status_t::THREAD_RUNNABLE:
                 break;
-            case Thread::status_t::SLEEPING:
+            case thread_status_t::THREAD_SLEEPING:
                 if (curtime < threads[i]->wakeup_at) {
                     increment();
                     continue;
                 }
 
-                threads[i]->status = Thread::status_t::RUNNABLE;
+                threads[i]->status = thread_status_t::THREAD_RUNNABLE;
 
                 break;
-            case Thread::status_t::BLOCKED:
+            case thread_status_t::THREAD_BLOCKED:
                 if (threads[i]->isAbortSet())
                     break;
 
@@ -136,21 +137,28 @@ namespace AEX::Proc {
                 continue;
             }
 
-            cpu->current_tid    = i;
-            cpu->currentThread  = threads[i];
-            cpu->currentContext = threads[i]->context;
+            auto thread = threads[i];
 
+            cpu->current_tid    = i;
+            cpu->currentThread  = thread;
+            cpu->currentContext = thread->context;
+
+            cpu->updateStructures(thread);
             lock.releaseRaw();
 
             return;
         }
 
+        auto thread = idle_threads[cpu->id];
+
+        // We don't care, it's our private thread anyways
+        thread->lock.tryAcquireRaw();
+
         cpu->current_tid    = 0;
-        cpu->currentThread  = idle_threads[cpu->id];
-        cpu->currentContext = idle_threads[cpu->id]->context;
+        cpu->currentThread  = thread;
+        cpu->currentContext = thread->context;
 
-        cpu->currentThread->lock.tryAcquireRaw();
-
+        cpu->updateStructures(thread);
         lock.releaseRaw();
     }
 
@@ -195,7 +203,7 @@ namespace AEX::Proc {
 
         reap_thread(thread);
 
-        if (thread == Thread::getCurrentThread())
+        if (thread == Thread::getCurrent())
             while (true)
                 Proc::Thread::yield();
     }
@@ -250,7 +258,7 @@ namespace AEX::Proc {
             auto thread = threads_to_reap->readObject<Thread*>();
 
             thread->lock.acquire();
-            thread->setStatus(Thread::status_t::DEAD);
+            thread->setStatus(thread_status_t::THREAD_DEAD);
             thread->lock.release();
 
             if (thread->refs->decrement())

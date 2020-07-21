@@ -35,7 +35,7 @@ namespace AEX::Sys {
 
         RTC::_century_index = _fadt->century;
         if (RTC::_century_index == 0)
-            kpanic("This computer's CMOS doesn't know what a century is");
+            _century_index = 0x32;
     }
 
     int64_t RTC::get_epoch() {

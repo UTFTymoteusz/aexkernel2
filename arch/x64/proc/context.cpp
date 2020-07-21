@@ -1,4 +1,4 @@
-#include "proc/context.hpp"
+#include "aex/arch/proc/context.hpp"
 
 #include "aex/debug.hpp"
 #include "aex/mem.hpp"
@@ -17,7 +17,7 @@ namespace AEX::Proc {
                       // likely)
 
             rsp -= sizeof(uint64_t);
-            *((uint64_t*) rsp) = usermode ? Debug::entry_type::USER : Debug::entry_type::KERNEL;
+            *((uint64_t*) rsp) = usermode ? Debug::ENTRY_USER : Debug::ENTRY_KERNEL;
 
             rsp -= sizeof(on_exit);
             *((uint64_t*) rsp) = (uint64_t) on_exit;

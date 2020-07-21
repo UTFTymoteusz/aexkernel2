@@ -6,13 +6,15 @@
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
 
+using Thread = AEX::Proc::Thread;
+
 namespace AEX {
     void Mutex::acquire() {
         volatile size_t count = 0;
-        Proc::Thread::getCurrentThread()->addBusy();
+        Thread::getCurrent()->addBusy();
 
         while (!__sync_bool_compare_and_swap(&_lock, false, true)) {
-            Proc::Thread::getCurrentThread()->subBusy();
+            Thread::getCurrent()->subBusy();
 
             asm volatile("pause");
             count++;
@@ -24,33 +26,33 @@ namespace AEX {
                     name = "no idea";
 
                 kpanic("mutex 0x%p <%s+0x%x> hung (val: %i, cpu: %i)\n", this, name, delta, _lock,
-                       Sys::CPU::getCurrentCPUID());
+                       Sys::CPU::getCurrentID());
             }
 
-            Proc::Thread::getCurrentThread()->addBusy();
+            Thread::getCurrent()->addBusy();
         }
 
         __sync_synchronize();
     }
 
     void Mutex::release() {
-        if (!Proc::Thread::getCurrentThread()->isBusy())
+        if (!Thread::getCurrent()->isBusy())
             kpanic("bbb!!!");
 
         if (!__sync_bool_compare_and_swap(&_lock, true, false))
             kpanic("mutex: Too many releases");
 
-        Proc::Thread::getCurrentThread()->subBusy();
+        Thread::getCurrent()->subBusy();
 
         __sync_synchronize();
     }
 
     bool Mutex::tryAcquire() {
-        Proc::Thread::getCurrentThread()->addBusy();
+        Thread::getCurrent()->addBusy();
 
         bool ret = __sync_bool_compare_and_swap(&_lock, false, true);
         if (!ret)
-            Proc::Thread::getCurrentThread()->subBusy();
+            Thread::getCurrent()->subBusy();
 
         return ret;
     }

@@ -31,7 +31,7 @@ namespace AEX::Dev {
     }
 
     int64_t BlockDevice::read(void* buffer, uint64_t start, uint32_t len) {
-        auto current_usage = &Proc::Thread::getCurrentThread()->getProcess()->usage;
+        auto current_usage = &Proc::Thread::getCurrent()->getProcess()->usage;
 
         // this needs to be checked properly
         while (!isAligned(buffer) && word_align) {

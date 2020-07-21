@@ -6,13 +6,15 @@
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
 
+using Thread = AEX::Proc::Thread;
+
 namespace AEX {
     void Spinlock::acquire() {
         volatile size_t count = 0;
-        Proc::Thread::getCurrentThread()->addCritical();
+        Thread::getCurrent()->addCritical();
 
         while (!__sync_bool_compare_and_swap(&_lock, false, true)) {
-            Proc::Thread::getCurrentThread()->subCritical();
+            Thread::getCurrent()->subCritical();
 
             asm volatile("pause");
             count++;
@@ -24,33 +26,33 @@ namespace AEX {
                     name = "no idea";
 
                 kpanic("spinlock 0x%p <%s+0x%x> hung (val: %i, cpu: %i)\n", this, name, delta,
-                       _lock, Sys::CPU::getCurrentCPUID());
+                       _lock, Sys::CPU::getCurrentID());
             }
 
-            Proc::Thread::getCurrentThread()->addCritical();
+            Thread::getCurrent()->addCritical();
         }
 
         __sync_synchronize();
     }
 
     void Spinlock::release() {
-        if (!Proc::Thread::getCurrentThread()->isCritical())
+        if (!Thread::getCurrent()->isCritical())
             kpanic("aaa!!!");
 
         if (!__sync_bool_compare_and_swap(&_lock, true, false))
             kpanic("spinlock: Too many releases");
 
-        Proc::Thread::getCurrentThread()->subCritical();
+        Thread::getCurrent()->subCritical();
 
         __sync_synchronize();
     }
 
     bool Spinlock::tryAcquire() {
-        Proc::Thread::getCurrentThread()->addCritical();
+        Thread::getCurrent()->addCritical();
 
         bool ret = __sync_bool_compare_and_swap(&_lock, false, true);
         if (!ret)
-            Proc::Thread::getCurrentThread()->subCritical();
+            Thread::getCurrent()->subCritical();
 
         return ret;
     }

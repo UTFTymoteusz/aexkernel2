@@ -19,13 +19,8 @@
 constexpr auto CPUID_EDX_FEAT_APIC = 0x100;
 
 namespace AEX::Sys::IRQ {
-    bool   is_apic_present   = false;
-    size_t apic_tps          = 0;
-    double apic_interval     = 0.0;
-    double apic_interval_adj = 0.0;
-
-    uint64_t ns_per_irq     = 0;
-    uint64_t ns_per_irq_adj = 0;
+    bool   is_apic_present = false;
+    size_t apic_tps        = 0;
 
     ACPI::MADT*          madt;
     Mem::Vector<IOAPIC*> ioapics;
@@ -45,7 +40,6 @@ namespace AEX::Sys::IRQ {
         CPU::cpuid(0x01, &eax, &ebx, &ecx, &edx);
 
         is_apic_present = edx & CPUID_EDX_FEAT_APIC;
-
         if (!is_apic_present)
             kpanic("This computer is too ancient to run this OS");
 
@@ -146,7 +140,7 @@ namespace AEX::Sys::IRQ {
         double interval = (1000.0 / timer_hz) / MCore::cpu_count;
 
         for (int i = 0; i < MCore::cpu_count; i++) {
-            if (i == CPU::getCurrentCPUID()) {
+            if (i == CPU::getCurrentID()) {
                 irq_sleep(interval);
                 continue;
             }
@@ -154,12 +148,6 @@ namespace AEX::Sys::IRQ {
             MCore::CPUs[i]->sendPacket(CPU::IPP_CALL, (void*) timer_sync);
             irq_sleep(interval);
         }
-
-        apic_interval     = (double) ((1.0 / (double) apic_tps) * 1000000000.0);
-        apic_interval_adj = apic_interval / MCore::cpu_count;
-
-        ns_per_irq     = (uint64_t)(apic_interval * apic_tps / timer_hz);
-        ns_per_irq_adj = ns_per_irq / MCore::cpu_count;
 
         setup_timer(timer_hz);
     }
@@ -174,7 +162,7 @@ namespace AEX::Sys::IRQ {
             if (ioapic->irq_base + ioapic->getIRQAmount() < irq)
                 continue;
 
-            return &*ioapic;
+            return ioapic;
         }
 
         return nullptr;

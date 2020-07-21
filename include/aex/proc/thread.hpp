@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aex/arch/proc/context.hpp"
 #include "aex/mem/atomic.hpp"
 #include "aex/mem/paging.hpp"
 #include "aex/mem/smartptr.hpp"
@@ -17,17 +18,25 @@ namespace AEX::Proc {
     class Event;
     class Context;
 
+    enum thread_status_t : uint8_t {
+        THREAD_FRESH    = 0,
+        THREAD_RUNNABLE = 1,
+        THREAD_SLEEPING = 2,
+        THREAD_BLOCKED  = 3,
+        THREAD_DEAD     = 4,
+    };
+
     class Thread {
         public:
         static constexpr auto USER_STACK_SIZE   = 16384;
         static constexpr auto KERNEL_STACK_SIZE = 16384;
+        static constexpr auto FAULT_STACK_SIZE  = 16384;
 
-        enum status_t : uint8_t {
-            FRESH    = 0,
-            RUNNABLE = 1,
-            SLEEPING = 2,
-            BLOCKED  = 3,
-            DEAD     = 4,
+        struct state {
+            uint16_t busy;
+            uint16_t critical;
+
+            thread_status_t status;
         };
 
         tid_t tid;
@@ -37,12 +46,20 @@ namespace AEX::Proc {
         Spinlock          lock;
         Mem::ref_counter* refs = new Mem::ref_counter(1);
 
-        status_t status;
+        thread_status_t status;
         union {
             uint64_t wakeup_at;
         };
 
         Process* parent;
+
+        size_t user_stack;
+        size_t kernel_stack;
+        size_t fault_stack;
+
+        int user_stack_size;
+        int kernel_stack_size;
+        int fault_stack_size;
 
         Thread();
         Thread(Process* parent);
@@ -67,7 +84,7 @@ namespace AEX::Proc {
          * Gets the currently running thread.
          * @returns Pointer to the currently running thread.
          */
-        static Thread* getCurrentThread();
+        static Thread* getCurrent();
 
         /**
          * Gets the currently running thread's ID.
@@ -100,6 +117,15 @@ namespace AEX::Proc {
         void join();
 
         /**
+         * Sets the arguments of the thread.
+         * @param args Arguments.
+         */
+        template <typename... U>
+        void setArguments(U... args) {
+            context->setArguments(args...);
+        }
+
+        /**
          * Aborts the thread.
          * @param block Whenever to wait for the thread to exit fully.
          */
@@ -120,10 +146,10 @@ namespace AEX::Proc {
         Mem::SmartPointer<Thread> getSmartPointer();
 
         /**
-         * Sets the status of the thread\n
+         * Sets the status of the thread.
          * @param status Status to set to.
          */
-        void setStatus(status_t status);
+        void setStatus(thread_status_t status);
 
         // pls atomic<T> later
         /**
@@ -154,6 +180,14 @@ namespace AEX::Proc {
             return Mem::atomic_read(&_busy) > 0;
         }
 
+        inline uint16_t getBusy() {
+            return Mem::atomic_read(&_busy);
+        }
+
+        inline void setBusy(uint16_t busy) {
+            _busy = busy;
+        }
+
         /**
          * Adds 1 to the thread's critical counter. If _critical is greater than 0, the thread
          * cannot be interrupted or killed.
@@ -175,6 +209,18 @@ namespace AEX::Proc {
             return Mem::atomic_read(&_critical) > 0;
         }
 
+        inline uint16_t getCritical() {
+            return Mem::atomic_read(&_critical);
+        }
+
+        inline void setCritical(uint16_t critical) {
+            _critical = critical;
+        }
+
+        state saveState();
+
+        void loadState(state& _state);
+
         void announceExit();
 
         private:
@@ -186,9 +232,6 @@ namespace AEX::Proc {
 
         uint8_t _abort    = 0;
         uint8_t _finished = 0;
-
-        void*  _stack      = nullptr;
-        size_t _stack_size = 0;
     };
 
     typedef Mem::SmartPointer<Thread> Thread_SP;

@@ -4,10 +4,10 @@
 #include <stdint.h>
 
 namespace AEX::Debug {
-    enum entry_type {
-        BOOT   = 0,
-        USER   = 1,
-        KERNEL = 2,
+    enum thread_entry_type {
+        ENTRY_BOOT   = 0,
+        ENTRY_USER   = 1,
+        ENTRY_KERNEL = 2,
     };
 
     void stack_trace(int skip = 0);

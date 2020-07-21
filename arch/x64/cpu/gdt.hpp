@@ -4,6 +4,8 @@
 #include <stdint.h>
 
 namespace AEX::Sys {
+    struct tss;
+
     enum gdt_flags_t : uint8_t {
         GDT_FL_X64         = 0x02,
         GDT_FL_SIZE        = 0x04,
@@ -50,5 +52,5 @@ namespace AEX::Sys {
 
     void load_gdt(gdt_entry* gdt, int entry_count);
 
-    void init_gdt();
+    void init_gdt(tss** tsses);
 }

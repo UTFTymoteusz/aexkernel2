@@ -2,6 +2,7 @@
 
 #include "aex/mem.hpp"
 #include "aex/mem/lazyvector.hpp"
+#include "aex/mem/mmap.hpp"
 #include "aex/proc.hpp"
 #include "aex/proc/affinity.hpp"
 #include "aex/proc/resource_usage.hpp"
@@ -28,7 +29,8 @@ namespace AEX::Proc {
 
         Mem::SmartArray<Thread> threads;
 
-        Mem::Pagemap* pagemap;
+        Mem::Pagemap*                pagemap;
+        Mem::Vector<Mem::MMapRegion> mmap_regions;
 
         Process() = default;
 

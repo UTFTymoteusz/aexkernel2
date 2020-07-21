@@ -38,7 +38,8 @@ namespace AEX::Init {
 void main_threaded();
 
 void main(multiboot_info_t* mbinfo) {
-    Sys::CPU::getCurrentCPU()->in_interrupt++;
+    // Dirty workaround but meh, it works.
+    Sys::CPU::getCurrent()->in_interrupt++;
 
     TTY::init(mbinfo);
 
@@ -112,9 +113,22 @@ void main(multiboot_info_t* mbinfo) {
     main_threaded();
 }
 
+void boi(const char*) {
+    for (int i = 0; i < 5; i++) {
+        Proc::debug_print_cpu_jobs();
+        Proc::Thread::sleep(2000);
+    }
+}
+
 void main_threaded() {
     auto idle    = Proc::processes.get(0);
-    auto process = Proc::Thread::getCurrentThread()->getProcess();
+    auto process = Proc::Thread::getCurrent()->getProcess();
+
+    Proc::threaded_call(boi, "threaded");
+
+    uint64_t* boi = (uint64_t*) 0xFFFD;
+    printk("aa %x\n", *boi);
+    printk("done\n");
 
     // int64_t start_epoch = get_clock_time();
 

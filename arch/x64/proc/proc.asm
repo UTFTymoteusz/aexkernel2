@@ -19,7 +19,7 @@ extern proc_reshed_manual_ext
     mov qword rax, [gs:0x08]
     mov qword [rax + 0x70], rbx
     mov qword [rax + 0x68], rcx
-    
+
     pop rax
     pop rbx
     pop rcx
@@ -63,7 +63,7 @@ extern proc_reshed_manual_ext
     push r10
 
     fxsave [rsp + 0x08 * 7]
-    
+
     mov rsp, rbx
 %endmacro
 
@@ -102,7 +102,7 @@ enter_context:
     add rsp, 8
 
     iretq
-    
+
 
 proc_timer_tick:
     save_context
@@ -113,7 +113,7 @@ proc_timer_tick:
     call proc_timer_tick_ext
 
     pop rbp
-    
+
     jmp enter_context
 
 proc_reshed_manual:
@@ -125,7 +125,7 @@ proc_reshed_manual:
     call proc_reshed_manual_ext
 
     pop rbp
-    
+
     jmp enter_context
 
 
@@ -147,8 +147,7 @@ proc_reshed:
 
     push .ret
 
-    cli 
-
+    cli
     jmp proc_reshed_manual
 
     .ret:

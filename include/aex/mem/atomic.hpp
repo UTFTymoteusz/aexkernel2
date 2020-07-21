@@ -12,6 +12,11 @@ namespace AEX::Mem {
     }
 
     template <typename T>
+    inline T atomic_fetch_add(T* ptr, T val) {
+        return __sync_fetch_and_add(ptr, val);
+    }
+
+    template <typename T>
     inline T atomic_add_fetch(T* ptr, T val) {
         return __sync_add_and_fetch(ptr, val);
     }

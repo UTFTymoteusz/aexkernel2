@@ -5,6 +5,7 @@
 #include "aex/string.hpp"
 
 #include "cpu/idt.hpp"
+#include "cpu/tss.hpp"
 #include "sys/apic.hpp"
 
 // For some reason g++ adds 8 to the offset
@@ -73,7 +74,7 @@ namespace AEX::Sys {
     }
 
     void CPU::halt() {
-        printk(PRINTK_WARN "cpu%i: Halted\n", CPU::getCurrentCPUID());
+        printk(PRINTK_WARN "cpu%i: Halted\n", CPU::getCurrentID());
 
         asm volatile("cli;");
 
@@ -173,11 +174,11 @@ namespace AEX::Sys {
     }
 
 
-    int CPU::getCurrentCPUID() {
+    int CPU::getCurrentID() {
         return CURRENT_CPU->id;
     }
 
-    CPU* CPU::getCurrentCPU() {
+    CPU* CPU::getCurrent() {
         return CURRENT_CPU;
     }
 
@@ -186,6 +187,11 @@ namespace AEX::Sys {
         load_idt(nullptr, 0);
 
         asm volatile("ud2;");
+        asm volatile("int 0;");
+    }
+
+    void CPU::updateStructures(Proc::Thread* thread) {
+        _tss->ist1 = thread->fault_stack;
     }
 
     void CPU::fillAndCleanName() {
@@ -201,9 +207,13 @@ namespace AEX::Sys {
         }
 
         // Now let's get rid of Intel's annoying right justification
-        while (name[0] == ' ') {
-            memcpy(name, name + 1, 47);
-            name[47] = '\0';
-        }
+        int pad_count = 0;
+        while (name[pad_count] == ' ')
+            pad_count++;
+
+        memcpy(name, name + pad_count, 48 - pad_count);
+        memset(name + 48 - pad_count, '\0', pad_count);
+
+        name[47] = '\0';
     }
 }

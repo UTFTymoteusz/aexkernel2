@@ -7,8 +7,12 @@
 
 namespace AEX::Sys {
     void CPU::broadcastPacket(ipp_type type, void* data, bool ignore_self) {
+        bool ints = CPU::checkInterrupts();
+
+        CPU::nointerrupts();
+
         for (int i = 0; i < MCore::cpu_count; i++) {
-            if (i == CPU::getCurrentCPUID() && ignore_self)
+            if (i == CPU::getCurrentID() && ignore_self)
                 continue;
 
             auto cpu = MCore::CPUs[i];
@@ -17,6 +21,9 @@ namespace AEX::Sys {
 
             cpu->sendPacket(type, data);
         }
+
+        if (ints)
+            CPU::interrupts();
     }
 
     void CPU::sendPacket(ipp_type type, void* data) {
@@ -26,7 +33,7 @@ namespace AEX::Sys {
         _ipi_packet.type = type;
         _ipi_packet.data = data;
 
-        if (CPU::getCurrentCPUID() == this->id) {
+        if (CPU::getCurrentID() == this->id) {
             handleIPP();
             _ipi_lock.release();
 
@@ -40,8 +47,9 @@ namespace AEX::Sys {
         while (!_ipi_ack) {
             counter++;
 
-            if (counter > 80000000)
-                kpanic("ipi to cpu%i stuck\n", this->id);
+            if (counter > 4000000 * 4)
+                kpanic("ipi to cpu%i from cpu%i stuck (%i, 0x%p)\n", this->id, CPU::getCurrentID(),
+                       type, data);
         }
 
         _ipi_lock.release();
@@ -51,7 +59,7 @@ namespace AEX::Sys {
      * This is a cute little function that's gonna get called by the IPI IRQ handler.
      */
     extern "C" void ipi_handle() {
-        auto us = CPU::getCurrentCPU();
+        auto us = CPU::getCurrent();
 
         us->in_interrupt++;
         us->handleIPP();
@@ -69,7 +77,7 @@ namespace AEX::Sys {
             return;
         case CPU::IPP_RESHED:
             _ipi_ack = true;
-            printk("cpu%i: Reshed\n", CPU::getCurrentCPUID());
+            printk("cpu%i: Reshed\n", CPU::getCurrentID());
 
             break;
         case CPU::IPP_CALL:
@@ -90,7 +98,7 @@ namespace AEX::Sys {
         default:
             _ipi_ack = true;
             printk(PRINTK_WARN "cpu%i: Received an IPP with an unknown type (%i)\n",
-                   CPU::getCurrentCPUID(), _ipi_packet.type);
+                   CPU::getCurrentID(), _ipi_packet.type);
 
             break;
         }

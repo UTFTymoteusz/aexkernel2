@@ -17,7 +17,8 @@ namespace AEX::FS {
         if (!inode_try.has_value)
             return inode_try.error_code;
 
-        auto inode           = inode_try.value;
+        auto inode = inode_try.value;
+
         inode->id            = root_inode_id;
         inode->control_block = this;
 

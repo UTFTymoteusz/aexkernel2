@@ -18,31 +18,33 @@ namespace AEX::Debug {
         asm volatile("mov %0, rbp;" : "=r"(frame));
 
         while (frame > (stack_frame*) 8) {
-            if (skip == 0)
-                switch (frame->rip) {
-                case entry_type::BOOT:
-                    printk("  *bootstrap entry*\n");
-                    return;
-                case entry_type::USER:
-                    printk("  *user entry*\n");
-                    return;
-                case entry_type::KERNEL:
-                    printk("  *kernel entry*\n");
-                    return;
-                default:
-                    if (frame->rip == (size_t) Proc::Thread::exit)
-                        printk("  *thread entry/exit*\n");
-                    else {
-                        int         delta = 0;
-                        const char* name  = symbol_addr2name((void*) frame->rip, &delta);
-
-                        printk("  0x%p <%s+0x%x>\n", frame->rip, name ? name : "no idea", delta);
-                    }
-
-                    break;
-                }
-            else
+            if (skip != 0) {
                 skip--;
+                continue;
+            }
+
+            switch (frame->rip) {
+            case ENTRY_BOOT:
+                printk("  *bootstrap entry*\n");
+                return;
+            case ENTRY_USER:
+                printk("  *user entry*\n");
+                return;
+            case ENTRY_KERNEL:
+                printk("  *kernel entry*\n");
+                return;
+            default:
+                if (frame->rip == (size_t) Proc::Thread::exit)
+                    printk("  *thread entry/exit*\n");
+                else {
+                    int         delta = 0;
+                    const char* name  = symbol_addr2name((void*) frame->rip, &delta);
+
+                    printk("  0x%p <%s+0x%x>\n", frame->rip, name ? name : "no idea", delta);
+                }
+
+                break;
+            }
 
             frame = frame->rbp;
         }

@@ -56,7 +56,7 @@ namespace AEX::Sys::MCore {
         printk(PRINTK_INIT "mcore: Initializing\n");
 
         // We need to add ourselves to the array
-        CPUs[0] = CPU::getCurrentCPU();
+        CPUs[0] = CPU::getCurrent();
 
         // We can assume it exists because the IRQ phase would panic the kernel otherwise
         auto madt = (MADT*) ACPI::find_table("APIC", 0);
@@ -74,7 +74,9 @@ namespace AEX::Sys::MCore {
             cpu_count++;
         }
 
-        init_gdt();
+        tss* tsses[cpu_count];
+
+        init_gdt(tsses);
         set_idt_ists();
 
         for (int i = 0; i <= 2137; i++) {
@@ -88,7 +90,7 @@ namespace AEX::Sys::MCore {
                 continue;
             }
 
-            if (entry->apic_id == CPU::getCurrentCPU()->apic_id)
+            if (entry->apic_id == CPU::getCurrent()->apic_id)
                 continue;
 
             id++;
@@ -101,6 +103,14 @@ namespace AEX::Sys::MCore {
 
         for (int i = 0; i < 24; i++)
             IRQ::set_destination(i, i % cpu_count);
+
+        for (int i = 0; i < cpu_count; i++) {
+            // We need to check because a CPU can fail to start.
+            if (!CPUs[i])
+                continue;
+
+            CPUs[i]->_tss = tsses[i];
+        }
 
         printk(PRINTK_OK "mcore: Initialized\n");
     }
@@ -115,8 +125,8 @@ namespace AEX::Sys::MCore {
 
         APIC::sendSIPI(apic_id, TRAMPOLINE_ADDR / CPU::PAGE_SIZE);
 
-        bool              success = false;
-        volatile uint8_t* signal  = (uint8_t*) TRAMPOLINE_ADDR;
+        bool success             = false;
+        uint8_t* volatile signal = (uint8_t*) TRAMPOLINE_ADDR;
 
         for (int j = 0; j < 2000; j++) {
             for (int k = 0; k < 2400; k++)
@@ -139,11 +149,11 @@ namespace AEX::Sys::MCore {
 
         CPUs[id] = cpu;
 
-        printk(PRINTK_OK "mcore: cpu%i: Ready\n", CPU::getCurrentCPUID());
+        printk(PRINTK_OK "mcore: cpu%i: Ready\n", CPU::getCurrentID());
     }
 
     void ap_wait() {
-        auto cpu = CPU::getCurrentCPU();
+        auto cpu = CPU::getCurrent();
 
         CPU::interrupts();
         cpu->in_interrupt--;
