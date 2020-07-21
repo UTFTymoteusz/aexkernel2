@@ -92,10 +92,9 @@ namespace AEX::Mem::Heap {
 
             memset(addr, '\0', pieces * ALLOC_SIZE);
 
-            auto header         = (alloc_block*) addr;
-            header->len         = pieces;
-            header->sanity      = ((size_t) addr + ALLOC_SIZE) ^ SANITY_XOR;
-            header->recognition = 0x55AA;
+            auto header    = (alloc_block*) addr;
+            header->len    = pieces;
+            header->sanity = ((size_t) addr + ALLOC_SIZE) ^ SANITY_XOR;
 
             Mem::atomic_sub(&heap_free, (uint64_t) pieces * ALLOC_SIZE);
 
@@ -139,7 +138,6 @@ namespace AEX::Mem::Heap {
 
             uint32_t len; // This is the piece count including this header
             bool     page;
-            uint16_t recognition;
         };
 
         static_assert(sizeof(alloc_block) <= ALLOC_SIZE);

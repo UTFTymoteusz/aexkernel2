@@ -69,7 +69,11 @@ namespace AEX::Dev::SATA {
     void init() {
         auto sata = new SATA();
 
-        if (!Tree::register_driver("pci", sata))
+        if (!Tree::register_driver("pci", sata)) {
             printk(PRINTK_WARN "sata: Failed to register the PCI driver\n");
+
+            delete sata;
+            return;
+        }
     }
 }

@@ -19,7 +19,7 @@ namespace AEX::Sys::IRQ {
         // if (info->irq_no > 0)
         //     AEX::printk("%i: irq: %i\n", CPU::getCurrentCPUID(), info->irq_no);
 
-        handle_irq(info->irq_no);
+        handle(info->irq_no);
 
         APIC::eoi();
         CPU::getCurrent()->in_interrupt--;

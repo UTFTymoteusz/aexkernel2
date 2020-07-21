@@ -28,9 +28,9 @@ namespace AEX::IPC {
             _tiddies.pushBack(current_sptr);
 
         if (timeout == 0)
-            current_sptr->setStatus(thread_status_t::THREAD_BLOCKED);
+            current_sptr->setStatus(THREAD_BLOCKED);
         else {
-            current_sptr->setStatus(thread_status_t::THREAD_SLEEPING);
+            current_sptr->setStatus(THREAD_SLEEPING);
             current_sptr->wakeup_at = Sys::get_uptime() + (uint64_t) timeout * 1000000;
         }
 
@@ -45,7 +45,7 @@ namespace AEX::IPC {
 
         int total = _tiddies.count();
         for (int i = 0; i < total; i++)
-            _tiddies.at(i)->setStatus(thread_status_t::THREAD_RUNNABLE);
+            _tiddies.at(i)->setStatus(THREAD_RUNNABLE);
 
         _tiddies.clear();
         _lock.release();
@@ -60,7 +60,7 @@ namespace AEX::IPC {
 
         int total = _tiddies.count();
         for (int i = 0; i < total; i++)
-            _tiddies.at(i)->setStatus(thread_status_t::THREAD_RUNNABLE);
+            _tiddies.at(i)->setStatus(THREAD_RUNNABLE);
 
         _tiddies.clear();
         _lock.release();
@@ -84,9 +84,9 @@ namespace AEX::IPC {
         _tiddie = current_sptr;
 
         if (timeout == 0)
-            current_sptr->setStatus(thread_status_t::THREAD_BLOCKED);
+            current_sptr->setStatus(THREAD_BLOCKED);
         else {
-            current_sptr->setStatus(thread_status_t::THREAD_SLEEPING);
+            current_sptr->setStatus(THREAD_SLEEPING);
             current_sptr->wakeup_at = Sys::get_uptime() + (uint64_t) timeout * 1000000;
         }
 
@@ -100,7 +100,7 @@ namespace AEX::IPC {
         _lock.acquire();
 
         if (_tiddie.isValid())
-            _tiddie->setStatus(thread_status_t::THREAD_RUNNABLE);
+            _tiddie->setStatus(THREAD_RUNNABLE);
 
         _tiddie = Mem::SmartPointer<Proc::Thread>(nullptr, nullptr);
         _lock.release();
@@ -112,7 +112,7 @@ namespace AEX::IPC {
         _defunct = true;
 
         if (_tiddie.isValid())
-            _tiddie->setStatus(thread_status_t::THREAD_RUNNABLE);
+            _tiddie->setStatus(THREAD_RUNNABLE);
 
         _tiddie = Mem::SmartPointer<Proc::Thread>(nullptr, nullptr);
         _lock.release();

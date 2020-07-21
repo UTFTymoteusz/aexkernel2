@@ -35,25 +35,24 @@ namespace AEX::Proc {
         if (!pagemap)
             pagemap = parent->pagemap;
 
-        void* stack = pagemap->alloc(stack_size, PAGE_WRITE);
-
         if (usermode) {
-            context = new Context(entry, stack, stack_size, pagemap, true);
+            user_stack      = (size_t) pagemap->alloc(stack_size, PAGE_WRITE);
+            user_stack_size = stack_size;
 
-            user_stack   = (size_t) stack;
-            kernel_stack = (size_t) pagemap->alloc(KERNEL_STACK_SIZE, PAGE_WRITE);
-
-            user_stack_size   = stack_size;
+            kernel_stack      = (size_t) Mem::kernel_pagemap->alloc(KERNEL_STACK_SIZE, PAGE_WRITE);
             kernel_stack_size = KERNEL_STACK_SIZE;
+
+            context = new Context(entry, (void*) user_stack, stack_size, pagemap, true);
         }
         else {
-            context = new Context(entry, stack, stack_size, pagemap, false, Thread::exit);
+            user_stack      = 0;
+            user_stack_size = 0;
 
-            user_stack   = 0;
-            kernel_stack = (size_t) stack;
-
-            user_stack_size   = 0;
+            kernel_stack      = (size_t) Mem::kernel_pagemap->alloc(stack_size, PAGE_WRITE);
             kernel_stack_size = stack_size;
+
+            context =
+                new Context(entry, (void*) kernel_stack, stack_size, pagemap, false, Thread::exit);
         }
 
         fault_stack      = (size_t) pagemap->alloc(FAULT_STACK_SIZE, PAGE_WRITE);
@@ -97,7 +96,7 @@ namespace AEX::Proc {
         bool ints = CPU::checkInterrupts();
         CPU::nointerrupts();
 
-        CPU::getCurrent()->willingly_yielded = true;
+        // CPU::getCurrent()->willingly_yielded = true;
         proc_reshed();
 
         if (ints)
@@ -108,7 +107,7 @@ namespace AEX::Proc {
         auto currentThread = Thread::getCurrent();
 
         currentThread->wakeup_at = Sys::get_uptime() + ((uint64_t) ms) * 1000000;
-        currentThread->status    = thread_status_t::THREAD_SLEEPING;
+        currentThread->status    = THREAD_SLEEPING;
 
         yield();
     }
@@ -117,7 +116,7 @@ namespace AEX::Proc {
         bool ints = CPU::checkInterrupts();
         CPU::nointerrupts();
 
-        auto thread = CPU::getCurrent()->currentThread;
+        auto thread = CPU::getCurrent()->current_thread;
 
         if (ints)
             CPU::interrupts();
@@ -224,7 +223,7 @@ namespace AEX::Proc {
     void Thread::subCritical() {
         uint16_t fetched = Mem::atomic_sub_fetch(&_critical, (uint16_t) 1);
 
-        if (fetched == 0 && CPU::getCurrent()->should_yield) {
+        /*if (fetched == 0 && CPU::getCurrent()->should_yield) {
             Mem::atomic_sub(&_busy, (uint16_t) 1);
 
             if (!CPU::getCurrent()->in_interrupt)
@@ -232,7 +231,7 @@ namespace AEX::Proc {
 
             Proc::Thread::yield();
             return;
-        }
+        }*/
 
         Mem::atomic_sub(&_busy, (uint16_t) 1);
 

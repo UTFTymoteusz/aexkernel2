@@ -90,8 +90,6 @@ void main(multiboot_info_t* mbinfo) {
     Mem::cleanup_bootstrap();
     printk("\n");
 
-    IRQ::init_proc();
-
     FS::init();
     FS::mount(nullptr, "/dev/", "devfs");
 
@@ -114,7 +112,7 @@ void main(multiboot_info_t* mbinfo) {
 }
 
 void boi(const char*) {
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 2; i++) {
         Proc::debug_print_cpu_jobs();
         Proc::Thread::sleep(2000);
     }
@@ -125,6 +123,9 @@ void main_threaded() {
     auto process = Proc::Thread::getCurrent()->getProcess();
 
     Proc::threaded_call(boi, "threaded");
+
+    // while (true)
+    //     Proc::Thread::getCurrent();
 
     uint64_t* boi = (uint64_t*) 0xFFFD;
     printk("aa %x\n", *boi);

@@ -56,14 +56,13 @@ namespace AEX::Dev::SATA {
         if (!atapi)
             sector_count = *((uint64_t*) (&identify[100]));
         else {
-            uint8_t  packet[12] = {AHCI::scsi_command::READ_CAPACITY_10};
-            uint32_t buffer[2]  = {0};
+            uint8_t              packet[12] = {AHCI::scsi_command::READ_CAPACITY_10};
+            big_endian<uint32_t> buffer[2]  = {0};
 
             scsiPacket(packet, buffer, sizeof(buffer));
 
-            // scsi why :(
-            buffer[0] = bswap(buffer[0]);
-            buffer[1] = bswap(buffer[1]);
+            buffer[0] = buffer[0];
+            buffer[1] = buffer[1];
 
             sector_count = buffer[0];
         }

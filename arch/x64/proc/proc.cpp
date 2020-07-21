@@ -7,6 +7,8 @@
 #include "sys/apic.hpp"
 #include "sys/irq.hpp"
 
+using CPU = AEX::Sys::CPU;
+
 namespace AEX::Proc {
     extern "C" void proc_timer_tick();
 
@@ -15,14 +17,14 @@ namespace AEX::Proc {
     }
 
     void setup_irq() {
-        AEX::Sys::init_IDT[0x20 + 0].setOffset((size_t) proc_timer_tick);
+        Sys::init_IDT[0x20 + 0].setOffset((size_t) proc_timer_tick);
 
-        Sys::CPU::broadcastPacket(Sys::CPU::IPP_CALL, (void*) reload);
+        CPU::broadcastPacket(CPU::IPP_CALL, (void*) reload);
         reload();
     }
 
     extern "C" void proc_timer_tick_ext() {
-        auto cpu = Sys::CPU::getCurrent();
+        auto cpu = CPU::getCurrent();
         cpu->in_interrupt++;
 
         schedule();
@@ -32,7 +34,7 @@ namespace AEX::Proc {
     }
 
     extern "C" void proc_reshed_manual_ext() {
-        auto cpu = Sys::CPU::getCurrent();
+        auto cpu = CPU::getCurrent();
         cpu->in_interrupt++;
 
         schedule();

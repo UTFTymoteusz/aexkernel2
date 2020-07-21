@@ -47,7 +47,7 @@ namespace AEX::Sys {
         "Reserved",
     };
 
-    void handle_page_fault(CPU::fault_info* info, CPU* cpu, Proc::Thread* thread);
+    bool handle_page_fault(CPU::fault_info* info, CPU* cpu, Proc::Thread* thread);
 
     inline Proc::Thread::state out(Proc::Thread* thread, CPU*& cpu) {
         auto state = thread->saveState();
@@ -73,13 +73,15 @@ namespace AEX::Sys {
     extern "C" void common_fault_handler(void* _info) {
         CPU::getCurrent()->in_interrupt++;
 
-        auto info   = (AEX::Sys::CPU::fault_info*) _info;
+        auto info   = (CPU::fault_info*) _info;
         auto cpu    = CPU::getCurrent();
-        auto thread = cpu->currentThread;
+        auto thread = cpu->current_thread;
 
         switch (info->int_no) {
         case EXC_PAGE_FAULT:
-            handle_page_fault(info, cpu, thread);
+            if (!handle_page_fault(info, cpu, thread))
+                break;
+
             CPU::getCurrent()->in_interrupt--;
             return;
         default:
@@ -138,7 +140,7 @@ namespace AEX::Sys {
         CPU::getCurrent()->in_interrupt--;
     }
 
-    void handle_page_fault(CPU::fault_info* info, CPU* cpu, Proc::Thread* thread) {
+    bool handle_page_fault(CPU::fault_info* info, CPU* cpu, Proc::Thread* thread) {
         size_t cr2, cr3;
 
         asm volatile("mov rax, cr2; mov %0, rax;" : : "m"(cr2) : "memory");
@@ -156,5 +158,7 @@ namespace AEX::Sys {
         Proc::Thread::sleep(500);
 
         in(state, thread, cpu);
+
+        return true;
     }
 }

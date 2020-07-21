@@ -54,6 +54,8 @@ namespace AEX {
         if (!ret)
             Thread::getCurrent()->subCritical();
 
+        __sync_synchronize();
+
         return ret;
     }
 

@@ -9,20 +9,20 @@
 namespace AEX::FS {
     struct file_info {
         Dev::devid_t  containing_dev_id = -1;
-        FS::fs_type_t type              = fs_type_t::UNKNOWN;
+        FS::fs_type_t type              = FILE_UNKNOWN;
         Dev::devid_t  dev_id            = -1;
         uint64_t      total_size        = 0;
 
         bool is_regular() {
-            return (type & FS::fs_type_t::REGULAR) == FS::fs_type_t::REGULAR;
+            return (type & FS::FILE_REGULAR) == FS::FILE_REGULAR;
         }
 
         bool is_directory() {
-            return (type & FS::fs_type_t::DIRECTORY) == FS::fs_type_t::DIRECTORY;
+            return (type & FS::FILE_DIRECTORY) == FS::FILE_DIRECTORY;
         }
 
         bool is_block() {
-            return (type & FS::fs_type_t::BLOCK) == FS::fs_type_t::BLOCK;
+            return (type & FS::FILE_BLOCK) == FS::FILE_BLOCK;
         }
     };
 

@@ -96,10 +96,8 @@ namespace AEX::TTY {
     }
 
     void GrTTY::scrollDown(int amnt) {
-        for (int i = 0; i < amnt; i++) {
-            memcpy(_double_buffer, &_double_buffer[_px_width * psf_font->size],
-                   _px_width * (_px_height - psf_font->size) * sizeof(uint32_t));
-        }
+        memcpy(_double_buffer, &_double_buffer[_px_width * psf_font->size * amnt],
+               _px_width * (_px_height - psf_font->size * amnt) * sizeof(uint32_t));
 
         memset32(&_double_buffer[_px_width * (_px_height - psf_font->size)], _bgColor,
                  _px_width * psf_font->size);

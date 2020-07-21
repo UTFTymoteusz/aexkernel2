@@ -1,6 +1,7 @@
 #include "aex/printk.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/macros.hpp"
 #include "aex/string.hpp"
 #include "aex/tty.hpp"
 
@@ -51,56 +52,25 @@ namespace AEX {
             if (format[0] == '^') {
                 switch (format[1]) {
                 case '0':
-                    rootTTY->setColorANSI(90);
-                    rootTTY->write(" [ ");
-
-                    rootTTY->setColorANSI(94);
-                    rootTTY->write("INIT");
-
-                    rootTTY->setColorANSI(90);
-                    rootTTY->write(" ] ");
-
-                    rootTTY->setColorANSI(97);
+                    *rootTTY << TTY::ANSI_FG_DARK_GRAY << " [ " << TTY::ANSI_FG_LIGHT_BLUE << "INIT"
+                             << TTY::ANSI_FG_DARK_GRAY << " ] " << TTY::ANSI_FG_WHITE;
                     break;
                 case '1':
-                    rootTTY->setColorANSI(90);
-                    rootTTY->write(" [  ");
-
-                    rootTTY->setColorANSI(92);
-                    rootTTY->write("OK");
-
-                    rootTTY->setColorANSI(90);
-                    rootTTY->write("  ] ");
-
-                    rootTTY->setColorANSI(97);
+                    *rootTTY << TTY::ANSI_FG_DARK_GRAY << " [  " << TTY::ANSI_FG_LIGHT_GREEN << "OK"
+                             << TTY::ANSI_FG_DARK_GRAY << "  ] " << TTY::ANSI_FG_WHITE;
                     break;
                 case '2':
-                    rootTTY->setColorANSI(90);
-                    rootTTY->write(" [ ");
-
-                    rootTTY->setColorANSI(93);
-                    rootTTY->write("WARN");
-
-                    rootTTY->setColorANSI(90);
-                    rootTTY->write(" ] ");
-
-                    rootTTY->setColorANSI(97);
+                    *rootTTY << TTY::ANSI_FG_DARK_GRAY << " [ " << TTY::ANSI_FG_YELLOW << "WARN"
+                             << TTY::ANSI_FG_DARK_GRAY << " ] " << TTY::ANSI_FG_WHITE;
                     break;
                 case '3':
-                    rootTTY->setColorANSI(90);
-                    rootTTY->write(" [ ");
-
-                    rootTTY->setColorANSI(91);
-                    rootTTY->write("FAIL");
-
-                    rootTTY->setColorANSI(90);
-                    rootTTY->write(" ] ");
-
-                    rootTTY->setColorANSI(97);
+                    *rootTTY << TTY::ANSI_FG_DARK_GRAY << " [ " << TTY::ANSI_FG_LIGHT_RED << "FAIL"
+                             << TTY::ANSI_FG_DARK_GRAY << " ] " << TTY::ANSI_FG_WHITE;
                     break;
                 default:
                     break;
                 }
+
                 format += 2;
             }
             else
@@ -209,9 +179,9 @@ namespace AEX {
                     printk_common(padchar, padlen, buffer);
                     break;
                 case 'p':
-#if INTPTR_MAX == INT64_MAX
+#if BIT64
                     itos((uint64_t) va_arg(args, unsigned long), 16, buffer);
-#elif INTPTR_MAX == INT32_MAX
+#elif BIT32
                     itos((uint32_t) va_arg(args, unsigned int), 16, buffer);
 #else
 #error "Environment is not 32 bit or 64 bit"

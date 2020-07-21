@@ -12,21 +12,21 @@ namespace AEX::FS {
         int pos;
 
         char          name[Path::MAX_FILENAME_LEN] = {};
-        FS::fs_type_t type                         = fs_type_t::UNKNOWN;
+        FS::fs_type_t type                         = FILE_UNKNOWN;
 
         dir_entry(){};
         dir_entry(const char* name, int pos, int inode_id);
 
         bool is_regular() {
-            return (type & FS::fs_type_t::REGULAR) == FS::fs_type_t::REGULAR;
+            return (type & FS::FILE_REGULAR) == FS::FILE_REGULAR;
         }
 
         bool is_directory() {
-            return (type & FS::fs_type_t::DIRECTORY) == FS::fs_type_t::DIRECTORY;
+            return (type & FS::FILE_DIRECTORY) == FS::FILE_DIRECTORY;
         }
 
         bool is_block() {
-            return (type & FS::fs_type_t::BLOCK) == FS::fs_type_t::BLOCK;
+            return (type & FS::FILE_BLOCK) == FS::FILE_BLOCK;
         }
     };
 

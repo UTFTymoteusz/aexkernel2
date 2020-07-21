@@ -3,10 +3,14 @@
 #include "aex/debug.hpp"
 #include "aex/mem.hpp"
 
+static constexpr auto FLAGS_RESERVED   = 1 << 1;
+static constexpr auto FLAGS_INTERRUPTS = 1 << 9;
+
 namespace AEX::Proc {
     Context::Context(void* entry, void* stack, size_t stack_size, Mem::Pagemap* pagemap,
                      bool usermode, void (*on_exit)()) {
         rip = (uint64_t) entry;
+
         rsp = (uint64_t) stack + stack_size;
         rbp = 0;
 
@@ -32,7 +36,7 @@ namespace AEX::Proc {
             ss = 0x1B;
         }
 
-        rflags = 0x202;
+        rflags = FLAGS_INTERRUPTS | FLAGS_RESERVED;
 
         *((uint16_t*) &fxstate[24]) = 0b0001111110000000;
     }

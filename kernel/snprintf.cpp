@@ -48,7 +48,6 @@ namespace AEX {
                 return;
 
             size_t total_len = min((size_t) strlen(str), len);
-
             if (total_len == 0)
                 return;
 

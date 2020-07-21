@@ -54,6 +54,8 @@ namespace AEX {
         if (!ret)
             Thread::getCurrent()->subBusy();
 
+        __sync_synchronize();
+
         return ret;
     }
 }

@@ -8,10 +8,10 @@ namespace AEX::Dev::SATA {
     class AHCI;
 
     enum sata_type_t {
-        SATA   = 0,
-        SATAPI = 1,
-        SEMB   = 2,
-        PM     = 3,
+        SATA_ATA   = 0,
+        SATA_ATAPI = 1,
+        SATA_SEMB  = 2,
+        SATA_PM    = 3,
     };
 
     class SATADevice : public Tree::Device {

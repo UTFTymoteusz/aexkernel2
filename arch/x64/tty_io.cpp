@@ -92,4 +92,9 @@ namespace AEX::TTY {
         write(str);
         return *this;
     }
+
+    VTTY& VTTY::operator<<(ansi_color_t color) {
+        setColorANSI(color);
+        return *this;
+    }
 }

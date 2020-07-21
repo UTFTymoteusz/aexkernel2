@@ -16,14 +16,14 @@ namespace AEX::FS {
         inode->device_id = id - 2;
 
         switch (device->type) {
-        case Dev::dev_type_t::DEV_BLOCK:
-            inode->type = fs_type_t::BLOCK;
+        case Dev::DEV_BLOCK:
+            inode->type = FILE_BLOCK;
             break;
-        case Dev::dev_type_t::DEV_CHAR:
-            inode->type = fs_type_t::CHAR;
+        case Dev::DEV_CHAR:
+            inode->type = FILE_CHAR;
             break;
-        case Dev::dev_type_t::DEV_NET:
-            inode->type = fs_type_t::NET;
+        case Dev::DEV_NET:
+            inode->type = FILE_NET;
             break;
         }
 

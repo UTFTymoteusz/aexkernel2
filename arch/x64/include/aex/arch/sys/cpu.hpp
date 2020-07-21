@@ -147,15 +147,15 @@ namespace AEX::Sys {
 
         CPU* self;
 
-        AEX::Proc::Context* currentContext;
+        AEX::Proc::Context* current_context;
 
         // Safe to change again
-        bool    should_yield      = false;
-        bool    willingly_yielded = false;
-        uint8_t in_interrupt      = 1;
+        // bool    should_yield      = false;
+        // bool    willingly_yielded = false;
+        uint8_t in_interrupt = 1;
 
         int                current_tid;
-        AEX::Proc::Thread* currentThread;
+        AEX::Proc::Thread* current_thread;
 
         uint64_t measurement_start_ns;
 

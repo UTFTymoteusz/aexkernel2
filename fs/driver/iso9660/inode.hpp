@@ -17,7 +17,7 @@ namespace AEX::FS {
             _dentry = dentry;
 
             size = dentry.data_len.le;
-            type = fs_type_t::DIRECTORY;
+            type = FILE_DIRECTORY;
         }
 
         optional<dir_entry> readDir(dir_context* ctx) {
@@ -80,8 +80,7 @@ namespace AEX::FS {
 
                 auto dentry_ret = dir_entry(name_buffer, ctx->pos - len, ldentry->data_lba.le);
 
-                dentry_ret.type =
-                    ldentry->isDirectory() ? fs_type_t::DIRECTORY : fs_type_t::REGULAR;
+                dentry_ret.type = ldentry->isDirectory() ? FILE_DIRECTORY : FILE_REGULAR;
 
                 return dentry_ret;
             }
@@ -108,7 +107,7 @@ namespace AEX::FS {
             _dentry = dentry;
 
             size = dentry.data_len.le;
-            type = fs_type_t::REGULAR;
+            type = FILE_REGULAR;
         }
 
         error_t readBlocks(void* buffer, uint64_t block, uint16_t count) {

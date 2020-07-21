@@ -75,8 +75,6 @@ namespace AEX::Sys::IRQ {
             auto _ioapic = new IOAPIC(mapped, ioapic->global_interrupt_base);
 
             for (int j = 0; j < _ioapic->getIRQAmount(); j++) {
-                _ioapic->setDestination(j, 0x00);
-                _ioapic->setVector(j, 0x20 + 30);
                 _ioapic->setMask(j, true);
                 _ioapic->setMode(j, IOAPIC::irq_mode::IRQ_NORMAL);
             }

@@ -22,6 +22,7 @@ namespace AEX::Dev::SATA {
             readWrite(buffer, sector, sector_count, false);
             return sector_count * SECTOR_SIZE;
         }
+
         int64_t writeBlock(const void* buffer, uint64_t sector, uint32_t sector_count) {
             readWrite((void*) buffer, sector, sector_count, true);
             return sector_count * SECTOR_SIZE;
@@ -44,7 +45,7 @@ namespace AEX::Dev::SATA {
 
         bool check(Tree::Device* _device) {
             auto device = (SATADevice*) _device;
-            return device->type == sata_type_t::SATAPI;
+            return device->type == SATA_ATAPI;
         }
 
         void bind(Tree::Device* _device) {

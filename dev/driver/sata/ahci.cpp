@@ -83,17 +83,17 @@ namespace AEX::Dev::SATA {
         }
 
         SATADevice* sata_device;
-        char        buffer[16];
+        char        name_buffer[16];
 
         switch (port->signature) {
         case SATA_SIG_ATAPI:
             printk("ahci%i: port%i: Found SATAPI\n", index, port_index);
 
-            name_letter_increment(buffer, sizeof(buffer), "sr%");
+            name_letter_increment(name_buffer, sizeof(name_buffer), "sr%");
 
-            sata_device             = new SATADevice(buffer);
+            sata_device             = new SATADevice(name_buffer);
             sata_device->controller = this;
-            sata_device->type       = sata_type_t::SATAPI;
+            sata_device->type       = SATA_ATAPI;
             sata_device->atapi      = true;
 
             sata_device->max_commands   = max_cmd;
@@ -117,11 +117,11 @@ namespace AEX::Dev::SATA {
         default:
             printk("ahci%i: port%i: Found SATA\n", index, port_index);
 
-            name_letter_increment(buffer, sizeof(buffer), "sd%");
+            name_letter_increment(name_buffer, sizeof(name_buffer), "sd%");
 
-            sata_device             = new SATADevice(buffer);
+            sata_device             = new SATADevice(name_buffer);
             sata_device->controller = this;
-            sata_device->type       = sata_type_t::SATA;
+            sata_device->type       = SATA_ATA;
             sata_device->atapi      = false;
 
             sata_device->max_commands   = max_cmd;
