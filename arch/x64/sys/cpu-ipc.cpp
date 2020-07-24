@@ -6,6 +6,8 @@
 #include "sys/mcore.hpp"
 
 namespace AEX::Sys {
+    extern "C" void proc_reshed();
+
     void CPU::broadcastPacket(ipp_type type, void* data, bool ignore_self) {
         bool ints = CPU::checkInterrupts();
 
@@ -27,6 +29,9 @@ namespace AEX::Sys {
     }
 
     void CPU::sendPacket(ipp_type type, void* data) {
+        static Spinlock lock;
+        auto            scopeLock = ScopeSpinlock(lock);
+
         _ipi_lock.acquire();
         _ipi_ack = false;
 
@@ -47,7 +52,10 @@ namespace AEX::Sys {
         while (!_ipi_ack) {
             counter++;
 
-            if (counter > 4000000 * 4)
+            if (counter == 4000000 * 7)
+                APIC::sendNMI(apic_id);
+
+            if (counter == 4000000 * 8)
                 kpanic("ipi to cpu%i from cpu%i stuck (%i, 0x%p)\n", this->id, CPU::getCurrentID(),
                        type, data);
         }
@@ -64,33 +72,42 @@ namespace AEX::Sys {
         us->in_interrupt++;
         us->handleIPP();
         us->in_interrupt--;
+
+        __sync_synchronize();
     }
 
     void CPU::handleIPP() {
+        auto us = CPU::getCurrent();
+
         switch (_ipi_packet.type) {
-        case CPU::IPP_HALT:
+        case IPP_HALT:
             _ipi_ack = true;
 
             APIC::eoi();
             CPU::halt();
 
             return;
-        case CPU::IPP_RESHED:
+        case IPP_RESHED:
             _ipi_ack = true;
-            printk("cpu%i: Reshed\n", CPU::getCurrentID());
 
-            break;
-        case CPU::IPP_CALL:
+            APIC::eoi();
+
+            us->in_interrupt--;
+            proc_reshed();
+            us->in_interrupt++;
+
+            return;
+        case IPP_CALL:
             _ipi_ack = true;
             ((void (*)(void)) _ipi_packet.data)();
 
             break;
-        case CPU::IPP_PG_FLUSH:
+        case IPP_PG_FLUSH:
             _ipi_ack = true;
             asm volatile("mov rax, cr3; mov cr3, rax;");
 
             break;
-        case CPU::IPP_PG_INV:
+        case IPP_PG_INV:
             asm volatile("invlpg [%0]" : : "r"(_ipi_packet.data));
             _ipi_ack = true;
 

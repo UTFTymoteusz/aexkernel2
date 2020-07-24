@@ -37,36 +37,24 @@ namespace AEX::Init {
 
 void main_threaded();
 
+void init_mem(multiboot_info_t* mbinfo);
+void mount_fs();
+
 void main(multiboot_info_t* mbinfo) {
-    // Dirty workaround but meh, it works.
-    Sys::CPU::getCurrent()->in_interrupt++;
+    // Dirty workaround but meh, it works
+    CPU::getCurrent()->in_interrupt++;
 
     TTY::init(mbinfo);
-
     Init::init_print_header();
     printk(PRINTK_INIT "Booting AEX/2\n\n");
 
-    // clang-format off
-    printk("Section info:\n");
-    printk(".text  : %93$0x%p%90$, %93$0x%p%$\n", &_start_text  , &_end_text);
-    printk(".rodata: %93$0x%p%90$, %93$0x%p%$\n", &_start_rodata, &_end_rodata);
-    printk(".data  : %93$0x%p%90$, %93$0x%p%$\n", &_start_data  , &_end_data);
-    printk(".bss   : %93$0x%p%90$, %93$0x%p%$\n", &_start_bss   , &_end_bss);
-    printk("\n");
-    // clang-format on
-
-    Phys::init(mbinfo);
-    Mem::init();
-    Heap::init();
-    printk("\n");
-
-    TTY::init_mem(mbinfo);
+    init_mem(mbinfo);
+    load_multiboot_symbols(mbinfo);
 
     ACPI::init();
     printk("\n");
 
     Sys::init_time();
-    printk("\n");
 
     IRQ::init();
     IRQ::init_timer();
@@ -75,34 +63,35 @@ void main(multiboot_info_t* mbinfo) {
     auto bsp = new CPU(0);
     bsp->initLocal();
 
-    Dev::init();
-    printk("\n");
-
     MCore::init();
 
     CPU::interrupts();
     IRQ::setup_timers_mcore(500);
 
+    Proc::init();
+
     bsp->in_interrupt--;
 
-    Proc::init();
+    // Sys::lazy_sleep(50);
+
+    Dev::init();
+    printk("\n");
+    FS::init();
+    printk("\n");
+
+    load_multiboot_modules(mbinfo);
 
     Mem::cleanup_bootstrap();
     printk("\n");
 
-    FS::init();
-    FS::mount(nullptr, "/dev/", "devfs");
-
-    auto res = FS::mount("/dev/sra", "/", nullptr);
-    if (res != ENONE)
-        kpanic("Failed to mount iso9660: %s\n", strerror((error_t) res));
-
-    printk("\n");
+    mount_fs();
 
     Net::init();
     printk("\n");
 
-    Debug::load_kernel_symbols("/sys/aexkrnl.elf");
+    if (!Debug::symbols_loaded)
+        Debug::load_kernel_symbols("/sys/aexkrnl.elf");
+
     load_core_modules();
 
     Dev::Input::init();
@@ -118,6 +107,34 @@ void boi(const char*) {
     }
 }
 
+void init_mem(multiboot_info_t* mbinfo) {
+    // clang-format off
+    printk("Section info:\n");
+    printk(".text  : %93$0x%p%90$, %93$0x%p%$\n", &_start_text  , &_end_text);
+    printk(".rodata: %93$0x%p%90$, %93$0x%p%$\n", &_start_rodata, &_end_rodata);
+    printk(".data  : %93$0x%p%90$, %93$0x%p%$\n", &_start_data  , &_end_data);
+    printk(".bss   : %93$0x%p%90$, %93$0x%p%$\n", &_start_bss   , &_end_bss);
+    printk("\n");
+    // clang-format on
+
+    Phys::init(mbinfo);
+    Mem::init();
+    Heap::init();
+    printk("\n");
+
+    TTY::init_mem(mbinfo);
+}
+
+void mount_fs() {
+    FS::mount(nullptr, "/dev/", "devfs");
+
+    auto res = FS::mount("/dev/sra", "/", nullptr);
+    if (res != ENONE)
+        kpanic("Failed to mount iso9660: %s\n", strerror((error_t) res));
+
+    printk("\n");
+}
+
 void main_threaded() {
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrent()->getProcess();
@@ -131,30 +148,39 @@ void main_threaded() {
     printk("aa %x\n", *boi);
     printk("done\n");*/
 
+    Proc::Thread::sleep(500);
+    // CPU::tripleFault();
+
     int64_t start_epoch = get_clock_time();
 
     while (true) {
-        if (TTY::VTTYs[TTY::ROOT_TTY]->readChar() != 't')
-            continue;
+        switch (TTY::VTTYs[TTY::ROOT_TTY]->readChar()) {
+        case 't': {
+            uint64_t ns    = get_uptime();
+            uint64_t clock = get_clock_time();
 
-        uint64_t ns    = get_uptime();
-        uint64_t clock = get_clock_time();
+            auto dt = from_unix_epoch(clock);
 
-        auto dt = from_unix_epoch(clock);
+            printk("cpu%i: %16li ns (%li ms, %li s, %li min), clock says %li s, %02i:%02i:%02i\n",
+                   CPU::getCurrentID(), ns, ns / 1000000, ns / 1000000000, ns / 1000000000 / 60,
+                   clock - start_epoch, dt.hour, dt.minute, dt.second);
+            printk("idle: %16li ns (%li ms) cpu time (pid %i)\n", idle->usage.cpu_time_ns,
+                   idle->usage.cpu_time_ns / 1000000, idle->pid);
+            printk("us  : %16li ns (%li ms) cpu time (pid %i)\n", process->usage.cpu_time_ns,
+                   process->usage.cpu_time_ns / 1000000, process->pid);
+            printk("bytes read: %li\n", process->usage.block_bytes_read);
+            printk("heap free : %li\n", Heap::heap_free);
 
-        printk("cpu%i: %16li ns (%li ms, %li s, %li min), clock says %li s, %02i:%02i:%02i\n",
-               CPU::getCurrentID(), ns, ns / 1000000, ns / 1000000000, ns / 1000000000 / 60,
-               clock - start_epoch, dt.hour, dt.minute, dt.second);
-        printk("idle: %16li ns (%li ms) cpu time (pid %i)\n", idle->usage.cpu_time_ns,
-               idle->usage.cpu_time_ns / 1000000, idle->pid);
-        printk("us  : %16li ns (%li ms) cpu time (pid %i)\n", process->usage.cpu_time_ns,
-               process->usage.cpu_time_ns / 1000000, process->pid);
-        printk("bytes read: %li\n", process->usage.block_bytes_read);
-        printk("heap free : %li\n", Heap::heap_free);
+            printk("tid: %i\n", Proc::Thread::getCurrentTID());
 
-        printk("tid: %i\n", Proc::Thread::getCurrentTID());
-
-        Proc::debug_print_cpu_jobs();
+            Proc::debug_print_cpu_jobs();
+        } break;
+        case 'r':
+            CPU::tripleFault();
+            break;
+        default:
+            break;
+        }
     }
 
     Proc::Thread::exit();

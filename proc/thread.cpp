@@ -15,11 +15,15 @@ namespace AEX::Proc {
     extern "C" void proc_reshed();
 
     Thread::Thread() {
+        this->self = this;
+
         this->context     = new Context();
         this->_exit_event = new IPC::Event();
     }
 
     Thread::Thread(Process* parent) {
+        this->self = this;
+
         status  = THREAD_FRESH;
         context = new Context();
 
@@ -29,6 +33,8 @@ namespace AEX::Proc {
 
     Thread::Thread(Process* parent, void* entry, size_t stack_size, Mem::Pagemap* pagemap,
                    bool usermode, bool dont_add) {
+        this->self = this;
+
         if (!parent)
             parent = processes.get(1).get();
 
@@ -113,15 +119,8 @@ namespace AEX::Proc {
     }
 
     Thread* Thread::getCurrent() {
-        bool ints = CPU::checkInterrupts();
-        CPU::nointerrupts();
-
-        auto thread = CPU::getCurrent()->current_thread;
-
-        if (ints)
-            CPU::interrupts();
-
-        return thread;
+        // We need atomicity here
+        return CPU::getCurrentThread();
     }
 
     tid_t Thread::getCurrentTID() {

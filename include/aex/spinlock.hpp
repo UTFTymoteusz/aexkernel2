@@ -12,6 +12,7 @@ namespace AEX {
         void releaseRaw();
 
         bool tryAcquireRaw();
+        bool tryReleaseRaw();
 
         private:
         volatile int _lock = 0;

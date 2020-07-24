@@ -103,6 +103,8 @@ namespace AEX::Mem {
          */
         phys_addr paddrof(void* vaddr);
 
+        size_t rawof(void* vaddr);
+
         private:
         Mutex _lock;
 

@@ -15,6 +15,9 @@ namespace AEX::Debug {
     void stack_trace(int skip) {
         stack_frame* frame;
 
+        const int max   = 12;
+        int       level = 0;
+
         asm volatile("mov %0, rbp;" : "=r"(frame));
 
         while (frame > (stack_frame*) 8) {
@@ -22,6 +25,11 @@ namespace AEX::Debug {
                 skip--;
                 continue;
             }
+
+            level++;
+
+            if (level > max)
+                return;
 
             switch (frame->rip) {
             case ENTRY_BOOT:
@@ -36,13 +44,17 @@ namespace AEX::Debug {
             default:
                 if (frame->rip == (size_t) Proc::Thread::exit) {
                     printk("  *thread entry/exit*\n");
-                    continue;
+                    return;
                 }
 
                 int         delta = 0;
                 const char* name  = symbol_addr2name((void*) frame->rip, &delta);
 
                 printk("  0x%p <%s+0x%x>\n", frame->rip, name ? name : "no idea", delta);
+
+                if ((frame->rip & 0xFFFFFFFFF0000000) != 0xFFFFFFFF80000000)
+                    return;
+
                 break;
             }
 

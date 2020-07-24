@@ -21,8 +21,8 @@ namespace AEX::Sys::IRQ {
 
         handle(info->irq_no);
 
-        APIC::eoi();
         CPU::getCurrent()->in_interrupt--;
+        APIC::eoi();
     }
 
     extern "C" void irq_marker(void*) {

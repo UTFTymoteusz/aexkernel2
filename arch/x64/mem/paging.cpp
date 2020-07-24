@@ -9,6 +9,7 @@
 #include "aex/string.hpp"
 
 #include "mem/sections.hpp"
+#include "proc/proc.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -51,16 +52,20 @@ namespace AEX::Mem {
         while (true) {
             pptr_lock.acquire();
 
-            for (size_t i = 0; i < PPTR_AMOUNT; i++)
-                if (!pptr_taken[i]) {
-                    pptr_taken[i] = true;
-                    pptr_lock.release();
+            for (size_t i = 0; i < PPTR_AMOUNT; i++) {
+                if (pptr_taken[i])
+                    continue;
 
-                    return i;
-                }
+                pptr_taken[i] = true;
+                pptr_lock.release();
 
-            // yield here
+                return i;
+            }
+
             pptr_lock.release();
+
+            if (Proc::ready)
+                Proc::Thread::yield();
         }
     }
 
@@ -77,13 +82,17 @@ namespace AEX::Mem {
         debug_pptr_targets[index] = at;
         *pptr_entries[index]      = at | PAGE_WRITE | PAGE_PRESENT;
 
+        Sys::CPU::broadcastPacket(Sys::CPU::IPP_PG_INV, pptr_vaddr[index]);
+
         asm volatile("invlpg [%0]" : : "r"(pptr_vaddr[index]));
 
         return pptr_vaddr[index];
     }
 
     Pagemap::Pagemap() {
-        pageRoot = Mem::Phys::alloc(1);
+        _lock.acquire();
+
+        pageRoot = Phys::alloc(1);
 
         int pptr_a = alloc_pptr();
         int pptr_b = alloc_pptr();
@@ -95,6 +104,8 @@ namespace AEX::Mem {
 
         free_pptr(pptr_b);
         free_pptr(pptr_a);
+
+        _lock.release();
     }
 
     Pagemap::Pagemap(phys_addr rootAddr) {
@@ -235,6 +246,8 @@ namespace AEX::Mem {
 
         ptable[index] = paddr | flags;
 
+        __sync_synchronize();
+
         Sys::CPU::broadcastPacket(Sys::CPU::IPP_PG_INV, virt);
 
         asm volatile("invlpg [%0]" : : "r"(virt));
@@ -257,6 +270,8 @@ namespace AEX::Mem {
 
         size_t addr   = ptable[index] & MEM_PAGE_MASK;
         ptable[index] = 0x0000;
+
+        __sync_synchronize();
 
         Sys::CPU::broadcastPacket(Sys::CPU::IPP_PG_INV, virt);
         Mem::Phys::free(addr, Sys::CPU::PAGE_SIZE);
@@ -399,7 +414,9 @@ namespace AEX::Mem {
         int       pptr  = alloc_pptr();
         uint64_t* table = findTable(pptr, vaddr);
         if (!table) {
+            free_pptr(pptr);
             _lock.release();
+
             return 0;
         }
 
@@ -409,6 +426,32 @@ namespace AEX::Mem {
         _lock.release();
 
         return paddr;
+    }
+
+    size_t Pagemap::rawof(void* addr) {
+        uint64_t vaddr = (uint64_t) addr;
+        uint64_t index = ((size_t) addr >> 12) & 0x1FF;
+
+        vaddr &= ~0xFFF;
+
+        _lock.acquire();
+
+        int       pptr  = alloc_pptr();
+        uint64_t* table = findTable(pptr, vaddr);
+        if (!table) {
+            free_pptr(pptr);
+            _lock.release();
+
+            return 0;
+        }
+
+        uint64_t boi = table[index];
+
+        free_pptr(pptr);
+
+        _lock.release();
+
+        return boi;
     }
 
     void create_first_levels();
@@ -423,6 +466,8 @@ namespace AEX::Mem {
 
         for (size_t i = 0; i < PPTR_AMOUNT; i++) {
             void* _virt = _kernel_pagemap.map(Sys::CPU::PAGE_SIZE, 0x0000, PAGE_WRITE);
+
+            // printk("aa: 0x%p\n", _virt);
 
             uint64_t virt = (uint64_t) _virt;
 

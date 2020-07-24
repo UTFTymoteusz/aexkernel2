@@ -8,7 +8,6 @@
 #include "aex/string.hpp"
 
 #include "fs/driver/devfs/devfs.hpp"
-#include "fs/driver/iso9660/iso9660.hpp"
 #include "fs/fs.hpp"
 
 namespace AEX::FS {
@@ -19,7 +18,6 @@ namespace AEX::FS {
         printk(PRINTK_INIT "fs: Initializing\n");
 
         DevFS::init();
-        ISO9660::init();
 
         printk(PRINTK_OK "fs: Initialized\n");
     }

@@ -103,6 +103,21 @@ namespace AEX::Sys {
             CPU::interrupts();
     }
 
+    void APIC::sendNMI(uint8_t dst) {
+        bool ints = CPU::checkInterrupts();
+
+        CPU::nointerrupts();
+
+        write(0x310, dst << 24);
+        write(0x300, (4 << 8));
+
+        while (read(0x300) & (1 << 12))
+            ;
+
+        if (ints)
+            CPU::interrupts();
+    }
+
     void APIC::eoi() {
         write(0xB0, 0x00);
     }

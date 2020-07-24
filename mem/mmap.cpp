@@ -30,17 +30,17 @@ namespace AEX::Mem {
     }
 
     FileBackedMMapRegion::~FileBackedMMapRegion() {
+        _lock.acquire();
+
         if (_file.has_value)
             _file.value->close();
 
         _pagemap->free(start, len);
 
-        for (int i = 0; i < CACHE_SLOTS; i++) {
-            if (cache[i].id == -1)
-                continue;
-
+        for (int i = 0; i < CACHE_SLOTS; i++)
             kernel_pagemap->free(cache[i].buffer, Sys::CPU::PAGE_SIZE);
-        }
+
+        _lock.release();
     }
 
     error_t FileBackedMMapRegion::read(void* dst, int64_t offset, uint32_t count) {

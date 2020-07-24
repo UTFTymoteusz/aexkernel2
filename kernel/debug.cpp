@@ -14,13 +14,13 @@
 
 using namespace AEX::Mem;
 
-extern void main(multiboot_info_t* mbinfo);
-
 namespace AEX::Debug {
     struct kernel_symbol {
         uint64_t address;
         char*    name;
     };
+
+    bool symbols_loaded = false;
 
     Mem::Vector<kernel_symbol> kernel_symbols;
     char*                      kernel_image_strings = nullptr;
@@ -39,8 +39,14 @@ namespace AEX::Debug {
 
         file->close();
 
-        uint8_t* addr = (uint8_t*) mmap_try.value;
+        void* addr = mmap_try.value;
 
+        load_kernel_symbols_from_memory(addr);
+
+        Mem::munmap(addr, size);
+    }
+
+    void load_kernel_symbols_from_memory(void* addr) {
         auto elf = ELF(addr);
 
         if (!elf.isValid(ELF::bitness_t::BITS64, ELF::endianiness_t::LITTLE, ELF::isa_t::AMD64))
@@ -69,7 +75,7 @@ namespace AEX::Debug {
             kernel_symbols.pushBack(_symbol);
         }
 
-        Mem::munmap(addr, size);
+        symbols_loaded = true;
     }
 
     const char* symbol_addr2name(void* addr, int* delta_ret, bool only_kernel) {

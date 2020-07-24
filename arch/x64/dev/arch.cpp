@@ -10,7 +10,5 @@ namespace AEX::Dev {
 
     void arch_drivers_init() {
         PCI::init();
-
-        SATA::init();
     }
 }

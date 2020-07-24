@@ -8,8 +8,10 @@
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
 
+#include "boot/mboot.h"
 #include "elf.hpp"
 #include "kernel/module.hpp"
+#include "proc/proc.hpp"
 
 namespace AEX {
     struct module_symbol {
@@ -45,7 +47,7 @@ namespace AEX {
 
     Spinlock symbol_lock;
 
-    error_t load_module(const char* path) {
+    error_t load_module(const char* path, bool block) {
         auto file_try = FS::File::open(path);
         if (!file_try.has_value)
             return file_try.error_code;
@@ -61,13 +63,16 @@ namespace AEX {
 
         void* addr = mmap_try.value;
 
-        auto error = load_module_from_memory(addr, size, path);
+        auto error = load_module_from_memory(addr, size, path, block);
         Mem::munmap(addr, size);
 
         return error;
     }
 
-    error_t load_module_from_memory(void* _addr, size_t, const char* path) {
+    error_t load_module_from_memory(void* _addr, size_t, const char* path, bool block) {
+        static Mutex lock      = Mutex();
+        auto         scopeLock = ScopeMutex(lock);
+
         uint8_t* addr = (uint8_t*) _addr;
         auto     elf  = ELF(addr);
 
@@ -197,7 +202,7 @@ namespace AEX {
                     break;
                 }
 
-            if (!S) {
+            if (!S)
                 for (int j = 0; j < elf.symbols.count(); j++) {
                     auto symbol_b = elf.symbols[j];
                     if (!symbol_b.name)
@@ -212,7 +217,6 @@ namespace AEX {
                     S = (size_t) section_info[symbol_b.section_index].addr + symbol_b.address;
                     break;
                 }
-            }
 
             if (!S && (symbol.info >> 4) != ELF::sym_binding::SB_LOCAL)
                 S = (uint64_t) Debug::symbol_name2addr(symbol.name);
@@ -258,8 +262,6 @@ namespace AEX {
             return ENOSYS;
         }
 
-        modules.addRef(module);
-
         module->name = *((const char**) ((size_t) section_info[name_symbol.section_index].addr +
                                          name_symbol.address));
 
@@ -267,6 +269,26 @@ namespace AEX {
                                      entry_symbol.address);
         module->exit  = (void (*)())((size_t) section_info[exit_symbol.section_index].addr +
                                     exit_symbol.address);
+
+        bool already_loaded = false;
+
+        for (auto iterator = modules.getIterator(); auto _module = iterator.next();) {
+            if (strcmp(module->name, _module->name) != 0)
+                continue;
+
+            already_loaded = true;
+            break;
+        }
+
+        if (already_loaded) {
+            printk(PRINTK_WARN "Not loading module '%s' as it's already loaded\n", module->name);
+
+            delete module;
+            delete section_info;
+            return ENONE;
+        }
+
+        modules.addRef(module);
 
         for (int i = 0; i < module->symbols.count(); i++) {
             char buffer[sizeof(module->symbols[i].name)];
@@ -278,13 +300,68 @@ namespace AEX {
 
         printk(PRINTK_OK "Loaded module '%s'\n", module->name);
 
+        if (!Proc::ready) {
+            ((void (*)()) module->enter)();
+
+            delete section_info;
+            return ENONE;
+        }
+
         // 2 goddamned hours + sleep for this goddamned thing (stack size)
         auto thread = new Proc::Thread(Proc::processes.get(1).get(), (void*) module->enter, 16384,
                                        Mem::kernel_pagemap);
+
+        if (block) {
+            Proc::Thread::getCurrent()->addCritical();
+
+            thread->start();
+            if (block)
+                thread->join();
+
+            Proc::Thread::getCurrent()->subCritical();
+            Proc::Thread::yield();
+
+            delete section_info;
+            return ENONE;
+        }
+
         thread->start();
 
         delete section_info;
         return ENONE;
+    }
+
+    void load_multiboot_symbols(multiboot_info_t* mbinfo) {
+        if (!(mbinfo->flags & MULTIBOOT_INFO_MODS))
+            return;
+
+        auto list = (multiboot_mod_list*) (size_t) mbinfo->mods_addr;
+
+        for (uint32_t i = 0; i < mbinfo->mods_count; i++) {
+            if (list[i].cmdline == 0 || strcmp((char*) (size_t) list[i].cmdline, "kernel") != 0)
+                continue;
+
+            Debug::load_kernel_symbols_from_memory((void*) (size_t) list[i].mod_start);
+        }
+    }
+
+    void load_multiboot_modules(multiboot_info_t* mbinfo) {
+        if (!(mbinfo->flags & MULTIBOOT_INFO_MODS))
+            return;
+
+        auto list = (multiboot_mod_list*) (size_t) mbinfo->mods_addr;
+
+        if (!Debug::symbols_loaded)
+            return;
+
+        for (uint32_t i = 0; i < mbinfo->mods_count; i++) {
+            if (list[i].cmdline != 0 && strcmp((char*) (size_t) list[i].cmdline, "kernel") == 0)
+                continue;
+
+            load_module_from_memory((void*) (size_t) list[i].mod_start,
+                                    list[i].mod_end - list[i].mod_start,
+                                    (char*) (size_t) list[i].cmdline, true);
+        }
     }
 
     // This will need to be changed in the future, though
@@ -362,7 +439,7 @@ namespace AEX {
 
             FS::Path::canonize_path(list[i].name, "/sys/core/", buffer, sizeof(buffer));
 
-            load_module(buffer);
+            load_module(buffer, true);
 
             Proc::Thread::sleep(75);
         }

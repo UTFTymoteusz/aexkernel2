@@ -16,7 +16,7 @@ namespace AEX {
         SIZE_LONG  = 2,
     };
 
-    Spinlock lock;
+    Spinlock printk_lock;
 
     int faulted_cpu = -1;
 
@@ -31,9 +31,9 @@ namespace AEX {
 
     void printk(const char* format, va_list args) {
         if (faulted_cpu == -1)
-            lock.acquire();
+            printk_lock.acquire();
         else if (Sys::CPU::getCurrentID() != faulted_cpu)
-            return;
+            return; // printk_lock.acquire();
 
         auto rootTTY = TTY::VTTYs[TTY::ROOT_TTY];
 
@@ -203,7 +203,7 @@ namespace AEX {
         } while (*++format != '\0');
 
         if (faulted_cpu == -1)
-            lock.release();
+            printk_lock.release();
     }
 
     void printk_fault() {

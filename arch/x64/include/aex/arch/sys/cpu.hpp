@@ -119,6 +119,11 @@ namespace AEX::Sys {
         static CPU* getCurrent();
 
         /**
+         * Gets a pointer to the current thread.
+         */
+        static Proc::Thread* getCurrentThread();
+
+        /**
          * Broadcasts a packet to all processors (except the local one, unless you specify
          * otherwise) and IPIs them.
          * @param type Type of the packet.
@@ -139,23 +144,20 @@ namespace AEX::Sys {
          */
         void sendPacket(ipp_type type, void* data = nullptr);
 
-        void updateStructures(Proc::Thread* thread);
+        void update(Proc::Thread* thread);
 
         // Don't change the order of these or the kernel will go boom boom
         int id;
         int apic_id;
 
-        CPU* self;
+        CPU* self; // 0x00
 
-        AEX::Proc::Context* current_context;
+        AEX::Proc::Context* current_context; // 0x08
+        AEX::Proc::Thread*  current_thread;  // 0x10
+        volatile int        current_tid;     // 0x18
 
         // Safe to change again
-        // bool    should_yield      = false;
-        // bool    willingly_yielded = false;
         uint8_t in_interrupt = 1;
-
-        int                current_tid;
-        AEX::Proc::Thread* current_thread;
 
         uint64_t measurement_start_ns;
 

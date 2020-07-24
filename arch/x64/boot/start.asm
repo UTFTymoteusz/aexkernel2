@@ -9,6 +9,10 @@ extern paging_init
 extern pml4
 extern sse_init
 
+extern _start_text
+extern _start_bss
+extern _end_bss
+
 _start:
     jmp bootstrap
 
@@ -17,19 +21,20 @@ mboot:
 	MULTIBOOT_PAGE_ALIGN	equ 1 << 0
 	MULTIBOOT_MEMORY_INFO	equ 1 << 1
 	MULTIBOOT_GRAPHICS_INFO	equ 1 << 2
+	MULTIBOOT_ADDRESS_INFO	equ 1 << 16
 	MULTIBOOT_HEADER_MAGIC	equ 0x1BADB002
-	MULTIBOOT_HEADER_FLAGS  equ MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO | MULTIBOOT_GRAPHICS_INFO
+	MULTIBOOT_HEADER_FLAGS  equ MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO | MULTIBOOT_GRAPHICS_INFO | MULTIBOOT_ADDRESS_INFO
 	MULTIBOOT_CHECKSUM	    equ -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
 
 	dd MULTIBOOT_HEADER_MAGIC
 	dd MULTIBOOT_HEADER_FLAGS
 	dd MULTIBOOT_CHECKSUM
 
-	dd 0
-	dd 0
-	dd 0
-	dd 0
-	dd 0
+	dd mboot
+	dd _start_text
+	dd _start_bss
+	dd 0x1000000 - 0x200000
+	dd _start
 
 	; Graphics things
 	dd 0

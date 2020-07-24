@@ -16,9 +16,7 @@ namespace AEX {
         while (!__sync_bool_compare_and_swap(&_lock, false, true)) {
             Thread::getCurrent()->subBusy();
 
-            asm volatile("pause");
             count++;
-
             if (count > 12212222) {
                 int  delta = 0;
                 auto name  = Debug::symbol_addr2name((void*) this, &delta);
@@ -39,12 +37,12 @@ namespace AEX {
         if (!Thread::getCurrent()->isBusy())
             kpanic("bbb!!!");
 
+        __sync_synchronize();
+
         if (!__sync_bool_compare_and_swap(&_lock, true, false))
             kpanic("mutex: Too many releases");
 
         Thread::getCurrent()->subBusy();
-
-        __sync_synchronize();
     }
 
     bool Mutex::tryAcquire() {

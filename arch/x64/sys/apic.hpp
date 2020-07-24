@@ -27,6 +27,7 @@ namespace AEX::Sys {
         static void sendInterrupt(uint8_t dst, uint8_t vector);
         static void sendINIT(uint8_t dst);
         static void sendSIPI(uint8_t dst, uint8_t page);
+        static void sendNMI(uint8_t dst);
 
         static void eoi();
     };

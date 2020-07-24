@@ -7,11 +7,12 @@
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
-#include "aex/sys/time.hpp"
 
 #include "sys/mcore.hpp"
+#include "sys/time.hpp"
 
 using namespace AEX::Mem;
+using namespace AEX::Sys;
 
 namespace AEX::Proc {
     Mem::SmartArray<Process> processes;
@@ -21,21 +22,25 @@ namespace AEX::Proc {
     Thread** threads      = nullptr;
     Thread** idle_threads = nullptr;
 
+    bool ready = false;
+
     int thread_array_size = 0;
 
-    Thread void_thread;
+    Thread** void_threads;
 
     Spinlock lock;
 
     void setup_idle_threads(Process* process);
     void setup_cores(Thread* bsp_thread);
+    void cleanup_voids();
 
     void thread_reaper();
 
     void init() {
-        new (&void_thread) Thread();
-
+        void_threads    = new Thread*[MCore::cpu_count];
         threads_to_reap = new IPC::MessageQueue();
+
+        auto bsp = MCore::CPUs[0];
 
         threads           = (Thread**) new Thread*[1];
         thread_array_size = 1;
@@ -45,6 +50,10 @@ namespace AEX::Proc {
 
         auto bsp_thread = new Thread(kernel_process);
         bsp_thread->start();
+
+        bsp->current_thread  = bsp_thread;
+        bsp->current_context = bsp_thread->context;
+        bsp->current_tid     = bsp_thread->tid;
 
         add_thread(bsp_thread);
 
@@ -58,18 +67,15 @@ namespace AEX::Proc {
         setup_idle_threads(idle_process);
         setup_cores(bsp_thread);
         setup_irq();
+        cleanup_voids();
+
+        ready = true;
+
+        Proc::Thread::yield();
     }
 
     void schedule() {
-        auto cpu = Sys::CPU::getCurrent();
-
-        /*if (cpu->currentThread->isCritical() && !cpu->willingly_yielded) {
-            cpu->should_yield = true;
-            return;
-        }
-
-        cpu->willingly_yielded = false;
-        cpu->should_yield      = false;*/
+        auto cpu = CPU::getCurrent();
 
         if (!lock.tryAcquireRaw()) {
             if (cpu->current_thread->status != THREAD_RUNNABLE)
@@ -80,7 +86,7 @@ namespace AEX::Proc {
 
         int i = cpu->current_tid;
 
-        uint64_t curtime = Sys::get_uptime();
+        uint64_t curtime = get_uptime_raw();
         uint64_t delta   = curtime - cpu->measurement_start_ns;
 
         cpu->measurement_start_ns = curtime;
@@ -140,7 +146,7 @@ namespace AEX::Proc {
             cpu->current_thread  = thread;
             cpu->current_context = thread->context;
 
-            cpu->updateStructures(thread);
+            cpu->update(thread);
             lock.releaseRaw();
 
             return;
@@ -155,7 +161,7 @@ namespace AEX::Proc {
         cpu->current_thread  = thread;
         cpu->current_context = thread->context;
 
-        cpu->updateStructures(thread);
+        cpu->update(thread);
         lock.releaseRaw();
     }
 
@@ -221,33 +227,49 @@ namespace AEX::Proc {
 
     void idle() {
         while (true)
-            Sys::CPU::waitForInterrupt();
+            CPU::waitForInterrupt();
     }
 
     void setup_idle_threads(Process* idle_process) {
-        idle_threads = (Thread**) new Thread*[Sys::MCore::cpu_count];
+        idle_threads = (Thread**) new Thread*[MCore::cpu_count];
 
-        for (int i = 0; i < Sys::MCore::cpu_count; i++) {
+        for (int i = 0; i < MCore::cpu_count; i++) {
             idle_threads[i] =
                 new Thread(idle_process, (void*) idle, 1024, Mem::kernel_pagemap, false, true);
         }
     }
 
     void setup_cores(Thread* bsp_thread) {
-        for (int i = 1; i < Sys::MCore::cpu_count; i++) {
-            Sys::MCore::CPUs[i]->current_thread  = idle_threads[i];
-            Sys::MCore::CPUs[i]->current_context = void_thread.context;
-            Sys::MCore::CPUs[i]->current_tid     = 0;
+        for (int i = 1; i < MCore::cpu_count; i++) {
+            auto void_thread = new Thread();
+            void_threads[i]  = void_thread;
 
-            idle_threads[i]->lock.acquireRaw();
+            MCore::CPUs[i]->current_thread  = void_thread;
+            MCore::CPUs[i]->current_context = void_thread->context;
+            MCore::CPUs[i]->current_tid     = 2137 + i;
+
+            void_thread->lock.acquireRaw();
         }
 
-        Sys::MCore::CPUs[0]->current_tid     = 1;
-        Sys::MCore::CPUs[0]->current_thread  = bsp_thread;
-        Sys::MCore::CPUs[0]->current_context = bsp_thread->context;
+        MCore::CPUs[0]->current_tid     = 1;
+        MCore::CPUs[0]->current_thread  = bsp_thread;
+        MCore::CPUs[0]->current_context = bsp_thread->context;
 
         // The scheduler will release the lock
         bsp_thread->lock.acquireRaw();
+    }
+
+    void cleanup_voids() {
+        CPU::broadcastPacket(CPU::IPP_RESHED, nullptr);
+
+        for (int i = 1; i < MCore::cpu_count; i++) {
+            while (MCore::CPUs[i]->current_tid >= 2137)
+                ;
+
+            delete void_threads[i];
+        }
+
+        delete void_threads;
     }
 
     void thread_reaper() {
@@ -264,8 +286,8 @@ namespace AEX::Proc {
     }
 
     void debug_print_cpu_jobs() {
-        for (int i = 0; i < Sys::MCore::cpu_count; i++) {
-            auto cpu = Sys::MCore::CPUs[i];
+        for (int i = 0; i < MCore::cpu_count; i++) {
+            auto cpu = MCore::CPUs[i];
 
             void* addr = (void*) cpu->current_thread->context->rip;
 

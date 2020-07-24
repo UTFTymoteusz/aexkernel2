@@ -16,6 +16,13 @@
         ret;                                                   \
     }))
 
+#define CURRENT_THREAD                                                \
+    ((AEX::Proc::Thread*) ({                                          \
+        size_t ret = 0;                                               \
+        asm volatile("mov %0, qword [gs:-0x08 + 0x10];" : "=r"(ret)); \
+        ret;                                                          \
+    }))
+
 constexpr auto GSBase = 0xC0000101;
 
 constexpr auto CPUID_NAME_STRING_1 = 0x80000002;
@@ -182,6 +189,10 @@ namespace AEX::Sys {
         return CURRENT_CPU;
     }
 
+    Proc::Thread* CPU::getCurrentThread() {
+        return CURRENT_THREAD;
+    }
+
     void CPU::tripleFault() {
         nointerrupts();
         load_idt(nullptr, 0);
@@ -190,7 +201,7 @@ namespace AEX::Sys {
         asm volatile("int 0;");
     }
 
-    void CPU::updateStructures(Proc::Thread* thread) {
+    void CPU::update(Proc::Thread* thread) {
         _tss->ist1 = thread->fault_stack;
     }
 

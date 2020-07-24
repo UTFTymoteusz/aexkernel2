@@ -39,6 +39,8 @@ namespace AEX::Proc {
             thread_status_t status;
         };
 
+        Thread* self = this;
+
         tid_t tid;
 
         Context* context;

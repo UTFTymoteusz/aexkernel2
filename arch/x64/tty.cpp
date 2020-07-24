@@ -22,7 +22,6 @@ namespace AEX::TTY {
     }
 
     void VTTY::_writeChar(char) {
-        Sys::CPU::outportb(0x3F8, 'b');
         // kpanic("VTTY::_writeChar() not implemented");
     }
 
@@ -44,6 +43,7 @@ namespace AEX::TTY {
 
     void VTTY::writeChar(char c) {
         _lock.acquire();
+        // Sys::CPU::outportb(0xE9, c);
         _writeChar(c);
         _lock.release();
     }
@@ -51,8 +51,10 @@ namespace AEX::TTY {
     void VTTY::write(const char* str) {
         _lock.acquire();
 
-        while (*str != '\0')
+        while (*str != '\0') {
+            // Sys::CPU::outportb(0xE9, *str);
             _writeChar(*str++);
+        }
 
         _lock.release();
     }

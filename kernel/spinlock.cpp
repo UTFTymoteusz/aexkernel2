@@ -36,15 +36,24 @@ namespace AEX {
     }
 
     void Spinlock::release() {
-        if (!Thread::getCurrent()->isCritical())
-            kpanic("aaa!!!");
+        __sync_synchronize();
 
-        if (!__sync_bool_compare_and_swap(&_lock, true, false))
+        if (!__sync_bool_compare_and_swap(&_lock, true, false)) {
+            Sys::CPU::nointerrupts();
+
+            printk_fault();
+
+            int  delta = 0;
+            auto name  = Debug::symbol_addr2name((void*) &_lock, &delta);
+            if (!name)
+                name = "no idea";
+
+            printk("aaa (0x%p, <%s>+0x%x)\n", this, name, delta);
+            Debug::stack_trace();
             kpanic("spinlock: Too many releases");
+        }
 
         Thread::getCurrent()->subCritical();
-
-        __sync_synchronize();
     }
 
     bool Spinlock::tryAcquire() {
@@ -68,13 +77,34 @@ namespace AEX {
     }
 
     void Spinlock::releaseRaw() {
-        if (!__sync_bool_compare_and_swap(&_lock, true, false))
-            kpanic("spinlock: Too many releases");
-
         __sync_synchronize();
+
+        if (!__sync_bool_compare_and_swap(&_lock, true, false)) {
+            Sys::CPU::nointerrupts();
+
+            printk_fault();
+
+            int  delta = 0;
+            auto name  = Debug::symbol_addr2name((void*) &_lock, &delta);
+            if (!name)
+                name = "no idea";
+
+            printk("bbb (0x%p, <%s>+0x%x)\n", this, name, delta);
+            Debug::stack_trace();
+            kpanic("spinlock: Too many releases");
+        }
     }
 
     bool Spinlock::tryAcquireRaw() {
-        return __sync_bool_compare_and_swap(&_lock, false, true);
+        bool ret = __sync_bool_compare_and_swap(&_lock, false, true);
+
+        __sync_synchronize();
+        return ret;
+    }
+
+    bool Spinlock::tryReleaseRaw() {
+        __sync_synchronize();
+
+        return __sync_bool_compare_and_swap(&_lock, true, false);
     }
 }

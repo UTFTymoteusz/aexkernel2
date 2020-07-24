@@ -39,6 +39,18 @@ paging_init:
     mov dword [pdp0.pd0 + 8 * 3], edx
     add edx, 4096
 
+    mov dword [pdp0.pd0 + 8 * 4], edx
+    add edx, 4096
+
+    mov dword [pdp0.pd0 + 8 * 5], edx
+    add edx, 4096
+
+    mov dword [pdp0.pd0 + 8 * 6], edx
+    add edx, 4096
+
+    mov dword [pdp0.pd0 + 8 * 7], edx
+    add edx, 4096
+
 
     mov ebx, pdp0.pt0_3
     xor ecx, ecx
@@ -50,7 +62,7 @@ paging_init:
         inc ecx
         add edx, 4096
 
-        cmp ecx, 2048
+        cmp ecx, 4096
         jl .ptinit1
 
 
@@ -119,7 +131,7 @@ pdp0:
     .pd0:
         resb 4096
         .pt0_3:
-            resb 4096 * 4
+            resb 4096 * 8
 
 
 pdp511:
