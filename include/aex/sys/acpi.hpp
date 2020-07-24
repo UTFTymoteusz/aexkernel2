@@ -184,7 +184,7 @@ namespace AEX::ACPI {
         void* findEntry(int type, int index);
     } __attribute((packed));
 
-    typedef void* acpi_table;
+    struct acpi_table {};
 
     extern Mem::Vector<acpi_table*> tables;
     extern uint8_t                  revision;

@@ -1,5 +1,5 @@
-CC = g++
-AS = nasm
+CXX ?= g++
+AS   = nasm
 
 MKDIR = mkdir -p
 
@@ -10,13 +10,13 @@ OBJ_DEST := $(BIN)obj/
 
 ARCH = arch/x64/
 
-CFILES    := $(shell find . -type f -name '*.cpp'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.cpp')
-HFILES    := $(shell find . -type f -name '*.hpp'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.hpp')
+CXXFILES  := $(shell find . -type f -name '*.cpp'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.cpp')
+HXXFILES  := $(shell find . -type f -name '*.hpp'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.hpp')
 ASMFILES  := $(shell find . -type f -name '*.asm'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.asm')
 PSFFILES  := $(shell find . -type f -name '*.psf'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.psf')
 ASMRFILES := $(shell find . -type f -name '*.asmr' -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.asmr')
 
-OBJS := $(patsubst %.o, $(OBJ_DEST)%.o, $(CFILES:.cpp=.cpp.o) $(ASMFILES:.asm=.asm.o) $(PSFFILES:.psf=.psf.o) $(ASMRFILES:.asmr=.asmr.o))
+OBJS := $(patsubst %.o, $(OBJ_DEST)%.o, $(CXXFILES:.cpp=.cpp.o) $(ASMFILES:.asm=.asm.o) $(PSFFILES:.psf=.psf.o) $(ASMRFILES:.asmr=.asmr.o))
 
 ISO  = $(BIN)grubiso/
 SYS  = $(ISO)sys/
@@ -25,16 +25,16 @@ GFLAGS = -O3 -Wall -Wextra -Werror -nostdlib -pipe -lgcc
 
 INCLUDES := -I. -I$(ARCH) -I$(ARCH)include/ -Iinclude/ -Iinclude/libc/ -I../lai/include/
 
-CCFLAGS := $(GFLAGS)     \
-	-std=c++17           \
-	-fno-rtti            \
-	-fno-exceptions      \
-	-ffreestanding       \
-	-masm=intel          \
-	-mcmodel=kernel      \
-	-fno-pic             \
-	-fno-stack-protector \
-	-mno-red-zone        \
+CXXFLAGS := $(GFLAGS)       \
+	-std=c++17              \
+	-fno-rtti               \
+	-fno-exceptions         \
+	-ffreestanding          \
+	-masm=intel             \
+	-mcmodel=kernel         \
+	-fno-pic                \
+	-fno-stack-protector    \
+	-mno-red-zone           \
 	-fno-omit-frame-pointer \
 	$(INCLUDES)
 
@@ -48,11 +48,11 @@ LDFLAGS := $(GFLAGS) \
 
 format:
 	@$(MKDIR) $(ISO) $(SYS)
-	clang-format -style=file -i ${CFILES} ${HFILES}
+	clang-format -style=file -i ${CXXFILES} ${HXXFILES}
 
 all: $(OBJS)
 	@$(MKDIR) $(ISO) $(SYS)
-	@$(CC) $(OBJS) $(LDFLAGS) -T linker.ld -o $(SYS)aexkrnl.elf
+	@$(CXX) $(OBJS) $(LDFLAGS) -T linker.ld -o $(SYS)aexkrnl.elf
 
 copy:
 	@cp $(SYS)aexkrnl.elf "$(SYSTEM_DIR)"
@@ -66,7 +66,7 @@ clean:
 $(OBJ_DEST)%.cpp.o : %.cpp
 	@$(MKDIR) ${@D}
 	@$(MKDIR) $(dir $(DEP_DEST)$*)
-	$(CC) $(CCFLAGS) -c $< -o $@ -MMD -MT $@ -MF $(DEP_DEST)$*.cpp.d
+	$(CXX) $(CXXFLAGS) -c $< -o $@ -MMD -MT $@ -MF $(DEP_DEST)$*.cpp.d
 
 $(OBJ_DEST)%.asm.o : %.asm
 	@$(MKDIR) ${@D}
