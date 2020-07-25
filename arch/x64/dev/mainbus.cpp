@@ -21,7 +21,7 @@ namespace AEX::Dev {
     }
 
     void detect_pci() {
-        auto pci = new Device("pci");
+        auto pci = new Device("pci", nullptr);
 
         pci->addResource(Device::resource(Device::resource::IO, 0xCF8));
         pci->addResource(Device::resource(Device::resource::IO, 0xCFC));
@@ -37,7 +37,7 @@ namespace AEX::Dev {
 
         for (size_t i = 0; i < 200; i++) {
             if (CPU::inportb(0x60) == 0x55) {
-                auto ps2 = new Device("ps2");
+                auto ps2 = new Device("ps2", nullptr);
 
                 ps2->addResource(Device::resource(Device::resource::IO, 0x60));
                 ps2->addResource(Device::resource(Device::resource::IO, 0x64));
@@ -52,7 +52,7 @@ namespace AEX::Dev {
     }
 
     void detect_rtc() {
-        auto rtc = new Device("rtc");
+        auto rtc = new Device("rtc", nullptr);
 
         rtc->addResource(Device::resource(Device::resource::IO, 0x70, 2));
         rtc->addResource(Device::resource(Device::resource::IRQ, 8));

@@ -6,8 +6,17 @@
 #include "aex/string.hpp"
 
 namespace AEX::Dev::Tree {
-    Device::Device(const char* name) {
+    Device::Device(const char* name, Device* parent) {
         strncpy(this->name, name, sizeof(this->name));
+
+        if (!parent && root_device)
+            parent = root_device;
+
+        if (!parent)
+            return;
+
+        this->parent = parent;
+        this->parent->children.addRef(this);
     }
 
     Device::~Device() {

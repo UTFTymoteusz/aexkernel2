@@ -16,7 +16,7 @@ constexpr auto CONFIG_ADDRESS = 0xCF8;
 constexpr auto CONFIG_DATA    = 0xCFC;
 
 namespace AEX::Dev::PCI {
-    void scan_all_buses();
+    void scan_all_buses(Tree::Device* pci_root);
 
     Tree::Bus* dev_bus;
 
@@ -32,11 +32,11 @@ namespace AEX::Dev::PCI {
             return true;
         }
 
-        void bind(Tree::Device*) {
+        void bind(Tree::Device* device) {
             printk(PRINTK_INIT "pci: Initializing\n");
 
             dev_bus = new Tree::Bus("pci");
-            scan_all_buses();
+            scan_all_buses(device);
 
             printk(PRINTK_OK "pci: Initialized\n");
         }
@@ -85,8 +85,7 @@ namespace AEX::Dev::PCI {
     uint16_t read_word(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
     uint8_t  read_byte(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
 
-    void scan_all_buses();
-    void scan_device(uint16_t bus, uint8_t device);
+    void scan_device(Tree::Device* pci_root, uint16_t bus, uint8_t device);
 
     uint16_t get_vendor_id(uint16_t bus, uint8_t device, uint8_t function);
     uint16_t get_device_id(uint16_t bus, uint8_t device, uint8_t function);
@@ -178,10 +177,10 @@ namespace AEX::Dev::PCI {
         return Sys::CPU::outportd(CONFIG_DATA, val);
     }
 
-    void scan_all_buses() {
+    void scan_all_buses(Tree::Device* pci_root) {
         for (uint16_t bus = 0; bus < 256; bus++)
             for (uint8_t device = 0; device < 32; device++)
-                scan_device(bus, device);
+                scan_device(pci_root, bus, device);
     }
 
     void fill_bars(uint8_t bus, uint8_t device, uint8_t function, PCIDevice* dev_device) {
@@ -248,7 +247,7 @@ namespace AEX::Dev::PCI {
         }
     }
 
-    void scan_device(uint16_t bus, uint8_t device) {
+    void scan_device(Tree::Device* pci_root, uint16_t bus, uint8_t device) {
         if (get_vendor_id(bus, device, 0x00) == 0xFFFF)
             return;
 
@@ -264,7 +263,7 @@ namespace AEX::Dev::PCI {
             char buffer[32];
             snprintf(buffer, sizeof(buffer), "%02x.%02x.%02x", bus, device, function);
 
-            auto dev_device = new PCIDevice(buffer);
+            auto dev_device = new PCIDevice(buffer, pci_root);
 
             dev_device->bus      = bus;
             dev_device->device   = device;

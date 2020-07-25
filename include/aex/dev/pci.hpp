@@ -15,7 +15,7 @@ namespace AEX::Dev::PCI {
 
         uint8_t interrupt_pin;
 
-        PCIDevice(const char* name) : Device(name) {}
+        PCIDevice(const char* name, Tree::Device* parent) : Device(name, parent) {}
 
         /**
          * Gets the IRQ number of the device.

@@ -10,8 +10,13 @@
 #include <stdint.h>
 
 namespace AEX::Dev::Tree {
-    class Bus : public Device {
+    class Bus {
         public:
+        Mem::SmartArray<Device> devices;
+        Mem::SmartArray<Driver> drivers;
+
+        char name[32];
+
         Bus(const char* name);
 
         /**
@@ -27,8 +32,6 @@ namespace AEX::Dev::Tree {
         void registerDriver(Driver* driver);
 
         private:
-        Mem::SmartArray<Driver> _drivers;
-
         Spinlock _lock;
 
         static void bindDriverToDevice(Driver* driver, Device* device);

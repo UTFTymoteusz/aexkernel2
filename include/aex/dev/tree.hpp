@@ -12,6 +12,7 @@
 
 namespace AEX::Dev::Tree {
     extern Mem::SmartArray<Bus> buses;
+    extern Tree::Device*        root_device;
 
     /**
      * Tries to register a device in the specified bus.

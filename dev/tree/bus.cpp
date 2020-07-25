@@ -7,7 +7,9 @@
 #include "aex/string.hpp"
 
 namespace AEX::Dev::Tree {
-    Bus::Bus(const char* name) : Device(name) {
+    Bus::Bus(const char* name) {
+        strncpy(this->name, name, sizeof(this->name));
+
         buses.addRef(this);
 
         printk(PRINTK_OK "dev: Registered bus '%s'\n", this->name);
@@ -21,20 +23,20 @@ namespace AEX::Dev::Tree {
     }
 
     void Bus::registerDevice(Device* device) {
-        children.addRef(device);
+        devices.addRef(device);
 
         printk("dev: %s: Registered tree device '%s'\n", this->name, device->name);
 
-        for (auto iterator = _drivers.getIterator(); auto driver = iterator.next();)
+        for (auto iterator = drivers.getIterator(); auto driver = iterator.next();)
             bindDriverToDevice(driver, device);
     }
 
     void Bus::registerDriver(Driver* driver) {
-        _drivers.addRef(driver);
+        drivers.addRef(driver);
 
         printk("dev: %s: Registered tree driver '%s'\n", this->name, driver->name);
 
-        for (auto iterator = children.getIterator(); auto device = iterator.next();)
+        for (auto iterator = devices.getIterator(); auto device = iterator.next();)
             bindDriverToDevice(driver, device);
     }
 }

@@ -8,7 +8,7 @@
 
 namespace AEX::Dev {
     namespace Tree {
-        extern void register_base_drivers();
+        extern void init();
     }
 
     Mem::SmartArray<Device> devices;
@@ -19,10 +19,8 @@ namespace AEX::Dev {
     void init() {
         printk(PRINTK_INIT "dev: Initializing\n");
 
-        Tree::buses = Mem::SmartArray<Tree::Bus>();
-
+        Tree::init();
         mainbus_init();
-        Tree::register_base_drivers();
         arch_drivers_init();
 
         printk(PRINTK_OK "dev: Initialized\n");

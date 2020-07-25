@@ -42,14 +42,14 @@ namespace AEX::Dev::Tree {
             }
         };
 
-        Device*                 parent;
+        Device*                 parent = nullptr;
         Mem::SmartArray<Device> children;
 
         char name[32];
 
         void* driver_data;
 
-        Device(const char* name);
+        Device(const char* name, Device* parent);
         virtual ~Device();
 
         void                       addResource(resource resource);

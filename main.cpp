@@ -35,6 +35,10 @@ namespace AEX::Init {
     void init_print_header();
 }
 
+namespace AEX::Dev::Tree {
+    void print_debug();
+}
+
 void main_threaded();
 
 void init_mem(multiboot_info_t* mbinfo);
@@ -139,7 +143,7 @@ void main_threaded() {
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrent()->getProcess();
 
-    Proc::threaded_call(boi, "threaded");
+    // Proc::threaded_call(boi, "threaded");
 
     // while (true)
     //     Proc::Thread::getCurrent();
@@ -148,8 +152,7 @@ void main_threaded() {
     printk("aa %x\n", *boi);
     printk("done\n");*/
 
-    Proc::Thread::sleep(500);
-    // CPU::tripleFault();
+    Dev::Tree::print_debug();
 
     int64_t start_epoch = get_clock_time();
 
