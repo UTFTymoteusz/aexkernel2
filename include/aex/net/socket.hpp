@@ -21,6 +21,16 @@ namespace AEX::Net {
         IPROTO_UDP  = 2,
     };
 
+    enum socket_flag_t {
+        MSG_WAITALL = 0x01,
+    };
+
+    enum socket_shutdown_flag_t {
+        SHUT_RD   = 0x01,
+        SHUT_WR   = 0x02,
+        SHUT_RDWR = 0x03,
+    };
+
     struct sockaddr {
         socket_domain_t domain;
         char            idk[14];
@@ -63,6 +73,9 @@ namespace AEX::Net {
         virtual error_t bind(const sockaddr* addr);
         error_t         bind(ipv4_addr addr, uint16_t port);
 
+        virtual error_t             listen(int backlog);
+        virtual optional<Socket_SP> accept();
+
         virtual optional<size_t> sendTo(const void* buffer, size_t len, int flags,
                                         const sockaddr* dst_addr);
         virtual optional<size_t> receiveFrom(void* buffer, size_t len, int flags,
@@ -71,7 +84,8 @@ namespace AEX::Net {
         optional<size_t> send(const void* buffer, size_t len, int flags);
         optional<size_t> receive(void* buffer, size_t len, int flags);
 
-        virtual void close();
+        virtual error_t shutdown(int how);
+        virtual error_t close();
 
         private:
     };

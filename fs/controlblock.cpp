@@ -14,7 +14,7 @@ namespace AEX::FS {
 
     optional<INode_SP> ControlBlock::findINode(const char* lpath) {
         auto inode_try = getINode(INode_SP::getNull(), dir_entry(), root_inode_id);
-        if (!inode_try.has_value)
+        if (!inode_try)
             return inode_try.error_code;
 
         auto inode = inode_try.value;
@@ -28,7 +28,7 @@ namespace AEX::FS {
 
             while (true) {
                 auto readd_try = inode->readDir(&context);
-                if (!readd_try.has_value)
+                if (!readd_try)
                     return readd_try.error_code;
 
                 if (strcmp(readd_try.value.name, piece) != 0)
@@ -40,7 +40,7 @@ namespace AEX::FS {
                     return ENOENT;
 
                 inode_try = getINode(inode, readd_try.value, readd_try.value.inode_id);
-                if (!inode_try.has_value)
+                if (!inode_try)
                     return inode_try.error_code;
 
                 inode                = inode_try.value;

@@ -23,6 +23,8 @@ namespace AEX::Proc {
         Context(void* entry, void* stack, size_t stack_size, Mem::Pagemap* pagemap,
                 bool usermode = false, void (*on_exit)() = nullptr);
 
+        void setArguments() {}
+
         template <typename T>
         void setArguments(T a) {
             rdi = (uint64_t) a;

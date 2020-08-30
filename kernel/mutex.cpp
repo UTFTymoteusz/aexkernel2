@@ -19,7 +19,7 @@ namespace AEX {
             count++;
             if (count > 12212222) {
                 int  delta = 0;
-                auto name  = Debug::symbol_addr2name((void*) this, &delta);
+                auto name  = Debug::symbol_addr2name((void*) this, delta);
                 if (!name)
                     name = "no idea";
 

@@ -10,7 +10,7 @@ namespace AEX::FS {
         optional<dir_entry> readDir(dir_context* ctx) {
             while ((int) ctx->pos < Dev::devices.count()) {
                 auto device = Dev::devices.get(ctx->pos);
-                if (!device.isValid())
+                if (!device)
                     continue;
 
                 ctx->pos++;

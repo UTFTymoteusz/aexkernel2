@@ -22,7 +22,7 @@ namespace AEX::Mem {
 
                 while (_index < _base->count()) {
                     auto ptr = _base->get(_index);
-                    if (!ptr.isValid()) {
+                    if (!ptr) {
                         _index++;
                         continue;
                     }
@@ -59,12 +59,12 @@ namespace AEX::Mem {
             if (index < 0 || index >= _element_count)
                 return SmartPointer<T>(nullptr, nullptr);
 
-            if (!_elements[index].refs)
+            if (!_elements[index].shared)
                 return SmartPointer<T>(nullptr, nullptr);
 
-            _elements[index].refs->increment();
+            _elements[index].shared->increment();
 
-            return SmartPointer<T>(_elements[index].ptr, _elements[index].refs);
+            return SmartPointer<T>(_elements[index].ptr, _elements[index].shared);
         }
 
         int count() {
@@ -83,7 +83,7 @@ namespace AEX::Mem {
             return index;
         }
 
-        int addRef(T* ptr, ref_counter* counter) {
+        int addRef(T* ptr, sp_shared* counter) {
             auto scopeLock = ScopeSpinlock(_lock);
 
             int index = findSlotOrMakeSlot();
@@ -110,29 +110,29 @@ namespace AEX::Mem {
 
         private:
         struct element {
-            T*           ptr;
-            ref_counter* refs;
+            T*         ptr;
+            sp_shared* shared;
 
             element(T* ptr) {
-                this->ptr = ptr;
-                refs      = new ref_counter(1);
+                this->ptr    = ptr;
+                this->shared = new sp_shared(1);
             }
 
-            element(T* ptr, ref_counter* refs) {
-                this->ptr  = ptr;
-                this->refs = refs;
+            element(T* ptr, sp_shared* shared) {
+                this->ptr    = ptr;
+                this->shared = shared;
             }
 
             void die() {
-                if (refs && refs->decrement()) {
+                if (shared && shared->decrement()) {
                     if (ptr)
                         delete ptr;
 
-                    delete refs;
+                    delete shared;
                 }
 
-                ptr  = nullptr;
-                refs = nullptr;
+                ptr    = nullptr;
+                shared = nullptr;
             }
         };
 
@@ -143,8 +143,8 @@ namespace AEX::Mem {
 
         int findSlotOrMakeSlot() {
             for (int i = 0; i < _element_count; i++) {
-                if (!_elements[i].ptr || !_elements[i].refs ||
-                    _elements[i].refs->ref_count() == 0) {
+                if (!_elements[i].ptr || !_elements[i].shared ||
+                    _elements[i].shared->ref_count() == 0) {
                     // printk("!present slot: %i\n", i);
                     return i;
                 }

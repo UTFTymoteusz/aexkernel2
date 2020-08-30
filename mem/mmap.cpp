@@ -32,7 +32,7 @@ namespace AEX::Mem {
     FileBackedMMapRegion::~FileBackedMMapRegion() {
         _lock.acquire();
 
-        if (_file.has_value)
+        if (_file)
             _file.value->close();
 
         _pagemap->free(start, len);
@@ -103,7 +103,7 @@ namespace AEX::Mem {
                          int64_t offset) {
         // make addr be actually used
 
-        if (!(flags & MAP_ANONYMOUS) && !file.isValid())
+        if (!(flags & MAP_ANONYMOUS) && !file)
             return EBADF;
 
         auto process = Proc::Process::getCurrent();
@@ -123,7 +123,7 @@ namespace AEX::Mem {
         }
 
         auto dupd_try = file->dup();
-        if (!dupd_try.has_value)
+        if (!dupd_try)
             return dupd_try.error_code;
 
         auto dupd = dupd_try.value;

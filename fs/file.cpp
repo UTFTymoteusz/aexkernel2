@@ -20,11 +20,11 @@ namespace AEX::FS {
 
     optional<File_SP> File::open(const char* path) {
         auto mount_info = find_mount(path);
-        if (!mount_info.mount.has_value)
+        if (!mount_info.mount)
             return mount_info.mount.error_code;
 
         auto inode_try = mount_info.mount.value->control_block->findINode(mount_info.new_path);
-        if (!inode_try.has_value)
+        if (!inode_try)
             return inode_try.error_code;
 
         auto inode = inode_try.value;
@@ -33,7 +33,7 @@ namespace AEX::FS {
 
         if (inode->device_id != -1) {
             auto device = Dev::devices.get(inode->device_id);
-            if (!device.isValid())
+            if (!device)
                 return ENOENT;
 
             return File_SP(new DevFile(device));
@@ -44,11 +44,11 @@ namespace AEX::FS {
 
     optional<File_SP> File::opendir(const char* path) {
         auto mount_info = find_mount(path);
-        if (!mount_info.mount.has_value)
+        if (!mount_info.mount)
             return mount_info.mount.error_code;
 
         auto inode_try = mount_info.mount.value->control_block->findINode(mount_info.new_path);
-        if (!inode_try.has_value)
+        if (!inode_try)
             return inode_try.error_code;
 
         auto inode = inode_try.value;
@@ -60,11 +60,11 @@ namespace AEX::FS {
 
     optional<file_info> File::info(const char* path) {
         auto mount_info = find_mount(path);
-        if (!mount_info.mount.has_value)
+        if (!mount_info.mount)
             return mount_info.mount.error_code;
 
         auto inode_try = mount_info.mount.value->control_block->findINode(mount_info.new_path);
-        if (!inode_try.has_value)
+        if (!inode_try)
             return inode_try.error_code;
 
         auto inode = inode_try.value;
@@ -98,5 +98,7 @@ namespace AEX::FS {
         kpanic("Attempt to call the default dup()");
     }
 
-    void File::close() {}
+    error_t File::close() {
+        return ENOSYS;
+    }
 }

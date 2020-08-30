@@ -35,10 +35,13 @@ namespace AEX::Net {
             return memcmp(bytes, b.bytes, 4) != 0;
         }
 
+        bool isSubnettedWith(ipv4_addr destination, ipv4_addr mask) {
+            return (*this & mask) == (destination & mask);
+        }
+
         operator uint32_t() {
             return from_big_endian<uint32_t>(*((uint32_t*) bytes));
         }
-
     } __attribute__((packed));
 
     // Make these more efficient pls
@@ -56,6 +59,6 @@ namespace AEX::Net {
     }
 
     inline ipv4_addr operator~(ipv4_addr a) {
-        return ~(*((uint32_t*) a.bytes));
+        return to_big_endian(~(*((uint32_t*) a.bytes)));
     }
 }

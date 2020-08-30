@@ -21,7 +21,7 @@ namespace AEX {
 
             if (count > 12212222) {
                 int  delta = 0;
-                auto name  = Debug::symbol_addr2name((void*) this, &delta);
+                auto name  = Debug::symbol_addr2name((void*) this, delta);
                 if (!name)
                     name = "no idea";
 
@@ -44,7 +44,7 @@ namespace AEX {
             printk_fault();
 
             int  delta = 0;
-            auto name  = Debug::symbol_addr2name((void*) &_lock, &delta);
+            auto name  = Debug::symbol_addr2name((void*) &_lock, delta);
             if (!name)
                 name = "no idea";
 
@@ -85,7 +85,7 @@ namespace AEX {
             printk_fault();
 
             int  delta = 0;
-            auto name  = Debug::symbol_addr2name((void*) &_lock, &delta);
+            auto name  = Debug::symbol_addr2name((void*) &_lock, delta);
             if (!name)
                 name = "no idea";
 

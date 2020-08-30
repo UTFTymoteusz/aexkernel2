@@ -14,34 +14,6 @@
 #include "proc/proc.hpp"
 
 namespace AEX {
-    struct module_symbol {
-        char  name[64];
-        void* addr;
-    };
-
-    struct module_section {
-        void*  addr = nullptr;
-        size_t size = 0;
-
-        module_section() {}
-    };
-
-    class Module {
-        public:
-        const char* name = nullptr;
-
-        void (*enter)();
-        void (*exit)();
-
-        Mem::Vector<module_section> sections;
-        Mem::Vector<module_symbol>  symbols;
-
-        ~Module() {
-            for (int i = 0; i < sections.count(); i++)
-                ; // implement paging dealloc pls
-        }
-    };
-
     Mem::SmartArray<Module>    modules;
     Mem::Vector<module_symbol> global_symbols;
 
@@ -49,14 +21,14 @@ namespace AEX {
 
     error_t load_module(const char* path, bool block) {
         auto file_try = FS::File::open(path);
-        if (!file_try.has_value)
+        if (!file_try)
             return file_try.error_code;
 
         auto    file = file_try.value;
         int64_t size = file->seek(0, FS::File::END).value;
 
         auto mmap_try = Mem::mmap(nullptr, size, Mem::PROT_READ, Mem::MAP_NONE, file, 0);
-        if (!mmap_try.has_value)
+        if (!mmap_try)
             return mmap_try.error_code;
 
         file->close();
@@ -141,8 +113,7 @@ namespace AEX {
                 continue;
 
             auto _symbol = module_symbol();
-
-            strncpy(_symbol.name, symbol.name, sizeof(_symbol.name));
+            _symbol.name = symbol.name;
 
             if (symbol.section_index == ELF::sym_special::SHN_ABS)
                 _symbol.addr = (void*) symbol.address;
@@ -164,8 +135,7 @@ namespace AEX {
                 continue;
 
             auto _symbol = module_symbol();
-
-            strncpy(_symbol.name, symbol.name, sizeof(_symbol.name));
+            _symbol.name = symbol.name;
             _symbol.addr =
                 (void*) ((size_t) section_info[symbol.section_index].addr + symbol.address);
 
@@ -221,6 +191,16 @@ namespace AEX {
             if (!S && (symbol.info >> 4) != ELF::sym_binding::SB_LOCAL)
                 S = (uint64_t) Debug::symbol_name2addr(symbol.name);
 
+            if (!S && (symbol.info >> 4) != ELF::sym_binding::SB_LOCAL) {
+                Module* dawwdy;
+
+                S = (uint64_t) module_symbol_name2addr_raw(symbol.name, dawwdy);
+                if (S) {
+                    dawwdy->addReferencedBy(module);
+                    printk("module %s is now referenced by something\n", dawwdy->name);
+                }
+            }
+
             if (!S) {
                 printk(PRINTK_WARN "module: %s: Unresolved symbol: %s\n", path, symbol.name);
                 fail = true;
@@ -257,7 +237,7 @@ namespace AEX {
 
         if (fail) {
             delete module;
-            delete section_info;
+            delete[] section_info;
 
             return ENOSYS;
         }
@@ -269,6 +249,8 @@ namespace AEX {
                                      entry_symbol.address);
         module->exit  = (void (*)())((size_t) section_info[exit_symbol.section_index].addr +
                                     exit_symbol.address);
+
+        module->name_len = strlen(module->name);
 
         bool already_loaded = false;
 
@@ -284,26 +266,45 @@ namespace AEX {
             printk(PRINTK_WARN "Not loading module '%s' as it's already loaded\n", module->name);
 
             delete module;
-            delete section_info;
+            delete[] section_info;
             return ENONE;
         }
 
-        modules.addRef(module);
+        int string_array_size = (module->name_len + 2) * module->symbols.count();
+
+        for (int i = 0; i < module->symbols.count(); i++)
+            string_array_size += strlen(module->symbols[i].name);
+
+        module->strings = new char[string_array_size];
+
+        int str_ptr = 0;
 
         for (int i = 0; i < module->symbols.count(); i++) {
-            char buffer[sizeof(module->symbols[i].name)];
+            auto&       symbol = module->symbols[i];
+            const char* ptr    = module->strings + str_ptr;
 
-            strncpy(buffer, module->symbols[i].name, sizeof(buffer));
-            snprintf(module->symbols[i].name, sizeof(module->symbols[i].name), "%s%c%s",
-                     module->name, ':', buffer);
+            int sym_name_len = strlen(symbol.name);
+
+            memcpy(module->strings + str_ptr, module->name, module->name_len + 1);
+            str_ptr += module->name_len;
+
+            module->strings[str_ptr] = ':';
+            str_ptr++;
+
+            memcpy(module->strings + str_ptr, symbol.name, sym_name_len + 1);
+            str_ptr += sym_name_len + 1;
+
+            symbol.name = ptr;
         }
+
+        modules.addRef(module);
 
         printk(PRINTK_OK "Loaded module '%s'\n", module->name);
 
         if (!Proc::ready) {
             ((void (*)()) module->enter)();
 
-            delete section_info;
+            delete[] section_info;
             return ENONE;
         }
 
@@ -321,13 +322,13 @@ namespace AEX {
             Proc::Thread::getCurrent()->subCritical();
             Proc::Thread::yield();
 
-            delete section_info;
+            delete[] section_info;
             return ENONE;
         }
 
         thread->start();
 
-        delete section_info;
+        delete[] section_info;
         return ENONE;
     }
 
@@ -373,9 +374,8 @@ namespace AEX {
         };
 
         auto dir_try = FS::File::opendir("/sys/core/");
-        if (!dir_try.has_value) {
-            printk(PRINTK_WARN "module: Failed to opendir /sys/core/: %s\n",
-                   strerror(dir_try.error_code));
+        if (!dir_try) {
+            printk(PRINTK_WARN "module: Failed to opendir /sys/core/: %s\n", strerror(dir_try));
 
             return;
         }
@@ -409,7 +409,7 @@ namespace AEX {
 
         while (true) {
             auto entry_try = dir->readdir();
-            if (!entry_try.has_value)
+            if (!entry_try)
                 break;
 
             if (!entry_try.value.is_regular())
@@ -447,7 +447,12 @@ namespace AEX {
         dir->close();
     }
 
-    const char* module_symbol_addr2name(void* addr, int* delta_ret) {
+    const char* module_symbol_addr2name(void* addr, int& delta_ret) {
+        Module* mod;
+        return module_symbol_addr2name(addr, delta_ret, mod);
+    }
+
+    const char* module_symbol_addr2name(void* addr, int& delta_ret, Module*& module_ref) {
         uint64_t _addr = (uint64_t) addr;
         uint64_t delta = 0x63756e74;
 
@@ -468,19 +473,33 @@ namespace AEX {
                 delta = new_delta;
                 match = symbol;
 
-                name = module->symbols[i].name;
+                name       = module->symbols[i].name;
+                module_ref = module;
             }
 
-        *delta_ret = delta;
+        delta_ret = delta;
 
         return name;
     }
 
+    void* module_symbol_name2addr_raw(const char* name, Module*& module) {
+        for (auto iterator = modules.getIterator(); (module = iterator.next());)
+            for (int i = 0; i < module->symbols.count(); i++) {
+                auto symbol = module->symbols[i];
+
+                const char* clean_name = symbol.name + 1 + module->name_len;
+                if (strcmp(clean_name, name) != 0)
+                    continue;
+
+                return symbol.addr;
+            }
+
+        module = nullptr;
+        return nullptr;
+    }
+
     void register_global_symbol(const char* name, void* addr) {
         auto scopeLock = ScopeSpinlock(symbol_lock);
-
-        if ((size_t) strlen(name) > sizeof(module_symbol::name) - 1)
-            kpanic("register_global_symbol: name length > 31\n");
 
         for (int i = 0; i < global_symbols.count(); i++) {
             if (strcmp(name, global_symbols[i].name) == 0) {
@@ -489,9 +508,13 @@ namespace AEX {
             }
         }
 
-        auto symbol = module_symbol();
+        int  name_len = strlen(name);
+        auto symbol   = module_symbol();
 
-        strncpy(symbol.name, name, sizeof(symbol.name));
+        char* _name = new char[name_len + 1];
+        strncpy(_name, name, name_len + 1);
+
+        symbol.name = name;
         symbol.addr = addr;
 
         global_symbols.pushBack(symbol);

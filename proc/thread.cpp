@@ -76,14 +76,14 @@ namespace AEX::Proc {
 
         parent->lock.acquire();
 
-        this->refs->increment();
-        parent->threads.addRef(this, this->refs);
+        this->shared->increment();
+        parent->threads.addRef(this, this->shared);
 
         parent->lock.release();
     }
 
     Thread::~Thread() {
-        delete refs;
+        delete shared;
         delete _exit_event;
 
         delete context;
@@ -199,8 +199,8 @@ namespace AEX::Proc {
     }
 
     Mem::SmartPointer<Thread> Thread::getSmartPointer() {
-        this->refs->increment();
-        return Mem::SmartPointer<Thread>(this, this->refs);
+        this->shared->increment();
+        return Mem::SmartPointer<Thread>(this, this->shared);
     }
 
     void Thread::setStatus(thread_status_t status) {

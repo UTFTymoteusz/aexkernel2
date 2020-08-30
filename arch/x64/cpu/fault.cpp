@@ -78,7 +78,7 @@ namespace AEX::Sys {
         in(state, thread, cpu);
 
         int  delta = 0;
-        auto name  = Debug::symbol_addr2name((void*) info->rip, &delta);
+        auto name  = Debug::symbol_addr2name((void*) info->rip, delta);
         if (!name)
             name = "no idea";
 
@@ -112,6 +112,7 @@ namespace AEX::Sys {
                    (info->err & 0x02) ? "Write" : "Read",
                    (info->err & 0x01) ? "Present" : "Not Present");
 
+            printk("ssssss: 0x%lx\n", cr2);
             printk("actual: 0x%lx\n", thread->parent->pagemap->rawof((void*) cr2));
         }
 
@@ -171,7 +172,7 @@ namespace AEX::Sys {
         void* addr = (void*) cr2;
 
         int  delta = 0;
-        auto name  = Debug::symbol_addr2name((void*) info->rip, &delta);
+        auto name  = Debug::symbol_addr2name((void*) info->rip, delta);
         if (!name)
             name = "no idea";
 

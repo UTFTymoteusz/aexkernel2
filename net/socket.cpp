@@ -3,17 +3,19 @@
 #include "aex/printk.hpp"
 
 namespace AEX::Net {
-    Socket::~Socket() {}
+    Socket::~Socket() {
+        printk("socket is gone\n");
+    }
 
     optional<Socket_SP> Socket::create(socket_domain_t domain, socket_type_t type,
                                        socket_protocol_t protocol) {
         switch (domain) {
         case socket_domain_t::AF_INET: {
             auto sock_try = inet_protocols[(uint8_t) protocol]->createSocket(type);
-            if (!sock_try.has_value)
+            if (!sock_try)
                 return sock_try.error_code;
 
-            return Socket_SP(sock_try.value);
+            return sock_try.value;
         }
         case socket_domain_t::AF_UNIX:
             return EINVAL;
@@ -50,6 +52,14 @@ namespace AEX::Net {
         return bind((sockaddr*) &aaa);
     }
 
+    optional<Socket_SP> Socket::accept() {
+        return ENOSYS;
+    }
+
+    error_t Socket::listen(int) {
+        return ENOSYS;
+    }
+
     optional<size_t> Socket::sendTo(const void*, size_t, int, const sockaddr*) {
         return ENOSYS;
     }
@@ -66,7 +76,11 @@ namespace AEX::Net {
         return receiveFrom(buffer, len, flags, nullptr);
     }
 
-    void Socket::close() {
-        // return ENOSYS;
+    error_t Socket::shutdown(int) {
+        return ENOSYS;
+    }
+
+    error_t Socket::close() {
+        return ENOSYS;
     }
 }

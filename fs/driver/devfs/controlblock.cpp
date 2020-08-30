@@ -8,7 +8,7 @@ namespace AEX::FS {
             return INode_SP(new DevFSRootINode());
 
         auto device = Dev::devices.get(id - 2);
-        if (!device.isValid())
+        if (!device)
             return ENOENT;
 
         auto inode = new INode();

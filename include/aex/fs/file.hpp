@@ -53,7 +53,7 @@ namespace AEX::FS {
 
         virtual optional<File_SP> dup();
 
-        virtual void close();
+        virtual error_t close();
 
         private:
     };

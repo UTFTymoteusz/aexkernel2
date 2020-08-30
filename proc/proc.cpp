@@ -57,8 +57,8 @@ namespace AEX::Proc {
 
         add_thread(bsp_thread);
 
-        bsp_thread->refs->increment();
-        kernel_process->threads.addRef(bsp_thread, bsp_thread->refs);
+        bsp_thread->shared->increment();
+        kernel_process->threads.addRef(bsp_thread, bsp_thread->shared);
 
         auto thread_reaper_thread =
             new Thread(kernel_process, (void*) thread_reaper, 8192, kernel_process->pagemap);
@@ -280,7 +280,7 @@ namespace AEX::Proc {
             thread->setStatus(THREAD_DEAD);
             thread->lock.release();
 
-            if (thread->refs->decrement())
+            if (thread->shared->decrement())
                 delete thread;
         }
     }
@@ -292,7 +292,7 @@ namespace AEX::Proc {
             void* addr = (void*) cpu->current_thread->context->rip;
 
             int         delta = 0;
-            const char* name  = Debug::symbol_addr2name(addr, &delta);
+            const char* name  = Debug::symbol_addr2name(addr, delta);
 
             printk("cpu%i: PID %8i, TID %8i @ 0x%p <%s+0x%x> (b%i, c%i, i%i)\n", i,
                    cpu->current_thread->parent->pid, cpu->current_tid, addr,

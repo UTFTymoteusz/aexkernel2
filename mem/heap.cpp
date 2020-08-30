@@ -20,6 +20,7 @@ constexpr auto ALLOC_SIZE = 16;
 constexpr auto SANITY_XOR = 0x28AC829B1F5231EC;
 
 // Idea: Make heap hybrid - use the heap itself for smaller things and paging for larger things
+// Idea: Make realloc just unmark the pieces instead of reallocing when shrinking
 
 namespace AEX::Mem::Heap {
     template <typename T>
@@ -35,39 +36,39 @@ namespace AEX::Mem::Heap {
     uint64_t heap_allocated = 0;
     uint64_t heap_free      = 0;
 
-    class Piece {
+    class Slab {
         public:
         size_t pieces;
         size_t free_pieces;
 
-        Piece*   next;
+        Slab*    next;
         Spinlock lock;
 
-        Piece(size_t size) {
+        Slab(size_t size) {
             pieces      = size / ALLOC_SIZE;
             free_pieces = pieces;
         }
 
-        static Piece* createFromVMem(size_t size) {
+        static auto createFromVMem(size_t size) {
             size_t pieces      = int_floor<size_t>(size / ALLOC_SIZE, sizeof(BITMAP_TYPE) * 8);
-            size_t data_offset = ceilToAllocSize(sizeof(Piece) + ceilToAllocSize(pieces / 8));
+            size_t data_offset = ceilToAllocSize(sizeof(Slab) + ceilToAllocSize(pieces / 8));
 
             size += data_offset;
 
-            void* mem   = Mem::kernel_pagemap->alloc(size, PAGE_WRITE);
-            auto  piece = (Piece*) mem;
+            void* mem  = Mem::kernel_pagemap->alloc(size, PAGE_WRITE);
+            auto  slab = (Slab*) mem;
 
-            piece->pieces      = pieces;
-            piece->free_pieces = pieces;
-            piece->data        = (void*) ((size_t) mem + data_offset);
-            piece->next        = nullptr;
+            slab->pieces      = pieces;
+            slab->free_pieces = pieces;
+            slab->data        = (void*) ((size_t) mem + data_offset);
+            slab->next        = nullptr;
 
-            memset(piece->bitmap, '\0', pieces);
+            memset(slab->bitmap, '\0', pieces);
 
             Mem::atomic_add(&heap_allocated, pieces * ALLOC_SIZE);
             Mem::atomic_add(&heap_free, pieces * ALLOC_SIZE);
 
-            return piece;
+            return slab;
         }
 
         void* alloc(size_t size) {
@@ -256,7 +257,7 @@ namespace AEX::Mem::Heap {
         friend void free(void*);
     };
 
-    Piece* rootPiece;
+    Slab* rootSlab;
 
     void* malloc(size_t size) {
         static Spinlock malloc_lock;
@@ -269,27 +270,27 @@ namespace AEX::Mem::Heap {
             return nullptr;
         }
 
-        Piece* piece = rootPiece;
+        auto slab = rootSlab;
 
         do {
-            void* addr = piece->alloc(size);
+            void* addr = slab->alloc(size);
             if (addr != nullptr)
                 return addr;
 
-            if (!piece->next) {
+            if (!slab->next) {
                 malloc_lock.acquire();
 
-                if (piece->next) {
+                if (slab->next) {
                     malloc_lock.release();
                     continue;
                 }
 
-                piece->next = Piece::createFromVMem(max<size_t>(size * 2, 0x100000));
+                slab->next = Slab::createFromVMem(max<size_t>(size * 2, 0x100000));
                 malloc_lock.release();
             }
 
-            piece = piece->next;
-        } while (piece != nullptr);
+            slab = slab->next;
+        } while (slab != nullptr);
 
         kpanic("heap: malloc(%li) failed [t%li, f%li]\n", size, heap_allocated, heap_free);
     }
@@ -298,24 +299,23 @@ namespace AEX::Mem::Heap {
         if (!ptr)
             return;
 
-        Piece* piece = rootPiece;
+        auto slab = rootSlab;
 
         do {
-            if (piece->owns(ptr)) {
-                piece->free(ptr);
+            if (slab->owns(ptr)) {
+                slab->free(ptr);
                 return;
             }
 
-            piece = piece->next;
-        } while (piece != nullptr);
+            slab = slab->next;
+        } while (slab != nullptr);
 
-        piece = rootPiece;
+        slab = rootSlab;
 
         do {
-            printk("mmm: 0x%p-0x%p\n", piece->data,
-                   (size_t) piece->data + piece->pieces * ALLOC_SIZE);
-            piece = piece->next;
-        } while (piece != nullptr);
+            printk("mmm: 0x%p-0x%p\n", slab->data, (size_t) slab->data + slab->pieces * ALLOC_SIZE);
+            slab = slab->next;
+        } while (slab != nullptr);
 
         kpanic("heap: free(0x%p) failed", ptr);
     }
@@ -324,18 +324,26 @@ namespace AEX::Mem::Heap {
         if (!ptr)
             return 0;
 
-        Piece* piece = rootPiece;
+        auto slab = rootSlab;
 
         do {
-            if (piece->owns(ptr))
-                return piece->getAllocSize(ptr);
+            if (slab->owns(ptr))
+                return slab->getAllocSize(ptr);
 
-            piece = piece->next;
-        } while (piece != nullptr);
+            slab = slab->next;
+        } while (slab != nullptr);
 
         kpanic("AEX::Heap::msize() failed");
 
         return 0;
+    }
+
+    size_t msize_total(void* ptr) {
+        return msize(ptr) + ALLOC_SIZE;
+    }
+
+    size_t msize_total(size_t len) {
+        return int_ceil(len, (size_t) ALLOC_SIZE) + ALLOC_SIZE;
     }
 
     void* realloc(void* ptr, size_t size) {
@@ -350,21 +358,19 @@ namespace AEX::Mem::Heap {
         size_t oldsize = msize(ptr);
         void*  newptr  = malloc(size);
 
-        if (!newptr)
+        if (!newptr) {
+            free(ptr);
             return nullptr;
+        }
 
         memcpy(newptr, ptr, min(oldsize, size));
-
-        if (oldsize < size)
-            memset((void*) ((size_t) newptr + oldsize), '\0', size - oldsize);
-
         free(ptr);
 
         return newptr;
     }
 
     void init() {
-        rootPiece = Piece::createFromVMem(0x100000);
+        rootSlab = Slab::createFromVMem(0x100000);
 
         void* a = malloc(24);
         void* b = malloc(24);

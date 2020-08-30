@@ -43,15 +43,7 @@ namespace AEX::Dev {
          * @param buffer Buffer length.
          * @returns Error code.
          */
-        virtual error_t send(const void* buffer, size_t len);
-
-        /**
-         * Notifies the network stack of a packet reception. The device should call this method upon
-         * a reception of a packet.
-         * @param buffer Buffer.
-         * @param buffer Buffer length.
-         */
-        void receive(const void* buffer, size_t len);
+        virtual error_t send(const void* buffer, size_t len, Net::net_type_t type);
 
         /**
          * Sets the IPv4 address of the network interface and updates the broadcast address.

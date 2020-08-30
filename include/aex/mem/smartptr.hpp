@@ -25,6 +25,12 @@ namespace AEX::Mem {
         }
     };
 
+    struct sp_shared : ref_counter {
+        bool cleaning;
+
+        sp_shared(int refs) : ref_counter(refs) {}
+    };
+
     template <typename T>
     class SmartPointer {
         public:
@@ -35,12 +41,12 @@ namespace AEX::Mem {
 
         SmartPointer(T* val) {
             _val  = val;
-            _refs = new ref_counter(1);
+            _refs = new sp_shared(1);
         }
 
-        SmartPointer(T* val, ref_counter* ref_counter) {
+        SmartPointer(T* val, sp_shared* sp_shared) {
             _val  = val;
-            _refs = ref_counter;
+            _refs = sp_shared;
         }
 
         SmartPointer(const SmartPointer& sp) {
@@ -108,9 +114,21 @@ namespace AEX::Mem {
             return _val != nullptr;
         }
 
+        void defuse() {
+            _refs = nullptr;
+        }
+
+        void decrement() {
+            _refs->decrement();
+        }
+
+        operator bool() {
+            return isValid();
+        }
+
         private:
-        ref_counter* _refs;
-        T*           _val;
+        sp_shared* _refs;
+        T*         _val;
 
         void cleanup() {
             if (_val)
@@ -118,6 +136,9 @@ namespace AEX::Mem {
 
             if (_refs)
                 delete _refs;
+
+            _val  = nullptr;
+            _refs = nullptr;
         }
 
         template <typename>

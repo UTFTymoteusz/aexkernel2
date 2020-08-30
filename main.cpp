@@ -139,9 +139,174 @@ void mount_fs() {
     printk("\n");
 }
 
+struct blocc {
+    Net::Socket_SP socket;
+};
+
+void test_server_handle(blocc* b) {
+    auto sock2 = b->socket;
+    delete b;
+
+    char buffer[4];
+    sock2->receive(buffer, 4, 0);
+
+    sock2->send("HTTP/1.1 200 OK\r\nContent-Length: 16\r\n\r\n<h1>works</h1>\r\n", 56, 0);
+
+    Proc::Thread::sleep(1000);
+    sock2->shutdown(Net::SHUT_RDWR);
+
+    Proc::Thread::sleep(1000);
+    return;
+}
+
+extern "C" void context_test();
+
+void test_client() {
+    auto sock_try = Net::Socket::create(Net::AF_INET, Net::SOCK_STREAM, Net::IPROTO_TCP);
+    auto sock     = sock_try.value;
+
+    auto error = sock->connect(Net::ipv4_addr(127, 0, 0, 1), 7654);
+    if (error) {
+        printk("retrying client\n");
+        sock->connect(Net::ipv4_addr(127, 0, 0, 1), 7654);
+    }
+    else
+        printk("connected client\n");
+
+    int total = 0;
+
+    char buffer[64];
+
+    auto ret = sock->send(
+        "GET /login HTTP/1.1\r\nHost: 127.0.0.1\r\ncookie: "
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\r\n\r\n",
+        747, 0);
+
+    if (!ret)
+        printk("socket send error: %s\n", strerror(ret));
+
+    while (true) {
+        auto ret = sock->receive(buffer, 63, 0);
+        if (!ret) {
+            printk("socket receive error: %s\n", strerror(ret));
+            break;
+        }
+
+        total += ret.value;
+
+        if (ret.value == 0) {
+            printk("\nnothing more to read\n");
+            break;
+        }
+
+        buffer[ret.value] = '\0';
+        printk("%s", buffer, ret.value);
+
+        if (total == 6165)
+            break;
+    }
+
+    sock->shutdown(Net::SHUT_RDWR);
+
+    Proc::Thread::sleep(5000);
+
+    sock->close();
+}
+
+void test_server() {
+    auto sock_try = Net::Socket::create(Net::AF_INET, Net::SOCK_STREAM, Net::IPROTO_TCP);
+    if (!sock_try) {
+        printk("failed to create() the socket: %s\n", strerror(sock_try));
+        return;
+    }
+
+    auto sock = sock_try.value;
+
+    auto error = sock->bind(Net::ipv4_addr(127, 0, 0, 1), 7654);
+    if (error) {
+        printk("failed to bind() the socket: %s\n", strerror(error));
+        return;
+    }
+
+    error = sock->listen(2);
+    if (error) {
+        printk("failed to listen() the socket: %s\n", strerror(error));
+        return;
+    }
+
+    for (size_t i = 0; i < 8; i++) {
+        auto sock2_try = sock->accept();
+        if (!sock2_try) {
+            printk("failed to accept() the socket: %s\n", strerror(sock2_try));
+            return;
+        }
+
+        auto sock2 = sock2_try.value;
+        auto b     = new blocc();
+
+        b->socket = sock2;
+
+        printk("accepted\n");
+        Proc::threaded_call(test_server_handle, b);
+    }
+
+    Proc::Thread::sleep(1250);
+}
+
+void test_udp_client() {
+    auto sock_try = Net::Socket::create(Net::AF_INET, Net::SOCK_DGRAM, Net::IPROTO_UDP);
+    if (!sock_try) {
+        printk("failed to create udp socket: %s\n", strerror(sock_try));
+        return;
+    }
+
+    auto sock  = sock_try.value;
+    auto error = sock->connect(Net::ipv4_addr(255, 255, 255, 255), 27015);
+    if (error) {
+        printk("failed to connect udp socket: %s\n", strerror(error));
+        return;
+    }
+
+    for (size_t i = 0; i < 5; i++) {
+        auto send_try = sock->send("\xFF\xFF\xFF\xFFTSource Engine Query", 25, 0);
+        if (!send_try) {
+            printk("failed to send via udp socket: %s\n", strerror(send_try));
+            return;
+        }
+
+        char buffer[64] = {};
+
+        auto receive_try = sock->receive(buffer, sizeof(buffer) - 1, 0);
+        if (!receive_try) {
+            printk("failed to receive via udp socket: %s\n", strerror(receive_try));
+            return;
+        }
+
+        printk("udp received: %s\n", buffer);
+
+        Proc::Thread::sleep(2500);
+    }
+}
+
 void main_threaded() {
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrent()->getProcess();
+
+    Proc::threaded_call(test_server);
+    Proc::Thread::sleep(500);
+    test_client();
+
+    // test_udp_client();
+
+    // Proc::threaded_call(context_test);
 
     // Proc::threaded_call(boi, "threaded");
 
@@ -152,7 +317,7 @@ void main_threaded() {
     printk("aa %x\n", *boi);
     printk("done\n");*/
 
-    Dev::Tree::print_debug();
+    // Dev::Tree::print_debug();
 
     int64_t start_epoch = get_clock_time();
 

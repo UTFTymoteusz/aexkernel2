@@ -18,6 +18,7 @@ namespace AEX::Mem {
 
     CircularBuffer::~CircularBuffer() {
         delete _buffer;
+        _buffer = nullptr;
     }
 
     void CircularBuffer::read(void* buffer, int len) {
@@ -108,7 +109,7 @@ namespace AEX::Mem {
         _readPos  = 0;
         _writePos = 0;
 
-        Heap::realloc(_buffer, new_size);
+        _buffer = Heap::realloc(_buffer, new_size);
 
         _lock.release();
     }

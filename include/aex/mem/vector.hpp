@@ -11,6 +11,8 @@ namespace AEX::Mem {
         Vector() = default;
 
         ~Vector() {
+            clear();
+
             if (_array)
                 delete _array;
         }

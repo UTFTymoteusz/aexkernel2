@@ -7,6 +7,8 @@
 #include "aex/proc/resource_usage.hpp"
 #include "aex/spinlock.hpp"
 
+// pls consider making thread functions accept and return smartpointers
+
 namespace AEX::IPC {
     class Event;
 }
@@ -45,8 +47,8 @@ namespace AEX::Proc {
 
         Context* context;
 
-        Spinlock          lock;
-        Mem::ref_counter* refs = new Mem::ref_counter(1);
+        Spinlock        lock;
+        Mem::sp_shared* shared = new Mem::sp_shared(1);
 
         thread_status_t status;
         union {

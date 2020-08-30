@@ -78,7 +78,7 @@ namespace AEX::IPC {
 
         auto current_sptr = Thread::getCurrent()->getSmartPointer();
 
-        if (_tiddie.isValid())
+        if (_tiddie)
             kpanic("simpleevent: Tried to wait while another boi was waiting already");
 
         _tiddie = current_sptr;
@@ -99,7 +99,7 @@ namespace AEX::IPC {
     void SimpleEvent::raise() {
         _lock.acquire();
 
-        if (_tiddie.isValid())
+        if (_tiddie)
             _tiddie->setStatus(THREAD_RUNNABLE);
 
         _tiddie = Mem::SmartPointer<Proc::Thread>(nullptr, nullptr);
@@ -111,7 +111,7 @@ namespace AEX::IPC {
 
         _defunct = true;
 
-        if (_tiddie.isValid())
+        if (_tiddie)
             _tiddie->setStatus(THREAD_RUNNABLE);
 
         _tiddie = Mem::SmartPointer<Proc::Thread>(nullptr, nullptr);

@@ -17,7 +17,7 @@ namespace AEX::Debug {
     void load_kernel_symbols(const char* elf_path);
     void load_kernel_symbols_from_memory(void* addr);
 
-    const char* symbol_addr2name(void* addr, int* delta, bool only_kernel = false);
+    const char* symbol_addr2name(void* addr, int& delta, bool only_kernel = false);
     const char* symbol_addr2name(void* addr, bool only_kernel = false);
 
     void* symbol_name2addr(const char* name);

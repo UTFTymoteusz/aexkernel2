@@ -34,7 +34,7 @@ namespace AEX::FS {
                 continue;
 
             auto res = fs->mount(source);
-            if (!res.has_value)
+            if (!res)
                 continue;
 
             auto mount = new Mount();

@@ -27,5 +27,13 @@ namespace AEX {
         optional(error_t error) {
             error_code = error;
         }
+
+        operator bool() {
+            return has_value;
+        }
+
+        operator error_t() {
+            return error_code;
+        }
     };
 }

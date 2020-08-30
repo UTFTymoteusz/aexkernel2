@@ -27,15 +27,15 @@ namespace AEX::Debug {
 
     void load_kernel_symbols(const char* elf_path) {
         auto file_try = FS::File::open(elf_path);
-        if (!file_try.has_value)
-            kpanic("Failed to load symbols: %s\n", strerror(file_try.error_code));
+        if (!file_try)
+            kpanic("Failed to load symbols: %s\n", strerror(file_try));
 
         auto    file = file_try.value;
         int64_t size = file->seek(0, FS::File::END).value;
 
         auto mmap_try = Mem::mmap(nullptr, size, Mem::PROT_READ, Mem::MAP_NONE, file, 0);
-        if (!mmap_try.has_value)
-            kpanic("Failed to mmap the kernel image: %s\n", strerror(mmap_try.error_code));
+        if (!mmap_try)
+            kpanic("Failed to mmap the kernel image: %s\n", strerror(mmap_try));
 
         file->close();
 
@@ -78,7 +78,7 @@ namespace AEX::Debug {
         symbols_loaded = true;
     }
 
-    const char* symbol_addr2name(void* addr, int* delta_ret, bool only_kernel) {
+    const char* symbol_addr2name(void* addr, int& delta_ret, bool only_kernel) {
         if (kernel_symbols.count() == 0)
             return nullptr;
 
@@ -107,14 +107,14 @@ namespace AEX::Debug {
             match = symbol;
         }
 
-        *delta_ret = delta;
+        delta_ret = delta;
 
         return match.name;
     }
 
     const char* symbol_addr2name(void* addr, bool only_kernel) {
         int delta = 0;
-        return symbol_addr2name(addr, &delta, only_kernel);
+        return symbol_addr2name(addr, delta, only_kernel);
     }
 
     void* symbol_name2addr(const char* name) {

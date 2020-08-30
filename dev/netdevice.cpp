@@ -1,7 +1,6 @@
 #include "aex/dev/netdevice.hpp"
 
 #include "aex/dev.hpp"
-#include "aex/net/linklayer.hpp"
 
 namespace AEX::Dev {
     NetDevice::NetDevice(const char* name, Net::link_type_t link_type) : Device(name, DEV_NET) {
@@ -10,12 +9,8 @@ namespace AEX::Dev {
 
     NetDevice::~NetDevice() {}
 
-    error_t NetDevice::send(const void*, size_t) {
+    error_t NetDevice::send(const void*, size_t, Net::net_type_t) {
         return ENOSYS;
-    }
-
-    void NetDevice::receive(const void* buffer, size_t len) {
-        Net::parse(id, link_type, buffer, len);
     }
 
     void NetDevice::setIPv4Address(Net::ipv4_addr addr) {
@@ -38,7 +33,7 @@ namespace AEX::Dev {
 
     Mem::SmartPointer<NetDevice> get_net_device(int id) {
         auto device = devices.get(id);
-        if (!device.isValid() || device->type != DEV_NET)
+        if (!device || device->type != DEV_NET)
             return devices.get(-1);
 
         return device;

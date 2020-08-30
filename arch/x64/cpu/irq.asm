@@ -47,6 +47,7 @@ SECTION .text
 %macro irq 1
     global irq%1
     irq%1:
+        push qword 0 ; Need this for SSE alignment
         push qword %1
         jmp irq_common
 %endmacro
@@ -102,7 +103,7 @@ irq_common:
 
     popa
 
-    add rsp, 8 ; Clean up pushed IRQ number
+    add rsp, 16 ; Clean up pushed IRQ number and SSE padder
     iretq
 
 _irq_marker:

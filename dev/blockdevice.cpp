@@ -154,7 +154,7 @@ namespace AEX::Dev {
 
     Dev::BlockDevice_SP get_block_device(int id) {
         auto device = devices.get(id);
-        if (!device.isValid() || device->type != DEV_BLOCK)
+        if (!device || device->type != DEV_BLOCK)
             return devices.get(-1);
 
         return device;

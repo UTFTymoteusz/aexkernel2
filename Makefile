@@ -23,26 +23,25 @@ SYS  = $(ISO)sys/
 
 GFLAGS = -O3 -Wall -Wextra -Werror -nostdlib -pipe -lgcc
 
-INCLUDES := -I. -I$(ARCH) -I$(ARCH)include/ -Iinclude/ -Iinclude/libc/ -I../lai/include/
+INCLUDES := -I. -I$(ARCH) -I$(ARCH)include/ -Iinclude/
 
-CXXFLAGS := $(GFLAGS)       \
-	-std=c++17              \
-	-fno-rtti               \
-	-fno-exceptions         \
-	-ffreestanding          \
-	-masm=intel             \
-	-mcmodel=kernel         \
-	-fno-pic                \
-	-fno-stack-protector    \
-	-mno-red-zone           \
+CXXFLAGS := $(GFLAGS)		\
+	-std=c++17				\
+	-fno-rtti				\
+	-fno-exceptions			\
+	-ffreestanding			\
+	-masm=intel				\
+	-mcmodel=kernel			\
+	-fno-pic				\
+	-fno-stack-protector	\
 	-fno-omit-frame-pointer \
+	-mno-red-zone			\
 	$(INCLUDES)
 
-ASFLAGS := -felf64 \
-	-wall
+ASFLAGS := -felf64
 
-LDFLAGS := $(GFLAGS) \
-	-ffreestanding   \
+LDFLAGS := $(GFLAGS)		\
+	-ffreestanding			\
 	-z max-page-size=0x1000 \
 	-no-pie
 

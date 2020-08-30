@@ -81,7 +81,7 @@ namespace AEX::IPC {
             }
 
             query* next() {
-                if (index > base_queue->_queries.count())
+                if (index >= base_queue->_queries.count())
                     return nullptr;
 
                 index++;
