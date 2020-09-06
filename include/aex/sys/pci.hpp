@@ -5,8 +5,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace AEX::Dev::PCI {
-    class PCIDevice : public Tree::Device {
+namespace AEX::Sys::PCI {
+    class PCIDevice : public Dev::Tree::Device {
         public:
         uint16_t p_class, subclass, prog_if;
         uint16_t device_id, vendor_id;
@@ -15,7 +15,7 @@ namespace AEX::Dev::PCI {
 
         uint8_t interrupt_pin;
 
-        PCIDevice(const char* name, Tree::Device* parent) : Device(name, parent) {}
+        PCIDevice(const char* name, Dev::Tree::Device* parent) : Device(name, parent) {}
 
         /**
          * Gets the IRQ number of the device.
@@ -24,7 +24,7 @@ namespace AEX::Dev::PCI {
         int getIRQ();
     };
 
-    void set_busmaster(Tree::Device* device, bool on);
+    void set_busmaster(Dev::Tree::Device* device, bool on);
 
     uint8_t  read_byte(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
     uint16_t read_word(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);

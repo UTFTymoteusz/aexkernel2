@@ -1,15 +1,16 @@
-#include "sys/rtc.hpp"
+#include "sys/time/rtc.hpp"
 
 #include "aex/byte.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/mem.hpp"
 #include "aex/sys/acpi.hpp"
+#include "aex/sys/acpi/fadt.hpp"
 #include "aex/sys/irq.hpp"
 #include "aex/sys/time.hpp"
 
 #include "sys/cmos.hpp"
 
-namespace AEX::Sys {
+namespace AEX::Sys::Time {
     Spinlock RTC::m_lock;
 
     bool    RTC::m_normal_hour_format;
@@ -31,9 +32,9 @@ namespace AEX::Sys {
 
         IRQ::register_handler(8, RTC::irq);
 
-        auto m_fadt = (ACPI::fadt*) ACPI::find_table("FACP", 0);
+        auto _fadt = (ACPI::fadt*) ACPI::find_table("FACP", 0);
 
-        RTC::m_century_index = m_fadt->century;
+        RTC::m_century_index = _fadt->century;
         if (RTC::m_century_index == 0)
             m_century_index = 0x32;
     }

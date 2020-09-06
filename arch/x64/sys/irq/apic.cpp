@@ -1,4 +1,4 @@
-#include "sys/apic.hpp"
+#include "sys/irq/apic.hpp"
 
 #include "aex/kpanic.hpp"
 #include "aex/mem.hpp"
@@ -6,7 +6,7 @@
 
 constexpr auto IA32_APIC_BASE_MSR = 0x1B;
 
-namespace AEX::Sys {
+namespace AEX::Sys::IRQ {
     void* APIC::addr;
 
     void APIC::map(Mem::Phys::phys_addr phys) {

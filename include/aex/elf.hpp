@@ -1,9 +1,9 @@
 #pragma once
 
 #include "aex/fs/file.hpp"
-#include "aex/macros.hpp"
 #include "aex/mem.hpp"
 #include "aex/mem/vector.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -138,7 +138,6 @@ namespace AEX {
                 };
             };
         } PACKED;
-
 
         struct program_header32 {
             ph_type_t type;

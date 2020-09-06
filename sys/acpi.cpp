@@ -4,8 +4,12 @@
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
+#include "aex/sys/acpi/fadt.hpp"
+#include "aex/sys/acpi/rsdt.hpp"
+#include "aex/sys/acpi/sdt.hpp"
+#include "aex/sys/acpi/xsdt.hpp"
 
-namespace AEX::ACPI {
+namespace AEX::Sys::ACPI {
     Mem::Vector<acpi_table*> tables;
     uint8_t                  revision;
 
@@ -30,19 +34,18 @@ namespace AEX::ACPI {
     }
 
     void _init() {
-        auto m_fadt = (fadt*) find_table("FACP", 0);
-        if (!m_fadt)
+        auto _fadt = (fadt*) find_table("FACP", 0);
+        if (!_fadt)
             kpanic("This system has no FADT, what the hell?");
 
-        auto table_hdr =
-            (sdt_header*) Mem::kernel_pagemap->map(sizeof(sdt_header), m_fadt->dsdt, 0);
-        auto table = (acpi_table*) Mem::kernel_pagemap->map(table_hdr->length, m_fadt->dsdt, 0);
+        auto table_hdr = (sdt_header*) Mem::kernel_pagemap->map(sizeof(sdt_header), _fadt->dsdt, 0);
+        auto table     = (acpi_table*) Mem::kernel_pagemap->map(table_hdr->length, _fadt->dsdt, 0);
 
         Mem::kernel_pagemap->free(table_hdr, sizeof(sdt_header));
 
         add_table(table);
 
-        if (m_fadt->pm_timer_block == 0)
+        if (_fadt->pm_timer_block == 0)
             kpanic("acpi: no power management timer :(\n");
     }
 
@@ -53,17 +56,17 @@ namespace AEX::ACPI {
         if (xsdp != nullptr) {
             printk("acpi: Found the xdsp\n");
 
-            auto m_xsdt = (xsdt*) Mem::kernel_pagemap->map(xsdp->length, xsdp->xsdt_address, 0);
+            auto _xsdt = (xsdt*) Mem::kernel_pagemap->map(xsdp->length, xsdp->xsdt_address, 0);
 
-            if (!add_table((acpi_table*) m_xsdt)) {
+            if (!add_table((acpi_table*) _xsdt)) {
                 printk("acpi: Failed\n");
                 return;
             }
 
-            revision = m_xsdt->header.revision;
+            revision = _xsdt->header.revision;
 
-            for (size_t i = sizeof(xsdt); i < m_xsdt->header.length; i += 8) {
-                uint64_t addr = *((uint64_t*) ((size_t) m_xsdt + i));
+            for (size_t i = sizeof(xsdt); i < _xsdt->header.length; i += 8) {
+                uint64_t addr = *((uint64_t*) ((size_t) _xsdt + i));
                 auto     table_hdr =
                     (sdt_header*) Mem::kernel_pagemap->map(sizeof(sdt_header), addr, 0);
                 auto table = (acpi_table*) Mem::kernel_pagemap->map(table_hdr->length, addr, 0);
@@ -83,17 +86,17 @@ namespace AEX::ACPI {
         if (rsdp != nullptr) {
             printk("acpi: Found the RSDP\n");
 
-            auto m_rsdt = (rsdt*) Mem::kernel_pagemap->map(4096, rsdp->rsdt_address, 0);
+            auto _rsdt = (rsdt*) Mem::kernel_pagemap->map(4096, rsdp->rsdt_address, 0);
 
-            if (!add_table((acpi_table*) m_rsdt)) {
+            if (!add_table((acpi_table*) _rsdt)) {
                 printk("acpi: Failed\n");
                 return;
             }
 
-            revision = m_rsdt->header.revision;
+            revision = _rsdt->header.revision;
 
-            for (size_t i = sizeof(rsdt); i < m_rsdt->header.length; i += 4) {
-                uint32_t addr  = *((uint32_t*) ((size_t) m_rsdt + i));
+            for (size_t i = sizeof(rsdt); i < _rsdt->header.length; i += 4) {
+                uint32_t addr  = *((uint32_t*) ((size_t) _rsdt + i));
                 auto     table = (acpi_table*) Mem::kernel_pagemap->map(4096, addr, 0);
 
                 add_table(table);
@@ -136,26 +139,4 @@ namespace AEX::ACPI {
 
         return nullptr;
     };
-
-    void* MADT::findEntry(int type, int index) {
-        for (size_t i = 0; i < header.length - sizeof(ACPI::MADT);) {
-            auto entry = (ACPI::MADT::entry*) &(data[i]);
-
-            if (entry->type != type) {
-                i += entry->len;
-                continue;
-            }
-
-            if (index > 0) {
-                index--;
-                i += entry->len;
-
-                continue;
-            }
-
-            return (void*) entry;
-        }
-
-        return nullptr;
-    }
 }

@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace AEX::Sys {
+namespace AEX::Sys::Time {
     class RTC {
         public:
         static void init();

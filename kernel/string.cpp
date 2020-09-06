@@ -1,7 +1,7 @@
 #include "aex/string.hpp"
 
-#include "aex/macros.hpp"
 #include "aex/math.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>

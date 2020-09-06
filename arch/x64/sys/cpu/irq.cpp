@@ -6,7 +6,7 @@
 #include "aex/sys/irq.hpp"
 #include "aex/tty.hpp"
 
-#include "sys/apic.hpp"
+#include "sys/irq/apic.hpp"
 
 extern "C" void common_irq_handler(AEX::Sys::CPU::irq_info* info);
 

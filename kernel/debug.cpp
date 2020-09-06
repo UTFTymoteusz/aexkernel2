@@ -1,7 +1,6 @@
 #include "aex/debug.hpp"
 
 #include "aex/assert.hpp"
-#include "aex/dev/pci.hpp"
 #include "aex/elf.hpp"
 #include "aex/errno.hpp"
 #include "aex/fs/file.hpp"
@@ -9,6 +8,7 @@
 #include "aex/mem/mmap.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
+#include "aex/sys/pci.hpp"
 
 #include "boot/mboot.h"
 #include "kernel/module/module.hpp"

@@ -5,17 +5,18 @@
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 #include "aex/sys/acpi.hpp"
+#include "aex/sys/acpi/madt.hpp"
 
 #include "cpu/gdt.hpp"
 #include "cpu/idt.hpp"
 #include "cpu/tss.hpp"
-#include "sys/apic.hpp"
 #include "sys/irq.hpp"
+#include "sys/irq/apic.hpp"
 
 constexpr auto TRAMPOLINE_ADDR = 0x1000; // Must be page aligned!
 
 namespace AEX::Sys::MCore {
-    using MADT = AEX::ACPI::MADT;
+    using madt = ACPI::madt;
 
     extern "C" char _binary_bin_obj___arch_x64___boot_mcore_asmr_o_start;
     void*           trampoline = (void*) &_binary_bin_obj___arch_x64___boot_mcore_asmr_o_start;
@@ -59,12 +60,12 @@ namespace AEX::Sys::MCore {
         CPUs[0] = CPU::getCurrent();
 
         // We can assume it exists because the IRQ phase would panic the kernel otherwise
-        auto madt = (MADT*) ACPI::find_table("APIC", 0);
-        int  id   = 0;
+        auto _madt = (madt*) ACPI::find_table("APIC", 0);
+        int  id    = 0;
 
         // We need to count 'em up so the GDT can be prepared
         for (int i = 0; i <= 2137; i++) {
-            auto entry = madt->findEntry<MADT::lapic*>(MADT::entry_type::LAPIC, i);
+            auto entry = _madt->findEntry<madt::lapic*>(madt::LAPIC, i);
             if (!entry)
                 break;
 
@@ -80,7 +81,7 @@ namespace AEX::Sys::MCore {
         set_idt_ists();
 
         for (int i = 0; i <= 2137; i++) {
-            auto entry = madt->findEntry<MADT::lapic*>(MADT::entry_type::LAPIC, i);
+            auto entry = _madt->findEntry<madt::lapic*>(madt::LAPIC, i);
             if (!entry)
                 break;
 
@@ -118,12 +119,12 @@ namespace AEX::Sys::MCore {
     bool start_ap(int id, int apic_id) {
         setup_trampoline(id);
 
-        APIC::sendINIT(apic_id);
+        IRQ::APIC::sendINIT(apic_id);
 
         for (int j = 0; j < 50; j++)
             CPU::inportb(0x20);
 
-        APIC::sendSIPI(apic_id, TRAMPOLINE_ADDR / CPU::PAGE_SIZE);
+        IRQ::APIC::sendSIPI(apic_id, TRAMPOLINE_ADDR / CPU::PAGE_SIZE);
 
         bool success             = false;
         uint8_t* volatile signal = (uint8_t*) TRAMPOLINE_ADDR;
@@ -142,7 +143,7 @@ namespace AEX::Sys::MCore {
     }
 
     void finalize_ap(int id, void*) {
-        APIC::init();
+        IRQ::APIC::init();
 
         auto cpu = new CPU(id);
         cpu->initLocal();

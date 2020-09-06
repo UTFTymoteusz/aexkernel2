@@ -2,7 +2,7 @@
 #include "aex/kpanic.hpp"
 #include "aex/printk.hpp"
 
-#include "sys/apic.hpp"
+#include "sys/irq/apic.hpp"
 #include "sys/mcore.hpp"
 
 namespace AEX::Sys {
@@ -45,7 +45,7 @@ namespace AEX::Sys {
             return;
         }
 
-        APIC::sendInterrupt(apic_id, 32 + 13);
+        IRQ::APIC::sendInterrupt(apic_id, 32 + 13);
 
         volatile size_t counter = 0;
 
@@ -53,7 +53,7 @@ namespace AEX::Sys {
             counter++;
 
             if (counter == 4000000 * 7)
-                APIC::sendNMI(apic_id);
+                IRQ::APIC::sendNMI(apic_id);
 
             if (counter == 4000000 * 8)
                 kpanic("ipi to cpu%i from cpu%i stuck (%i, 0x%p)\n", this->id, CPU::getCurrentID(),
@@ -83,14 +83,14 @@ namespace AEX::Sys {
         case IPP_HALT:
             m_ipi_ack = true;
 
-            APIC::eoi();
+            IRQ::APIC::eoi();
             CPU::halt();
 
             return;
         case IPP_RESHED:
             m_ipi_ack = true;
 
-            APIC::eoi();
+            IRQ::APIC::eoi();
 
             us->in_interrupt--;
             proc_reshed();
@@ -120,6 +120,6 @@ namespace AEX::Sys {
             break;
         }
 
-        APIC::eoi();
+        IRQ::APIC::eoi();
     }
 }

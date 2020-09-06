@@ -8,7 +8,6 @@
 #include "aex/errno.hpp"
 #include "aex/fs.hpp"
 #include "aex/kpanic.hpp"
-#include "aex/macros.hpp"
 #include "aex/math.hpp"
 #include "aex/mem.hpp"
 #include "aex/module.hpp"
@@ -21,3 +20,4 @@
 #include "aex/std.hpp"
 #include "aex/string.hpp"
 #include "aex/tty.hpp"
+#include "aex/utility.hpp"

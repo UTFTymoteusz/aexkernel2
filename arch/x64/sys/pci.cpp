@@ -1,4 +1,4 @@
-#include "aex/dev/pci.hpp"
+#include "aex/sys/pci.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/dev/tree.hpp"
@@ -12,10 +12,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+using namespace AEX::Dev;
+
 constexpr auto CONFIG_ADDRESS = 0xCF8;
 constexpr auto CONFIG_DATA    = 0xCFC;
 
-namespace AEX::Dev::PCI {
+namespace AEX::Sys::PCI {
     void scan_all_buses(Tree::Device* pci_root);
 
     Tree::Bus* dev_bus;

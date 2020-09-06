@@ -1,4 +1,4 @@
-#include "sys/pic.hpp"
+#include "sys/irq/pic.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
 
@@ -7,7 +7,7 @@ constexpr auto ICW1_ICW4 = 0x01;
 
 constexpr auto ICW4_8086 = 0x01;
 
-namespace AEX::Sys {
+namespace AEX::Sys::IRQ {
     PIC pics[2];
 
     void PIC::setMask(uint8_t mask) {

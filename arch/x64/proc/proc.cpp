@@ -3,11 +3,12 @@
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/printk.hpp"
 
-#include "sys/apic.hpp"
 #include "sys/cpu/idt.hpp"
 #include "sys/irq.hpp"
+#include "sys/irq/apic.hpp"
 
-using CPU = AEX::Sys::CPU;
+using CPU  = AEX::Sys::CPU;
+using APIC = AEX::Sys::IRQ::APIC;
 
 namespace AEX::Proc {
     extern "C" void proc_timer_tick();
@@ -28,7 +29,7 @@ namespace AEX::Proc {
         cpu->in_interrupt++;
 
         schedule();
-        Sys::APIC::eoi();
+        APIC::eoi();
 
         cpu->in_interrupt--;
     }

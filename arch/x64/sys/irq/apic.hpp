@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace AEX::Sys {
+namespace AEX::Sys::IRQ {
     class APIC {
         public:
         static void* addr;

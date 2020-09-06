@@ -1,4 +1,5 @@
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/assert.hpp"
 #include "aex/debug.hpp"
 #include "aex/dev/input.hpp"
 #include "aex/fs.hpp"
@@ -306,6 +307,17 @@ void kmain_threaded() {
     printk(PRINTK_OK "mm it works\n");
 
     // Dev::Tree::print_debug();
+
+    auto dir_try = FS::File::opendir("/dev/");
+    AEX_ASSERT(dir_try);
+
+    while (true) {
+        auto dentry_try = dir_try.value->readdir();
+        if (!dentry_try)
+            break;
+
+        printk(" - %s\n", dentry_try.value.name);
+    }
 
     while (true) {
         switch (VTTYs[ROOT_TTY]->readChar()) {

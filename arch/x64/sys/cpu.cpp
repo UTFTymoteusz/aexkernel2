@@ -6,7 +6,7 @@
 
 #include "cpu/idt.hpp"
 #include "cpu/tss.hpp"
-#include "sys/apic.hpp"
+#include "sys/irq/apic.hpp"
 
 // For some reason g++ adds 8 to the offset
 #define CURRENT_CPU                                            \
@@ -38,10 +38,10 @@ constexpr auto CPUID_FEAT_PAT = (1 << 16);
 namespace AEX::Sys {
     CPU::CPU(int id) {
         this->id = id;
-        apic_id  = APIC::getID();
+        apic_id  = IRQ::APIC::getID();
         self     = this;
 
-        fillAndCleanName();
+        getName();
     }
 
     void CPU::initLocal() {
@@ -236,7 +236,7 @@ namespace AEX::Sys {
         printk("ist1: 0x%p\n", m_tss->ist1);
     }
 
-    void CPU::fillAndCleanName() {
+    void CPU::getName() {
         memset(name, '\0', sizeof(name));
 
         char* ptr = name;

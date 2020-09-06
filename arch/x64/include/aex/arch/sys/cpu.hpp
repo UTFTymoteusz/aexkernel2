@@ -179,7 +179,7 @@ namespace AEX::Sys {
 
         tss* m_tss;
 
-        void fillAndCleanName();
+        void getName();
 
         void handleIPP();
 

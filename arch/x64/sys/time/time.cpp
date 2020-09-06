@@ -6,12 +6,13 @@
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/sys/acpi.hpp"
+#include "aex/sys/acpi/fadt.hpp"
 #include "aex/sys/irq.hpp"
 
 #include "sys/irq.hpp"
-#include "sys/pit.hpp"
-#include "sys/rtc.hpp"
+#include "sys/irq/pit.hpp"
 #include "sys/time.hpp"
+#include "sys/time/rtc.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -30,11 +31,10 @@ namespace AEX::Sys::Time {
     void init() {
         RTC::init();
 
-        auto m_fadt = (ACPI::fadt*) ACPI::find_table("FACP", 0);
+        auto _fadt = (ACPI::fadt*) ACPI::find_table("FACP", 0);
 
-        acpi_pm_timer_addr = m_fadt->pm_timer_block;
-        acpi_pm_timer_overflow_correction =
-            (m_fadt->fixed_flags & (1 << 8)) ? 0xFFFFFFFF : 0xFFFFFF;
+        acpi_pm_timer_addr                = _fadt->pm_timer_block;
+        acpi_pm_timer_overflow_correction = (_fadt->fixed_flags & (1 << 8)) ? 0xFFFFFFFF : 0xFFFFFF;
     }
 
     time_t uptime() {

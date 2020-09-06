@@ -5,13 +5,14 @@
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/sys/acpi.hpp"
+#include "aex/sys/acpi/madt.hpp"
 
-#include "cpu/idt.hpp"
-#include "cpu/irq.hpp"
-#include "sys/apic.hpp"
+#include "sys/cpu/idt.hpp"
+#include "sys/cpu/irq.hpp"
+#include "sys/irq/apic.hpp"
+#include "sys/irq/pic.hpp"
+#include "sys/irq/pit.hpp"
 #include "sys/mcore.hpp"
-#include "sys/pic.hpp"
-#include "sys/pit.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -22,7 +23,7 @@ namespace AEX::Sys::IRQ {
     bool   is_apic_present = false;
     size_t apic_tps        = 0;
 
-    ACPI::MADT*          madt;
+    ACPI::madt*          madt;
     Mem::Vector<IOAPIC*> ioapics;
 
     IOAPIC* find_ioapic(int irq);
@@ -54,19 +55,19 @@ namespace AEX::Sys::IRQ {
 
         size_t addr = 0xFEE00000;
 
-        madt = (ACPI::MADT*) ACPI::find_table("APIC", 0);
+        madt = (ACPI::madt*) ACPI::find_table("APIC", 0);
         if (!madt)
             kpanic("This computer is too ancient to run this OS");
 
         addr = madt->apic_addr;
 
         auto override =
-            madt->findEntry<ACPI::MADT::addr_override*>(ACPI::MADT::entry_type::LAPIC_ADDR, 0);
+            madt->findEntry<ACPI::madt::addr_override*>(ACPI::madt::entry_type::LAPIC_ADDR, 0);
         if (override)
             addr = override->addr;
 
         for (int i = 0; i < 2137; i++) {
-            auto ioapic = madt->findEntry<ACPI::MADT::ioapic*>(ACPI::MADT::entry_type::IOAPIC, i);
+            auto ioapic = madt->findEntry<ACPI::madt::ioapic*>(ACPI::madt::entry_type::IOAPIC, i);
             if (!ioapic)
                 break;
 
@@ -169,7 +170,7 @@ namespace AEX::Sys::IRQ {
     int find_redirection(int irq) {
         for (int i = 0; i < 2137; i++) {
             auto m_irq =
-                madt->findEntry<ACPI::MADT::int_override*>(ACPI::MADT::entry_type::IRQ_SOURCE, i);
+                madt->findEntry<ACPI::madt::int_override*>(ACPI::madt::entry_type::IRQ_SOURCE, i);
             if (!m_irq)
                 break;
 

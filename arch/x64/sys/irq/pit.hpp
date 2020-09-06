@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-namespace AEX::Sys {
+namespace AEX::Sys::IRQ {
     class PIT {
         public:
         static void setHz(int hz);

@@ -1,8 +1,8 @@
-#include "sys/pit.hpp"
+#include "sys/irq/pit.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
 
-namespace AEX::Sys {
+namespace AEX::Sys::IRQ {
     Spinlock PIT::m_lock;
 
     void PIT::setHz(int hz) {

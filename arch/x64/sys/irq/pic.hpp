@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace AEX::Sys {
+namespace AEX::Sys::IRQ {
     class PIC {
         public:
         int command;
