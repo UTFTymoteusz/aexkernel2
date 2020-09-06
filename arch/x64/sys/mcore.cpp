@@ -109,7 +109,7 @@ namespace AEX::Sys::MCore {
             if (!CPUs[i])
                 continue;
 
-            CPUs[i]->_tss = tsses[i];
+            CPUs[i]->m_tss = tsses[i];
         }
 
         printk(PRINTK_OK "mcore: Initialized\n");

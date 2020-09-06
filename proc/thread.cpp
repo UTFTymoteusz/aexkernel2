@@ -17,18 +17,18 @@ namespace AEX::Proc {
     Thread::Thread() {
         this->self = this;
 
-        this->context     = new Context();
-        this->_exit_event = new IPC::Event();
+        this->context      = new Context();
+        this->m_exit_event = new IPC::Event();
     }
 
     Thread::Thread(Process* parent) {
         this->self = this;
 
-        status  = THREAD_FRESH;
+        status  = TS_FRESH;
         context = new Context();
 
-        this->parent      = parent;
-        this->_exit_event = new IPC::Event();
+        this->parent       = parent;
+        this->m_exit_event = new IPC::Event();
     }
 
     Thread::Thread(Process* parent, void* entry, size_t stack_size, Mem::Pagemap* pagemap,
@@ -64,10 +64,10 @@ namespace AEX::Proc {
         fault_stack      = (size_t) pagemap->alloc(FAULT_STACK_SIZE, PAGE_WRITE);
         fault_stack_size = FAULT_STACK_SIZE;
 
-        status = THREAD_FRESH;
+        status = TS_FRESH;
 
-        this->parent      = parent;
-        this->_exit_event = new IPC::Event();
+        this->parent       = parent;
+        this->m_exit_event = new IPC::Event();
 
         if (dont_add)
             return;
@@ -84,7 +84,7 @@ namespace AEX::Proc {
 
     Thread::~Thread() {
         delete shared;
-        delete _exit_event;
+        delete m_exit_event;
 
         delete context;
 
@@ -112,8 +112,8 @@ namespace AEX::Proc {
     void Thread::sleep(int ms) {
         auto currentThread = Thread::getCurrent();
 
-        currentThread->wakeup_at = Sys::get_uptime() + ((uint64_t) ms) * 1000000;
-        currentThread->status    = THREAD_SLEEPING;
+        currentThread->wakeup_at = Sys::Time::uptime() + ((Sys::Time::time_t) ms) * 1000000;
+        currentThread->status    = TS_SLEEPING;
 
         yield();
     }
@@ -136,8 +136,8 @@ namespace AEX::Proc {
         if (thread->isBusy())
             kpanic("Attempt to exit a thread while it's still busy\n");
 
-        Mem::atomic_compare_and_swap(&thread->_finished, (uint8_t) 0, (uint8_t) 1);
-        Mem::atomic_compare_and_swap(&thread->_abort, (uint8_t) 0, (uint8_t) 1);
+        Mem::atomic_compare_and_swap(&thread->m_finished, (uint8_t) 0, (uint8_t) 1);
+        Mem::atomic_compare_and_swap(&thread->m_abort, (uint8_t) 0, (uint8_t) 1);
 
         abort_thread(thread);
 
@@ -160,23 +160,23 @@ namespace AEX::Proc {
     }
 
     void Thread::start() {
-        if (status == THREAD_FRESH)
-            status = THREAD_RUNNABLE;
+        if (status == TS_FRESH)
+            status = TS_RUNNABLE;
     }
 
     void Thread::join() {
         auto sp = this->getSmartPointer();
-        sp->_exit_event->wait();
+        sp->m_exit_event->wait();
     }
 
     void Thread::abort(bool block) {
         auto sp = this->getSmartPointer();
         sp->lock.acquire();
 
-        Mem::atomic_compare_and_swap(&_abort, (uint8_t) 0, (uint8_t) 1);
+        Mem::atomic_compare_and_swap(&m_abort, (uint8_t) 0, (uint8_t) 1);
 
         if (!sp->isBusy()) {
-            Mem::atomic_compare_and_swap(&sp->_finished, (uint8_t) 0, (uint8_t) 1);
+            Mem::atomic_compare_and_swap(&sp->m_finished, (uint8_t) 0, (uint8_t) 1);
 
             sp->lock.release();
             abort_thread(sp.get());
@@ -191,11 +191,11 @@ namespace AEX::Proc {
     }
 
     bool Thread::isAbortSet() {
-        return Mem::atomic_read(&_abort) > 0;
+        return Mem::atomic_read(&m_abort) > 0;
     }
 
     bool Thread::isFinished() {
-        return Mem::atomic_read(&_finished) > 0;
+        return Mem::atomic_read(&m_finished) > 0;
     }
 
     Mem::SmartPointer<Thread> Thread::getSmartPointer() {
@@ -208,22 +208,22 @@ namespace AEX::Proc {
     }
 
     void Thread::announceExit() {
-        _exit_event->defunct();
+        m_exit_event->defunct();
     }
 
     void Thread::addCritical() {
         if (!CPU::getCurrent()->in_interrupt)
             CPU::nointerrupts();
 
-        Mem::atomic_add(&_busy, (uint16_t) 1);
-        Mem::atomic_add(&_critical, (uint16_t) 1);
+        Mem::atomic_add(&m_busy, (uint16_t) 1);
+        Mem::atomic_add(&m_critical, (uint16_t) 1);
     }
 
     void Thread::subCritical() {
-        uint16_t fetched = Mem::atomic_sub_fetch(&_critical, (uint16_t) 1);
+        uint16_t fetched = Mem::atomic_sub_fetch(&m_critical, (uint16_t) 1);
 
         /*if (fetched == 0 && CPU::getCurrent()->should_yield) {
-            Mem::atomic_sub(&_busy, (uint16_t) 1);
+            Mem::atomic_sub(&m_busy, (uint16_t) 1);
 
             if (!CPU::getCurrent()->in_interrupt)
                 CPU::interrupts();
@@ -232,7 +232,7 @@ namespace AEX::Proc {
             return;
         }*/
 
-        Mem::atomic_sub(&_busy, (uint16_t) 1);
+        Mem::atomic_sub(&m_busy, (uint16_t) 1);
 
         if (fetched == 0 && !CPU::getCurrent()->in_interrupt)
             CPU::interrupts();
@@ -241,16 +241,16 @@ namespace AEX::Proc {
     Thread::state Thread::saveState() {
         auto st = state();
 
-        st.busy     = _busy;
-        st.critical = _critical;
+        st.busy     = m_busy;
+        st.critical = m_critical;
         st.status   = status;
 
         return st;
     }
 
-    void Thread::loadState(state& _state) {
-        _busy     = _state.busy;
-        _critical = _state.critical;
-        status    = _state.status;
+    void Thread::loadState(state& m_state) {
+        m_busy     = m_state.busy;
+        m_critical = m_state.critical;
+        status     = m_state.status;
     }
 }

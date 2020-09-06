@@ -16,7 +16,7 @@ namespace AEX::FS {
 
         int device_id = -1;
 
-        fs_type_t type = FILE_UNKNOWN;
+        fs_type_t type = FT_UNKNOWN;
 
         uint64_t block_count;
         uint64_t size;
@@ -33,15 +33,15 @@ namespace AEX::FS {
         virtual optional<dir_entry> readDir(dir_context* ctx);
 
         bool is_regular() {
-            return (type & FILE_REGULAR) == FILE_REGULAR;
+            return (type & FT_REGULAR) == FT_REGULAR;
         }
 
         bool is_directory() {
-            return (type & FILE_DIRECTORY) == FILE_DIRECTORY;
+            return (type & FT_DIRECTORY) == FT_DIRECTORY;
         }
 
         bool is_block() {
-            return (type & FILE_BLOCK) == FILE_BLOCK;
+            return (type & FT_BLOCK) == FT_BLOCK;
         }
 
         private:

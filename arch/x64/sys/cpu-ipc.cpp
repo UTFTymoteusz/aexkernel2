@@ -30,17 +30,17 @@ namespace AEX::Sys {
 
     void CPU::sendPacket(ipp_type type, void* data) {
         static Spinlock lock;
-        auto            scopeLock = ScopeSpinlock(lock);
+        ScopeSpinlock   scopeLock(lock);
 
-        _ipi_lock.acquire();
-        _ipi_ack = false;
+        m_ipi_lock.acquire();
+        m_ipi_ack = false;
 
-        _ipi_packet.type = type;
-        _ipi_packet.data = data;
+        m_ipi_packet.type = type;
+        m_ipi_packet.data = data;
 
         if (CPU::getCurrentID() == this->id) {
             handleIPP();
-            _ipi_lock.release();
+            m_ipi_lock.release();
 
             return;
         }
@@ -49,7 +49,7 @@ namespace AEX::Sys {
 
         volatile size_t counter = 0;
 
-        while (!_ipi_ack) {
+        while (!m_ipi_ack) {
             counter++;
 
             if (counter == 4000000 * 7)
@@ -60,7 +60,7 @@ namespace AEX::Sys {
                        type, data);
         }
 
-        _ipi_lock.release();
+        m_ipi_lock.release();
     }
 
     /**
@@ -79,16 +79,16 @@ namespace AEX::Sys {
     void CPU::handleIPP() {
         auto us = CPU::getCurrent();
 
-        switch (_ipi_packet.type) {
+        switch (m_ipi_packet.type) {
         case IPP_HALT:
-            _ipi_ack = true;
+            m_ipi_ack = true;
 
             APIC::eoi();
             CPU::halt();
 
             return;
         case IPP_RESHED:
-            _ipi_ack = true;
+            m_ipi_ack = true;
 
             APIC::eoi();
 
@@ -98,24 +98,24 @@ namespace AEX::Sys {
 
             return;
         case IPP_CALL:
-            _ipi_ack = true;
-            ((void (*)(void)) _ipi_packet.data)();
+            m_ipi_ack = true;
+            ((void (*)(void)) m_ipi_packet.data)();
 
             break;
         case IPP_PG_FLUSH:
-            _ipi_ack = true;
+            m_ipi_ack = true;
             asm volatile("mov rax, cr3; mov cr3, rax;");
 
             break;
         case IPP_PG_INV:
-            asm volatile("invlpg [%0]" : : "r"(_ipi_packet.data));
-            _ipi_ack = true;
+            asm volatile("invlpg [%0]" : : "r"(m_ipi_packet.data));
+            m_ipi_ack = true;
 
             break;
         default:
-            _ipi_ack = true;
+            m_ipi_ack = true;
             printk(PRINTK_WARN "cpu%i: Received an IPP with an unknown type (%i)\n",
-                   CPU::getCurrentID(), _ipi_packet.type);
+                   CPU::getCurrentID(), m_ipi_packet.type);
 
             break;
         }

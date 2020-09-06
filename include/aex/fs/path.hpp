@@ -19,14 +19,14 @@ namespace AEX::FS::Path {
         bool isFinal();
 
         private:
-        char _buffer[MAX_FILENAME_LEN];
+        char m_buffer[MAX_FILENAME_LEN];
 
-        int         _index = 0;
-        const char* _path;
-        bool        _too_long = false;
+        int         m_index = 0;
+        const char* m_path;
+        bool        m_too_long = false;
 
-        int _level  = 0;
-        int _levels = 0;
+        int m_level  = 0;
+        int m_levels = 0;
     };
 
     /**

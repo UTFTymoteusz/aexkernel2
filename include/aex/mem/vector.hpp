@@ -13,8 +13,8 @@ namespace AEX::Mem {
         ~Vector() {
             clear();
 
-            if (_array)
-                delete _array;
+            if (m_array)
+                delete m_array;
         }
 
         template <typename... T2>
@@ -23,66 +23,70 @@ namespace AEX::Mem {
         }
 
         T& operator[](int index) {
-            if (index < 0 || index >= _count)
-                return _array[0];
+            if (index < 0 || index >= m_count)
+                return m_array[0];
 
-            return _array[index];
+            return m_array[index];
         }
 
         T at(int index) {
-            if (index < 0 || index >= _count)
-                return _array[0];
+            if (index < 0 || index >= m_count)
+                return m_array[0];
 
-            return _array[index];
+            return m_array[index];
         }
 
         int pushBack(T val) {
-            _count++;
+            m_count++;
 
-            int new_mem_count = int_ceil(_count, chunk_count);
-            if (new_mem_count != _mem_count) {
-                _mem_count = new_mem_count;
-                _array     = (T*) Heap::realloc((void*) _array, _mem_count * sizeof(T));
+            int new_mem_count = int_ceil(m_count, chunk_count);
+            if (new_mem_count != m_mem_count) {
+                m_mem_count = new_mem_count;
+                m_array     = (T*) Heap::realloc((void*) m_array, m_mem_count * sizeof(T));
             }
 
-            _array[_count - 1] = val;
-            return _count - 1;
+            m_array[m_count - 1] = val;
+            return m_count - 1;
         }
 
         void erase(int index) {
-            if (index < 0 || index >= _count)
+            if (index < 0 || index >= m_count)
                 return;
 
-            _array[index].~T();
-            _count--;
+            m_array[index].~T();
+            m_count--;
 
-            int copy_amount = _mem_count - index;
-            memcpy(&_array[index], &_array[index + 1], copy_amount * sizeof(T));
+            int copy_amount = m_mem_count - index;
+            memcpy(&m_array[index], &m_array[index + 1], copy_amount * sizeof(T));
 
             deallocCheck();
         }
 
         void clear() {
-            for (int i = 0; i < _count; i++)
-                _array[i].~T();
+            for (int i = 0; i < m_count; i++)
+                m_array[i].~T();
 
-            _count = 0;
+            m_count = 0;
 
             deallocCheck();
 
-            if (_array)
-                memset(_array, '\0', _mem_count * sizeof(T));
+            if (m_array)
+                memset(m_array, '\0', m_mem_count * sizeof(T));
         }
 
         int count() {
-            return _count;
+            return m_count;
+        }
+
+        T* get() {
+            return m_array;
         }
 
         private:
-        int _mem_count = 0;
-        int _count     = 0;
+        int m_mem_count = 0;
+        int m_count     = 0;
 
-        T* _array = nullptr;
+        T* m_array = nullptr;
 
         template <typename T1>
         void pushRecursive(T1 bong) {
@@ -96,10 +100,10 @@ namespace AEX::Mem {
         }
 
         inline void deallocCheck() {
-            int new_mem_count = int_ceil(_count, chunk_count);
-            if (new_mem_count != _mem_count && new_mem_count > minimum_allocation) {
-                _mem_count = new_mem_count;
-                _array     = (T*) Heap::realloc((void*) _array, _mem_count * sizeof(T));
+            int new_mem_count = int_ceil(m_count, chunk_count);
+            if (new_mem_count != m_mem_count && new_mem_count > minimum_allocation) {
+                m_mem_count = new_mem_count;
+                m_array     = (T*) Heap::realloc((void*) m_array, m_mem_count * sizeof(T));
             }
         }
     };

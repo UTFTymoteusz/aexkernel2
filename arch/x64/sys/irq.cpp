@@ -72,14 +72,14 @@ namespace AEX::Sys::IRQ {
 
             void* mapped = Mem::kernel_pagemap->map(sizeof(IOAPIC), ioapic->addr, PAGE_WRITE);
 
-            auto _ioapic = new IOAPIC(mapped, ioapic->global_interrupt_base);
+            auto m_ioapic = new IOAPIC(mapped, ioapic->global_interrupt_base);
 
-            for (int j = 0; j < _ioapic->getIRQAmount(); j++) {
-                _ioapic->setMask(j, true);
-                _ioapic->setMode(j, IOAPIC::irq_mode::IRQ_NORMAL);
+            for (int j = 0; j < m_ioapic->getIRQAmount(); j++) {
+                m_ioapic->setMask(j, true);
+                m_ioapic->setMode(j, IOAPIC::irq_mode::IRQ_NORMAL);
             }
 
-            ioapics.pushBack(_ioapic);
+            ioapics.pushBack(m_ioapic);
         }
 
         if (ioapics.count() == 0)
@@ -168,15 +168,15 @@ namespace AEX::Sys::IRQ {
 
     int find_redirection(int irq) {
         for (int i = 0; i < 2137; i++) {
-            auto _irq =
+            auto m_irq =
                 madt->findEntry<ACPI::MADT::int_override*>(ACPI::MADT::entry_type::IRQ_SOURCE, i);
-            if (!_irq)
+            if (!m_irq)
                 break;
 
-            if (_irq->irq_source != irq)
+            if (m_irq->irq_source != irq)
                 continue;
 
-            return _irq->global_interrupt;
+            return m_irq->global_interrupt;
         }
 
         return irq;

@@ -21,23 +21,23 @@ constexpr auto MEM_PAGE_MASK = ~0xFFF;
 
 extern void* pml4;
 
-const int _page_present   = 0x01;
-const int _page_write     = 0x02;
-const int _page_user      = 0x04;
-const int _page_through   = 0x08;
-const int _page_nocache   = 0x10;
-const int _page_pat       = 0x80;
-const int _page_combine   = _page_pat;
-const int _page_nophys    = 0x200;
-const int _page_exec      = 0x1000;
-const int _page_fixed     = 0x2000;
-const int _page_arbitrary = 0x4000;
+const int m_page_present   = 0x01;
+const int m_page_write     = 0x02;
+const int m_page_user      = 0x04;
+const int m_page_through   = 0x08;
+const int m_page_nocache   = 0x10;
+const int m_page_pat       = 0x80;
+const int m_page_combine   = m_page_pat;
+const int m_page_nophys    = 0x200;
+const int m_page_exec      = 0x1000;
+const int m_page_fixed     = 0x2000;
+const int m_page_arbitrary = 0x4000;
 
 // I need to make invlpg clump together
 
 namespace AEX::Mem {
     Pagemap* kernel_pagemap;
-    Pagemap  _kernel_pagemap = {0};
+    Pagemap  m_kernel_pagemap = {0};
 
     uint64_t* pptr_entries[PPTR_AMOUNT];
     uint64_t* pptr_vaddr[PPTR_AMOUNT];
@@ -90,7 +90,7 @@ namespace AEX::Mem {
     }
 
     Pagemap::Pagemap() {
-        _lock.acquire();
+        m_lock.acquire();
 
         pageRoot = Phys::alloc(1);
 
@@ -105,7 +105,7 @@ namespace AEX::Mem {
         free_pptr(pptr_b);
         free_pptr(pptr_a);
 
-        _lock.release();
+        m_lock.release();
     }
 
     Pagemap::Pagemap(phys_addr rootAddr) {
@@ -116,7 +116,7 @@ namespace AEX::Mem {
         if (bytes == 0)
             return nullptr;
 
-        _lock.acquire();
+        m_lock.acquire();
 
         int pptr = alloc_pptr();
 
@@ -137,7 +137,7 @@ namespace AEX::Mem {
 
         // proot->frames_used += amount;
         free_pptr(pptr);
-        _lock.release();
+        m_lock.release();
 
         memset((void*) start, 0, amount * Sys::CPU::PAGE_SIZE);
 
@@ -148,7 +148,7 @@ namespace AEX::Mem {
         if (bytes == 0)
             return nullptr;
 
-        _lock.acquire();
+        m_lock.acquire();
 
         int pptr = alloc_pptr();
 
@@ -168,7 +168,7 @@ namespace AEX::Mem {
         }
 
         free_pptr(pptr);
-        _lock.release();
+        m_lock.release();
 
         memset((void*) start, 0, amount * Sys::CPU::PAGE_SIZE);
 
@@ -178,7 +178,7 @@ namespace AEX::Mem {
     void* Pagemap::map(size_t bytes, phys_addr paddr, uint16_t flags, void* source) {
         flags |= PAGE_NOPHYS | PAGE_PRESENT;
 
-        _lock.acquire();
+        m_lock.acquire();
 
         int pptr = alloc_pptr();
 
@@ -213,13 +213,13 @@ namespace AEX::Mem {
             }
 
         free_pptr(pptr);
-        _lock.release();
+        m_lock.release();
 
         return (void*) (start + offset);
     }
 
     void Pagemap::free(void* addr, size_t bytes) {
-        _lock.acquire();
+        m_lock.acquire();
 
         int pptr = alloc_pptr();
 
@@ -233,7 +233,7 @@ namespace AEX::Mem {
         }
 
         free_pptr(pptr);
-        _lock.release();
+        m_lock.release();
     }
 
     // Private
@@ -347,20 +347,20 @@ namespace AEX::Mem {
         if (amount == 0)
             return nullptr;
 
-        size_t _vstart = (size_t) vstart;
-        size_t _vend   = (size_t) vend;
+        size_t m_vstart = (size_t) vstart;
+        size_t m_vend   = (size_t) vend;
 
         if (executable) {
-            if (_vstart == 0xFFFF800000000000)
-                _vstart = 0xFFFFFFFF80000000;
-            else if (_vend == 0x00007FFFFFFFFFFF)
-                _vstart = 0x00007FFF80000000;
+            if (m_vstart == 0xFFFF800000000000)
+                m_vstart = 0xFFFFFFFF80000000;
+            else if (m_vend == 0x00007FFFFFFFFFFF)
+                m_vstart = 0x00007FFF80000000;
         }
 
-        uint64_t index = ((size_t) _vstart >> 12) & 0x1FF;
-        size_t   vaddr = _vstart;
+        uint64_t index = ((size_t) m_vstart >> 12) & 0x1FF;
+        size_t   vaddr = m_vstart;
         size_t   combo = 0;
-        void*    start = (void*) _vstart;
+        void*    start = (void*) m_vstart;
 
         uint64_t* tb = findTable(pptr, vaddr);
         if (tb == nullptr)
@@ -409,13 +409,13 @@ namespace AEX::Mem {
 
         vaddr &= ~0xFFF;
 
-        _lock.acquire();
+        m_lock.acquire();
 
         int       pptr  = alloc_pptr();
         uint64_t* table = findTable(pptr, vaddr);
         if (!table) {
             free_pptr(pptr);
-            _lock.release();
+            m_lock.release();
 
             return 0;
         }
@@ -423,7 +423,7 @@ namespace AEX::Mem {
         uint64_t paddr = (table[index] & MEM_PAGE_MASK) + offset;
 
         free_pptr(pptr);
-        _lock.release();
+        m_lock.release();
 
         return paddr;
     }
@@ -434,13 +434,13 @@ namespace AEX::Mem {
 
         vaddr &= ~0xFFF;
 
-        _lock.acquire();
+        m_lock.acquire();
 
         int       pptr  = alloc_pptr();
         uint64_t* table = findTable(pptr, vaddr);
         if (!table) {
             free_pptr(pptr);
-            _lock.release();
+            m_lock.release();
 
             return 0;
         }
@@ -449,7 +449,7 @@ namespace AEX::Mem {
 
         free_pptr(pptr);
 
-        _lock.release();
+        m_lock.release();
 
         return boi;
     }
@@ -457,35 +457,35 @@ namespace AEX::Mem {
     void create_first_levels();
 
     void init() {
-        _kernel_pagemap = Pagemap((phys_addr) &pml4);
+        m_kernel_pagemap = Pagemap((phys_addr) &pml4);
 
-        _kernel_pagemap.vstart = (void*) 0xFFFF800000000000;
-        _kernel_pagemap.vend   = (void*) 0xFFFFFFFFFFFFFFFF;
+        m_kernel_pagemap.vstart = (void*) 0xFFFF800000000000;
+        m_kernel_pagemap.vend   = (void*) 0xFFFFFFFFFFFFFFFF;
 
-        kernel_pagemap = &_kernel_pagemap;
+        kernel_pagemap = &m_kernel_pagemap;
 
         for (size_t i = 0; i < PPTR_AMOUNT; i++) {
-            void* _virt = _kernel_pagemap.map(Sys::CPU::PAGE_SIZE, 0x0000, PAGE_WRITE);
+            void* m_virt = m_kernel_pagemap.map(Sys::CPU::PAGE_SIZE, 0x0000, PAGE_WRITE);
 
-            // printk("aa: 0x%p\n", _virt);
+            // printk("aa: 0x%p\n", m_virt);
 
-            uint64_t virt = (uint64_t) _virt;
+            uint64_t virt = (uint64_t) m_virt;
 
             uint64_t pml4index = (virt >> 39) & 0x1FF;
             uint64_t pdpindex  = (virt >> 30) & 0x1FF;
             uint64_t pdindex   = (virt >> 21) & 0x1FF;
             uint64_t ptindex   = (virt >> 12) & 0x1FF;
 
-            uint64_t* pml4   = (uint64_t*) _kernel_pagemap.pageRoot;
+            uint64_t* pml4   = (uint64_t*) m_kernel_pagemap.pageRoot;
             uint64_t* pdp    = (uint64_t*) (pml4[pml4index] & ~0xFFF);
             uint64_t* pd     = (uint64_t*) (pdp[pdpindex] & ~0xFFF);
             uint64_t* ptable = (uint64_t*) (pd[pdindex] & ~0xFFF);
 
-            uint64_t* vpt = (uint64_t*) _kernel_pagemap.map(Sys::CPU::PAGE_SIZE, (phys_addr) ptable,
-                                                            PAGE_WRITE);
+            uint64_t* vpt = (uint64_t*) m_kernel_pagemap.map(Sys::CPU::PAGE_SIZE,
+                                                             (phys_addr) ptable, PAGE_WRITE);
 
             pptr_entries[i] = (uint64_t*) (vpt + ptindex);
-            pptr_vaddr[i]   = (uint64_t*) _virt;
+            pptr_vaddr[i]   = (uint64_t*) m_virt;
         }
 
         ready = true;

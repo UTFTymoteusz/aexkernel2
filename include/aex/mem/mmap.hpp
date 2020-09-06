@@ -37,8 +37,8 @@ namespace AEX::Mem {
         virtual error_t read(void* dst, int64_t offset, uint32_t count);
 
         protected:
-        optional<FS::File_SP> _file;
-        Pagemap*              _pagemap;
+        optional<FS::File_SP> m_file;
+        Pagemap*              m_pagemap;
     };
 
     class FileBackedMMapRegion : public MMapRegion {
@@ -58,9 +58,9 @@ namespace AEX::Mem {
 
         static constexpr auto CACHE_SLOTS = 4;
 
-        Mutex _lock;
+        Mutex m_lock;
 
-        int64_t _offset;
+        int64_t m_offset;
 
         int        cache_ptr = 0;
         cache_slot cache[CACHE_SLOTS];

@@ -9,8 +9,8 @@ namespace AEX::Mem {
         this->start = addr;
         this->len   = len;
 
-        this->_file    = {};
-        this->_pagemap = pagemap;
+        this->m_file    = {};
+        this->m_pagemap = pagemap;
     }
 
     MMapRegion::~MMapRegion() {}
@@ -22,31 +22,31 @@ namespace AEX::Mem {
     FileBackedMMapRegion::FileBackedMMapRegion(Pagemap* pagemap, void* addr, size_t len,
                                                FS::File_SP file, int64_t offset)
         : MMapRegion(pagemap, addr, len) {
-        this->_file   = file;
-        this->_offset = offset;
+        this->m_file   = file;
+        this->m_offset = offset;
 
         for (int i = 0; i < CACHE_SLOTS; i++)
             cache[i].buffer = (uint8_t*) kernel_pagemap->alloc(Sys::CPU::PAGE_SIZE, PAGE_WRITE);
     }
 
     FileBackedMMapRegion::~FileBackedMMapRegion() {
-        _lock.acquire();
+        m_lock.acquire();
 
-        if (_file)
-            _file.value->close();
+        if (m_file)
+            m_file.value->close();
 
-        _pagemap->free(start, len);
+        m_pagemap->free(start, len);
 
         for (int i = 0; i < CACHE_SLOTS; i++)
             kernel_pagemap->free(cache[i].buffer, Sys::CPU::PAGE_SIZE);
 
-        _lock.release();
+        m_lock.release();
     }
 
     error_t FileBackedMMapRegion::read(void* dst, int64_t offset, uint32_t count) {
         auto process = Proc::Process::getCurrent();
 
-        auto scopeLock = ScopeMutex(_lock);
+        ScopeMutex scopeLock(m_lock);
 
         int32_t id = offset / Sys::CPU::PAGE_SIZE;
 
@@ -59,16 +59,17 @@ namespace AEX::Mem {
         }
 
         if (cache[slot].id != -1)
-            _pagemap->map(Sys::CPU::PAGE_SIZE, 0, PAGE_FIXED | PAGE_ARBITRARY,
-                          cache[slot].referenced);
+            m_pagemap->map(Sys::CPU::PAGE_SIZE, 0, PAGE_FIXED | PAGE_ARBITRARY,
+                           cache[slot].referenced);
 
         cache[slot].id         = id;
         cache[slot].referenced = dst;
 
-        _file.value->seek(_offset + offset);
-        _file.value->read(cache[slot].buffer, count);
+        m_file.value->seek(m_offset + offset);
+        m_file.value->read(cache[slot].buffer, count);
 
-        _pagemap->map(Sys::CPU::PAGE_SIZE, _pagemap->paddrof(cache[slot].buffer), PAGE_FIXED, dst);
+        m_pagemap->map(Sys::CPU::PAGE_SIZE, m_pagemap->paddrof(cache[slot].buffer), PAGE_FIXED,
+                       dst);
 
         // printk("slot: %i for %i\n", slot, id);
 
@@ -139,7 +140,7 @@ namespace AEX::Mem {
         return region->start;
     }
 
-    // Make len work properly.
+    // Make len work properly
     error_t munmap(void* addr, size_t) {
         auto process = Proc::Process::getCurrent();
 
@@ -178,15 +179,15 @@ namespace AEX::Mem {
         process->lock.acquire();
 
         for (int i = 0; i < process->mmap_regions.count(); i++) {
-            auto _region = process->mmap_regions[i];
+            auto m_region = process->mmap_regions[i];
 
-            size_t start = (size_t) _region->start;
-            size_t len   = _region->len;
+            size_t start = (size_t) m_region->start;
+            size_t len   = m_region->len;
 
             if (addr_n < start || addr_n >= start + len)
                 continue;
 
-            region = _region;
+            region = m_region;
             process->mmap_regions.erase(i);
 
             break;

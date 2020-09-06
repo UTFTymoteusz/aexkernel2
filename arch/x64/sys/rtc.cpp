@@ -10,44 +10,44 @@
 #include "sys/cmos.hpp"
 
 namespace AEX::Sys {
-    Spinlock RTC::_lock;
+    Spinlock RTC::m_lock;
 
-    bool    RTC::_normal_hour_format;
-    bool    RTC::_retarded_bcd;
-    uint8_t RTC::_century_index;
+    bool    RTC::m_normal_hour_format;
+    bool    RTC::m_retarded_bcd;
+    uint8_t RTC::m_century_index;
 
-    volatile int64_t RTC::_epoch = 0;
+    volatile int64_t RTC::m_epoch = 0;
 
     void RTC::init() {
-        auto scopeLock = ScopeSpinlock(_lock);
+        ScopeSpinlock scopeLock(m_lock);
 
         CMOS::write(CMOS::STATUS_B, CMOS::read(CMOS::STATUS_B) | CMOS::STATUS_B_UPDATE_ENDED_INT);
         CMOS::read(CMOS::STATUS_C);
 
         uint8_t status_b = CMOS::read(CMOS::STATUS_B);
 
-        _normal_hour_format = status_b & CMOS::STATUS_B_24_HOUR_MODE;
-        _retarded_bcd       = !(status_b & CMOS::STATUS_B_BINARY_MODE);
+        m_normal_hour_format = status_b & CMOS::STATUS_B_24_HOUR_MODE;
+        m_retarded_bcd       = !(status_b & CMOS::STATUS_B_BINARY_MODE);
 
         IRQ::register_handler(8, RTC::irq);
 
-        auto _fadt = (ACPI::fadt*) ACPI::find_table("FACP", 0);
+        auto m_fadt = (ACPI::fadt*) ACPI::find_table("FACP", 0);
 
-        RTC::_century_index = _fadt->century;
-        if (RTC::_century_index == 0)
-            _century_index = 0x32;
+        RTC::m_century_index = m_fadt->century;
+        if (RTC::m_century_index == 0)
+            m_century_index = 0x32;
     }
 
     int64_t RTC::get_epoch() {
-        int64_t ret = Mem::atomic_read(&_epoch);
+        int64_t ret = Mem::atomic_read(&m_epoch);
         while (!ret)
-            ret = Mem::atomic_read(&_epoch);
+            ret = Mem::atomic_read(&m_epoch);
 
         return ret;
     }
 
     void RTC::irq(void*) {
-        auto scopeLock = ScopeSpinlock(_lock);
+        ScopeSpinlock scopeLock(m_lock);
 
         CMOS::read(CMOS::STATUS_C);
 
@@ -59,13 +59,13 @@ namespace AEX::Sys {
         uint8_t month = CMOS::read(0x08);
         uint8_t day   = CMOS::read(0x07);
 
-        uint8_t century = CMOS::read(_century_index);
+        uint8_t century = CMOS::read(m_century_index);
 
         bool pm = (hours & 0x80);
 
         hours &= ~0x80;
 
-        if (_retarded_bcd) {
+        if (m_retarded_bcd) {
             hours   = fromBCD(hours);
             minutes = fromBCD(minutes);
             seconds = fromBCD(seconds);
@@ -79,17 +79,9 @@ namespace AEX::Sys {
 
         uint32_t actual_year = year + century * 100;
 
-        if (!_normal_hour_format && pm)
+        if (!m_normal_hour_format && pm)
             hours += 12;
 
-        _epoch = to_unix_epoch(actual_year, month, day, hours, minutes, seconds);
-
-        /*printk("a %02i:%02i:%02i %02i/%02i/%04i (%li)\n", hours, minutes, seconds, day, month,
-               actual_year, _epoch);
-
-        auto dt = from_unix_epoch(_epoch);
-
-        printk("b %02i:%02i:%02i %02i/%02i/%04i (%li)\n", dt.hour, dt.minute, dt.second, dt.day,
-               dt.month, dt.year, to_unix_epoch(dt));*/
+        m_epoch = Time::dt2epoch(actual_year, month, day, hours, minutes, seconds);
     }
 }

@@ -53,10 +53,10 @@ namespace AEX::Sys {
     inline Proc::Thread::state out(Proc::Thread* thread, CPU*& cpu);
     inline void                in(Proc::Thread::state& state, Proc::Thread* thread, CPU*& cpu);
 
-    extern "C" void common_fault_handler(void* _info) {
+    extern "C" void common_fault_handler(void* m_info) {
         CPU::getCurrent()->in_interrupt++;
 
-        auto info   = (CPU::fault_info*) _info;
+        auto info   = (CPU::fault_info*) m_info;
         auto cpu    = CPU::getCurrent();
         auto thread = cpu->current_thread;
 
@@ -78,7 +78,7 @@ namespace AEX::Sys {
         in(state, thread, cpu);
 
         int  delta = 0;
-        auto name  = Debug::symbol_addr2name((void*) info->rip, delta);
+        auto name  = Debug::addr2name((void*) info->rip, delta);
         if (!name)
             name = "no idea";
 
@@ -135,6 +135,8 @@ namespace AEX::Sys {
         printk("FRSP: 0x%p (%i, 0x%p)\n", thread->fault_stack, thread->fault_stack_size,
                thread->fault_stack + thread->fault_stack_size);
 
+        Sys::CPU::getCurrent()->printDebug();
+
         if (info->int_no == EXC_DEBUG) {
             Debug::stack_trace();
 
@@ -144,7 +146,7 @@ namespace AEX::Sys {
 
             counter++;
 
-            for (volatile size_t i = 0; i < 84354325; i++)
+            for (volatile size_t i = 0; i < 484354325; i++)
                 ;
 
             CPU::getCurrent()->in_interrupt--;
@@ -172,24 +174,31 @@ namespace AEX::Sys {
         void* addr = (void*) cr2;
 
         int  delta = 0;
-        auto name  = Debug::symbol_addr2name((void*) info->rip, delta);
+        auto name  = Debug::addr2name((void*) info->rip, delta);
         if (!name)
             name = "no idea";
 
+        cpu = cpu;
+
         // AEX::printk("cpu%i, tid %i (b%i, c%i, i%i): Page fault @ 0x%lx (0x%lx)\n", cpu->id,
-        //             cpu->current_tid, thread->_busy, thread->_critical, cpu->in_interrupt, cr2,
+        //             cpu->current_tid, thread->m_busy, thread->m_critical, cpu->in_interrupt, cr2,
         //             cr3);
 
         // AEX::printk("RIP: 0x%p <%s+0x%x>\n", info->rip, name, delta);
         // Debug::stack_trace();
 
+        /*AEX::printk("cpu%i, tid %i (b%i, c%i, i%i): Page fault @ 0x%lx (0x%lx)\n"
+                    "RIP: 0x%016lx <%s+0x%x>\n",
+                    cpu->id, cpu->current_tid, thread->m_busy, thread->m_critical,
+           cpu->in_interrupt, cr2, cr3, info->rip, name);  */
+
         auto process = thread->getProcess();
         auto region  = Mem::find_mmap_region(process.get(), addr);
         if (!region) {
-            AEX::printk("cpu%i, tid %i (b%i, c%i, i%i): Unrecoverable page fault @ 0x%lx (0x%lx)\n"
-                        "RIP: 0x%016lx <%s+0x%x>\n",
-                        cpu->id, cpu->current_tid, thread->_busy, thread->_critical,
-                        cpu->in_interrupt, cr2, cr3, info->rip, name);
+            /*AEX::printk("cpu%i, tid %i (b%i, c%i, i%i): Unrecoverable page fault @
+               0x%lx (0x%lx)\n" "RIP: 0x%016lx <%s+0x%x>\n", cpu->id,
+               cpu->current_tid, thread->m_busy, thread->m_critical,
+                        cpu->in_interrupt, cr2, cr3, info->rip, name);*/
 
             return false;
         }
@@ -206,7 +215,7 @@ namespace AEX::Sys {
 
         thread->setBusy(1);
         thread->setCritical(0);
-        thread->setStatus(Proc::THREAD_RUNNABLE);
+        thread->setStatus(Proc::TS_RUNNABLE);
 
         cpu->in_interrupt--;
         CPU::interrupts();

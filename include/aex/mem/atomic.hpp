@@ -37,7 +37,7 @@ namespace AEX::Mem {
     }
 
     template <typename T>
-    inline T atomic_compare_and_swap(T* ptr, T old, T _new) {
-        return __sync_val_compare_and_swap(ptr, old, _new);
+    inline T atomic_compare_and_swap(T* ptr, T old, T m_new) {
+        return __sync_val_compare_and_swap(ptr, old, m_new);
     }
 }

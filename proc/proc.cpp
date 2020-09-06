@@ -49,6 +49,10 @@ namespace AEX::Proc {
         auto kernel_process = new Process("/sys/aexkrnl.elf", 0, Mem::kernel_pagemap);
 
         auto bsp_thread = new Thread(kernel_process);
+        bsp_thread->fault_stack =
+            (size_t) Mem::kernel_pagemap->alloc(Thread::FAULT_STACK_SIZE, PAGE_WRITE) +
+            Thread::FAULT_STACK_SIZE;
+        bsp_thread->fault_stack_size = Thread::FAULT_STACK_SIZE;
         bsp_thread->start();
 
         bsp->current_thread  = bsp_thread;
@@ -78,7 +82,7 @@ namespace AEX::Proc {
         auto cpu = CPU::getCurrent();
 
         if (!lock.tryAcquireRaw()) {
-            if (cpu->current_thread->status != THREAD_RUNNABLE)
+            if (cpu->current_thread->status != TS_RUNNABLE)
                 lock.acquireRaw();
             else
                 return;
@@ -86,8 +90,8 @@ namespace AEX::Proc {
 
         int i = cpu->current_tid;
 
-        uint64_t curtime = get_uptime_raw();
-        uint64_t delta   = curtime - cpu->measurement_start_ns;
+        Time::time_t curtime = Time::uptime_raw();
+        Time::time_t delta   = curtime - cpu->measurement_start_ns;
 
         cpu->measurement_start_ns = curtime;
 
@@ -100,45 +104,35 @@ namespace AEX::Proc {
                 i = 1;
         };
 
-        increment();
-
         for (int j = 1; j < thread_array_size; j++) {
-            if (!threads[i]) {
-                increment();
+            increment();
+            if (!threads[i])
                 continue;
-            }
 
-            switch (threads[i]->status) {
-            case THREAD_RUNNABLE:
-                break;
-            case THREAD_SLEEPING:
-                if (curtime < threads[i]->wakeup_at) {
-                    increment();
-                    continue;
-                }
+            auto& status = threads[i]->status;
+            if (!(status & TF_RUNNABLE))
+                continue;
 
-                threads[i]->status = THREAD_RUNNABLE;
-                break;
-            case THREAD_BLOCKED:
+            if (status & TF_BLOCKED) {
                 if (threads[i]->isAbortSet())
                     break;
 
-                increment();
-                continue;
-            default:
-                increment();
                 continue;
             }
 
-            if (threads[i]->parent->cpu_affinity.isMasked(cpu->id)) {
-                increment();
-                continue;
+            if (status & TF_SLEEPING) {
+                if (curtime < threads[i]->wakeup_at)
+                    continue;
+
+                status = TS_RUNNABLE;
+                break;
             }
 
-            if (!threads[i]->lock.tryAcquireRaw()) {
-                increment();
+            if (threads[i]->parent->cpu_affinity.isMasked(cpu->id))
                 continue;
-            }
+
+            if (!threads[i]->lock.tryAcquireRaw())
+                continue;
 
             auto thread = threads[i];
 
@@ -170,7 +164,7 @@ namespace AEX::Proc {
     }
 
     tid_t add_thread(Thread* thread) {
-        auto scopeLock = ScopeSpinlock(lock);
+        ScopeSpinlock scopeLock(lock);
 
         for (int i = 1; i < thread_array_size; i++) {
             if (threads[i])
@@ -194,8 +188,8 @@ namespace AEX::Proc {
     void abort_thread(Thread* thread) {
         {
             auto process = thread->getProcess();
-            for (auto iterator = process->threads.getIterator(); auto _thread = iterator.next();) {
-                if (_thread == thread) {
+            for (auto iterator = process->threads.getIterator(); auto m_thread = iterator.next();) {
+                if (m_thread == thread) {
                     process->threads.remove(iterator.index());
                     break;
                 }
@@ -213,7 +207,7 @@ namespace AEX::Proc {
 
     void reap_thread(Thread* thread) {
         {
-            auto scopeLock = ScopeSpinlock(lock);
+            ScopeSpinlock scopeLock(lock);
 
             if (thread->tid == -1)
                 return;
@@ -277,7 +271,7 @@ namespace AEX::Proc {
             auto thread = threads_to_reap->readObject<Thread*>();
 
             thread->lock.acquire();
-            thread->setStatus(THREAD_DEAD);
+            thread->setStatus(TS_DEAD);
             thread->lock.release();
 
             if (thread->shared->decrement())
@@ -292,12 +286,12 @@ namespace AEX::Proc {
             void* addr = (void*) cpu->current_thread->context->rip;
 
             int         delta = 0;
-            const char* name  = Debug::symbol_addr2name(addr, delta);
+            const char* name  = Debug::addr2name(addr, delta);
 
             printk("cpu%i: PID %8i, TID %8i @ 0x%p <%s+0x%x> (b%i, c%i, i%i)\n", i,
                    cpu->current_thread->parent->pid, cpu->current_tid, addr,
-                   name ? name : "no idea", delta, cpu->current_thread->_busy,
-                   cpu->current_thread->_critical, cpu->in_interrupt);
+                   name ? name : "no idea", delta, cpu->current_thread->m_busy,
+                   cpu->current_thread->m_critical, cpu->in_interrupt);
         }
     }
 }

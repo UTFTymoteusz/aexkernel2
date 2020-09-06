@@ -1,6 +1,7 @@
 #include "aex/mutex.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/assert.hpp"
 #include "aex/debug.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/printk.hpp"
@@ -13,17 +14,17 @@ namespace AEX {
         volatile size_t count = 0;
         Thread::getCurrent()->addBusy();
 
-        while (!__sync_bool_compare_and_swap(&_lock, false, true)) {
+        while (!__sync_bool_compare_and_swap(&m_lock, false, true)) {
             Thread::getCurrent()->subBusy();
 
             count++;
             if (count > 12212222) {
                 int  delta = 0;
-                auto name  = Debug::symbol_addr2name((void*) this, delta);
+                auto name  = Debug::addr2name((void*) this, delta);
                 if (!name)
                     name = "no idea";
 
-                kpanic("mutex 0x%p <%s+0x%x> hung (val: %i, cpu: %i)\n", this, name, delta, _lock,
+                kpanic("mutex 0x%p <%s+0x%x> hung (val: %i, cpu: %i)\n", this, name, delta, m_lock,
                        Sys::CPU::getCurrentID());
             }
 
@@ -34,13 +35,10 @@ namespace AEX {
     }
 
     void Mutex::release() {
-        if (!Thread::getCurrent()->isBusy())
-            kpanic("bbb!!!");
-
         __sync_synchronize();
 
-        if (!__sync_bool_compare_and_swap(&_lock, true, false))
-            kpanic("mutex: Too many releases");
+        AEX_ASSERT(Thread::getCurrent()->isBusy());
+        AEX_ASSERT(__sync_bool_compare_and_swap(&m_lock, true, false));
 
         Thread::getCurrent()->subBusy();
     }
@@ -48,7 +46,7 @@ namespace AEX {
     bool Mutex::tryAcquire() {
         Thread::getCurrent()->addBusy();
 
-        bool ret = __sync_bool_compare_and_swap(&_lock, false, true);
+        bool ret = __sync_bool_compare_and_swap(&m_lock, false, true);
         if (!ret)
             Thread::getCurrent()->subBusy();
 

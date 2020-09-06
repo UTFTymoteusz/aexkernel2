@@ -13,6 +13,6 @@ namespace AEX::Sys {
         static void interruptIn(double ms);
 
         private:
-        static Spinlock _lock;
+        static Spinlock m_lock;
     };
 }

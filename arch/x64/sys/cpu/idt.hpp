@@ -17,11 +17,12 @@ namespace AEX::Sys {
 
         uint32_t zero;
 
-        void setOffset(size_t offset);
-        void setType(uint8_t type);
-        void setSelector(uint8_t selector);
-        void setPresent(bool present);
-        void setIST(uint8_t ist);
+        IDTEntry& setOffset(size_t offset);
+        IDTEntry& setOffset(void* offset);
+        IDTEntry& setType(uint8_t type);
+        IDTEntry& setSelector(uint8_t selector);
+        IDTEntry& setPresent(bool present);
+        IDTEntry& setIST(uint8_t ist);
     } __attribute((packed));
 
     extern IDTEntry init_IDT[256];

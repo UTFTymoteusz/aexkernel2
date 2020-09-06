@@ -12,24 +12,24 @@ namespace AEX::FS {
     class INodeDirectory : public File {
         public:
         INodeDirectory(INode_SP inode) {
-            _inode = inode;
+            m_inode = inode;
         }
 
         optional<dir_entry> readdir() {
-            return _inode->readDir(&_dir_ctx);
+            return m_inode->readDir(&m_dir_ctx);
         }
 
         optional<File_SP> dup() {
-            auto dupd = new INodeDirectory(_inode);
+            auto dupd = new INodeDirectory(m_inode);
 
-            dupd->_dir_ctx = _dir_ctx;
+            dupd->m_dir_ctx = m_dir_ctx;
 
             return File_SP(dupd);
         }
 
         private:
-        dir_context _dir_ctx = dir_context();
+        dir_context m_dir_ctx = dir_context();
 
-        Mem::SmartPointer<INode> _inode;
+        Mem::SmartPointer<INode> m_inode;
     };
 }

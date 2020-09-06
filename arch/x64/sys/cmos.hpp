@@ -24,6 +24,6 @@ namespace AEX::Sys {
         static void    write(uint8_t addr, uint8_t val);
 
         private:
-        static Spinlock _lock;
+        static Spinlock m_lock;
     };
 }

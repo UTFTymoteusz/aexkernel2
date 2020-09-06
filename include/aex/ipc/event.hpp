@@ -29,11 +29,11 @@ namespace AEX::IPC {
         int defunct();
 
         private:
-        Spinlock _lock;
+        Spinlock m_lock;
 
-        Mem::Vector<Mem::SmartPointer<Proc::Thread>, 8, 8> _tiddies;
+        Mem::Vector<Mem::SmartPointer<Proc::Thread>, 4, 4> m_tiddies;
 
-        bool _defunct = false;
+        bool m_defunct = false;
     };
 
     class SimpleEvent {
@@ -57,10 +57,10 @@ namespace AEX::IPC {
         void defunct();
 
         private:
-        Spinlock _lock;
+        Spinlock m_lock;
 
-        Mem::SmartPointer<Proc::Thread> _tiddie;
+        Mem::SmartPointer<Proc::Thread> m_tiddie;
 
-        bool _defunct = false;
+        bool m_defunct = false;
     };
 }

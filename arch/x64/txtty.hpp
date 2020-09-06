@@ -2,7 +2,7 @@
 
 #include "aex/tty.hpp"
 
-namespace AEX::TTY {
+namespace AEX {
     class TxTTY : public VTTY {
         public:
         struct vga_char;
@@ -38,10 +38,10 @@ namespace AEX::TTY {
             VGA_WHITE        = 15,
         };
 
-        int _bgColor = VGA_BLACK;
-        int _fgColor = VGA_WHITE;
+        int m_bgColor = VGA_BLACK;
+        int m_fgColor = VGA_WHITE;
 
-        vga_char* volatile _output;
+        vga_char* volatile m_output;
 
         protected:
         void _writeChar(char c);

@@ -103,7 +103,7 @@ namespace AEX::Dev::PCI {
         address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
                   ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
-        auto scopeLock = ScopeSpinlock(lock);
+        ScopeSpinlock scopeLock(lock);
 
         Sys::CPU::outportd(CONFIG_ADDRESS, address);
 
@@ -116,7 +116,7 @@ namespace AEX::Dev::PCI {
         address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
                   ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
-        auto scopeLock = ScopeSpinlock(lock);
+        ScopeSpinlock scopeLock(lock);
 
         Sys::CPU::outportd(CONFIG_ADDRESS, address);
 
@@ -129,7 +129,7 @@ namespace AEX::Dev::PCI {
         address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
                   ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
-        auto scopeLock = ScopeSpinlock(lock);
+        ScopeSpinlock scopeLock(lock);
 
         Sys::CPU::outportd(CONFIG_ADDRESS, address);
 
@@ -140,7 +140,7 @@ namespace AEX::Dev::PCI {
         uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
                            ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
-        auto scopeLock = ScopeSpinlock(lock);
+        ScopeSpinlock scopeLock(lock);
 
         Sys::CPU::outportd(CONFIG_ADDRESS, address);
 
@@ -155,7 +155,7 @@ namespace AEX::Dev::PCI {
         uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
                            ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
-        auto scopeLock = ScopeSpinlock(lock);
+        ScopeSpinlock scopeLock(lock);
 
         Sys::CPU::outportd(CONFIG_ADDRESS, address);
 
@@ -170,7 +170,7 @@ namespace AEX::Dev::PCI {
         uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
                            ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
-        auto scopeLock = ScopeSpinlock(lock);
+        ScopeSpinlock scopeLock(lock);
 
         Sys::CPU::outportd(CONFIG_ADDRESS, address);
 
@@ -294,8 +294,8 @@ namespace AEX::Dev::PCI {
         }
     }
 
-    void set_busmaster(Tree::Device* _device, bool on) {
-        auto pci_device = (PCIDevice*) _device;
+    void set_busmaster(Tree::Device* m_device, bool on) {
+        auto pci_device = (PCIDevice*) m_device;
 
         uint8_t bus      = pci_device->bus;
         uint8_t device   = pci_device->device;

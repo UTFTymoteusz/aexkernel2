@@ -24,14 +24,14 @@ namespace AEX::Mem {
         void resize(int new_size);
 
         private:
-        Spinlock   _lock;
-        IPC::Event _event;
+        Spinlock   m_lock;
+        IPC::Event m_event;
 
-        uint8_t* _buffer = nullptr;
-        int      _size   = 0;
+        uint8_t* m_buffer = nullptr;
+        int      m_size   = 0;
 
-        int _readPos  = 0;
-        int _writePos = 0;
+        int m_readPos  = 0;
+        int m_writePos = 0;
 
         int findDistance(int a, int b);
 

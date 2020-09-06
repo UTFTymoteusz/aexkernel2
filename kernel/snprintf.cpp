@@ -30,7 +30,7 @@ namespace AEX {
 
         len--;
 
-        auto scopeLock = ScopeSpinlock(lock);
+        ScopeSpinlock scopeLock(lock);
 
         auto snprintf_common = [&buffer, &len](char padchar, int padlen, char* str) {
             if (len == 0)

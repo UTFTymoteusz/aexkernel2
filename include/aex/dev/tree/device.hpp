@@ -58,8 +58,8 @@ namespace AEX::Dev::Tree {
         virtual void registerDevice(Device* device);
 
         private:
-        Spinlock _lock;
+        Spinlock m_lock;
 
-        Mem::Vector<resource> _resources;
+        Mem::Vector<resource> m_resources;
     };
 }

@@ -8,113 +8,113 @@ using namespace AEX::Proc;
 
 namespace AEX::IPC {
     void Event::wait(int timeout) {
-        _lock.acquire();
+        m_lock.acquire();
 
-        if (_defunct) {
-            _lock.release();
+        if (m_defunct) {
+            m_lock.release();
             return;
         }
 
         auto current_sptr = Thread::getCurrent()->getSmartPointer();
         bool is_on_queue  = false;
 
-        for (int i = 0; i < _tiddies.count(); i++)
-            if (_tiddies[i].get() == current_sptr.get()) {
+        for (int i = 0; i < m_tiddies.count(); i++)
+            if (m_tiddies[i].get() == current_sptr.get()) {
                 is_on_queue = true;
                 break;
             }
 
         if (!is_on_queue)
-            _tiddies.pushBack(current_sptr);
+            m_tiddies.pushBack(current_sptr);
 
         if (timeout == 0)
-            current_sptr->setStatus(THREAD_BLOCKED);
+            current_sptr->setStatus(TS_BLOCKED);
         else {
-            current_sptr->setStatus(THREAD_SLEEPING);
-            current_sptr->wakeup_at = Sys::get_uptime() + (uint64_t) timeout * 1000000;
+            current_sptr->setStatus(TS_SLEEPING);
+            current_sptr->wakeup_at = Sys::Time::uptime() + (uint64_t) timeout * 1000000;
         }
 
-        _lock.release();
+        m_lock.release();
 
         if (!current_sptr->isCritical())
             Thread::yield();
     }
 
     int Event::raise() {
-        _lock.acquire();
+        m_lock.acquire();
 
-        int total = _tiddies.count();
+        int total = m_tiddies.count();
         for (int i = 0; i < total; i++)
-            _tiddies.at(i)->setStatus(THREAD_RUNNABLE);
+            m_tiddies.at(i)->setStatus(TS_RUNNABLE);
 
-        _tiddies.clear();
-        _lock.release();
+        m_tiddies.clear();
+        m_lock.release();
 
         return total;
     }
 
     int Event::defunct() {
-        _lock.acquire();
+        m_lock.acquire();
 
-        _defunct = true;
+        m_defunct = true;
 
-        int total = _tiddies.count();
+        int total = m_tiddies.count();
         for (int i = 0; i < total; i++)
-            _tiddies.at(i)->setStatus(THREAD_RUNNABLE);
+            m_tiddies.at(i)->setStatus(TS_RUNNABLE);
 
-        _tiddies.clear();
-        _lock.release();
+        m_tiddies.clear();
+        m_lock.release();
 
         return total;
     }
 
     void SimpleEvent::wait(int timeout) {
-        _lock.acquire();
+        m_lock.acquire();
 
-        if (_defunct) {
-            _lock.release();
+        if (m_defunct) {
+            m_lock.release();
             return;
         }
 
         auto current_sptr = Thread::getCurrent()->getSmartPointer();
 
-        if (_tiddie)
+        if (m_tiddie)
             kpanic("simpleevent: Tried to wait while another boi was waiting already");
 
-        _tiddie = current_sptr;
+        m_tiddie = current_sptr;
 
         if (timeout == 0)
-            current_sptr->setStatus(THREAD_BLOCKED);
+            current_sptr->setStatus(TS_BLOCKED);
         else {
-            current_sptr->setStatus(THREAD_SLEEPING);
-            current_sptr->wakeup_at = Sys::get_uptime() + (uint64_t) timeout * 1000000;
+            current_sptr->setStatus(TS_SLEEPING);
+            current_sptr->wakeup_at = Sys::Time::uptime() + (uint64_t) timeout * 1000000;
         }
 
-        _lock.release();
+        m_lock.release();
 
         if (!current_sptr->isCritical())
             Thread::yield();
     }
 
     void SimpleEvent::raise() {
-        _lock.acquire();
+        m_lock.acquire();
 
-        if (_tiddie)
-            _tiddie->setStatus(THREAD_RUNNABLE);
+        if (m_tiddie)
+            m_tiddie->setStatus(TS_RUNNABLE);
 
-        _tiddie = Mem::SmartPointer<Proc::Thread>(nullptr, nullptr);
-        _lock.release();
+        m_tiddie = Mem::SmartPointer<Proc::Thread>(nullptr, nullptr);
+        m_lock.release();
     }
 
     void SimpleEvent::defunct() {
-        _lock.acquire();
+        m_lock.acquire();
 
-        _defunct = true;
+        m_defunct = true;
 
-        if (_tiddie)
-            _tiddie->setStatus(THREAD_RUNNABLE);
+        if (m_tiddie)
+            m_tiddie->setStatus(TS_RUNNABLE);
 
-        _tiddie = Mem::SmartPointer<Proc::Thread>(nullptr, nullptr);
-        _lock.release();
+        m_tiddie = Mem::SmartPointer<Proc::Thread>(nullptr, nullptr);
+        m_lock.release();
     }
 }

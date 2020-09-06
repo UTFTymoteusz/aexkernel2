@@ -1,5 +1,6 @@
 #pragma once
 
+#define PACKED __attribute((packed))
 #define WEAK __attribute((weak))
 
 #define BIT64 INTPTR_MAX == INT64_MAX

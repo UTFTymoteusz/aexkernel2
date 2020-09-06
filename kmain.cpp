@@ -13,15 +13,15 @@
 #include "aex/tty.hpp"
 
 #include "boot/mboot.h"
-#include "cpu/idt.hpp"
 #include "dev/dev.hpp"
 #include "fs/fs.hpp"
-#include "kernel/module.hpp"
+#include "kernel/module/module.hpp"
 #include "mem/heap.hpp"
 #include "mem/phys.hpp"
 #include "mem/sections.hpp"
 #include "net/net.hpp"
 #include "proc/proc.hpp"
+#include "sys/cpu/idt.hpp"
 #include "sys/irq.hpp"
 #include "sys/irq_i.hpp"
 #include "sys/mcore.hpp"
@@ -39,26 +39,28 @@ namespace AEX::Dev::Tree {
     void print_debug();
 }
 
-void main_threaded();
+void kmain_threaded();
 
 void init_mem(multiboot_info_t* mbinfo);
 void mount_fs();
 
-void main(multiboot_info_t* mbinfo) {
+extern "C" void kmain(multiboot_info_t* mbinfo) {
     // Dirty workaround but meh, it works
     CPU::getCurrent()->in_interrupt++;
 
-    TTY::init(mbinfo);
+    VTTY::init(mbinfo);
     Init::init_print_header();
     printk(PRINTK_INIT "Booting AEX/2\n\n");
 
-    init_mem(mbinfo);
-    load_multiboot_symbols(mbinfo);
+    if (mbinfo->flags & MULTIBOOT_INFO_MODS) {
+        init_mem(mbinfo);
+        load_symbols(mbinfo);
+    }
 
     ACPI::init();
     printk("\n");
 
-    Sys::init_time();
+    Time::init();
 
     IRQ::init();
     IRQ::init_timer();
@@ -76,32 +78,29 @@ void main(multiboot_info_t* mbinfo) {
 
     bsp->in_interrupt--;
 
-    // Sys::lazy_sleep(50);
-
     Dev::init();
     printk("\n");
     FS::init();
     printk("\n");
 
-    load_multiboot_modules(mbinfo);
+    load_modules(mbinfo);
 
     Mem::cleanup_bootstrap();
     printk("\n");
 
     mount_fs();
+    if (!Debug::symbols_loaded)
+        Debug::load_symbols("/sys/aexkrnl.elf");
 
     Net::init();
     printk("\n");
-
-    if (!Debug::symbols_loaded)
-        Debug::load_kernel_symbols("/sys/aexkrnl.elf");
 
     load_core_modules();
 
     Dev::Input::init();
 
     // Let's get to it
-    main_threaded();
+    kmain_threaded();
 }
 
 void boi(const char*) {
@@ -126,7 +125,7 @@ void init_mem(multiboot_info_t* mbinfo) {
     Heap::init();
     printk("\n");
 
-    TTY::init_mem(mbinfo);
+    VTTY::init_mem(mbinfo);
 }
 
 void mount_fs() {
@@ -188,7 +187,7 @@ void test_client() {
         "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
         "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
         "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\r\n\r\n",
-        747, 0);
+        745, 0);
 
     if (!ret)
         printk("socket send error: %s\n", strerror(ret));
@@ -296,38 +295,25 @@ void test_udp_client() {
     }
 }
 
-void main_threaded() {
+void kmain_threaded() {
+    using namespace AEX::Sys::Time;
+
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::getCurrent()->getProcess();
 
-    Proc::threaded_call(test_server);
-    Proc::Thread::sleep(500);
-    test_client();
+    time_t start_epoch = clocktime();
 
-    // test_udp_client();
-
-    // Proc::threaded_call(context_test);
-
-    // Proc::threaded_call(boi, "threaded");
-
-    // while (true)
-    //     Proc::Thread::getCurrent();
-
-    /*uint64_t* boi = (uint64_t*) 0xFFFD;
-    printk("aa %x\n", *boi);
-    printk("done\n");*/
+    printk(PRINTK_OK "mm it works\n");
 
     // Dev::Tree::print_debug();
 
-    int64_t start_epoch = get_clock_time();
-
     while (true) {
-        switch (TTY::VTTYs[TTY::ROOT_TTY]->readChar()) {
+        switch (VTTYs[ROOT_TTY]->readChar()) {
         case 't': {
-            uint64_t ns    = get_uptime();
-            uint64_t clock = get_clock_time();
+            time_t ns    = uptime();
+            time_t clock = clocktime();
 
-            auto dt = from_unix_epoch(clock);
+            auto dt = epoch2dt(clock);
 
             printk("cpu%i: %16li ns (%li ms, %li s, %li min), clock says %li s, %02i:%02i:%02i\n",
                    CPU::getCurrentID(), ns, ns / 1000000, ns / 1000000000, ns / 1000000000 / 60,

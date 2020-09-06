@@ -9,7 +9,7 @@ namespace AEX {
         bool tryAcquire();
 
         private:
-        volatile int _lock = 0;
+        volatile int m_lock = 0;
     };
 
     class ScopeMutex {
@@ -17,14 +17,14 @@ namespace AEX {
         ScopeMutex(Mutex& lock) {
             lock.acquire();
 
-            _lock = &lock;
+            m_lock = &lock;
         }
 
         ~ScopeMutex() {
-            _lock->release();
+            m_lock->release();
         }
 
         private:
-        Mutex* _lock;
+        Mutex* m_lock;
     };
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aex/assert.hpp"
 #include "aex/byte.hpp"
 #include "aex/debug.hpp"
 #include "aex/dev.hpp"

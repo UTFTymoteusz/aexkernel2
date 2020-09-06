@@ -40,19 +40,19 @@ namespace AEX::IPC {
             QueryQueue* base_queue;
 
             ~promise() {
-                base_queue->_lock.acquire();
+                base_queue->m_lock.acquire();
 
-                for (int i = 0; i < base_queue->_queries.count(); i++) {
-                    auto query = base_queue->_queries[i];
+                for (int i = 0; i < base_queue->m_queries.count(); i++) {
+                    auto query = base_queue->m_queries[i];
                     if (query != base_query)
                         continue;
 
-                    base_queue->_queries.erase(i);
+                    base_queue->m_queries.erase(i);
 
                     break;
                 }
 
-                base_queue->_lock.release();
+                base_queue->m_lock.release();
 
                 delete base_query;
             }
@@ -73,42 +73,42 @@ namespace AEX::IPC {
 
             iterator(QueryQueue* queue) {
                 base_queue = queue;
-                base_queue->_lock.acquire();
+                base_queue->m_lock.acquire();
             }
 
             ~iterator() {
-                base_queue->_lock.release();
+                base_queue->m_lock.release();
             }
 
             query* next() {
-                if (index >= base_queue->_queries.count())
+                if (index >= base_queue->m_queries.count())
                     return nullptr;
 
                 index++;
-                return base_queue->_queries[index - 1];
+                return base_queue->m_queries[index - 1];
             }
         };
 
         promise startQuery(T* base, int timeout = default_timeout) {
-            auto _query  = new query();
-            _query->base = base;
+            auto m_query  = new query();
+            m_query->base = base;
 
-            auto _promise = promise();
+            auto m_promise = promise();
 
-            _promise.base_query = _query;
-            _promise.base_queue = this;
+            m_promise.base_query = m_query;
+            m_promise.base_queue = this;
 
-            _lock.acquire();
+            m_lock.acquire();
 
-            _queries.pushBack(_query);
+            m_queries.pushBack(m_query);
 
-            _query->event.wait(timeout);
-            _lock.release();
+            m_query->event.wait(timeout);
+            m_lock.release();
 
             if (!Proc::Thread::getCurrent()->isCritical())
                 Proc::Thread::yield();
 
-            return _promise;
+            return m_promise;
         }
 
         iterator getIterator() {
@@ -116,7 +116,7 @@ namespace AEX::IPC {
         }
 
         private:
-        Spinlock                    _lock;
-        Mem::Vector<query*, 16, 16> _queries;
+        Spinlock                    m_lock;
+        Mem::Vector<query*, 16, 16> m_queries;
     };
 }

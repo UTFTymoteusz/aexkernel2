@@ -29,11 +29,15 @@ namespace AEX {
         Mem::Vector<module_section> sections;
         Mem::Vector<module_symbol>  symbols;
 
+        Mem::Vector<Module*> references;
         Mem::Vector<Module*> referencedBy;
 
         ~Module() {
             if (strings)
                 delete[] strings;
+
+            for (int i = 0; i < references.count(); i++)
+                references[i]->removeReferencedBy(this);
 
             for (int i = 0; i < sections.count(); i++)
                 ; // implement paging dealloc pls
@@ -45,6 +49,26 @@ namespace AEX {
                     return;
 
             referencedBy.pushBack(referencer);
+        }
+
+        void removeReferencedBy(Module* referencer) {
+            for (int i = 0; i < referencedBy.count(); i++) {
+                if (referencedBy[i] != referencer)
+                    return;
+
+                referencedBy.erase(i);
+                i--;
+
+                break;
+            }
+        }
+
+        void addReference(Module* reference) {
+            for (int i = 0; i < references.count(); i++)
+                if (references[i] == reference)
+                    return;
+
+            references.pushBack(reference);
         }
     };
 

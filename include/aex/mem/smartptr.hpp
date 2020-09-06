@@ -35,65 +35,65 @@ namespace AEX::Mem {
     class SmartPointer {
         public:
         SmartPointer() {
-            _val  = nullptr;
-            _refs = nullptr;
+            m_val  = nullptr;
+            m_refs = nullptr;
         }
 
         SmartPointer(T* val) {
-            _val  = val;
-            _refs = new sp_shared(1);
+            m_val  = val;
+            m_refs = new sp_shared(1);
         }
 
         SmartPointer(T* val, sp_shared* sp_shared) {
-            _val  = val;
-            _refs = sp_shared;
+            m_val  = val;
+            m_refs = sp_shared;
         }
 
         SmartPointer(const SmartPointer& sp) {
-            _val  = sp._val;
-            _refs = sp._refs;
+            m_val  = sp.m_val;
+            m_refs = sp.m_refs;
 
-            if (_refs)
-                _refs->increment();
+            if (m_refs)
+                m_refs->increment();
         }
 
         template <typename T2>
         SmartPointer(const SmartPointer<T2>& sp) {
-            _val  = (T*) sp._val;
-            _refs = sp._refs;
+            m_val  = (T*) sp.m_val;
+            m_refs = sp.m_refs;
 
-            if (_refs)
-                _refs->increment();
+            if (m_refs)
+                m_refs->increment();
         }
 
         ~SmartPointer() {
-            if (!_refs)
+            if (!m_refs)
                 return;
 
-            if (_refs->decrement())
+            if (m_refs->decrement())
                 cleanup();
         }
 
         T& operator*() {
-            return *_val;
+            return *m_val;
         }
 
         T* operator->() {
-            return _val;
+            return m_val;
         }
 
         SmartPointer& operator=(const SmartPointer& sp) {
             if (this == &sp)
                 return *this;
 
-            if (_refs && _refs->decrement())
+            if (m_refs && m_refs->decrement())
                 cleanup();
 
-            _val  = sp._val;
-            _refs = sp._refs;
+            m_val  = sp.m_val;
+            m_refs = sp.m_refs;
 
-            if (_refs)
-                _refs->increment();
+            if (m_refs)
+                m_refs->increment();
 
             return *this;
         }
@@ -103,23 +103,23 @@ namespace AEX::Mem {
         }
 
         T* get() {
-            return _val;
+            return m_val;
         }
 
         int refCount() {
-            return _refs->ref_count();
+            return m_refs->ref_count();
         }
 
         bool isValid() {
-            return _val != nullptr;
+            return m_val != nullptr;
         }
 
         void defuse() {
-            _refs = nullptr;
+            m_refs = nullptr;
         }
 
         void decrement() {
-            _refs->decrement();
+            m_refs->decrement();
         }
 
         operator bool() {
@@ -127,18 +127,18 @@ namespace AEX::Mem {
         }
 
         private:
-        sp_shared* _refs;
-        T*         _val;
+        sp_shared* m_refs;
+        T*         m_val;
 
         void cleanup() {
-            if (_val)
-                delete _val;
+            if (m_val)
+                delete m_val;
 
-            if (_refs)
-                delete _refs;
+            if (m_refs)
+                delete m_refs;
 
-            _val  = nullptr;
-            _refs = nullptr;
+            m_val  = nullptr;
+            m_refs = nullptr;
         }
 
         template <typename>

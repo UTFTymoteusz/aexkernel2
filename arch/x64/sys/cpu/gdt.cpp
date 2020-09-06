@@ -1,11 +1,11 @@
-#include "cpu/gdt.hpp"
+#include "sys/cpu/gdt.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/debug.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 
-#include "cpu/tss.hpp"
+#include "sys/cpu/tss.hpp"
 #include "sys/mcore.hpp"
 
 namespace AEX::Sys {
@@ -29,42 +29,39 @@ namespace AEX::Sys {
 
         gdt[1].setBase(0);
         gdt[1].setLimit(0xFFFFF);
-        gdt[1].access = GDT_AC_RING_0 | GDT_AC_EXECUTABLE | GDT_AC_READ_WRITE | GDT_AC_CODE_DATA |
-                        GDT_AC_PRESENT;
-        gdt[1].flags = GDT_FL_GRANULARITY | GDT_FL_X64;
+        gdt[1].access = AC_RING_0 | AC_EXECUTABLE | AC_READ_WRITE | AC_CODE_DATA | AC_PRESENT;
+        gdt[1].flags  = FL_GRANULARITY | FL_X64;
 
         gdt[2].setBase(0);
         gdt[2].setLimit(0xFFFFF);
-        gdt[2].access = GDT_AC_RING_0 | GDT_AC_READ_WRITE | GDT_AC_CODE_DATA | GDT_AC_PRESENT;
+        gdt[2].access = AC_RING_0 | AC_READ_WRITE | AC_CODE_DATA | AC_PRESENT;
         gdt[2].flags  = 0;
 
         gdt[3].setBase(0);
         gdt[3].setLimit(0xFFFFF);
-        gdt[3].access = GDT_AC_RING_3 | GDT_AC_READ_WRITE | GDT_AC_CODE_DATA | GDT_AC_PRESENT;
+        gdt[3].access = AC_RING_3 | AC_READ_WRITE | AC_CODE_DATA | AC_PRESENT;
         gdt[3].flags  = 0;
 
         gdt[4].setBase(0);
         gdt[4].setLimit(0xFFFFF);
-        gdt[4].access = GDT_AC_RING_3 | GDT_AC_EXECUTABLE | GDT_AC_READ_WRITE | GDT_AC_CODE_DATA |
-                        GDT_AC_PRESENT;
-        gdt[4].flags = GDT_FL_GRANULARITY | GDT_FL_X64;
+        gdt[4].access = AC_RING_3 | AC_EXECUTABLE | AC_READ_WRITE | AC_CODE_DATA | AC_PRESENT;
+        gdt[4].flags  = FL_GRANULARITY | FL_X64;
 
         for (int i = 0; i < MCore::cpu_count * 2; i += 2) {
-            auto     _tss     = new tss();
-            uint64_t tss_addr = (uint64_t) _tss;
+            auto     m_tss    = new tss();
+            uint64_t tss_addr = (uint64_t) m_tss;
 
             gdt[5 + i].setLimit(sizeof(tss));
             gdt[5 + i].setBase(tss_addr);
-            gdt[5 + i].access =
-                GDT_AC_RING_3 | GDT_AC_EXECUTABLE | GDT_AC_ACCESSED | GDT_AC_PRESENT;
-            gdt[5 + i].flags = GDT_FL_GRANULARITY | GDT_FL_X64;
+            gdt[5 + i].access = AC_RING_3 | AC_EXECUTABLE | AC_ACCESSED | AC_PRESENT;
+            gdt[5 + i].flags  = FL_GRANULARITY | FL_X64;
 
             *((uint32_t*) &gdt[5 + i + 1]) = tss_addr >> 32;
 
-            // ist1 will get set on the first context switch
-            _tss->ist2 = (size_t) Mem::kernel_pagemap->alloc(16384) + 16384;
+            m_tss->ist1 = (size_t) 0;
+            m_tss->ist2 = (size_t) Mem::kernel_pagemap->alloc(16384) + 16384;
 
-            tsses[i / 2] = _tss;
+            tsses[i / 2] = m_tss;
         }
 
         load_gdt(gdt, 5 + MCore::cpu_count * 2);

@@ -119,34 +119,34 @@ namespace AEX::Sys {
                      : "memory");
     }
 
-    uint8_t CPU::inportb(uint16_t _port) {
+    uint8_t CPU::inportb(uint16_t m_port) {
         uint8_t val;
-        asm volatile("inb %0, %1" : "=a"(val) : "dN"(_port));
+        asm volatile("inb %0, %1" : "=a"(val) : "dN"(m_port));
         return val;
     }
 
-    void CPU::outportb(uint16_t _port, uint8_t _data) {
-        asm volatile("outb %0, %1" : : "dN"(_port), "a"(_data));
+    void CPU::outportb(uint16_t m_port, uint8_t m_data) {
+        asm volatile("outb %0, %1" : : "dN"(m_port), "a"(m_data));
     }
 
-    uint16_t CPU::inportw(uint16_t _port) {
+    uint16_t CPU::inportw(uint16_t m_port) {
         uint16_t val;
-        asm volatile("inw %0, %1" : "=a"(val) : "dN"(_port));
+        asm volatile("inw %0, %1" : "=a"(val) : "dN"(m_port));
         return val;
     }
 
-    void CPU::outportw(uint16_t _port, uint16_t _data) {
-        asm volatile("outw %0, %1" : : "dN"(_port), "a"(_data));
+    void CPU::outportw(uint16_t m_port, uint16_t m_data) {
+        asm volatile("outw %0, %1" : : "dN"(m_port), "a"(m_data));
     }
 
-    uint32_t CPU::inportd(uint16_t _port) {
+    uint32_t CPU::inportd(uint16_t m_port) {
         uint32_t val;
-        asm volatile("ind %0, %1" : "=a"(val) : "d"(_port));
+        asm volatile("ind %0, %1" : "=a"(val) : "d"(m_port));
         return val;
     }
 
-    void CPU::outportd(uint16_t _port, uint32_t _data) {
-        asm volatile("outd %0, %1" : : "d"(_port), "a"(_data));
+    void CPU::outportd(uint16_t m_port, uint32_t m_data) {
+        asm volatile("outd %0, %1" : : "d"(m_port), "a"(m_data));
     }
 
     void CPU::wrmsr(uint32_t reg, uint64_t data) {
@@ -201,8 +201,39 @@ namespace AEX::Sys {
         asm volatile("int 0;");
     }
 
+    void CPU::setBreakpoint(int index, size_t addr, uint8_t trigger, uint8_t size, bool enabled) {
+        switch (index) {
+        case 0:
+            asm volatile("mov dr0, rsi");
+            break;
+        default:
+            break;
+        }
+
+        addr    = addr;
+        trigger = trigger;
+
+        size_t dr7;
+        asm volatile("mov %0, dr7" : "=r"(dr7));
+
+        if (enabled)
+            dr7 |= 0x02 << index * 2;
+        else
+            dr7 &= ~(0x02 << index * 2);
+
+        dr7 &= ~(0x0F << (18 + index * 4));
+        dr7 |= trigger << (16 + index * 4);
+        dr7 |= size << (18 + index * 4);
+
+        asm volatile("mov dr7, %0" : : "r"(dr7));
+    }
+
     void CPU::update(Proc::Thread* thread) {
-        _tss->ist1 = thread->fault_stack;
+        m_tss->ist1 = thread->fault_stack;
+    }
+
+    void CPU::printDebug() {
+        printk("ist1: 0x%p\n", m_tss->ist1);
     }
 
     void CPU::fillAndCleanName() {

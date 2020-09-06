@@ -1,5 +1,6 @@
 #include "aex/debug.hpp"
 
+#include "aex/assert.hpp"
 #include "aex/dev/pci.hpp"
 #include "aex/elf.hpp"
 #include "aex/errno.hpp"
@@ -10,7 +11,7 @@
 #include "aex/string.hpp"
 
 #include "boot/mboot.h"
-#include "kernel/module.hpp"
+#include "kernel/module/module.hpp"
 
 using namespace AEX::Mem;
 
@@ -25,32 +26,28 @@ namespace AEX::Debug {
     Mem::Vector<kernel_symbol> kernel_symbols;
     char*                      kernel_image_strings = nullptr;
 
-    void load_kernel_symbols(const char* elf_path) {
+    void load_symbols(const char* elf_path) {
         auto file_try = FS::File::open(elf_path);
-        if (!file_try)
-            kpanic("Failed to load symbols: %s\n", strerror(file_try));
+        AEX_ASSERT(file_try);
 
         auto    file = file_try.value;
-        int64_t size = file->seek(0, FS::File::END).value;
+        int64_t size = file->seek(0, FS::File::SEEK_END).value;
 
         auto mmap_try = Mem::mmap(nullptr, size, Mem::PROT_READ, Mem::MAP_NONE, file, 0);
-        if (!mmap_try)
-            kpanic("Failed to mmap the kernel image: %s\n", strerror(mmap_try));
+        AEX_ASSERT(mmap_try);
 
         file->close();
 
         void* addr = mmap_try.value;
 
-        load_kernel_symbols_from_memory(addr);
-
+        load_symbols(addr);
         Mem::munmap(addr, size);
     }
 
-    void load_kernel_symbols_from_memory(void* addr) {
+    void load_symbols(void* addr) {
         auto elf = ELF(addr);
 
-        if (!elf.isValid(ELF::bitness_t::BITS64, ELF::endianiness_t::LITTLE, ELF::isa_t::AMD64))
-            kpanic("Apparently our own ELF doesn't work on this machine");
+        AEX_ASSERT(elf.isValid(ELF::BIT_64, ELF::EN_LITTLE, ELF::ISA_AMD64));
 
         elf.loadStrings();
         elf.loadSymbols();
@@ -67,39 +64,51 @@ namespace AEX::Debug {
 
             char* name = kernel_image_strings + (symbol.name - elf.strings);
 
-            auto _symbol = kernel_symbol();
+            auto m_symbol = kernel_symbol();
 
-            _symbol.name    = name;
-            _symbol.address = symbol.address;
+            m_symbol.name    = name;
+            m_symbol.address = symbol.address;
 
-            kernel_symbols.pushBack(_symbol);
+            kernel_symbols.pushBack(m_symbol);
         }
 
         symbols_loaded = true;
     }
 
-    const char* symbol_addr2name(void* addr, int& delta_ret, bool only_kernel) {
+    void symbol_debug() {
+        /*for (int i = 0; i < kernel_symbols.count(); i++) {
+            auto& symbol = kernel_symbols[i];
+
+            printk("%s - 0x%p\n", symbol.name, symbol.address);
+
+            if (strcmp(symbol.name, "_ZN3AEX8Spinlock7acquireEv") == 0)
+                for (volatile size_t i = 0; i < 2423422244; i++)
+                    ;
+        }*/
+    }
+
+    const char* addr2name(void* addr, int& delta_ret, bool only_kernel) {
         if (kernel_symbols.count() == 0)
             return nullptr;
 
         if (!only_kernel) {
-            const char* ret = module_symbol_addr2name(addr, delta_ret);
+            const char* ret = module_addr2name(addr, delta_ret);
             if (ret)
                 return ret;
         }
 
-        uint64_t _addr = (uint64_t) addr;
-        uint64_t delta = 0x63756e74;
+        uint64_t m_addr = (uint64_t) addr;
+        uint64_t delta  = 0x63756e74;
 
         kernel_symbol match = {};
 
         for (int i = 0; i < kernel_symbols.count(); i++) {
             auto symbol = kernel_symbols[i];
 
-            if (_addr < symbol.address)
+            if (m_addr < symbol.address)
                 continue;
 
-            uint64_t new_delta = _addr - symbol.address;
+            uint64_t new_delta = m_addr - symbol.address;
             if (new_delta >= delta)
                 continue;
 
@@ -112,12 +121,12 @@ namespace AEX::Debug {
         return match.name;
     }
 
-    const char* symbol_addr2name(void* addr, bool only_kernel) {
+    const char* addr2name(void* addr, bool only_kernel) {
         int delta = 0;
-        return symbol_addr2name(addr, delta, only_kernel);
+        return addr2name(addr, delta, only_kernel);
     }
 
-    void* symbol_name2addr(const char* name) {
+    void* name2addr(const char* name) {
         if (kernel_symbols.count() == 0)
             return nullptr;
 
@@ -136,8 +145,8 @@ namespace AEX::Debug {
     }
 
     void dump_bytes(void* addr, size_t len) {
-        uint8_t* _addr = (uint8_t*) addr;
-        uint16_t cap   = 17;
+        uint8_t* m_addr = (uint8_t*) addr;
+        uint16_t cap    = 17;
 
         while (len) {
             cap--;
@@ -151,12 +160,12 @@ namespace AEX::Debug {
             }
 
             if (cap == 16) {
-                printk("%p: ", _addr);
+                printk("%p: ", m_addr);
             }
 
-            printk("%02x ", *_addr);
+            printk("%02x ", *m_addr);
 
-            _addr++;
+            m_addr++;
             len--;
         }
         printk("\n");

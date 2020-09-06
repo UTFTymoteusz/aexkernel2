@@ -15,7 +15,7 @@ namespace AEX::Dev::Input {
     void tty_input_thread();
 }
 
-namespace AEX::TTY {
+namespace AEX {
     constexpr auto ROOT_TTY   = 0;
     constexpr auto TTY_AMOUNT = 1;
 
@@ -65,6 +65,16 @@ namespace AEX::TTY {
         VTTY(int width, int height);
 
         /**
+         * Initializes the bare neccesities required for a terminal.
+         */
+        static void init(multiboot_info_t* mbinfo);
+
+        /**
+         * Initializes all terminals and makes them actually appear if in framebuffer mode.
+         */
+        static void init_mem(multiboot_info_t* mbinfo);
+
+        /**
          * Reads a character from the virtual terminal.
          * @returns A character.
          */
@@ -96,24 +106,24 @@ namespace AEX::TTY {
 
         /**
          * Sets the keymap of the virtual terminal.
-         * @param _keymap Pointer to the new keymap. Will be copied over.
+         * @param m_keymap Pointer to the new keymap. Will be copied over.
          */
-        void set_keymap(Dev::Input::keymap* _keymap);
+        void set_keymap(Dev::Input::keymap* m_keymap);
 
         int getCursorX() {
-            return _cursorx;
+            return m_cursorx;
         }
 
         int getCursorY() {
-            return _cursory;
+            return m_cursory;
         }
 
         void setCursorX(int x) {
-            _cursorx = x;
+            m_cursorx = x;
         }
 
         void setCursorY(int y) {
-            _cursory = y;
+            m_cursory = y;
         }
 
         VTTY& operator<<(bool val);
@@ -139,23 +149,23 @@ namespace AEX::TTY {
         VTTY& operator<<(ansi_color_t color);
 
         private:
-        int _bgColor;
-        int _fgColor;
+        int m_bgColor;
+        int m_fgColor;
 
-        Mem::CircularBuffer* _inputBuffer;
-        Dev::Input::keymap   _keymap = Dev::Input::default_keymap;
+        Mem::CircularBuffer* m_inputBuffer;
+        Dev::Input::keymap   m_keymap = Dev::Input::default_keymap;
 
         void inputReady();
-        void inputKeyPress(Dev::Input::event _event);
+        void inputKeyPress(Dev::Input::event m_event);
 
         friend void AEX::Dev::Input::init();
         friend void AEX::Dev::Input::tty_input_thread();
 
         protected:
-        int _cursorx = 0;
-        int _cursory = 0;
+        int m_cursorx = 0;
+        int m_cursory = 0;
 
-        Spinlock _lock;
+        Spinlock m_lock;
 
         virtual void _writeChar(char c);
     };
@@ -164,14 +174,4 @@ namespace AEX::TTY {
      * An array of all virtual terminals.
      */
     extern VTTY* VTTYs[TTY_AMOUNT];
-
-    /**
-     * Initializes the bare neccesities required for a terminal.
-     */
-    void init(multiboot_info_t* mbinfo);
-
-    /**
-     * Initializes all terminals and makes them actually appear if in framebuffer mode.
-     */
-    void init_mem(multiboot_info_t* mbinfo);
 }

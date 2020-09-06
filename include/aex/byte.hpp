@@ -34,14 +34,14 @@ namespace AEX {
 
     template <typename T>
     struct big_endian {
-        T _value;
+        T m_value;
 
         T get() {
-            return from_big_endian<T>(_value);
+            return from_big_endian<T>(m_value);
         }
 
         void set(T value) {
-            _value = to_big_endian<T>(value);
+            m_value = to_big_endian<T>(value);
         }
 
         operator T() {

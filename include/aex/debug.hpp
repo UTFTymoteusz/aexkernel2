@@ -14,15 +14,17 @@ namespace AEX::Debug {
 
     void stack_trace(int skip = 0);
 
-    void load_kernel_symbols(const char* elf_path);
-    void load_kernel_symbols_from_memory(void* addr);
+    void load_symbols(const char* elf_path);
+    void load_symbols(void* addr);
 
-    const char* symbol_addr2name(void* addr, int& delta, bool only_kernel = false);
-    const char* symbol_addr2name(void* addr, bool only_kernel = false);
+    const char* addr2name(void* addr, int& delta, bool only_kernel = false);
+    const char* addr2name(void* addr, bool only_kernel = false);
 
-    void* symbol_name2addr(const char* name);
+    void* name2addr(const char* name);
 
     char* demangle_name(const char* symbol, char* buffer, size_t buffer_len);
 
     void dump_bytes(void* addr, size_t len);
+
+    void symbol_debug();
 }

@@ -7,22 +7,22 @@ namespace AEX::Sys {
     struct tss;
 
     enum gdt_flags_t : uint8_t {
-        GDT_FL_X64         = 0x02,
-        GDT_FL_SIZE        = 0x04,
-        GDT_FL_GRANULARITY = 0x08,
+        FL_X64         = 0x02,
+        FL_SIZE        = 0x04,
+        FL_GRANULARITY = 0x08,
     };
 
     enum gdt_access_t : uint8_t {
-        GDT_AC_ACCESSED    = 0x01,
-        GDT_AC_READ_WRITE  = 0x02,
-        GDT_AC_DIR_CONFORM = 0x04,
-        GDT_AC_EXECUTABLE  = 0x08,
-        GDT_AC_CODE_DATA   = 0x10,
-        GDT_AC_RING_0      = 0x00,
-        GDT_AC_RING_1      = 0x20,
-        GDT_AC_RING_2      = 0x40,
-        GDT_AC_RING_3      = 0x60,
-        GDT_AC_PRESENT     = 0x80,
+        AC_ACCESSED    = 0x01,
+        AC_READ_WRITE  = 0x02,
+        AC_DIR_CONFORM = 0x04,
+        AC_EXECUTABLE  = 0x08,
+        AC_CODE_DATA   = 0x10,
+        AC_RING_0      = 0x00,
+        AC_RING_1      = 0x20,
+        AC_RING_2      = 0x40,
+        AC_RING_3      = 0x60,
+        AC_PRESENT     = 0x80,
     };
 
     struct gdt_entry {

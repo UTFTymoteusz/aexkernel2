@@ -3,7 +3,7 @@
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/string.hpp"
 
-namespace AEX::TTY {
+namespace AEX {
     struct TxTTY::vga_char {
         char    ascii;
         uint8_t fg : 4;
@@ -16,11 +16,11 @@ namespace AEX::TTY {
         width  = 80;
         height = 25;
 
-        _output = (vga_char*) output;
+        m_output = (vga_char*) output;
     }
 
     TxTTY::vga_char* TxTTY::getOutputPointer() {
-        return _output;
+        return m_output;
     }
 
     void TxTTY::clear() {
@@ -46,54 +46,54 @@ namespace AEX::TTY {
         };
 
         if (ansi >= 30 && ansi <= 37)
-            _fgColor = ansi_to_vga[ansi - 30];
+            m_fgColor = ansi_to_vga[ansi - 30];
         else if (ansi >= 40 && ansi <= 47)
-            _bgColor = ansi_to_vga[ansi - 40];
+            m_bgColor = ansi_to_vga[ansi - 40];
         else if (ansi >= 90 && ansi <= 97)
-            _fgColor = ansi_to_vga[ansi - 90 + 8];
+            m_fgColor = ansi_to_vga[ansi - 90 + 8];
         else if (ansi >= 100 && ansi <= 107)
-            _bgColor = ansi_to_vga[ansi - 100 + 8];
+            m_bgColor = ansi_to_vga[ansi - 100 + 8];
 
         return *this;
     }
 
     void TxTTY::scrollDown(int amnt) {
         for (int i = 0; i < amnt; i++)
-            memcpy(_output, &_output[width], width * (height - 1) * 2);
+            memcpy(m_output, &m_output[width], width * (height - 1) * 2);
 
         for (int i = width * (height - 1); i < width * height; i++) {
-            _output[i].ascii = ' ';
-            _output[i].bg    = _bgColor;
-            _output[i].fg    = _fgColor;
+            m_output[i].ascii = ' ';
+            m_output[i].bg    = m_bgColor;
+            m_output[i].fg    = m_fgColor;
         }
     }
 
     void TxTTY::_writeChar(char c) {
         switch (c) {
         case '\n':
-            _cursorx = 0;
-            _cursory++;
+            m_cursorx = 0;
+            m_cursory++;
             break;
         case '\r':
-            _cursorx = 0;
+            m_cursorx = 0;
             break;
         default:
-            _output[_cursorx + _cursory * width].ascii = c;
-            _output[_cursorx + _cursory * width].bg    = _bgColor;
-            _output[_cursorx + _cursory * width].fg    = _fgColor;
+            m_output[m_cursorx + m_cursory * width].ascii = c;
+            m_output[m_cursorx + m_cursory * width].bg    = m_bgColor;
+            m_output[m_cursorx + m_cursory * width].fg    = m_fgColor;
 
-            _cursorx++;
+            m_cursorx++;
 
-            if (_cursorx >= width) {
-                _cursorx = 0;
-                _cursory++;
+            if (m_cursorx >= width) {
+                m_cursorx = 0;
+                m_cursory++;
             }
 
             break;
         }
 
-        if (_cursory >= height) {
-            _cursory--;
+        if (m_cursory >= height) {
+            m_cursory--;
             scrollDown(1);
         }
     }

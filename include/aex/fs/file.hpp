@@ -9,20 +9,20 @@
 namespace AEX::FS {
     struct file_info {
         Dev::devid_t  containing_dev_id = -1;
-        FS::fs_type_t type              = FILE_UNKNOWN;
+        FS::fs_type_t type              = FT_UNKNOWN;
         Dev::devid_t  dev_id            = -1;
         uint64_t      total_size        = 0;
 
         bool is_regular() {
-            return (type & FS::FILE_REGULAR) == FS::FILE_REGULAR;
+            return (type & FS::FT_REGULAR) == FS::FT_REGULAR;
         }
 
         bool is_directory() {
-            return (type & FS::FILE_DIRECTORY) == FS::FILE_DIRECTORY;
+            return (type & FS::FT_DIRECTORY) == FS::FT_DIRECTORY;
         }
 
         bool is_block() {
-            return (type & FS::FILE_BLOCK) == FS::FILE_BLOCK;
+            return (type & FS::FT_BLOCK) == FS::FT_BLOCK;
         }
     };
 
@@ -32,9 +32,9 @@ namespace AEX::FS {
     class File {
         public:
         enum seek_mode {
-            SET     = 0,
-            CURRENT = 1,
-            END     = 2,
+            SEEK_SET     = 0,
+            SEEK_CURRENT = 1,
+            SEEK_END     = 2,
         };
 
         virtual ~File();
@@ -47,7 +47,7 @@ namespace AEX::FS {
         virtual optional<uint32_t> read(void* buf, uint32_t count);
         virtual optional<uint32_t> write(void* buf, uint32_t count);
 
-        virtual optional<int64_t> seek(int64_t offset, seek_mode mode = seek_mode::SET);
+        virtual optional<int64_t> seek(int64_t offset, seek_mode mode = seek_mode::SEEK_SET);
 
         virtual optional<dir_entry> readdir();
 

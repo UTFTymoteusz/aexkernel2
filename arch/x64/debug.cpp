@@ -48,19 +48,19 @@ namespace AEX::Debug {
                 }
 
                 int         delta = 0;
-                const char* name  = symbol_addr2name((void*) frame->rip, delta);
+                const char* name  = addr2name((void*) frame->rip, delta);
 
                 printk("  0x%p <%s+0x%x>\n", frame->rip, name ? name : "no idea", delta);
 
-                if ((frame->rip & 0xFFFFFFFFF0000000) != 0xFFFFFFFF80000000)
-                    return;
+                // if ((frame->rip & 0xFFFFFFFFF0000000) != 0xFFFFFFFF80000000)
+                //    return;
 
                 break;
             }
 
             frame = frame->rbp;
-            if (((size_t) frame & 0xFFFF000000000000) != 0xFFFF000000000000)
-                return;
+            // if (((size_t) frame & 0xFFFF000000000000) != 0xFFFF000000000000)
+            //    return;
         }
     }
 }

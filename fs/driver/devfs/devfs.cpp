@@ -13,7 +13,7 @@ namespace AEX::FS {
 
     optional<ControlBlock*> DevFS::mount(const char* source) {
         if (source)
-            return {};
+            return EINVAL;
 
         auto control_block = new DevFSControlBlock();
 

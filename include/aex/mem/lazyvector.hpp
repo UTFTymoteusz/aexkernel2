@@ -15,54 +15,54 @@ namespace AEX::Mem {
         }
 
         T& operator[](int index) {
-            if (index < 0 || index >= _count)
-                return _array[0];
+            if (index < 0 || index >= m_count)
+                return m_array[0];
 
-            return _array[index];
+            return m_array[index];
         }
 
         T at(int index) {
-            if (index < 0 || index >= _count)
-                return _array[0];
+            if (index < 0 || index >= m_count)
+                return m_array[0];
 
-            return _array[index];
+            return m_array[index];
         }
 
         int pushBack(T val) {
-            for (int i = 0; i < _count; i++) {
-                if (_array[i] == nullboi) {
-                    _array[i] = val;
+            for (int i = 0; i < m_count; i++) {
+                if (m_array[i] == nullboi) {
+                    m_array[i] = val;
                     return i;
                 }
             }
 
-            _count++;
-            _array = (T*) Heap::realloc((void*) _array, _count * sizeof(T));
+            m_count++;
+            m_array = (T*) Heap::realloc((void*) m_array, m_count * sizeof(T));
 
-            memcpy(&_array[_count - 1], &val, sizeof(T));
+            memcpy(&m_array[m_count - 1], &val, sizeof(T));
 
-            return _count - 1;
+            return m_count - 1;
         }
 
         void erase(int index) {
-            if (index < 0 || index >= _count)
+            if (index < 0 || index >= m_count)
                 return;
 
-            _array[index] = nullboi;
+            m_array[index] = nullboi;
 
-            if (index == _count - 1) {
-                _count--;
-                _array = (T*) Heap::realloc((void*) _array, _count * sizeof(T));
+            if (index == m_count - 1) {
+                m_count--;
+                m_array = (T*) Heap::realloc((void*) m_array, m_count * sizeof(T));
             }
         }
 
         int count() {
-            return _count;
+            return m_count;
         }
 
         private:
-        int _count = 0;
-        T*  _array = nullptr;
+        int m_count = 0;
+        T*  m_array = nullptr;
 
         template <typename T1>
         void pushRecursive(T1 bong) {

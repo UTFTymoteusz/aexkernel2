@@ -2,10 +2,12 @@
 
 #include <stdint.h>
 
-namespace AEX::Sys {
-    void init_time();
+namespace AEX::Sys::Time {
+    typedef int64_t time_t;
 
-    uint64_t get_uptime_raw();
+    void init();
+
+    time_t uptime_raw();
 
     void lazy_sleep(uint64_t ms);
 }

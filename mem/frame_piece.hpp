@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aex/assert.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/mem.hpp"
 #include "aex/string.hpp"
@@ -27,7 +28,7 @@ namespace AEX::Mem::Phys {
 
             next = nullptr;
 
-            memset(_bitmap, 0, amnt / 8);
+            memset(m_bitmap, 0, amnt / 8);
         }
 
         void alloc(int32_t lid, uint32_t amount) {
@@ -39,12 +40,12 @@ namespace AEX::Mem::Phys {
             for (size_t i = 0; i < amount; i++) {
                 tmp = 1 << ib;
 
-                if (_bitmap[ii] & tmp)
+                if (m_bitmap[ii] & tmp)
                     kpanic("frame_piece::Alloc(%i, %u) tried to alloc an "
                            "alloced frame.",
                            lid, amount);
 
-                _bitmap[ii] |= tmp;
+                m_bitmap[ii] |= tmp;
 
                 ib++;
                 if (ib >= sizeof(uint32_t) * 8) {
@@ -64,12 +65,9 @@ namespace AEX::Mem::Phys {
             for (size_t i = 0; i < amount; i++) {
                 tmp = 1 << ib;
 
-                if (!(_bitmap[ii] & tmp))
-                    kpanic("frame_piece::free(%i, %u) tried to free a unalloced "
-                           "frame.",
-                           lid, amount);
+                AEX_ASSERT(m_bitmap[ii] & tmp);
 
-                _bitmap[ii] &= ~tmp;
+                m_bitmap[ii] &= ~tmp;
 
                 ib++;
                 if (ib >= sizeof(uint32_t) * 8) {
@@ -95,7 +93,7 @@ namespace AEX::Mem::Phys {
             for (size_t i = 0; i < size; i++) {
                 tmp = 1 << ib;
 
-                if (!(_bitmap[ii] & tmp)) {
+                if (!(m_bitmap[ii] & tmp)) {
                     if (start == -1)
                         start = i;
 
@@ -117,6 +115,6 @@ namespace AEX::Mem::Phys {
             return -1;
         }
 
-        uint32_t _bitmap[];
+        uint32_t m_bitmap[];
     };
 }

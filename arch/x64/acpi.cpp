@@ -34,26 +34,26 @@ namespace AEX::ACPI {
         if (!rsd_ptr)
             return nullptr;
 
-        auto _rsdp = (rsdp*) Mem::kernel_pagemap->map(sizeof(rsdp), (Mem::Phys::phys_addr) rsd_ptr,
-                                                      PAGE_WRITE);
-        auto _xsdp = (xsdp*) _rsdp;
+        auto m_rsdp = (rsdp*) Mem::kernel_pagemap->map(sizeof(rsdp), (Mem::Phys::phys_addr) rsd_ptr,
+                                                       PAGE_WRITE);
+        auto m_xsdp = (xsdp*) m_rsdp;
 
-        if (validate_table((void*) _xsdp, sizeof(xsdp)) && _xsdp->xsdt_address != 0x0000) {
-            Mem::kernel_pagemap->free(_rsdp, sizeof(rsdp));
+        if (validate_table((void*) m_xsdp, sizeof(xsdp)) && m_xsdp->xsdt_address != 0x0000) {
+            Mem::kernel_pagemap->free(m_rsdp, sizeof(rsdp));
             return nullptr;
         }
 
-        if (!validate_table((void*) _rsdp, sizeof(rsdp))) {
-            Mem::kernel_pagemap->free(_rsdp, sizeof(rsdp));
+        if (!validate_table((void*) m_rsdp, sizeof(rsdp))) {
+            Mem::kernel_pagemap->free(m_rsdp, sizeof(rsdp));
             return nullptr;
         }
 
-        if (_rsdp->rsdt_address == 0x0000) {
-            Mem::kernel_pagemap->free(_rsdp, sizeof(rsdp));
+        if (m_rsdp->rsdt_address == 0x0000) {
+            Mem::kernel_pagemap->free(m_rsdp, sizeof(rsdp));
             return nullptr;
         }
 
-        return _rsdp;
+        return m_rsdp;
     }
 
     xsdp* find_xsdp() {
@@ -61,19 +61,19 @@ namespace AEX::ACPI {
         if (!rsd_ptr)
             return nullptr;
 
-        auto _xsdp = (xsdp*) Mem::kernel_pagemap->map(sizeof(xsdp), (Mem::Phys::phys_addr) rsd_ptr,
-                                                      PAGE_WRITE);
+        auto m_xsdp = (xsdp*) Mem::kernel_pagemap->map(sizeof(xsdp), (Mem::Phys::phys_addr) rsd_ptr,
+                                                       PAGE_WRITE);
 
-        if (!validate_table((void*) _xsdp, sizeof(xsdp))) {
-            Mem::kernel_pagemap->free(_xsdp, sizeof(xsdp));
+        if (!validate_table((void*) m_xsdp, sizeof(xsdp))) {
+            Mem::kernel_pagemap->free(m_xsdp, sizeof(xsdp));
             return nullptr;
         }
 
-        if (_xsdp->xsdt_address == 0x0000) {
-            Mem::kernel_pagemap->free(_xsdp, sizeof(xsdp));
+        if (m_xsdp->xsdt_address == 0x0000) {
+            Mem::kernel_pagemap->free(m_xsdp, sizeof(xsdp));
             return nullptr;
         }
 
-        return _xsdp;
+        return m_xsdp;
     }
 }

@@ -3,8 +3,8 @@
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/printk.hpp"
 
-#include "cpu/idt.hpp"
 #include "sys/apic.hpp"
+#include "sys/cpu/idt.hpp"
 #include "sys/irq.hpp"
 
 using CPU = AEX::Sys::CPU;

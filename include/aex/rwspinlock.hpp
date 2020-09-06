@@ -17,10 +17,10 @@ namespace AEX {
         void release_write();
 
         private:
-        int _read  = 0;
-        int _write = 0;
+        int m_read  = 0;
+        int m_write = 0;
 
-        Spinlock _lock;
+        Spinlock m_lock;
     };
 
     class ScopeRWSpinlockRead {
@@ -28,15 +28,15 @@ namespace AEX {
         ScopeRWSpinlockRead(RWSpinlock& lock) {
             lock.acquire_read();
 
-            _lock = &lock;
+            m_lock = &lock;
         }
 
         ~ScopeRWSpinlockRead() {
-            _lock->release_read();
+            m_lock->release_read();
         }
 
         private:
-        RWSpinlock* _lock;
+        RWSpinlock* m_lock;
     };
 
     class ScopeRWSpinlockWrite {
@@ -44,14 +44,14 @@ namespace AEX {
         ScopeRWSpinlockWrite(RWSpinlock& lock) {
             lock.acquire_write();
 
-            _lock = &lock;
+            m_lock = &lock;
         }
 
         ~ScopeRWSpinlockWrite() {
-            _lock->release_write();
+            m_lock->release_write();
         }
 
         private:
-        RWSpinlock* _lock;
+        RWSpinlock* m_lock;
     };
 }

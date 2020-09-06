@@ -9,7 +9,7 @@ namespace AEX::Proc {
     struct affinity {
         public:
         affinity() {
-            _mask = 0x00000000;
+            m_mask = 0x00000000;
         }
 
         bool isCurrentCPUMasked() {
@@ -17,17 +17,17 @@ namespace AEX::Proc {
         }
 
         bool isMasked(int id) {
-            return _mask & (1 << id);
+            return m_mask & (1 << id);
         }
 
         void mask(int cpuid, bool mask) {
             if (mask)
-                _mask |= (1 << cpuid);
+                m_mask |= (1 << cpuid);
             else
-                _mask &= ~(1 << cpuid);
+                m_mask &= ~(1 << cpuid);
         }
 
         private:
-        uint32_t _mask;
+        uint32_t m_mask;
     };
 }

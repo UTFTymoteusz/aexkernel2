@@ -8,6 +8,7 @@
 #include "aex/spinlock.hpp"
 
 // pls consider making thread functions accept and return smartpointers
+// make the eventbong use an int or whatever
 
 namespace AEX::IPC {
     class Event;
@@ -20,12 +21,21 @@ namespace AEX::Proc {
     class Event;
     class Context;
 
+    enum thread_flag_t : uint8_t {
+        TF_NONE     = 0x00,
+        TF_RUNNABLE = 0x01,
+        TF_SLEEPING = 0x02,
+        TF_BLOCKED  = 0x04,
+        TF_DEAD     = 0x80,
+    };
+
     enum thread_status_t : uint8_t {
-        THREAD_FRESH    = 0,
-        THREAD_RUNNABLE = 1,
-        THREAD_SLEEPING = 2,
-        THREAD_BLOCKED  = 3,
-        THREAD_DEAD     = 4,
+        TS_FRESH         = TF_NONE,
+        TS_RUNNABLE      = TF_RUNNABLE,
+        TS_SLEEPING      = TF_SLEEPING | TF_RUNNABLE,
+        TS_BLOCKED       = TF_BLOCKED | TF_RUNNABLE,
+        TS_BLOCKED_SLEEP = TF_SLEEPING | TF_BLOCKED | TF_RUNNABLE,
+        TS_DEAD          = TF_DEAD,
     };
 
     class Thread {
@@ -52,7 +62,7 @@ namespace AEX::Proc {
 
         thread_status_t status;
         union {
-            uint64_t wakeup_at;
+            int64_t wakeup_at;
         };
 
         Process* parent;
@@ -157,85 +167,85 @@ namespace AEX::Proc {
 
         // pls atomic<T> later
         /**
-         * Adds 1 to the thread's busy counter. If _busy is greater than 0, the thread cannot be
+         * Adds 1 to the thread's busy counter. If m_busy is greater than 0, the thread cannot be
          * killed.
          */
         inline void addBusy() {
-            Mem::atomic_add(&_busy, (uint16_t) 1);
+            Mem::atomic_add(&m_busy, (uint16_t) 1);
         }
 
         /**
-         * Subtracts 1 from the thread's busy counter. If _busy is greater than 0, the thread cannot
-         * be killed.
+         * Subtracts 1 from the thread's busy counter. If m_busy is greater than 0, the thread
+         * cannot be killed.
          */
         inline void subBusy() {
-            uint16_t busy = Mem::atomic_sub_fetch(&_busy, (uint16_t) 1);
+            uint16_t busy = Mem::atomic_sub_fetch(&m_busy, (uint16_t) 1);
 
-            if (Mem::atomic_read(&_abort) == 1 && !isFinished() && busy == 0)
+            if (Mem::atomic_read(&m_abort) == 1 && !isFinished() && busy == 0)
                 Thread::exit();
         }
 
         /**
-         * Checks the thread's busy counter. If _busy is greater than 0, the thread cannot
+         * Checks the thread's busy counter. If m_busy is greater than 0, the thread cannot
          * be killed.
          * @returns Whenever the thread is "busy".
          */
         inline bool isBusy() {
-            return Mem::atomic_read(&_busy) > 0;
+            return Mem::atomic_read(&m_busy) > 0;
         }
 
         inline uint16_t getBusy() {
-            return Mem::atomic_read(&_busy);
+            return Mem::atomic_read(&m_busy);
         }
 
         inline void setBusy(uint16_t busy) {
-            _busy = busy;
+            m_busy = busy;
         }
 
         /**
-         * Adds 1 to the thread's critical counter. If _critical is greater than 0, the thread
+         * Adds 1 to the thread's critical counter. If m_critical is greater than 0, the thread
          * cannot be interrupted or killed.
          */
         void addCritical();
 
         /**
-         * Subtracts 1 from the thread's critical counter. If _critical is greater than 0, the
+         * Subtracts 1 from the thread's critical counter. If m_critical is greater than 0, the
          * thread cannot be interrupted or killed.
          */
         void subCritical();
 
         /**
-         * Checks the thread's critical counter. If _critical is greater than 0, the thread cannot
+         * Checks the thread's critical counter. If m_critical is greater than 0, the thread cannot
          * be interrupted or killed.
          * @returns Whenever the thread is "critical".
          */
         inline bool isCritical() {
-            return Mem::atomic_read(&_critical) > 0;
+            return Mem::atomic_read(&m_critical) > 0;
         }
 
         inline uint16_t getCritical() {
-            return Mem::atomic_read(&_critical);
+            return Mem::atomic_read(&m_critical);
         }
 
         inline void setCritical(uint16_t critical) {
-            _critical = critical;
+            m_critical = critical;
         }
 
         state saveState();
 
-        void loadState(state& _state);
+        void loadState(state& m_state);
 
         void announceExit();
 
         private:
-        IPC::Event* _exit_event = nullptr;
+        IPC::Event* m_exit_event = nullptr;
 
         public:
-        uint16_t _busy     = 0;
-        uint16_t _critical = 0;
+        uint16_t m_busy     = 0;
+        uint16_t m_critical = 0;
 
-        uint8_t _abort    = 0;
-        uint8_t _finished = 0;
+        uint8_t m_abort    = 0;
+        uint8_t m_finished = 0;
     };
 
     typedef Mem::SmartPointer<Thread> Thread_SP;

@@ -41,35 +41,41 @@ namespace AEX {
     }
 
     void WEAK memset(void* mem, char c, size_t len) {
-        char* _mem = (char*) mem;
+        char* m_mem = (char*) mem;
 
         for (size_t i = 0; i < len; i++)
-            _mem[i] = c;
+            m_mem[i] = c;
     }
 
     void WEAK memset16(void* mem, uint16_t n, size_t count) {
-        uint16_t* _mem = (uint16_t*) mem;
+        uint16_t* m_mem = (uint16_t*) mem;
 
         for (size_t i = 0; i < count; i++)
-            _mem[i] = n;
+            m_mem[i] = n;
     }
 
     void WEAK memset32(void* mem, uint32_t n, size_t count) {
-        uint32_t* _mem = (uint32_t*) mem;
+        uint32_t* m_mem = (uint32_t*) mem;
 
         for (size_t i = 0; i < count; i++)
-            _mem[i] = n;
+            m_mem[i] = n;
     }
 
     void WEAK memset64(void* mem, uint64_t n, size_t count) {
-        uint64_t* _mem = (uint64_t*) mem;
+        uint64_t* m_mem = (uint64_t*) mem;
 
         for (size_t i = 0; i < count; i++)
-            _mem[i] = n;
+            m_mem[i] = n;
     }
 
     void WEAK memcpy(void* dst, const void* src, size_t size) {
-        size_t aligned = size / sizeof(size_t);
+        uint8_t* dst_b = (uint8_t*) dst;
+        uint8_t* src_b = (uint8_t*) src;
+
+        for (size_t i = 0; i < size; i++)
+            dst_b[i] = src_b[i];
+
+        /*size_t aligned = size / sizeof(size_t);
 
         size_t* dst_st = (size_t*) dst;
         size_t* src_st = (size_t*) src;
@@ -83,7 +89,7 @@ namespace AEX {
         uint8_t* src_b = (uint8_t*) src + aligned * sizeof(size_t);
 
         for (size_t i = 0; i < remainder; i++)
-            dst_b[i] = src_b[i];
+            dst_b[i] = src_b[i];*/
     }
 
     int WEAK memcmp(const void* a, const void* b, size_t num) {

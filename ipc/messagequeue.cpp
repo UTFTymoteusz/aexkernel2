@@ -13,33 +13,33 @@ namespace AEX::IPC {
         if (total_len > MAX_WAITING_SIZE)
             return 0;
 
-        _lock.acquire();
+        m_lock.acquire();
 
-        while ((MAX_WAITING_SIZE - _free) < total_len) {
-            _event.wait();
-            _lock.release();
+        while ((MAX_WAITING_SIZE - m_free) < total_len) {
+            m_event.wait();
+            m_lock.release();
 
             Thread::yield();
 
-            _lock.acquire();
+            m_lock.acquire();
         }
 
         message_header header;
-        _circ_buffer.read((uint8_t*) &header, sizeof(header));
-        _circ_buffer.read((uint8_t*) ptr, len);
+        m_circ_buffer.read((uint8_t*) &header, sizeof(header));
+        m_circ_buffer.read((uint8_t*) ptr, len);
 
         int left = header.len - len;
         while (left > 0) {
             uint8_t buffer[32];
-            _circ_buffer.read(buffer, min(left, 32));
+            m_circ_buffer.read(buffer, min(left, 32));
 
             left -= min(left, 32);
         }
 
-        _free += total_len;
+        m_free += total_len;
 
-        _event.raise();
-        _lock.release();
+        m_event.raise();
+        m_lock.release();
 
         return min(header.len, len);
     }
@@ -49,27 +49,27 @@ namespace AEX::IPC {
         if (total_len > MAX_WAITING_SIZE)
             return;
 
-        _lock.acquire();
+        m_lock.acquire();
 
-        while (_free < total_len) {
-            _event.wait();
-            _lock.release();
+        while (m_free < total_len) {
+            m_event.wait();
+            m_lock.release();
 
             Thread::yield();
 
-            _lock.acquire();
+            m_lock.acquire();
         }
 
-        _free -= total_len;
+        m_free -= total_len;
 
         message_header header;
         header.pid = Thread::getCurrent()->getProcess()->pid;
         header.len = len;
 
-        _circ_buffer.write((uint8_t*) &header, sizeof(header));
-        _circ_buffer.write((uint8_t*) ptr, len);
+        m_circ_buffer.write((uint8_t*) &header, sizeof(header));
+        m_circ_buffer.write((uint8_t*) ptr, len);
 
-        _event.raise();
-        _lock.release();
+        m_event.raise();
+        m_lock.release();
     }
 }

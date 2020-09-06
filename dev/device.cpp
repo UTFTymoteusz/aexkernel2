@@ -11,26 +11,27 @@ namespace AEX::Dev {
 
     bool Device::registerDevice() {
         this->id = devices.addRef(this);
-        if (this->id != -1) {
-            const char* type = "unknown";
+        if (this->id == -1)
+            return false;
 
-            switch (this->type) {
-            case DEV_BLOCK:
-                type = "block";
-                break;
-            case DEV_CHAR:
-                type = "char";
-                break;
-            case DEV_NET:
-                type = "net";
-                break;
-            default:
-                break;
-            }
+        const char* type = "unknown";
 
-            printk("dev: Registered %s device '%s'\n", type, name);
+        switch (this->type) {
+        case DEV_BLOCK:
+            type = "block";
+            break;
+        case DEV_CHAR:
+            type = "char";
+            break;
+        case DEV_NET:
+            type = "net";
+            break;
+        default:
+            break;
         }
 
-        return this->id != -1;
+        printk("dev: Registered %s device '%s'\n", type, name);
+
+        return true;
     }
 }

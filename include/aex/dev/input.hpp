@@ -24,8 +24,8 @@ namespace AEX::Dev::Input {
         event readEvent();
 
         private:
-        Mem::CircularBuffer _buffer;
-        bool                _registered = false;
+        Mem::CircularBuffer m_buffer;
+        bool                m_registered = false;
 
         Handle(int buffer_size);
 
@@ -37,5 +37,5 @@ namespace AEX::Dev::Input {
 
     extern keymap default_keymap;
 
-    char translateEvent(keymap* _keymap, event& _event);
+    char translateEvent(keymap* m_keymap, event& m_event);
 }

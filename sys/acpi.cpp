@@ -30,18 +30,19 @@ namespace AEX::ACPI {
     }
 
     void _init() {
-        auto _fadt = (fadt*) find_table("FACP", 0);
-        if (!_fadt)
+        auto m_fadt = (fadt*) find_table("FACP", 0);
+        if (!m_fadt)
             kpanic("This system has no FADT, what the hell?");
 
-        auto table_hdr = (sdt_header*) Mem::kernel_pagemap->map(sizeof(sdt_header), _fadt->dsdt, 0);
-        auto table     = (acpi_table*) Mem::kernel_pagemap->map(table_hdr->length, _fadt->dsdt, 0);
+        auto table_hdr =
+            (sdt_header*) Mem::kernel_pagemap->map(sizeof(sdt_header), m_fadt->dsdt, 0);
+        auto table = (acpi_table*) Mem::kernel_pagemap->map(table_hdr->length, m_fadt->dsdt, 0);
 
         Mem::kernel_pagemap->free(table_hdr, sizeof(sdt_header));
 
         add_table(table);
 
-        if (_fadt->pm_timer_block == 0)
+        if (m_fadt->pm_timer_block == 0)
             kpanic("acpi: no power management timer :(\n");
     }
 
@@ -52,17 +53,17 @@ namespace AEX::ACPI {
         if (xsdp != nullptr) {
             printk("acpi: Found the xdsp\n");
 
-            auto _xsdt = (xsdt*) Mem::kernel_pagemap->map(xsdp->length, xsdp->xsdt_address, 0);
+            auto m_xsdt = (xsdt*) Mem::kernel_pagemap->map(xsdp->length, xsdp->xsdt_address, 0);
 
-            if (!add_table((acpi_table*) _xsdt)) {
+            if (!add_table((acpi_table*) m_xsdt)) {
                 printk("acpi: Failed\n");
                 return;
             }
 
-            revision = _xsdt->header.revision;
+            revision = m_xsdt->header.revision;
 
-            for (size_t i = sizeof(xsdt); i < _xsdt->header.length; i += 8) {
-                uint64_t addr = *((uint64_t*) ((size_t) _xsdt + i));
+            for (size_t i = sizeof(xsdt); i < m_xsdt->header.length; i += 8) {
+                uint64_t addr = *((uint64_t*) ((size_t) m_xsdt + i));
                 auto     table_hdr =
                     (sdt_header*) Mem::kernel_pagemap->map(sizeof(sdt_header), addr, 0);
                 auto table = (acpi_table*) Mem::kernel_pagemap->map(table_hdr->length, addr, 0);
@@ -82,17 +83,17 @@ namespace AEX::ACPI {
         if (rsdp != nullptr) {
             printk("acpi: Found the RSDP\n");
 
-            auto _rsdt = (rsdt*) Mem::kernel_pagemap->map(4096, rsdp->rsdt_address, 0);
+            auto m_rsdt = (rsdt*) Mem::kernel_pagemap->map(4096, rsdp->rsdt_address, 0);
 
-            if (!add_table((acpi_table*) _rsdt)) {
+            if (!add_table((acpi_table*) m_rsdt)) {
                 printk("acpi: Failed\n");
                 return;
             }
 
-            revision = _rsdt->header.revision;
+            revision = m_rsdt->header.revision;
 
-            for (size_t i = sizeof(rsdt); i < _rsdt->header.length; i += 4) {
-                uint32_t addr  = *((uint32_t*) ((size_t) _rsdt + i));
+            for (size_t i = sizeof(rsdt); i < m_rsdt->header.length; i += 4) {
+                uint32_t addr  = *((uint32_t*) ((size_t) m_rsdt + i));
                 auto     table = (acpi_table*) Mem::kernel_pagemap->map(4096, addr, 0);
 
                 add_table(table);
@@ -108,11 +109,11 @@ namespace AEX::ACPI {
     }
 
     bool validate_table(const void* tbl, size_t len) {
-        uint8_t* _tbl = (uint8_t*) tbl;
-        uint8_t  sum  = 0;
+        uint8_t* m_tbl = (uint8_t*) tbl;
+        uint8_t  sum   = 0;
 
         for (size_t i = 0; i < len; i++)
-            sum += _tbl[i];
+            sum += m_tbl[i];
 
         return sum == 0;
     }

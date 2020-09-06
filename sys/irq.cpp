@@ -1,6 +1,7 @@
 #include "aex/sys/irq.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/assert.hpp"
 #include "aex/mem.hpp"
 #include "aex/proc.hpp"
 #include "aex/spinlock.hpp"
@@ -60,15 +61,14 @@ namespace AEX::Sys::IRQ {
     Spinlock handler_lock;
 
     void handle(uint8_t irq) {
-        if (irq >= 32)
-            kpanic("irq >= 32 wtf");
+        AEX_ASSERT(irq < 32);
 
         auto thread = Thread::getCurrent();
         auto state  = thread->saveState();
 
         thread->setCritical(1);
         thread->setBusy(0);
-        thread->setStatus(Proc::THREAD_RUNNABLE);
+        thread->setStatus(Proc::TS_RUNNABLE);
 
         handlers[irq].callAll();
 

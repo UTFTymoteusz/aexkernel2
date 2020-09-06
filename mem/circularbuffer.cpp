@@ -12,137 +12,135 @@ using namespace AEX::Proc;
 
 namespace AEX::Mem {
     CircularBuffer::CircularBuffer(int size) {
-        _buffer = new uint8_t[size];
-        _size   = size;
+        m_buffer = new uint8_t[size];
+        m_size   = size;
     }
 
     CircularBuffer::~CircularBuffer() {
-        delete _buffer;
-        _buffer = nullptr;
+        delete m_buffer;
+        m_buffer = nullptr;
     }
 
     void CircularBuffer::read(void* buffer, int len) {
-        _lock.acquire();
+        m_lock.acquire();
 
         int offset = 0;
 
         while (len > 0) {
             int clen = min(len, readAvailableCut());
             if (clen == 0) {
-                _event.wait();
-                _lock.release();
+                m_event.wait();
+                m_lock.release();
 
                 Thread::yield();
 
-                _lock.acquire();
-
+                m_lock.acquire();
                 continue;
             }
 
-            memcpy((uint8_t*) buffer + offset, _buffer + _readPos, clen);
+            memcpy((uint8_t*) buffer + offset, m_buffer + m_readPos, clen);
 
-            _readPos += clen;
-            _event.raise();
+            m_readPos += clen;
+            m_event.raise();
 
             offset += clen;
             len -= clen;
 
-            if (_readPos == _size)
-                _readPos = 0;
+            if (m_readPos == m_size)
+                m_readPos = 0;
         }
 
-        _lock.release();
+        m_lock.release();
     }
 
     void CircularBuffer::write(const void* buffer, int len) {
-        _lock.acquire();
+        m_lock.acquire();
 
         int offset = 0;
 
         while (len > 0) {
             int clen = min(len, writeAvailableCut());
             if (clen == 0) {
-                _event.wait();
-                _lock.release();
+                m_event.wait();
+                m_lock.release();
 
                 Thread::yield();
 
-                _lock.acquire();
-
+                m_lock.acquire();
                 continue;
             }
 
-            memcpy(_buffer + _writePos, (uint8_t*) buffer + offset, clen);
+            memcpy(m_buffer + m_writePos, (uint8_t*) buffer + offset, clen);
 
-            _writePos += clen;
-            _event.raise();
+            m_writePos += clen;
+            m_event.raise();
 
             offset += clen;
             len -= clen;
 
-            if (_writePos == _size)
-                _writePos = 0;
+            if (m_writePos == m_size)
+                m_writePos = 0;
         }
 
-        _lock.release();
+        m_lock.release();
     }
 
     int CircularBuffer::readAvailable() {
-        return min(_size, findDistance(_readPos, _writePos));
+        return min(m_size, findDistance(m_readPos, m_writePos));
     }
 
     int CircularBuffer::writeAvailable() {
-        return min(_size, findDistance(_writePos, _readPos - 1));
+        return min(m_size, findDistance(m_writePos, m_readPos - 1));
     }
 
     int CircularBuffer::getReadPos() {
-        return _readPos;
+        return m_readPos;
     }
 
     int CircularBuffer::getWritePos() {
-        return _writePos;
+        return m_writePos;
     }
 
     void CircularBuffer::resize(int new_size) {
-        _lock.acquire();
+        m_lock.acquire();
 
-        _readPos  = 0;
-        _writePos = 0;
+        m_readPos  = 0;
+        m_writePos = 0;
 
-        _buffer = Heap::realloc(_buffer, new_size);
+        m_buffer = Heap::realloc(m_buffer, new_size);
 
-        _lock.release();
+        m_lock.release();
     }
 
     int CircularBuffer::findDistance(int a, int b) {
         if (a < 0)
-            a += _size;
+            a += m_size;
 
         if (b < 0)
-            b += _size;
+            b += m_size;
 
         int c = b - a;
 
         if (c < 0)
-            c += _size;
+            c += m_size;
 
         return c;
     }
 
     int CircularBuffer::readAvailableCut() {
-        int len = _size;
+        int len = m_size;
 
-        len = min(len, _size - _readPos);
-        len = min(len, findDistance(_readPos, _writePos));
+        len = min(len, m_size - m_readPos);
+        len = min(len, findDistance(m_readPos, m_writePos));
 
         return len;
     }
 
     int CircularBuffer::writeAvailableCut() {
-        int len = _size;
+        int len = m_size;
 
-        len = min(len, _size - _writePos);
-        len = min(len, findDistance(_writePos, _readPos - 1));
+        len = min(len, m_size - m_writePos);
+        len = min(len, findDistance(m_writePos, m_readPos - 1));
 
         return len;
     }

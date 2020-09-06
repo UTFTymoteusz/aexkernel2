@@ -1,15 +1,16 @@
 #pragma once
 
+#include "aex/macros.hpp"
 #include "aex/mem.hpp"
 #include "aex/string.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
-constexpr auto PROCESSOR_ENABLED = 1 << 0;
-constexpr auto PROCESSOR_ONLINE  = 1 << 1;
-
 namespace AEX::ACPI {
+    constexpr auto PROCESSOR_ENABLED = 1 << 0;
+    constexpr auto PROCESSOR_ONLINE  = 1 << 1;
+
     struct sdt_header {
         char signature[4];
 
@@ -23,7 +24,7 @@ namespace AEX::ACPI {
         uint32_t oem_revision;
         uint32_t creator_id;
         uint32_t creator_revision;
-    } __attribute((packed));
+    } PACKED;
 
     struct rsdp {
         char     signature[8];
@@ -31,26 +32,26 @@ namespace AEX::ACPI {
         char     oem_id[6];
         uint8_t  revision;
         uint32_t rsdt_address;
-    } __attribute((packed));
+    } PACKED;
 
     struct rsdt {
         sdt_header header;
         uint32_t   table_pointers[];
-    } __attribute((packed));
+    } PACKED;
 
     struct xsdp {
-        rsdp _rsdp;
+        rsdp m_rsdp;
 
         uint32_t length;
         uint64_t xsdt_address;
         uint8_t  extended_checksum;
         uint8_t  reserved[3];
-    } __attribute((packed));
+    } PACKED;
 
     struct xsdt {
         sdt_header header;
         uint64_t   table_pointers[];
-    } __attribute((packed));
+    } PACKED;
 
     struct fadt {
         sdt_header header;
@@ -107,7 +108,7 @@ namespace AEX::ACPI {
 
         uint8_t  reserved1;
         uint32_t fixed_flags;
-    } __attribute((packed));
+    } PACKED;
 
     class MADT {
         public:
@@ -122,7 +123,7 @@ namespace AEX::ACPI {
         struct entry {
             uint8_t type;
             uint8_t len;
-        } __attribute((packed));
+        } PACKED;
 
         struct lapic {
             entry base;
@@ -134,7 +135,7 @@ namespace AEX::ACPI {
             bool canStart() {
                 return flags & PROCESSOR_ENABLED || flags & PROCESSOR_ONLINE;
             }
-        } __attribute((packed));
+        } PACKED;
 
         struct ioapic {
             entry base;
@@ -143,7 +144,7 @@ namespace AEX::ACPI {
             uint8_t  reserved;
             uint32_t addr;
             uint32_t global_interrupt_base;
-        } __attribute((packed));
+        } PACKED;
 
         struct int_override {
             entry base;
@@ -152,7 +153,7 @@ namespace AEX::ACPI {
             uint8_t  irq_source;
             uint32_t global_interrupt;
             uint16_t flags;
-        } __attribute((packed));
+        } PACKED;
 
         struct nmi {
             entry base;
@@ -160,14 +161,14 @@ namespace AEX::ACPI {
             uint8_t  id;
             uint16_t flags;
             uint8_t  num;
-        } __attribute((packed));
+        } PACKED;
 
         struct addr_override {
             entry base;
 
             uint16_t reserved;
             uint64_t addr;
-        } __attribute((packed));
+        } PACKED;
 
         sdt_header header;
         uint32_t   apic_addr;
@@ -182,7 +183,7 @@ namespace AEX::ACPI {
 
         private:
         void* findEntry(int type, int index);
-    } __attribute((packed));
+    } PACKED;
 
     struct acpi_table {};
 

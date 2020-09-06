@@ -15,15 +15,15 @@ namespace AEX::Dev {
     BlockDevice::BlockDevice(const char* name, uint16_t sector_size, uint64_t sector_count,
                              uint16_t max_sectors_at_once)
         : Device(name, DEV_BLOCK) {
-        _overflow_buffer = new uint8_t[sector_size];
+        m_overflow_buffer = new uint8_t[sector_size];
 
-        _sector_size         = sector_size;
-        _sector_count        = sector_count;
-        _max_sectors_at_once = max_sectors_at_once;
+        m_sector_size         = sector_size;
+        m_sector_count        = sector_count;
+        m_max_sectors_at_once = max_sectors_at_once;
     }
 
     BlockDevice::~BlockDevice() {
-        delete _overflow_buffer;
+        delete m_overflow_buffer;
     }
 
     int BlockDevice::init() {
@@ -35,14 +35,14 @@ namespace AEX::Dev {
 
         // this needs to be checked properly
         while (!isAligned(buffer) && word_align) {
-            uint8_t misaligned_sector[_sector_size];
-            readBlock(misaligned_sector, start / _sector_size, 1);
+            uint8_t misaligned_sector[m_sector_size];
+            readBlock(misaligned_sector, start / m_sector_size, 1);
 
-            current_usage->block_bytes_read += _sector_size;
+            current_usage->block_bytes_read += m_sector_size;
 
-            uint16_t misaligned_len = min<uint64_t>(start & (_sector_size - 1), len);
+            uint16_t misaligned_len = min<uint64_t>(start & (m_sector_size - 1), len);
             if (misaligned_len == 0) // If this is the case, we're aligned sector-wise
-                misaligned_len = min<uint16_t>(len, _sector_size);
+                misaligned_len = min<uint16_t>(len, m_sector_size);
 
             memcpy(buffer, misaligned_sector, misaligned_len);
 
@@ -60,30 +60,30 @@ namespace AEX::Dev {
         uint32_t combo_count = 0;
 
         while (len > 0) {
-            uint32_t offset = start - int_floor<uint64_t>(start, _sector_size);
-            uint32_t llen   = min(_sector_size - offset, len);
+            uint32_t offset = start - int_floor<uint64_t>(start, m_sector_size);
+            uint32_t llen   = min(m_sector_size - offset, len);
 
-            if (combo && combo_count == _max_sectors_at_once) {
+            if (combo && combo_count == m_max_sectors_at_once) {
                 readBlock(buffer, combo_start, combo_count);
-                buffer = (void*) ((uint8_t*) buffer + combo_count * _sector_size);
 
-                current_usage->block_bytes_read += combo_count * _sector_size;
+                current_usage->block_bytes_read += combo_count * m_sector_size;
 
-                combo = false;
+                buffer = (void*) ((uint8_t*) buffer + combo_count * m_sector_size);
+                combo  = false;
             }
 
             if (!isPerfectFit(start, llen)) {
                 if (combo) {
                     readBlock(buffer, combo_start, combo_count);
-                    buffer = (void*) ((uint8_t*) buffer + combo_count * _sector_size);
 
-                    combo = false;
+                    buffer = (void*) ((uint8_t*) buffer + combo_count * m_sector_size);
+                    combo  = false;
                 }
 
-                readBlock(_overflow_buffer, start / _sector_size, 1);
-                memcpy(buffer, _overflow_buffer + offset, llen);
+                readBlock(m_overflow_buffer, start / m_sector_size, 1);
+                memcpy(buffer, m_overflow_buffer + offset, llen);
 
-                current_usage->block_bytes_read += _sector_size;
+                current_usage->block_bytes_read += m_sector_size;
 
                 buffer = (void*) ((uint8_t*) buffer + llen);
             }
@@ -91,7 +91,7 @@ namespace AEX::Dev {
                 if (!combo) {
                     combo = true;
 
-                    combo_start = start / _sector_size;
+                    combo_start = start / m_sector_size;
                     combo_count = 0;
                 }
 
@@ -104,11 +104,7 @@ namespace AEX::Dev {
 
         if (combo) {
             readBlock(buffer, combo_start, combo_count);
-            buffer = (void*) ((uint8_t*) buffer + combo_count * _sector_size);
-
-            current_usage->block_bytes_read += combo_count * _sector_size;
-
-            combo = false;
+            current_usage->block_bytes_read += combo_count * m_sector_size;
         }
 
         return 0;
@@ -143,10 +139,10 @@ namespace AEX::Dev {
     }
 
     bool BlockDevice::isPerfectFit(uint64_t start, uint32_t len) {
-        if (start % _sector_size != 0)
+        if (start % m_sector_size != 0)
             return false;
 
-        if (len % _sector_size != 0)
+        if (len % m_sector_size != 0)
             return false;
 
         return true;

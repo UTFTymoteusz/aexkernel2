@@ -1,7 +1,7 @@
 #include "aex/string.hpp"
 #include "aex/tty.hpp"
 
-namespace AEX::TTY {
+namespace AEX {
     VTTY& VTTY::operator<<(bool val) {
         write(val ? "true" : "false");
         return *this;

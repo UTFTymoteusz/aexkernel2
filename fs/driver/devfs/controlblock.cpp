@@ -17,13 +17,13 @@ namespace AEX::FS {
 
         switch (device->type) {
         case Dev::DEV_BLOCK:
-            inode->type = FILE_BLOCK;
+            inode->type = FT_BLOCK;
             break;
         case Dev::DEV_CHAR:
-            inode->type = FILE_CHAR;
+            inode->type = FT_CHAR;
             break;
         case Dev::DEV_NET:
-            inode->type = FILE_NET;
+            inode->type = FT_NET;
             break;
         }
 

@@ -4,7 +4,7 @@ SECTION .bootstrap
 
 global _start
 
-extern main
+extern kmain
 extern paging_init
 extern pml4
 extern sse_init
@@ -64,10 +64,11 @@ bootstrap:
 	; Let's setup paging
 	call paging_init
 
-	; Setting the long mode bit
+	; Time to touch the EFER
 	mov ecx, 0xC0000080
 	rdmsr
-	or eax, 1 << 8
+	or eax, 1 << 8  ; Long mode
+	or eax, 1 << 0  ; Syscall
 	wrmsr
 
 	; Actually enabling paging
@@ -131,7 +132,7 @@ bootstrap64:
 	xor rbp, rbp
 	sub rsp, 8   ; Gotta align the stack to 16 bytes or SSE will explode
 
-    call main
+    call kmain
 
     cli
 	.hcf:

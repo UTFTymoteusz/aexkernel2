@@ -1,4 +1,4 @@
-#include "cpu/irq.hpp"
+#include "sys/cpu/irq.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/printk.hpp"
@@ -15,9 +15,6 @@ namespace AEX::Sys::IRQ {
 
     extern "C" void common_irq_handler(CPU::irq_info* info) {
         CPU::getCurrent()->in_interrupt++;
-
-        // if (info->irq_no > 0)
-        //     AEX::printk("%i: irq: %i\n", CPU::getCurrentCPUID(), info->irq_no);
 
         handle(info->irq_no);
 

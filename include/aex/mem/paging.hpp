@@ -5,27 +5,27 @@
 #include <stddef.h>
 #include <stdint.h>
 
-extern const int _page_present, _page_write, _page_user, _page_through, _page_nocache,
-    _page_combine, _page_nophys, _page_exec, _page_fixed, _page_arbitrary;
+extern const int m_page_present, m_page_write, m_page_user, m_page_through, m_page_nocache,
+    m_page_combine, m_page_nophys, m_page_exec, m_page_fixed, m_page_arbitrary;
 
 // Specifies if a page is present.
-#define PAGE_PRESENT _page_present
+#define PAGE_PRESENT m_page_present
 // Specifies if a page is writeable.
-#define PAGE_WRITE _page_write
+#define PAGE_WRITE m_page_write
 // Specifies if a page is accessible by userspace code.
-#define PAGE_USER _page_user
-#define PAGE_THROUGH _page_through
-#define PAGE_NOCACHE _page_nocache
+#define PAGE_USER m_page_user
+#define PAGE_THROUGH m_page_through
+#define PAGE_NOCACHE m_page_nocache
 // Write-combining mode.
-#define PAGE_COMBINE _page_combine
+#define PAGE_COMBINE m_page_combine
 // Marks the page as not being the owner of a physical memory frame.
-#define PAGE_NOPHYS _page_nophys
+#define PAGE_NOPHYS m_page_nophys
 // Puts the page in the executable space.
-#define PAGE_EXEC _page_exec
+#define PAGE_EXEC m_page_exec
 // If set, the pages will be mapped at the source address.
-#define PAGE_FIXED _page_fixed
+#define PAGE_FIXED m_page_fixed
 // If set, the pages will raise page faults.
-#define PAGE_ARBITRARY _page_arbitrary
+#define PAGE_ARBITRARY m_page_arbitrary
 
 namespace AEX::Mem {
     typedef size_t phys_addr;
@@ -106,7 +106,7 @@ namespace AEX::Mem {
         size_t rawof(void* vaddr);
 
         private:
-        Mutex _lock;
+        Mutex m_lock;
 
         void assign(int pptr, void* virt, phys_addr phys, uint16_t flags);
         void unassign(int pptr, void* virt);

@@ -45,10 +45,10 @@ namespace AEX::IPC {
             int         len;
         };
 
-        Spinlock            _lock;
-        Event               _event;
-        Mem::CircularBuffer _circ_buffer = Mem::CircularBuffer(MAX_WAITING_SIZE + 1);
+        Spinlock            m_lock;
+        Event               m_event;
+        Mem::CircularBuffer m_circ_buffer = Mem::CircularBuffer(MAX_WAITING_SIZE + 1);
 
-        int _free = MAX_WAITING_SIZE;
+        int m_free = MAX_WAITING_SIZE;
     };
 }

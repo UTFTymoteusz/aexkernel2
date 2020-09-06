@@ -35,7 +35,7 @@ namespace AEX {
         else if (Sys::CPU::getCurrentID() != faulted_cpu)
             return; // printk_lock.acquire();
 
-        auto rootTTY = TTY::VTTYs[TTY::ROOT_TTY];
+        auto rootTTY = VTTYs[ROOT_TTY];
 
         auto printk_common = [rootTTY](char padchar, int padlen, char* buffer) {
             for (int i = strlen(buffer); i < padlen; i++)
@@ -52,20 +52,20 @@ namespace AEX {
             if (format[0] == '^') {
                 switch (format[1]) {
                 case '0':
-                    *rootTTY << TTY::ANSI_FG_DARK_GRAY << " [ " << TTY::ANSI_FG_LIGHT_BLUE << "INIT"
-                             << TTY::ANSI_FG_DARK_GRAY << " ] " << TTY::ANSI_FG_WHITE;
+                    *rootTTY << ANSI_FG_DARK_GRAY << " [ " << ANSI_FG_LIGHT_BLUE << "INIT"
+                             << ANSI_FG_DARK_GRAY << " ] " << ANSI_FG_WHITE;
                     break;
                 case '1':
-                    *rootTTY << TTY::ANSI_FG_DARK_GRAY << " [  " << TTY::ANSI_FG_LIGHT_GREEN << "OK"
-                             << TTY::ANSI_FG_DARK_GRAY << "  ] " << TTY::ANSI_FG_WHITE;
+                    *rootTTY << ANSI_FG_DARK_GRAY << " [  " << ANSI_FG_LIGHT_GREEN << "OK"
+                             << ANSI_FG_DARK_GRAY << "  ] " << ANSI_FG_WHITE;
                     break;
                 case '2':
-                    *rootTTY << TTY::ANSI_FG_DARK_GRAY << " [ " << TTY::ANSI_FG_YELLOW << "WARN"
-                             << TTY::ANSI_FG_DARK_GRAY << " ] " << TTY::ANSI_FG_WHITE;
+                    *rootTTY << ANSI_FG_DARK_GRAY << " [ " << ANSI_FG_YELLOW << "WARN"
+                             << ANSI_FG_DARK_GRAY << " ] " << ANSI_FG_WHITE;
                     break;
                 case '3':
-                    *rootTTY << TTY::ANSI_FG_DARK_GRAY << " [ " << TTY::ANSI_FG_LIGHT_RED << "FAIL"
-                             << TTY::ANSI_FG_DARK_GRAY << " ] " << TTY::ANSI_FG_WHITE;
+                    *rootTTY << ANSI_FG_DARK_GRAY << " [ " << ANSI_FG_LIGHT_RED << "FAIL"
+                             << ANSI_FG_DARK_GRAY << " ] " << ANSI_FG_WHITE;
                     break;
                 default:
                     break;

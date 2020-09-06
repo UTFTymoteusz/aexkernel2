@@ -13,7 +13,7 @@ namespace AEX {
         volatile size_t count = 0;
         Thread::getCurrent()->addCritical();
 
-        while (!__sync_bool_compare_and_swap(&_lock, false, true)) {
+        while (!__sync_bool_compare_and_swap(&m_lock, false, true)) {
             Thread::getCurrent()->subCritical();
 
             asm volatile("pause");
@@ -21,12 +21,12 @@ namespace AEX {
 
             if (count > 12212222) {
                 int  delta = 0;
-                auto name  = Debug::symbol_addr2name((void*) this, delta);
+                auto name  = Debug::addr2name((void*) this, delta);
                 if (!name)
                     name = "no idea";
 
                 kpanic("spinlock 0x%p <%s+0x%x> hung (val: %i, cpu: %i)\n", this, name, delta,
-                       _lock, Sys::CPU::getCurrentID());
+                       m_lock, Sys::CPU::getCurrentID());
             }
 
             Thread::getCurrent()->addCritical();
@@ -38,13 +38,13 @@ namespace AEX {
     void Spinlock::release() {
         __sync_synchronize();
 
-        if (!__sync_bool_compare_and_swap(&_lock, true, false)) {
+        if (!__sync_bool_compare_and_swap(&m_lock, true, false)) {
             Sys::CPU::nointerrupts();
 
             printk_fault();
 
             int  delta = 0;
-            auto name  = Debug::symbol_addr2name((void*) &_lock, delta);
+            auto name  = Debug::addr2name((void*) &m_lock, delta);
             if (!name)
                 name = "no idea";
 
@@ -59,7 +59,7 @@ namespace AEX {
     bool Spinlock::tryAcquire() {
         Thread::getCurrent()->addCritical();
 
-        bool ret = __sync_bool_compare_and_swap(&_lock, false, true);
+        bool ret = __sync_bool_compare_and_swap(&m_lock, false, true);
         if (!ret)
             Thread::getCurrent()->subCritical();
 
@@ -70,7 +70,7 @@ namespace AEX {
 
 
     void Spinlock::acquireRaw() {
-        while (!__sync_bool_compare_and_swap(&_lock, false, true))
+        while (!__sync_bool_compare_and_swap(&m_lock, false, true))
             asm volatile("pause");
 
         __sync_synchronize();
@@ -79,24 +79,24 @@ namespace AEX {
     void Spinlock::releaseRaw() {
         __sync_synchronize();
 
-        if (!__sync_bool_compare_and_swap(&_lock, true, false)) {
+        if (!__sync_bool_compare_and_swap(&m_lock, true, false)) {
             Sys::CPU::nointerrupts();
 
             printk_fault();
 
             int  delta = 0;
-            auto name  = Debug::symbol_addr2name((void*) &_lock, delta);
+            auto name  = Debug::addr2name((void*) &m_lock, delta);
             if (!name)
                 name = "no idea";
 
-            printk("bbb (0x%p, <%s>+0x%x)\n", this, name, delta);
+            printk("bbb (0x%p, <%s>+0x%x), %i\n", this, name, delta, m_lock);
             Debug::stack_trace();
             kpanic("spinlock: Too many releases");
         }
     }
 
     bool Spinlock::tryAcquireRaw() {
-        bool ret = __sync_bool_compare_and_swap(&_lock, false, true);
+        bool ret = __sync_bool_compare_and_swap(&m_lock, false, true);
 
         __sync_synchronize();
         return ret;
@@ -105,6 +105,6 @@ namespace AEX {
     bool Spinlock::tryReleaseRaw() {
         __sync_synchronize();
 
-        return __sync_bool_compare_and_swap(&_lock, true, false);
+        return __sync_bool_compare_and_swap(&m_lock, true, false);
     }
 }

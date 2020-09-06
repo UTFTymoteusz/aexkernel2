@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace AEX::TTY {
+namespace AEX {
     class GrTTY : public VTTY {
         public:
         struct vga_char;
@@ -41,18 +41,18 @@ namespace AEX::TTY {
             WHITE        = 0xFFFFFF,
         };
 
-        const uint32_t _ega_to_color[16]{
+        const uint32_t m_ega_to_color[16]{
             BLACK,     BLUE,       GREEN,       CYAN,       RED,       PURPLE,       BROWN,  GRAY,
             DARK_GRAY, LIGHT_BLUE, LIGHT_GREEN, LIGHT_CYAN, LIGHT_RED, LIGHT_PURPLE, YELLOW, WHITE,
         };
 
-        uint32_t _bgColor = color::BLACK;
-        uint32_t _fgColor = color::WHITE;
+        uint32_t m_bgColor = color::BLACK;
+        uint32_t m_fgColor = color::WHITE;
 
-        uint32_t _px_width, _px_height;
+        uint32_t m_px_width, m_px_height;
 
-        static uint32_t* volatile _output;
-        uint32_t* _double_buffer;
+        static uint32_t* volatile m_output;
+        uint32_t* m_double_buffer;
 
         void put_glyph(char c, uint32_t x, uint32_t y, uint32_t fg, uint32_t bg);
 

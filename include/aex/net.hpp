@@ -22,8 +22,6 @@ namespace AEX::Net {
 
     class INetProtocol;
 
-    struct ipv4_addr;
-
     extern INetProtocol** inet_protocols;
 
     /**

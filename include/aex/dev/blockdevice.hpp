@@ -20,11 +20,11 @@ namespace AEX::Dev {
         void    release();
 
         private:
-        uint8_t* _overflow_buffer;
+        uint8_t* m_overflow_buffer;
 
-        uint16_t _sector_size         = 512;
-        uint64_t _sector_count        = 0;
-        uint16_t _max_sectors_at_once = 16;
+        uint16_t m_sector_size         = 512;
+        uint64_t m_sector_count        = 0;
+        uint16_t m_max_sectors_at_once = 16;
 
         bool word_align = true;
 

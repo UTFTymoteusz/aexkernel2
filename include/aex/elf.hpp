@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aex/fs/file.hpp"
+#include "aex/macros.hpp"
 #include "aex/mem.hpp"
 #include "aex/mem/vector.hpp"
 
@@ -19,26 +20,26 @@ namespace AEX {
         };
 
         enum bitness_t : uint8_t {
-            BITS32 = 1,
-            BITS64 = 2,
+            BIT_32 = 1,
+            BIT_64 = 2,
         };
 
         enum endianiness_t : uint8_t {
-            LITTLE = 1,
-            BIG    = 2,
+            EN_LITTLE = 1,
+            EN_BIG    = 2,
         };
 
         enum isa_t : uint16_t {
-            NONE    = 0x00,
-            SPARC   = 0x02,
-            X86     = 0x03,
-            MIPS    = 0x08,
-            POWERPC = 0x14,
-            ARM     = 0x28,
-            SUPERH  = 0x2A,
-            IA64    = 0x32,
-            AMD64   = 0x3E,
-            AARCH64 = 0xB7,
+            ISA_NONE    = 0x00,
+            ISA_SPARC   = 0x02,
+            ISA_X86     = 0x03,
+            ISA_MIPS    = 0x08,
+            ISA_POWERPC = 0x14,
+            ISA_ARM     = 0x28,
+            ISA_SUPERH  = 0x2A,
+            ISA_IA64    = 0x32,
+            ISA_AMD64   = 0x3E,
+            ISA_AARCH64 = 0xB7,
         };
 
         enum ph_type_t : uint32_t {
@@ -81,13 +82,12 @@ namespace AEX {
             SHN_ABS = 0xFFF1,
         };
 
-
         struct header {
             enum type_t : uint16_t {
-                RELOCATABLE = 1,
-                EXECUTABLE  = 2,
-                SHARED      = 3,
-                CORE        = 4,
+                HDR_RELOCATABLE = 1,
+                HDR_EXECUTABLE  = 2,
+                HDR_SHARED      = 3,
+                HDR_CORE        = 4,
             };
 
             char          magic[4];
@@ -137,7 +137,7 @@ namespace AEX {
                     uint16_t section_header_name_index;
                 };
             };
-        } __attribute__((packed));
+        } PACKED;
 
 
         struct program_header32 {
@@ -154,7 +154,7 @@ namespace AEX {
             ph_flags_t flags;
 
             uint32_t alignment;
-        } __attribute__((packed));
+        } PACKED;
 
         struct program_header64 {
             ph_type_t  type;
@@ -169,9 +169,9 @@ namespace AEX {
             uint64_t memory_size;
 
             uint64_t alignment;
-        } __attribute__((packed));
+        } PACKED;
 
-        struct program_header_agnostic {
+        struct program_header_agn {
             ph_type_t type;
 
             uint64_t file_offset;
@@ -189,9 +189,9 @@ namespace AEX {
                 program_header64 base64;
             };
 
-            program_header_agnostic() {}
+            program_header_agn() {}
 
-            program_header_agnostic(program_header32 header) {
+            program_header_agn(program_header32 header) {
                 file_offset = header.file_offset;
                 address     = header.address;
 
@@ -205,7 +205,7 @@ namespace AEX {
                 base32 = header;
             }
 
-            program_header_agnostic(program_header64 header) {
+            program_header_agn(program_header64 header) {
                 file_offset = header.file_offset;
                 address     = header.address;
 
@@ -219,7 +219,6 @@ namespace AEX {
                 base64 = header;
             }
         };
-
 
         struct section_header32 {
             uint32_t name_offset;
@@ -236,7 +235,7 @@ namespace AEX {
             uint32_t info;
             uint32_t alignment;
             uint32_t member_size;
-        } __attribute__((packed));
+        } PACKED;
 
         struct section_header64 {
             uint32_t name_offset;
@@ -254,9 +253,9 @@ namespace AEX {
             uint32_t info;
             uint64_t alignment;
             uint64_t member_size;
-        } __attribute__((packed));
+        } PACKED;
 
-        struct section_header_agnostic {
+        struct section_header_agn {
             const char* name;
             char*       strings = nullptr;
 
@@ -281,11 +280,11 @@ namespace AEX {
                 section_header64 base64;
             };
 
-            section_header_agnostic() {}
+            section_header_agn() {}
 
-            section_header_agnostic(const char* name, section_header32 header) {
+            section_header_agn(const char* name, section_header32 header) {
                 this->name    = name;
-                this->bitness = bitness_t::BITS32;
+                this->bitness = bitness_t::BIT_32;
 
                 type  = header.type;
                 flags = header.flags;
@@ -303,9 +302,9 @@ namespace AEX {
                 base32 = header;
             }
 
-            section_header_agnostic(const char* name, section_header64 header) {
+            section_header_agn(const char* name, section_header64 header) {
                 this->name    = name;
-                this->bitness = bitness_t::BITS64;
+                this->bitness = bitness_t::BIT_64;
 
                 type  = header.type;
                 flags = header.flags;
@@ -334,9 +333,9 @@ namespace AEX {
 
             uint64_t address;
             uint64_t size;
-        } __attribute__((packed));
+        } PACKED;
 
-        struct symbol_agnostic {
+        struct symbol_agn {
             const char* name;
 
             uint16_t section_index = 0;
@@ -346,18 +345,18 @@ namespace AEX {
 
             uint64_t address;
             uint64_t size;
-        } __attribute__((packed));
+        } PACKED;
 
         struct relocation64 {
             uint64_t addr;
             uint64_t info;
-        } __attribute__((packed));
+        } PACKED;
 
         struct relocation_addend64 {
             uint64_t addr;
             uint64_t info;
             int64_t  addend;
-        } __attribute__((packed));
+        } PACKED;
 
         struct relocation {
             uint64_t addr;
@@ -366,13 +365,13 @@ namespace AEX {
 
             uint32_t target_section_id;
             uint32_t symbol_id;
-        } __attribute__((packed));
+        } PACKED;
 
-        Mem::Vector<program_header_agnostic> program_headers;
-        Mem::Vector<section_header_agnostic> section_headers;
+        Mem::Vector<program_header_agn> program_headers;
+        Mem::Vector<section_header_agn> section_headers;
 
-        Mem::Vector<symbol_agnostic, 256> symbols;
-        Mem::Vector<relocation, 256>      relocations;
+        Mem::Vector<symbol_agn, 256> symbols;
+        Mem::Vector<relocation, 256> relocations;
 
         const char* section_names = nullptr;
         const char* strings       = nullptr;
@@ -391,14 +390,14 @@ namespace AEX {
         void loadRelocations();
 
         private:
-        header _header;
+        header m_header;
 
-        uint8_t* _addr;
+        uint8_t* m_addr;
 
         void loadSymbols64();
         void loadSymbols32();
 
         void loadRelocations64();
-        void loadRelocationsFromSection64(section_header_agnostic section);
+        void loadRelocationsFromSection64(section_header_agn section);
     };
 }

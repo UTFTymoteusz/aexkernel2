@@ -7,8 +7,8 @@
 
 constexpr auto GLYPH_WIDTH = 8;
 
-namespace AEX::TTY {
-    uint32_t* volatile GrTTY::_output = nullptr;
+namespace AEX {
+    uint32_t* volatile GrTTY::m_output = nullptr;
 
     struct GrTTY::vga_char {
         char    ascii;
@@ -22,32 +22,32 @@ namespace AEX::TTY {
         if (mbinfo->framebuffer_bpp != 32)
             asm volatile("ud2");
 
-        _px_width  = mbinfo->framebuffer_width;
-        _px_height = mbinfo->framebuffer_height;
+        m_px_width  = mbinfo->framebuffer_width;
+        m_px_height = mbinfo->framebuffer_height;
 
-        uint32_t total_len = _px_width * _px_height * sizeof(uint32_t);
+        uint32_t total_len = m_px_width * m_px_height * sizeof(uint32_t);
 
-        if (!_output) {
-            _output = (uint32_t*) Mem::kernel_pagemap->map(total_len, mbinfo->framebuffer_addr,
-                                                           PAGE_COMBINE | PAGE_WRITE);
-            memset32(_output, _bgColor, _px_width * _px_height);
+        if (!m_output) {
+            m_output = (uint32_t*) Mem::kernel_pagemap->map(total_len, mbinfo->framebuffer_addr,
+                                                            PAGE_COMBINE | PAGE_WRITE);
+            memset32(m_output, m_bgColor, m_px_width * m_px_height);
         }
 
-        _double_buffer = (uint32_t*) Mem::kernel_pagemap->alloc(total_len);
-        memset32(_double_buffer, _bgColor, _px_width * _px_height);
+        m_double_buffer = (uint32_t*) Mem::kernel_pagemap->alloc(total_len);
+        memset32(m_double_buffer, m_bgColor, m_px_width * m_px_height);
 
-        width  = _px_width / GLYPH_WIDTH;
-        height = _px_height / psf_font->size;
+        width  = m_px_width / GLYPH_WIDTH;
+        height = m_px_height / psf_font->size;
     }
 
     void GrTTY::fillFromEGA(vga_char* ega_buffer) {
         for (int y = 0; y < 25; y++)
             for (int x = 0; x < 80; x++) {
                 auto c = ega_buffer[x + y * 80];
-                put_glyph(c.ascii, x, y, _ega_to_color[c.fg], _ega_to_color[c.bg]);
+                put_glyph(c.ascii, x, y, m_ega_to_color[c.fg], m_ega_to_color[c.bg]);
             }
 
-        _cursory = 25;
+        m_cursory = 25;
     }
 
     void GrTTY::put_glyph(char c, uint32_t x, uint32_t y, uint32_t fg, uint32_t bg) {
@@ -59,14 +59,14 @@ namespace AEX::TTY {
         uint8_t* current = psf_font->data + c * height;
 
         for (int cy = 0; cy < height; cy++) {
-            uint32_t* dst = _output + x + _px_width * (y + cy);
+            uint32_t* dst = m_output + x + m_px_width * (y + cy);
 
             for (int cx = GLYPH_WIDTH; cx > 0; cx--) {
                 *dst = (*current & (1 << cx)) ? fg : bg;
                 dst++;
             }
 
-            dst = _double_buffer + x + _px_width * (y + cy);
+            dst = m_double_buffer + x + m_px_width * (y + cy);
 
             for (int cx = GLYPH_WIDTH; cx > 0; cx--) {
                 *dst = (*current & (1 << cx)) ? fg : bg;
@@ -84,51 +84,51 @@ namespace AEX::TTY {
         };
 
         if (ansi >= 30 && ansi <= 37)
-            _fgColor = ansi_to_color[ansi - 30];
+            m_fgColor = ansi_to_color[ansi - 30];
         else if (ansi >= 40 && ansi <= 47)
-            _bgColor = ansi_to_color[ansi - 40];
+            m_bgColor = ansi_to_color[ansi - 40];
         else if (ansi >= 90 && ansi <= 97)
-            _fgColor = ansi_to_color[ansi - 90 + 8];
+            m_fgColor = ansi_to_color[ansi - 90 + 8];
         else if (ansi >= 100 && ansi <= 107)
-            _bgColor = ansi_to_color[ansi - 100 + 8];
+            m_bgColor = ansi_to_color[ansi - 100 + 8];
 
         return *this;
     }
 
     void GrTTY::scrollDown(int amnt) {
-        memcpy(_double_buffer, &_double_buffer[_px_width * psf_font->size * amnt],
-               _px_width * (_px_height - psf_font->size * amnt) * sizeof(uint32_t));
+        memcpy(m_double_buffer, &m_double_buffer[m_px_width * psf_font->size * amnt],
+               m_px_width * (m_px_height - psf_font->size * amnt) * sizeof(uint32_t));
 
-        memset32(&_double_buffer[_px_width * (_px_height - psf_font->size)], _bgColor,
-                 _px_width * psf_font->size);
+        memset32(&m_double_buffer[m_px_width * (m_px_height - psf_font->size)], m_bgColor,
+                 m_px_width * psf_font->size);
 
-        memcpy(_output, _double_buffer, _px_width * _px_height * sizeof(uint32_t));
+        memcpy(m_output, m_double_buffer, m_px_width * m_px_height * sizeof(uint32_t));
     }
 
     void GrTTY::_writeChar(char c) {
         switch (c) {
         case '\n':
-            _cursorx = 0;
-            _cursory++;
+            m_cursorx = 0;
+            m_cursory++;
             break;
         case '\r':
-            _cursorx = 0;
+            m_cursorx = 0;
             break;
         default:
-            put_glyph(c, _cursorx, _cursory, _fgColor, _bgColor);
+            put_glyph(c, m_cursorx, m_cursory, m_fgColor, m_bgColor);
 
-            _cursorx++;
+            m_cursorx++;
 
-            if (_cursorx >= width) {
-                _cursorx = 0;
-                _cursory++;
+            if (m_cursorx >= width) {
+                m_cursorx = 0;
+                m_cursory++;
             }
 
             break;
         }
 
-        if (_cursory >= height) {
-            _cursory--;
+        if (m_cursory >= height) {
+            m_cursory--;
             scrollDown(1);
         }
     }

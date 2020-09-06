@@ -13,12 +13,12 @@ namespace AEX::Sys {
         static int64_t get_epoch();
 
         private:
-        static Spinlock         _lock;
-        static volatile int64_t _epoch;
+        static Spinlock         m_lock;
+        static volatile int64_t m_epoch;
 
-        static bool    _normal_hour_format;
-        static bool    _retarded_bcd;
-        static uint8_t _century_index;
+        static bool    m_normal_hour_format;
+        static bool    m_retarded_bcd;
+        static uint8_t m_century_index;
 
         static void irq(void*);
     };

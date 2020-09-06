@@ -28,8 +28,8 @@ namespace AEX::Dev::Input {
     void     tty_input_thread();
 
     void init() {
-        for (int i = 0; i < TTY::TTY_AMOUNT; i++) {
-            auto tty = TTY::VTTYs[i];
+        for (int i = 0; i < TTY_AMOUNT; i++) {
+            auto tty = VTTYs[i];
 
             tty->inputReady();
         }
@@ -44,12 +44,12 @@ namespace AEX::Dev::Input {
         for (int i = 0; i < handles.count(); i++) {
             auto handle = handles[i];
 
-            event _event;
+            event m_event;
 
-            _event.keycode = code;
-            _event.mod     = mod;
+            m_event.keycode = code;
+            m_event.mod     = mod;
 
-            handle->writeEvent(_event);
+            handle->writeEvent(m_event);
         }
 
         if (!pressed[code]) {
@@ -89,12 +89,12 @@ namespace AEX::Dev::Input {
 
         for (int i = 0; i < handles.count(); i++) {
             auto  handle = handles[i];
-            event _event;
+            event m_event;
 
-            _event.keycode = code;
-            _event.mod     = (keymod_t)(mod | KEYMOD_RELEASE);
+            m_event.keycode = code;
+            m_event.mod     = (keymod_t)(mod | KEYMOD_RELEASE);
 
-            handle->writeEvent(_event);
+            handle->writeEvent(m_event);
         }
 
         if (pressed[code]) {
@@ -125,9 +125,9 @@ namespace AEX::Dev::Input {
         handles.pushBack(handle);
     }
 
-    void unregister_handle(Handle* _handle) {
+    void unregister_handle(Handle* m_handle) {
         for (int i = 0; i < handles.count(); i++) {
-            if (handles[i] != _handle)
+            if (handles[i] != m_handle)
                 continue;
 
             handles.erase(i);
@@ -177,15 +177,15 @@ namespace AEX::Dev::Input {
         return mod;
     }
 
-    char translateEvent(keymap* _keymap, event& _event) {
-        auto& key  = _keymap->keys[_event.keycode];
-        bool  caps = _event.mod & KEYMOD_CAPSLOCK;
+    char translateEvent(keymap* m_keymap, event& m_event) {
+        auto& key  = m_keymap->keys[m_event.keycode];
+        bool  caps = m_event.mod & KEYMOD_CAPSLOCK;
 
-        if (_event.mod & KEYMOD_ALTGR)
+        if (m_event.mod & KEYMOD_ALTGR)
             return caps ? key.capslock_ctrl_alt : key.ctrl_alt;
-        else if (_event.mod & KEYMOD_CTRL)
+        else if (m_event.mod & KEYMOD_CTRL)
             return caps ? key.capslock_ctrl : key.ctrl;
-        else if (_event.mod & KEYMOD_SHIFT)
+        else if (m_event.mod & KEYMOD_SHIFT)
             return caps ? key.capslock_shift : key.shift;
 
         return caps ? key.capslock : key.normal;
@@ -200,7 +200,7 @@ namespace AEX::Dev::Input {
             if (event.mod & KEYMOD_RELEASE)
                 continue;
 
-            TTY::VTTYs[TTY::ROOT_TTY]->inputKeyPress(event);
+            VTTYs[ROOT_TTY]->inputKeyPress(event);
         }
     }
 }

@@ -9,51 +9,51 @@
 
 namespace AEX::FS::Path {
     Walker::Walker(const char* path) {
-        _path   = path;
-        _levels = count_levels(path);
+        m_path   = path;
+        m_levels = count_levels(path);
     }
 
     const char* Walker::next() {
-        if (!_path[_index] || _too_long)
+        if (!m_path[m_index] || m_too_long)
             return nullptr;
 
-        while (_path[_index] == '/')
-            _index++;
+        while (m_path[m_index] == '/')
+            m_index++;
 
         int chars_this_piece = 0;
 
-        while (_path[_index] && _path[_index] != '/') {
+        while (m_path[m_index] && m_path[m_index] != '/') {
             if (chars_this_piece >= MAX_FILENAME_LEN - 1) {
-                _too_long = true;
+                m_too_long = true;
                 return nullptr;
             }
 
-            _buffer[chars_this_piece] = _path[_index];
+            m_buffer[chars_this_piece] = m_path[m_index];
 
             chars_this_piece++;
-            _index++;
+            m_index++;
         }
 
         if (chars_this_piece == 0)
             return nullptr;
 
-        _buffer[chars_this_piece] = '\0';
+        m_buffer[chars_this_piece] = '\0';
 
-        _level++;
+        m_level++;
 
-        return _buffer;
+        return m_buffer;
     }
 
     int Walker::level() {
-        return _level;
+        return m_level;
     }
 
     bool Walker::isPieceTooLong() {
-        return _too_long;
+        return m_too_long;
     }
 
     bool Walker::isFinal() {
-        return _level == _levels;
+        return m_level == m_levels;
     }
 
     char* get_filename(char* buffer, const char* path, size_t num) {

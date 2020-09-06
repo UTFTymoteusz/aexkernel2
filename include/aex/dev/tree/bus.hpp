@@ -32,7 +32,7 @@ namespace AEX::Dev::Tree {
         void registerDriver(Driver* driver);
 
         private:
-        Spinlock _lock;
+        Spinlock m_lock;
 
         static void bindDriverToDevice(Driver* driver, Device* device);
     };

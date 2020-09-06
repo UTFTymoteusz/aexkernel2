@@ -1,10 +1,10 @@
 #include "aex/sys/time.hpp"
 
-namespace AEX::Sys {
+namespace AEX::Sys::Time {
     uint8_t day_count_for_each_month[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31};
 
-    int64_t to_unix_epoch(uint32_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute,
-                          uint8_t second) {
+    time_t dt2epoch(uint32_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute,
+                    uint8_t second) {
         uint32_t year_calc      = year - 1900;
         uint16_t day_since_jan1 = 0;
 
@@ -19,7 +19,7 @@ namespace AEX::Sys {
     }
 
     // gonna need to make this handle leaps properly
-    date_time from_unix_epoch(int64_t epoch) {
+    date_time epoch2dt(time_t epoch) {
         auto dt = date_time();
 
         dt.year = 1970 + (epoch / 31536000);

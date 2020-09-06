@@ -10,98 +10,98 @@ namespace AEX::Mem {
         class Iterator {
             public:
             Iterator(SmartArray<T>* base, int start = 0) {
-                _index = start;
-                _base  = base;
+                m_index = start;
+                m_base  = base;
 
-                _lock = &base->_lock;
+                m_lock = &base->m_lock;
             }
 
             T* next() {
-                if (!_base->_elements)
+                if (!m_base->m_elements)
                     return nullptr;
 
-                while (_index < _base->count()) {
-                    auto ptr = _base->get(_index);
+                while (m_index < m_base->count()) {
+                    auto ptr = m_base->get(m_index);
                     if (!ptr) {
-                        _index++;
+                        m_index++;
                         continue;
                     }
 
-                    _current = ptr;
-                    _index++;
+                    m_current = ptr;
+                    m_index++;
 
-                    return _current.get();
+                    return m_current.get();
                 }
 
                 return nullptr;
             }
 
             int index() {
-                return _index - 1;
+                return m_index - 1;
             }
 
             SmartPointer<T> get_ptr() {
-                return _current;
+                return m_current;
             }
 
             private:
-            int _index = 0;
+            int m_index = 0;
 
-            Spinlock*      _lock;
-            SmartArray<T>* _base;
+            Spinlock*      m_lock;
+            SmartArray<T>* m_base;
 
-            SmartPointer<T> _current = SmartPointer<T>::getNull();
+            SmartPointer<T> m_current = SmartPointer<T>::getNull();
         };
 
         SmartPointer<T> get(int index) {
-            auto scopeLock = ScopeSpinlock(_lock);
+            ScopeSpinlock scopeLock(m_lock);
 
-            if (index < 0 || index >= _element_count)
+            if (index < 0 || index >= m_element_count)
                 return SmartPointer<T>(nullptr, nullptr);
 
-            if (!_elements[index].shared)
+            if (!m_elements[index].shared)
                 return SmartPointer<T>(nullptr, nullptr);
 
-            _elements[index].shared->increment();
+            m_elements[index].shared->increment();
 
-            return SmartPointer<T>(_elements[index].ptr, _elements[index].shared);
+            return SmartPointer<T>(m_elements[index].ptr, m_elements[index].shared);
         }
 
         int count() {
-            return _element_count;
+            return m_element_count;
         }
 
         int addRef(T* ptr) {
-            auto scopeLock = ScopeSpinlock(_lock);
+            ScopeSpinlock scopeLock(m_lock);
 
             int index = findSlotOrMakeSlot();
             if (index == -1)
                 return -1;
 
-            _elements[index] = element(ptr);
+            m_elements[index] = element(ptr);
 
             return index;
         }
 
         int addRef(T* ptr, sp_shared* counter) {
-            auto scopeLock = ScopeSpinlock(_lock);
+            ScopeSpinlock scopeLock(m_lock);
 
             int index = findSlotOrMakeSlot();
             if (index == -1)
                 return -1;
 
-            _elements[index] = element(ptr, counter);
+            m_elements[index] = element(ptr, counter);
 
             return index;
         }
 
         void remove(int index) {
-            auto scopeLock = ScopeSpinlock(_lock);
+            ScopeSpinlock scopeLock(m_lock);
 
-            if (index < 0 || index >= _element_count)
+            if (index < 0 || index >= m_element_count)
                 return;
 
-            _elements[index].die();
+            m_elements[index].die();
         }
 
         Iterator getIterator(int start = 0) {
@@ -136,24 +136,25 @@ namespace AEX::Mem {
             }
         };
 
-        Spinlock _lock;
+        Spinlock m_lock;
 
-        int      _element_count = 0;
-        element* _elements      = nullptr;
+        int      m_element_count = 0;
+        element* m_elements      = nullptr;
 
         int findSlotOrMakeSlot() {
-            for (int i = 0; i < _element_count; i++) {
-                if (!_elements[i].ptr || !_elements[i].shared ||
-                    _elements[i].shared->ref_count() == 0) {
+            for (int i = 0; i < m_element_count; i++) {
+                if (!m_elements[i].ptr || !m_elements[i].shared ||
+                    m_elements[i].shared->ref_count() == 0) {
                     // printk("!present slot: %i\n", i);
                     return i;
                 }
             }
 
-            _elements = (element*) Heap::realloc(_elements, (_element_count + 1) * sizeof(element));
-            _element_count++;
+            m_elements =
+                (element*) Heap::realloc(m_elements, (m_element_count + 1) * sizeof(element));
+            m_element_count++;
 
-            return _element_count - 1;
+            return m_element_count - 1;
         }
     };
 }

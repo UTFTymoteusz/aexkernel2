@@ -16,19 +16,29 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace AEX::Sys {
+namespace AEX::Sys::Time {
     constexpr auto ACPI_PM_TIMER_FREQUENCY = 3579545;
 
-    Spinlock uptime_lock = {};
+    Spinlock uptime_lock;
 
-    uint64_t ns_uptime = 0;
+    time_t ns_uptime = 0;
 
     uint64_t acpi_pm_timer_ticks = 0;
     uint32_t acpi_pm_timer_addr  = 0;
     uint32_t acpi_pm_timer_overflow_correction;
 
-    uint64_t get_uptime() {
-        auto scopeLock = ScopeSpinlock(uptime_lock);
+    void init() {
+        RTC::init();
+
+        auto m_fadt = (ACPI::fadt*) ACPI::find_table("FACP", 0);
+
+        acpi_pm_timer_addr = m_fadt->pm_timer_block;
+        acpi_pm_timer_overflow_correction =
+            (m_fadt->fixed_flags & (1 << 8)) ? 0xFFFFFFFF : 0xFFFFFF;
+    }
+
+    time_t uptime() {
+        ScopeSpinlock scopeLock(uptime_lock);
 
         uint64_t delta;
 
@@ -38,15 +48,15 @@ namespace AEX::Sys {
         else
             delta = ticks - acpi_pm_timer_ticks;
 
-        uint64_t ret = Mem::atomic_add_fetch(
-            &ns_uptime, (uint64_t)((delta / (double) ACPI_PM_TIMER_FREQUENCY) * 1000000000.0));
+        time_t ret = Mem::atomic_add_fetch(
+            &ns_uptime, (time_t)((delta / (double) ACPI_PM_TIMER_FREQUENCY) * 1000000000.0));
 
         acpi_pm_timer_ticks = ticks;
 
         return ret;
     }
 
-    uint64_t get_uptime_raw() {
+    time_t uptime_raw() {
         uptime_lock.acquireRaw();
 
         uint64_t delta;
@@ -57,8 +67,8 @@ namespace AEX::Sys {
         else
             delta = ticks - acpi_pm_timer_ticks;
 
-        uint64_t ret = Mem::atomic_add_fetch(
-            &ns_uptime, (uint64_t)((delta / (double) ACPI_PM_TIMER_FREQUENCY) * 1000000000.0));
+        time_t ret = Mem::atomic_add_fetch(
+            &ns_uptime, (time_t)((delta / (double) ACPI_PM_TIMER_FREQUENCY) * 1000000000.0));
 
         acpi_pm_timer_ticks = ticks;
 
@@ -67,22 +77,13 @@ namespace AEX::Sys {
         return ret;
     }
 
-    int64_t get_clock_time() {
+    time_t clocktime() {
         return RTC::get_epoch();
     }
 
     void lazy_sleep(uint64_t ms) {
-        uint64_t trigger = get_uptime() + ms * 1000000;
-        while (trigger >= get_uptime())
+        time_t trigger = Time::uptime() + ms * 1000000;
+        while (trigger >= Time::uptime())
             ;
-    }
-
-    void init_time() {
-        RTC::init();
-
-        auto _fadt = (ACPI::fadt*) ACPI::find_table("FACP", 0);
-
-        acpi_pm_timer_addr                = _fadt->pm_timer_block;
-        acpi_pm_timer_overflow_correction = (_fadt->fixed_flags & (1 << 8)) ? 0xFFFFFFFF : 0xFFFFFF;
     }
 }
