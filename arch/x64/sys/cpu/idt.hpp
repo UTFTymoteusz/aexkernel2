@@ -4,8 +4,7 @@
 #include <stdint.h>
 
 namespace AEX::Sys {
-    class IDTEntry {
-        public:
+    struct idt_entry {
         uint16_t offset_0;
 
         uint16_t selector;
@@ -17,17 +16,17 @@ namespace AEX::Sys {
 
         uint32_t zero;
 
-        IDTEntry& setOffset(size_t offset);
-        IDTEntry& setOffset(void* offset);
-        IDTEntry& setType(uint8_t type);
-        IDTEntry& setSelector(uint8_t selector);
-        IDTEntry& setPresent(bool present);
-        IDTEntry& setIST(uint8_t ist);
+        idt_entry& setOffset(size_t offset);
+        idt_entry& setOffset(void* offset);
+        idt_entry& setType(uint8_t type);
+        idt_entry& setSelector(uint8_t selector);
+        idt_entry& setPresent(bool present);
+        idt_entry& setIST(uint8_t ist);
     } __attribute((packed));
 
-    extern IDTEntry init_IDT[256];
+    extern idt_entry init_IDT[256];
 
     void setup_idt();
-    void load_idt(IDTEntry* idt, size_t entry_count);
+    void load_idt(idt_entry* idt, size_t entry_count);
     void set_idt_ists();
 }

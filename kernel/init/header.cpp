@@ -1,9 +1,10 @@
-#include "aex/tty.hpp"
-
-constexpr auto COLOR0 = 94;
-constexpr auto COLOR1 = 97;
+#include "aex/dev/tty.hpp"
+#include "aex/printk.hpp"
 
 namespace AEX::Init {
+    constexpr auto COLOR0 = Dev::TTY::ANSI_FG_BLUE;
+    constexpr auto COLOR1 = Dev::TTY::ANSI_FG_WHITE;
+
     // clang-format off
     const char header[] = "\
   |##### |##### \\#  /#   |##### \n\
@@ -14,10 +15,10 @@ namespace AEX::Init {
     // clang-format on
 
     void init_print_header() {
-        auto rootTTY = VTTYs[ROOT_TTY];
+        auto rootTTY = Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY];
 
         char color = COLOR0;
-        rootTTY->setColorANSI(COLOR0);
+        rootTTY->color(COLOR0);
 
         for (size_t i = 0; i < sizeof(header) - 1; i++) {
             char c = header[i];
@@ -27,18 +28,19 @@ namespace AEX::Init {
             case '|':
             case '/':
                 if (color != COLOR0) {
-                    rootTTY->setColorANSI(COLOR0);
+                    rootTTY->color(COLOR0);
                     color = COLOR0;
                 }
                 break;
             default:
                 if (color != COLOR1) {
-                    rootTTY->setColorANSI(COLOR1);
+                    rootTTY->color(COLOR1);
                     color = COLOR1;
                 }
                 break;
             }
-            rootTTY->writeChar(c);
+
+            rootTTY->write(c);
         }
     }
 }

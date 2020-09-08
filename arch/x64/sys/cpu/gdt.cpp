@@ -21,29 +21,26 @@ namespace AEX::Sys {
         asm volatile("lgdt [%0]" : : "r"(&gdt_descriptor) : "memory");
     }
 
-    void init_gdt(tss** tsses) {
+    void mcore_gdt(tss** tsses) {
         auto gdt = new gdt_entry[5 + MCore::cpu_count * 2];
 
-        gdt[0].setBase(0);
-        gdt[0].setLimit(0);
+        gdt[0].setBase(0).setLimit(0);
+        gdt[0].access = AC_NONE;
+        gdt[0].flags  = FL_NONE;
 
-        gdt[1].setBase(0);
-        gdt[1].setLimit(0xFFFFF);
+        gdt[1].setBase(0).setLimit(0xFFFFF);
         gdt[1].access = AC_RING_0 | AC_EXECUTABLE | AC_READ_WRITE | AC_CODE_DATA | AC_PRESENT;
         gdt[1].flags  = FL_GRANULARITY | FL_X64;
 
-        gdt[2].setBase(0);
-        gdt[2].setLimit(0xFFFFF);
+        gdt[2].setBase(0).setLimit(0xFFFFF);
         gdt[2].access = AC_RING_0 | AC_READ_WRITE | AC_CODE_DATA | AC_PRESENT;
-        gdt[2].flags  = 0;
+        gdt[2].flags  = FL_NONE;
 
-        gdt[3].setBase(0);
-        gdt[3].setLimit(0xFFFFF);
+        gdt[3].setBase(0).setLimit(0xFFFFF);
         gdt[3].access = AC_RING_3 | AC_READ_WRITE | AC_CODE_DATA | AC_PRESENT;
-        gdt[3].flags  = 0;
+        gdt[3].flags  = FL_NONE;
 
-        gdt[4].setBase(0);
-        gdt[4].setLimit(0xFFFFF);
+        gdt[4].setBase(0).setLimit(0xFFFFF);
         gdt[4].access = AC_RING_3 | AC_EXECUTABLE | AC_READ_WRITE | AC_CODE_DATA | AC_PRESENT;
         gdt[4].flags  = FL_GRANULARITY | FL_X64;
 
@@ -51,8 +48,7 @@ namespace AEX::Sys {
             auto     m_tss    = new tss();
             uint64_t tss_addr = (uint64_t) m_tss;
 
-            gdt[5 + i].setLimit(sizeof(tss));
-            gdt[5 + i].setBase(tss_addr);
+            gdt[5 + i].setLimit(sizeof(tss)).setBase(tss_addr);
             gdt[5 + i].access = AC_RING_3 | AC_EXECUTABLE | AC_ACCESSED | AC_PRESENT;
             gdt[5 + i].flags  = FL_GRANULARITY | FL_X64;
 
@@ -67,6 +63,6 @@ namespace AEX::Sys {
         load_gdt(gdt, 5 + MCore::cpu_count * 2);
 
         // We need to flush the TSS now
-        asm volatile("mov eax, %0; ltr ax;" : : "r"(0x28 + CPU::getCurrentID() * 0x10));
+        asm volatile("mov eax, %0; ltr ax;" : : "r"(0x28 + CPU::currentID() * 0x10));
     }
 }

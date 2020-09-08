@@ -21,11 +21,11 @@ namespace AEX::Sys::MCore {
     extern "C" char _binary_bin_obj___arch_x64___boot_mcore_asmr_o_start;
     void*           trampoline = (void*) &_binary_bin_obj___arch_x64___boot_mcore_asmr_o_start;
 
-    int  cpu_count = 0;
-    CPU* CPUs[64];
+    int   cpu_count = 0;
+    CPU** CPUs;
 
-    bool start_ap(int id, int apic_id);
-    void finalize_ap(int id, void* stack);
+    bool start(int id, int apic_id);
+    void finalize(int id, void* stack);
     void ap_wait();
 
     void setup_trampoline(int id) {
@@ -45,7 +45,7 @@ namespace AEX::Sys::MCore {
             mov qword [0x500 - 8], rax; \
         "
                      :
-                     : "r"(finalize_ap), "r"(stack), "r"(id), "r"(ap_wait)
+                     : "r"(finalize), "r"(stack), "r"(id), "r"(ap_wait)
                      : "memory");
 
         void* dst = (void*) TRAMPOLINE_ADDR;
@@ -55,9 +55,6 @@ namespace AEX::Sys::MCore {
 
     void init() {
         printk(PRINTK_INIT "mcore: Initializing\n");
-
-        // We need to add ourselves to the array
-        CPUs[0] = CPU::getCurrent();
 
         // We can assume it exists because the IRQ phase would panic the kernel otherwise
         auto _madt = (madt*) ACPI::find_table("APIC", 0);
@@ -75,9 +72,10 @@ namespace AEX::Sys::MCore {
             cpu_count++;
         }
 
+        CPUs = new CPU* [cpu_count] { CPU::current() };
         tss* tsses[cpu_count];
 
-        init_gdt(tsses);
+        mcore_gdt(tsses);
         set_idt_ists();
 
         for (int i = 0; i <= 2137; i++) {
@@ -91,14 +89,14 @@ namespace AEX::Sys::MCore {
                 continue;
             }
 
-            if (entry->apic_id == CPU::getCurrent()->apic_id)
+            if (entry->apic_id == CPU::current()->apic_id)
                 continue;
 
             id++;
 
             printk("mcore: Found cpu%i (r:%i) with APIC id of %i\n", id, entry->id, entry->apic_id);
 
-            if (!start_ap(id, entry->apic_id))
+            if (!start(id, entry->apic_id))
                 printk(PRINTK_WARN "mcore: Failed to start cpu%i\n", id);
         }
 
@@ -116,7 +114,7 @@ namespace AEX::Sys::MCore {
         printk(PRINTK_OK "mcore: Initialized\n");
     }
 
-    bool start_ap(int id, int apic_id) {
+    bool start(int id, int apic_id) {
         setup_trampoline(id);
 
         IRQ::APIC::sendINIT(apic_id);
@@ -129,8 +127,8 @@ namespace AEX::Sys::MCore {
         bool success             = false;
         uint8_t* volatile signal = (uint8_t*) TRAMPOLINE_ADDR;
 
-        for (int j = 0; j < 2000; j++) {
-            for (int k = 0; k < 2400; k++)
+        for (int j = 0; j < 16000; j++) {
+            for (int k = 0; k < 300; k++)
                 CPU::inportb(0x20);
 
             if (*signal == 0xAA) {
@@ -142,7 +140,7 @@ namespace AEX::Sys::MCore {
         return success;
     }
 
-    void finalize_ap(int id, void*) {
+    void finalize(int id, void*) {
         IRQ::APIC::init();
 
         auto cpu = new CPU(id);
@@ -150,11 +148,11 @@ namespace AEX::Sys::MCore {
 
         CPUs[id] = cpu;
 
-        printk(PRINTK_OK "mcore: cpu%i: Ready\n", CPU::getCurrentID());
+        printk(PRINTK_OK "mcore: cpu%i: Ready\n", CPU::currentID());
     }
 
     void ap_wait() {
-        auto cpu = CPU::getCurrent();
+        auto cpu = CPU::current();
 
         CPU::interrupts();
         cpu->in_interrupt--;

@@ -54,10 +54,10 @@ namespace AEX::Sys {
     inline void                in(Proc::Thread::state& state, Proc::Thread* thread, CPU*& cpu);
 
     extern "C" void common_fault_handler(void* m_info) {
-        CPU::getCurrent()->in_interrupt++;
+        CPU::current()->in_interrupt++;
 
         auto info   = (CPU::fault_info*) m_info;
-        auto cpu    = CPU::getCurrent();
+        auto cpu    = CPU::current();
         auto thread = cpu->current_thread;
 
         auto state = out(thread, cpu);
@@ -67,7 +67,7 @@ namespace AEX::Sys {
             if (!handle_page_fault(info, cpu, thread))
                 break;
 
-            CPU::getCurrent()->in_interrupt--;
+            CPU::current()->in_interrupt--;
 
             in(state, thread, cpu);
             return;
@@ -87,14 +87,14 @@ namespace AEX::Sys {
         case EXC_NMI:
             AEX::printk(PRINTK_WARN
                         "cpu%i: %93$%s%$ Exception (%i) (%93$%i%$)\nRIP: 0x%016lx <%s+0x%x>\n",
-                        CPU::getCurrentID(), exception_names[info->int_no], info->int_no, info->err,
+                        CPU::currentID(), exception_names[info->int_no], info->int_no, info->err,
                         info->rip, name, delta);
             break;
 
         default:
             AEX::printk(PRINTK_FAIL
                         "cpu%i: %93$%s%$ Exception (%i) (%91$%i%$)\nRIP: 0x%016lx <%s+0x%x>\n",
-                        CPU::getCurrentID(), exception_names[info->int_no], info->int_no, info->err,
+                        CPU::currentID(), exception_names[info->int_no], info->int_no, info->err,
                         info->rip, name, delta);
 
             break;
@@ -135,7 +135,7 @@ namespace AEX::Sys {
         printk("FRSP: 0x%p (%i, 0x%p)\n", thread->fault_stack, thread->fault_stack_size,
                thread->fault_stack + thread->fault_stack_size);
 
-        Sys::CPU::getCurrent()->printDebug();
+        Sys::CPU::current()->printDebug();
 
         if (info->int_no == EXC_DEBUG) {
             Debug::stack_trace();
@@ -149,20 +149,20 @@ namespace AEX::Sys {
             for (volatile size_t i = 0; i < 484354325; i++)
                 ;
 
-            CPU::getCurrent()->in_interrupt--;
+            CPU::current()->in_interrupt--;
             return;
         }
 
         if (info->int_no == EXC_NMI) {
             Debug::stack_trace();
 
-            CPU::getCurrent()->in_interrupt--;
+            CPU::current()->in_interrupt--;
             return;
         }
 
-        kpanic("Unrecoverable processor exception occured in CPU %i", CPU::getCurrentID());
+        kpanic("Unrecoverable processor exception occured in CPU %i", CPU::currentID());
 
-        CPU::getCurrent()->in_interrupt--;
+        CPU::current()->in_interrupt--;
     }
 
     bool handle_page_fault(CPU::fault_info* info, CPU* cpu, Proc::Thread* thread) {
@@ -225,7 +225,7 @@ namespace AEX::Sys {
 
     inline void in(Proc::Thread::state& state, Proc::Thread* thread, CPU*& cpu) {
         CPU::nointerrupts();
-        cpu = CPU::getCurrent();
+        cpu = CPU::current();
         cpu->in_interrupt++;
 
         thread->loadState(state);

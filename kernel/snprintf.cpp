@@ -1,6 +1,5 @@
 #include "aex/math.hpp"
 #include "aex/string.hpp"
-#include "aex/tty.hpp"
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -23,14 +22,10 @@ namespace AEX {
     }
 
     void snprintf(char* buffer, size_t len, const char* format, va_list args) {
-        static Spinlock lock;
-
         if (len == 0)
             return;
 
         len--;
-
-        ScopeSpinlock scopeLock(lock);
 
         auto snprintf_common = [&buffer, &len](char padchar, int padlen, char* str) {
             if (len == 0)

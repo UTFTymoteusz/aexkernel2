@@ -5,6 +5,7 @@
 #include "aex/mem/paging.hpp"
 #include "aex/mem/smartptr.hpp"
 #include "aex/proc/resource_usage.hpp"
+#include "aex/proc/types.hpp"
 #include "aex/spinlock.hpp"
 
 // pls consider making thread functions accept and return smartpointers
@@ -15,8 +16,6 @@ namespace AEX::IPC {
 }
 
 namespace AEX::Proc {
-    typedef int tid_t;
-
     class Process;
     class Event;
     class Context;

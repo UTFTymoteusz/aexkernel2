@@ -7,7 +7,7 @@
 
 constexpr auto GLYPH_WIDTH = 8;
 
-namespace AEX {
+namespace AEX::Dev::TTY {
     uint32_t* volatile GrTTY::m_output = nullptr;
 
     struct GrTTY::vga_char {
@@ -30,17 +30,17 @@ namespace AEX {
         if (!m_output) {
             m_output = (uint32_t*) Mem::kernel_pagemap->map(total_len, mbinfo->framebuffer_addr,
                                                             PAGE_COMBINE | PAGE_WRITE);
-            memset32(m_output, m_bgColor, m_px_width * m_px_height);
+            memset32(m_output, m_bg, m_px_width * m_px_height);
         }
 
         m_double_buffer = (uint32_t*) Mem::kernel_pagemap->alloc(total_len);
-        memset32(m_double_buffer, m_bgColor, m_px_width * m_px_height);
+        memset32(m_double_buffer, m_bg, m_px_width * m_px_height);
 
         width  = m_px_width / GLYPH_WIDTH;
         height = m_px_height / psf_font->size;
     }
 
-    void GrTTY::fillFromEGA(vga_char* ega_buffer) {
+    void GrTTY::fromVGA(vga_char* ega_buffer) {
         for (int y = 0; y < 25; y++)
             for (int x = 0; x < 80; x++) {
                 auto c = ega_buffer[x + y * 80];
@@ -77,35 +77,39 @@ namespace AEX {
         }
     }
 
-    GrTTY& GrTTY::setColorANSI(int ansi) {
+    GrTTY& GrTTY::color(ansi_color_t ansi) {
         const uint32_t ansi_to_color[16] = {
-            BLACK,     RED,       GREEN,       BROWN,  BLUE,       PURPLE,       CYAN,       GRAY,
-            DARK_GRAY, LIGHT_RED, LIGHT_GREEN, YELLOW, LIGHT_BLUE, LIGHT_PURPLE, LIGHT_CYAN, WHITE,
+            RGB_BLACK,      RGB_RED,          RGB_GREEN,       RGB_BROWN,
+            RGB_BLUE,       RGB_PURPLE,       RGB_CYAN,        RGB_GRAY,
+            RGB_DARK_GRAY,  RGB_LIGHT_RED,    RGB_LIGHT_GREEN, RGB_YELLOW,
+            RGB_LIGHT_BLUE, RGB_LIGHT_PURPLE, RGB_LIGHT_CYAN,  RGB_WHITE,
         };
 
         if (ansi >= 30 && ansi <= 37)
-            m_fgColor = ansi_to_color[ansi - 30];
+            m_fg = ansi_to_color[ansi - 30];
         else if (ansi >= 40 && ansi <= 47)
-            m_bgColor = ansi_to_color[ansi - 40];
+            m_bg = ansi_to_color[ansi - 40];
         else if (ansi >= 90 && ansi <= 97)
-            m_fgColor = ansi_to_color[ansi - 90 + 8];
+            m_fg = ansi_to_color[ansi - 90 + 8];
         else if (ansi >= 100 && ansi <= 107)
-            m_bgColor = ansi_to_color[ansi - 100 + 8];
+            m_bg = ansi_to_color[ansi - 100 + 8];
 
         return *this;
     }
 
-    void GrTTY::scrollDown(int amnt) {
+    GrTTY& GrTTY::scroll(int amnt) {
         memcpy(m_double_buffer, &m_double_buffer[m_px_width * psf_font->size * amnt],
                m_px_width * (m_px_height - psf_font->size * amnt) * sizeof(uint32_t));
 
-        memset32(&m_double_buffer[m_px_width * (m_px_height - psf_font->size)], m_bgColor,
+        memset32(&m_double_buffer[m_px_width * (m_px_height - psf_font->size)], m_bg,
                  m_px_width * psf_font->size);
 
         memcpy(m_output, m_double_buffer, m_px_width * m_px_height * sizeof(uint32_t));
+
+        return *this;
     }
 
-    void GrTTY::_writeChar(char c) {
+    void GrTTY::_write(char c) {
         switch (c) {
         case '\n':
             m_cursorx = 0;
@@ -115,7 +119,7 @@ namespace AEX {
             m_cursorx = 0;
             break;
         default:
-            put_glyph(c, m_cursorx, m_cursory, m_fgColor, m_bgColor);
+            put_glyph(c, m_cursorx, m_cursory, m_fg, m_bg);
 
             m_cursorx++;
 
@@ -129,7 +133,7 @@ namespace AEX {
 
         if (m_cursory >= height) {
             m_cursory--;
-            scrollDown(1);
+            scroll(1);
         }
     }
 }

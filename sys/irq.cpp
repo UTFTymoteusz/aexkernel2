@@ -23,7 +23,7 @@ namespace AEX::Sys::IRQ {
         void** args           = nullptr;
 
         // need some locks here
-        void addFunc(void (*func)(void*), void* arg) {
+        void add(void (*func)(void*), void* arg) {
             if (!funcs) {
                 count = 1;
 
@@ -48,7 +48,7 @@ namespace AEX::Sys::IRQ {
             args[count - 1] = arg;
         }
 
-        void callAll() {
+        void call() {
             for (size_t i = 0; i < count; i++)
                 if (funcs[i])
                     funcs[i](args[i]);
@@ -63,6 +63,10 @@ namespace AEX::Sys::IRQ {
     void handle(uint8_t irq) {
         AEX_ASSERT(irq < 32);
 
+        // We need to steal the state of thread so nothing messes with us
+        // State saving is possible because only the executing thread changes it's criticality and
+        // busies.
+
         auto thread = Thread::getCurrent();
         auto state  = thread->saveState();
 
@@ -70,12 +74,12 @@ namespace AEX::Sys::IRQ {
         thread->setBusy(0);
         thread->setStatus(Proc::TS_RUNNABLE);
 
-        handlers[irq].callAll();
+        handlers[irq].call();
 
         thread->loadState(state);
     }
 
     void register_handler(uint8_t irq, void (*func)(void* arg), void* arg) {
-        handlers[irq].addFunc(func, arg);
+        handlers[irq].add(func, arg);
     }
 }

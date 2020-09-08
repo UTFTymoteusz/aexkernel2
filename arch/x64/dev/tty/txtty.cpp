@@ -3,7 +3,7 @@
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/string.hpp"
 
-namespace AEX {
+namespace AEX::Dev::TTY {
     struct TxTTY::vga_char {
         char    ascii;
         uint8_t fg : 4;
@@ -19,7 +19,7 @@ namespace AEX {
         m_output = (vga_char*) output;
     }
 
-    TxTTY::vga_char* TxTTY::getOutputPointer() {
+    TxTTY::vga_char* TxTTY::output() {
         return m_output;
     }
 
@@ -37,8 +37,8 @@ namespace AEX {
             }
     }
 
-    TxTTY& TxTTY::setColorANSI(int ansi) {
-        const char ansi_to_vga[16] = {
+    TxTTY& TxTTY::color(ansi_color_t ansi) {
+        char ansi_to_vga[16] = {
             VGA_BLACK,      VGA_RED,          VGA_GREEN,       VGA_BROWN,
             VGA_BLUE,       VGA_PURPLE,       VGA_CYAN,        VGA_GRAY,
             VGA_DARK_GRAY,  VGA_LIGHT_RED,    VGA_LIGHT_GREEN, VGA_YELLOW,
@@ -46,29 +46,31 @@ namespace AEX {
         };
 
         if (ansi >= 30 && ansi <= 37)
-            m_fgColor = ansi_to_vga[ansi - 30];
+            m_fg = ansi_to_vga[ansi - 30];
         else if (ansi >= 40 && ansi <= 47)
-            m_bgColor = ansi_to_vga[ansi - 40];
+            m_bg = ansi_to_vga[ansi - 40];
         else if (ansi >= 90 && ansi <= 97)
-            m_fgColor = ansi_to_vga[ansi - 90 + 8];
+            m_fg = ansi_to_vga[ansi - 90 + 8];
         else if (ansi >= 100 && ansi <= 107)
-            m_bgColor = ansi_to_vga[ansi - 100 + 8];
+            m_bg = ansi_to_vga[ansi - 100 + 8];
 
         return *this;
     }
 
-    void TxTTY::scrollDown(int amnt) {
+    TxTTY& TxTTY::scroll(int amnt) {
         for (int i = 0; i < amnt; i++)
             memcpy(m_output, &m_output[width], width * (height - 1) * 2);
 
         for (int i = width * (height - 1); i < width * height; i++) {
             m_output[i].ascii = ' ';
-            m_output[i].bg    = m_bgColor;
-            m_output[i].fg    = m_fgColor;
+            m_output[i].bg    = m_bg;
+            m_output[i].fg    = m_fg;
         }
+
+        return *this;
     }
 
-    void TxTTY::_writeChar(char c) {
+    void TxTTY::_write(char c) {
         switch (c) {
         case '\n':
             m_cursorx = 0;
@@ -79,8 +81,8 @@ namespace AEX {
             break;
         default:
             m_output[m_cursorx + m_cursory * width].ascii = c;
-            m_output[m_cursorx + m_cursory * width].bg    = m_bgColor;
-            m_output[m_cursorx + m_cursory * width].fg    = m_fgColor;
+            m_output[m_cursorx + m_cursory * width].bg    = m_bg;
+            m_output[m_cursorx + m_cursory * width].fg    = m_fg;
 
             m_cursorx++;
 
@@ -94,7 +96,7 @@ namespace AEX {
 
         if (m_cursory >= height) {
             m_cursory--;
-            scrollDown(1);
+            scroll(1);
         }
     }
 }

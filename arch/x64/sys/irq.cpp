@@ -139,12 +139,12 @@ namespace AEX::Sys::IRQ {
         double interval = (1000.0 / timer_hz) / MCore::cpu_count;
 
         for (int i = 0; i < MCore::cpu_count; i++) {
-            if (i == CPU::getCurrentID()) {
+            if (i == CPU::currentID()) {
                 irq_sleep(interval);
                 continue;
             }
 
-            MCore::CPUs[i]->sendPacket(CPU::IPP_CALL, (void*) timer_sync);
+            MCore::CPUs[i]->send(CPU::IPP_CALL, (void*) timer_sync);
             irq_sleep(interval);
         }
 

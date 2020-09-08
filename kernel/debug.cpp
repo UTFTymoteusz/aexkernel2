@@ -11,7 +11,7 @@
 #include "aex/sys/pci.hpp"
 
 #include "boot/mboot.h"
-#include "kernel/module/module.hpp"
+#include "kernel/module.hpp"
 
 using namespace AEX::Mem;
 
@@ -63,6 +63,8 @@ namespace AEX::Debug {
                 continue;
 
             char* name = kernel_image_strings + (symbol.name - elf.strings);
+            if (!symbol.address)
+                continue;
 
             auto m_symbol = kernel_symbol();
 
@@ -76,15 +78,15 @@ namespace AEX::Debug {
     }
 
     void symbol_debug() {
-        /*for (int i = 0; i < kernel_symbols.count(); i++) {
+        for (int i = 0; i < kernel_symbols.count(); i++) {
             auto& symbol = kernel_symbols[i];
 
             printk("%s - 0x%p\n", symbol.name, symbol.address);
 
-            if (strcmp(symbol.name, "_ZN3AEX8Spinlock7acquireEv") == 0)
-                for (volatile size_t i = 0; i < 2423422244; i++)
+            if (strcmp(symbol.name, "_ZN3AEX8Spinlock7releaseEv") == 0 || i < 5)
+                for (volatile size_t i = 0; i < 1223422244; i++)
                     ;
-        }*/
+        }
     }
 
     const char* addr2name(void* addr, int& delta_ret, bool only_kernel) {

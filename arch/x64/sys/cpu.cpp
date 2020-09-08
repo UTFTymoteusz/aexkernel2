@@ -81,7 +81,7 @@ namespace AEX::Sys {
     }
 
     void CPU::halt() {
-        printk(PRINTK_WARN "cpu%i: Halted\n", CPU::getCurrentID());
+        printk(PRINTK_WARN "cpu%i: Halted\n", CPU::currentID());
 
         asm volatile("cli;");
 
@@ -181,15 +181,15 @@ namespace AEX::Sys {
     }
 
 
-    int CPU::getCurrentID() {
+    int CPU::currentID() {
         return CURRENT_CPU->id;
     }
 
-    CPU* CPU::getCurrent() {
+    CPU* CPU::current() {
         return CURRENT_CPU;
     }
 
-    Proc::Thread* CPU::getCurrentThread() {
+    Proc::Thread* CPU::currentThread() {
         return CURRENT_THREAD;
     }
 
@@ -205,6 +205,15 @@ namespace AEX::Sys {
         switch (index) {
         case 0:
             asm volatile("mov dr0, rsi");
+            break;
+        case 1:
+            asm volatile("mov dr1, rsi");
+            break;
+        case 2:
+            asm volatile("mov dr2, rsi");
+            break;
+        case 3:
+            asm volatile("mov dr3, rsi");
             break;
         default:
             break;

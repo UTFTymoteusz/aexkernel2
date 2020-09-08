@@ -2,6 +2,7 @@
 #include "aex/assert.hpp"
 #include "aex/debug.hpp"
 #include "aex/dev/input.hpp"
+#include "aex/dev/tty.hpp"
 #include "aex/fs.hpp"
 #include "aex/mem.hpp"
 #include "aex/module.hpp"
@@ -11,12 +12,11 @@
 #include "aex/sys/acpi.hpp"
 #include "aex/sys/irq.hpp"
 #include "aex/sys/time.hpp"
-#include "aex/tty.hpp"
 
 #include "boot/mboot.h"
 #include "dev/dev.hpp"
 #include "fs/fs.hpp"
-#include "kernel/module/module.hpp"
+#include "kernel/module.hpp"
 #include "mem/heap.hpp"
 #include "mem/phys.hpp"
 #include "mem/sections.hpp"
@@ -47,9 +47,9 @@ void mount_fs();
 
 extern "C" void kmain(multiboot_info_t* mbinfo) {
     // Dirty workaround but meh, it works
-    CPU::getCurrent()->in_interrupt++;
+    CPU::current()->in_interrupt++;
 
-    VTTY::init(mbinfo);
+    Dev::TTY::init(mbinfo);
     Init::init_print_header();
     printk(PRINTK_INIT "Booting AEX/2\n\n");
 
@@ -126,7 +126,7 @@ void init_mem(multiboot_info_t* mbinfo) {
     Heap::init();
     printk("\n");
 
-    VTTY::init_mem(mbinfo);
+    Dev::TTY::init_mem(mbinfo);
 }
 
 void mount_fs() {
@@ -308,7 +308,7 @@ void kmain_threaded() {
 
     // Dev::Tree::print_debug();
 
-    auto dir_try = FS::File::opendir("/dev/");
+    /*auto dir_try = FS::File::opendir("/dev/");
     AEX_ASSERT(dir_try);
 
     while (true) {
@@ -319,8 +319,13 @@ void kmain_threaded() {
         printk(" - %s\n", dentry_try.value.name);
     }
 
+    auto file_try = FS::File::open("/dev/tty0");
+    AEX_ASSERT(file_try);
+
+    file_try.value.get()->write((void*) "aaa it works\n", 13);*/
+
     while (true) {
-        switch (VTTYs[ROOT_TTY]->readChar()) {
+        switch (Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY]->read()) {
         case 't': {
             time_t ns    = uptime();
             time_t clock = clocktime();
@@ -328,7 +333,7 @@ void kmain_threaded() {
             auto dt = epoch2dt(clock);
 
             printk("cpu%i: %16li ns (%li ms, %li s, %li min), clock says %li s, %02i:%02i:%02i\n",
-                   CPU::getCurrentID(), ns, ns / 1000000, ns / 1000000000, ns / 1000000000 / 60,
+                   CPU::currentID(), ns, ns / 1000000, ns / 1000000000, ns / 1000000000 / 60,
                    clock - start_epoch, dt.hour, dt.minute, dt.second);
             printk("idle: %16li ns (%li ms) cpu time (pid %i)\n", idle->usage.cpu_time_ns,
                    idle->usage.cpu_time_ns / 1000000, idle->pid);

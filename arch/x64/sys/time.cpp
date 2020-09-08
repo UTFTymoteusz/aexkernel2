@@ -44,7 +44,7 @@ namespace AEX::Sys::Time {
 
         uint64_t ticks = Sys::CPU::inportd(acpi_pm_timer_addr);
         if (ticks < acpi_pm_timer_ticks)
-            delta = (ticks + acpi_pm_timer_overflow_correction) - acpi_pm_timer_ticks;
+            delta = ticks + acpi_pm_timer_overflow_correction - acpi_pm_timer_ticks;
         else
             delta = ticks - acpi_pm_timer_ticks;
 
@@ -63,7 +63,7 @@ namespace AEX::Sys::Time {
 
         uint64_t ticks = Sys::CPU::inportd(acpi_pm_timer_addr);
         if (ticks < acpi_pm_timer_ticks)
-            delta = (ticks + acpi_pm_timer_overflow_correction) - acpi_pm_timer_ticks;
+            delta = ticks + acpi_pm_timer_overflow_correction - acpi_pm_timer_ticks;
         else
             delta = ticks - acpi_pm_timer_ticks;
 

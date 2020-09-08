@@ -15,9 +15,7 @@ namespace AEX::Sys::ACPI {
 
     bool add_table(acpi_table* table) {
         auto header = (sdt_header*) table;
-        char buffer[5];
-
-        buffer[4] = '\0';
+        char buffer[4];
 
         memcpy((void*) buffer, (void*) header->signature, 4);
 
@@ -33,21 +31,7 @@ namespace AEX::Sys::ACPI {
         return true;
     }
 
-    void _init() {
-        auto _fadt = (fadt*) find_table("FACP", 0);
-        if (!_fadt)
-            kpanic("This system has no FADT, what the hell?");
-
-        auto table_hdr = (sdt_header*) Mem::kernel_pagemap->map(sizeof(sdt_header), _fadt->dsdt, 0);
-        auto table     = (acpi_table*) Mem::kernel_pagemap->map(table_hdr->length, _fadt->dsdt, 0);
-
-        Mem::kernel_pagemap->free(table_hdr, sizeof(sdt_header));
-
-        add_table(table);
-
-        if (_fadt->pm_timer_block == 0)
-            kpanic("acpi: no power management timer :(\n");
-    }
+    void facp_init();
 
     void init() {
         printk(PRINTK_INIT "acpi: Initializing\n");
@@ -76,7 +60,7 @@ namespace AEX::Sys::ACPI {
                 add_table(table);
             }
 
-            _init();
+            facp_init();
 
             printk(PRINTK_OK "acpi: Initialized\n");
             return;
@@ -102,13 +86,29 @@ namespace AEX::Sys::ACPI {
                 add_table(table);
             }
 
-            _init();
+            facp_init();
 
             printk(PRINTK_OK "acpi: Initialized\n");
             return;
         }
 
         printk("acpi: Failed\n");
+    }
+
+    void facp_init() {
+        auto _fadt = (fadt*) find_table("FACP", 0);
+        if (!_fadt)
+            kpanic("This system has no FADT, what the hell?");
+
+        auto table_hdr = (sdt_header*) Mem::kernel_pagemap->map(sizeof(sdt_header), _fadt->dsdt, 0);
+        auto table     = (acpi_table*) Mem::kernel_pagemap->map(table_hdr->length, _fadt->dsdt, 0);
+
+        Mem::kernel_pagemap->free(table_hdr, sizeof(sdt_header));
+
+        add_table(table);
+
+        if (_fadt->pm_timer_block == 0)
+            kpanic("acpi: no power management timer :(\n");
     }
 
     bool validate_table(const void* tbl, size_t len) {

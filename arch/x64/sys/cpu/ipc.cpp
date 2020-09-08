@@ -8,27 +8,27 @@
 namespace AEX::Sys {
     extern "C" void proc_reshed();
 
-    void CPU::broadcastPacket(ipp_type type, void* data, bool ignore_self) {
+    void CPU::broadcast(ipp_type type, void* data, bool ignore_self) {
         bool ints = CPU::checkInterrupts();
 
         CPU::nointerrupts();
 
         for (int i = 0; i < MCore::cpu_count; i++) {
-            if (i == CPU::getCurrentID() && ignore_self)
+            if (i == CPU::currentID() && ignore_self)
                 continue;
 
             auto cpu = MCore::CPUs[i];
             if (cpu == nullptr)
                 continue;
 
-            cpu->sendPacket(type, data);
+            cpu->send(type, data);
         }
 
         if (ints)
             CPU::interrupts();
     }
 
-    void CPU::sendPacket(ipp_type type, void* data) {
+    void CPU::send(ipp_type type, void* data) {
         static Spinlock lock;
         ScopeSpinlock   scopeLock(lock);
 
@@ -38,7 +38,7 @@ namespace AEX::Sys {
         m_ipi_packet.type = type;
         m_ipi_packet.data = data;
 
-        if (CPU::getCurrentID() == this->id) {
+        if (CPU::currentID() == this->id) {
             handleIPP();
             m_ipi_lock.release();
 
@@ -56,7 +56,7 @@ namespace AEX::Sys {
                 IRQ::APIC::sendNMI(apic_id);
 
             if (counter == 4000000 * 8)
-                kpanic("ipi to cpu%i from cpu%i stuck (%i, 0x%p)\n", this->id, CPU::getCurrentID(),
+                kpanic("ipi to cpu%i from cpu%i stuck (%i, 0x%p)\n", this->id, CPU::currentID(),
                        type, data);
         }
 
@@ -67,7 +67,7 @@ namespace AEX::Sys {
      * This is a cute little function that's gonna get called by the IPI IRQ handler.
      */
     extern "C" void ipi_handle() {
-        auto us = CPU::getCurrent();
+        auto us = CPU::current();
 
         us->in_interrupt++;
         us->handleIPP();
@@ -77,7 +77,7 @@ namespace AEX::Sys {
     }
 
     void CPU::handleIPP() {
-        auto us = CPU::getCurrent();
+        auto us = CPU::current();
 
         switch (m_ipi_packet.type) {
         case IPP_HALT:
@@ -115,7 +115,7 @@ namespace AEX::Sys {
         default:
             m_ipi_ack = true;
             printk(PRINTK_WARN "cpu%i: Received an IPP with an unknown type (%i)\n",
-                   CPU::getCurrentID(), m_ipi_packet.type);
+                   CPU::currentID(), m_ipi_packet.type);
 
             break;
         }

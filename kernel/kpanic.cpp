@@ -18,7 +18,7 @@ namespace AEX {
         CPU::nointerrupts();
 
         printk_fault();
-        printk(PRINTK_FAIL "Kernel Panic (cpu%i)\n", CPU::getCurrentID());
+        printk(PRINTK_FAIL "Kernel Panic (cpu%i)\n", CPU::currentID());
         printk(format, args);
         printk("\n");
 
@@ -30,7 +30,7 @@ namespace AEX {
 
         va_end(args);
 
-        CPU::broadcastPacket(CPU::IPP_HALT);
+        CPU::broadcast(CPU::IPP_HALT);
         CPU::halt();
     }
 }

@@ -6,6 +6,7 @@
 #include "aex/printk.hpp"
 #include "aex/proc/process.hpp"
 #include "aex/proc/thread.hpp"
+#include "aex/proc/types.hpp"
 
 namespace AEX::Proc {
     extern Mem::SmartArray<Process> processes;

@@ -1,14 +1,14 @@
+#include "aex/dev/tty.hpp"
 #include "aex/string.hpp"
-#include "aex/tty.hpp"
 
-namespace AEX {
+namespace AEX::Dev::TTY {
     VTTY& VTTY::operator<<(bool val) {
         write(val ? "true" : "false");
         return *this;
     }
 
     VTTY& VTTY::operator<<(char c) {
-        writeChar(c);
+        write(c);
         return *this;
     }
 
@@ -93,8 +93,8 @@ namespace AEX {
         return *this;
     }
 
-    VTTY& VTTY::operator<<(ansi_color_t color) {
-        setColorANSI(color);
+    VTTY& VTTY::operator<<(ansi_color_t _color) {
+        color(_color);
         return *this;
     }
 }

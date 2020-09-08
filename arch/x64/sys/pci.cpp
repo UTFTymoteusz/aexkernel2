@@ -78,7 +78,7 @@ namespace AEX::Sys::PCI {
     int PCIDevice::getIRQ() {
         uint8_t (*set_pin)(uint8_t, uint8_t, uint8_t, uint8_t);
 
-        while (!(set_pin = (decltype(set_pin)) get_global_symbol("acpi_set_pci_pin")))
+        while (!(set_pin = (decltype(set_pin)) get_dynamic_symbol("acpi_set_pci_pin")))
             Proc::Thread::sleep(250);
 
         return set_pin(bus, device, function, interrupt_pin);

@@ -79,7 +79,7 @@ namespace AEX::Proc {
     }
 
     void schedule() {
-        auto cpu = CPU::getCurrent();
+        auto cpu = CPU::current();
 
         if (!lock.tryAcquireRaw()) {
             if (cpu->current_thread->status != TS_RUNNABLE)
@@ -254,7 +254,7 @@ namespace AEX::Proc {
     }
 
     void cleanup_voids() {
-        CPU::broadcastPacket(CPU::IPP_RESHED, nullptr);
+        CPU::broadcast(CPU::IPP_RESHED, nullptr);
 
         for (int i = 1; i < MCore::cpu_count; i++) {
             while (MCore::CPUs[i]->current_tid >= 2137)

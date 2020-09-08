@@ -26,10 +26,11 @@ mov eax, cr4
 or  eax, 1 << 5
 mov cr4, eax
 
-; Setting the long mode bit
+; Time to touch the EFER
 mov ecx, 0xC0000080
 rdmsr
-or  eax, 1 << 8
+or eax, 1 << 8  ; Long mode
+or eax, 1 << 0  ; Syscall
 wrmsr
 
 ; Set cr3 to what the BSP gave us

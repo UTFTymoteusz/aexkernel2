@@ -1,8 +1,8 @@
 #include "aex/printk.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/dev/tty.hpp"
 #include "aex/string.hpp"
-#include "aex/tty.hpp"
 #include "aex/utility.hpp"
 
 #include <stdarg.h>
@@ -30,9 +30,11 @@ namespace AEX {
     }
 
     void printk(const char* format, va_list args) {
+        using namespace AEX::Dev::TTY;
+
         if (faulted_cpu == -1)
             printk_lock.acquire();
-        else if (Sys::CPU::getCurrentID() != faulted_cpu)
+        else if (Sys::CPU::currentID() != faulted_cpu)
             return; // printk_lock.acquire();
 
         auto rootTTY = VTTYs[ROOT_TTY];
@@ -124,7 +126,7 @@ namespace AEX {
                     if (padlen == 0)
                         padlen = 97;
 
-                    rootTTY->setColorANSI(padlen);
+                    rootTTY->color((ansi_color_t) padlen);
                     break;
                 case 's':
                     printk_common(padchar, padlen, va_arg(args, char*));
@@ -211,7 +213,7 @@ namespace AEX {
 
         Sys::CPU::nointerrupts();
 
-        faulted_cpu = Sys::CPU::getCurrentID();
+        faulted_cpu = Sys::CPU::currentID();
 
         if (ints)
             Sys::CPU::interrupts();

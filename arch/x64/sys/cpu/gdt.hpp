@@ -7,12 +7,14 @@ namespace AEX::Sys {
     struct tss;
 
     enum gdt_flags_t : uint8_t {
+        FL_NONE        = 0x00,
         FL_X64         = 0x02,
         FL_SIZE        = 0x04,
         FL_GRANULARITY = 0x08,
     };
 
     enum gdt_access_t : uint8_t {
+        AC_NONE        = 0x00,
         AC_ACCESSED    = 0x01,
         AC_READ_WRITE  = 0x02,
         AC_DIR_CONFORM = 0x04,
@@ -38,19 +40,23 @@ namespace AEX::Sys {
 
         uint8_t base_high;
 
-        void setBase(uint32_t base) {
+        gdt_entry& setBase(uint32_t base) {
             this->base_low    = base & 0xFFFF;
             this->base_middle = (base >> 16) & 0xFF;
             this->base_high   = (base >> 24) & 0xFF;
+
+            return *this;
         }
 
-        void setLimit(uint32_t limit) {
+        gdt_entry& setLimit(uint32_t limit) {
             this->limit_low  = limit & 0xFFFF;
             this->limit_high = (limit >> 16) & 0x0F;
+
+            return *this;
         }
     } __attribute__((packed));
 
     void load_gdt(gdt_entry* gdt, int entry_count);
 
-    void init_gdt(tss** tsses);
+    void mcore_gdt(tss** tsses);
 }

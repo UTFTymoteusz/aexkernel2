@@ -20,12 +20,12 @@ namespace AEX::Proc {
     void setup_irq() {
         Sys::init_IDT[0x20 + 0].setOffset((size_t) proc_timer_tick);
 
-        CPU::broadcastPacket(CPU::IPP_CALL, (void*) reload);
+        CPU::broadcast(CPU::IPP_CALL, (void*) reload);
         reload();
     }
 
     extern "C" void proc_timer_tick_ext() {
-        auto cpu = CPU::getCurrent();
+        auto cpu = CPU::current();
         cpu->in_interrupt++;
 
         schedule();
@@ -35,7 +35,7 @@ namespace AEX::Proc {
     }
 
     extern "C" void proc_reshed_manual_ext() {
-        auto cpu = CPU::getCurrent();
+        auto cpu = CPU::current();
         cpu->in_interrupt++;
 
         schedule();

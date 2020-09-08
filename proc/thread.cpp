@@ -120,7 +120,7 @@ namespace AEX::Proc {
 
     Thread* Thread::getCurrent() {
         // We need atomicity here
-        return CPU::getCurrentThread();
+        return CPU::currentThread();
     }
 
     tid_t Thread::getCurrentTID() {
@@ -212,7 +212,7 @@ namespace AEX::Proc {
     }
 
     void Thread::addCritical() {
-        if (!CPU::getCurrent()->in_interrupt)
+        if (!CPU::current()->in_interrupt)
             CPU::nointerrupts();
 
         Mem::atomic_add(&m_busy, (uint16_t) 1);
@@ -234,7 +234,7 @@ namespace AEX::Proc {
 
         Mem::atomic_sub(&m_busy, (uint16_t) 1);
 
-        if (fetched == 0 && !CPU::getCurrent()->in_interrupt)
+        if (fetched == 0 && !CPU::current()->in_interrupt)
             CPU::interrupts();
     }
 

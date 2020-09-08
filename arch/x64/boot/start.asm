@@ -130,7 +130,7 @@ bootstrap64:
 	mov rsi, rax
 
 	xor rbp, rbp
-	sub rsp, 8   ; Gotta align the stack to 16 bytes or SSE will explode
+	;sub rsp, 8   ; Gotta align the stack to 16 bytes or SSE will explode
 
     call kmain
 
@@ -235,11 +235,13 @@ gdt64:
 	dq gdt64         ; Base
 
 SECTION .bootstrap.bss
+ALIGN 16
 boot_stack:
     resb 2048
 	boot_stack_end:
 
 SECTION .bss
+ALIGN 16
 stack:
     resb 16384
 	stack_end:

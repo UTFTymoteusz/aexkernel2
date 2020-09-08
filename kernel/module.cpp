@@ -10,7 +10,7 @@
 
 #include "boot/mboot.h"
 #include "elf.hpp"
-#include "kernel/module/module.hpp"
+#include "kernel/module.hpp"
 #include "proc/proc.hpp"
 
 namespace AEX {
@@ -171,7 +171,7 @@ namespace AEX {
         return nullptr;
     }
 
-    void register_global_symbol(const char* name, void* addr) {
+    void register_dynamic_symbol(const char* name, void* addr) {
         ScopeSpinlock scopeLock(symbol_lock);
 
         for (int i = 0; i < global_symbols.count(); i++) {
@@ -193,7 +193,7 @@ namespace AEX {
         global_symbols.pushBack(symbol);
     }
 
-    void* get_global_symbol(const char* name) {
+    void* get_dynamic_symbol(const char* name) {
         ScopeSpinlock scopeLock(symbol_lock);
 
         for (int i = 0; i < global_symbols.count(); i++) {

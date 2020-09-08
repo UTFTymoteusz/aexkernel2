@@ -1,8 +1,8 @@
 #pragma once
 
-#include "aex/tty.hpp"
+#include "aex/dev/tty.hpp"
 
-namespace AEX {
+namespace AEX::Dev::TTY {
     class TxTTY : public VTTY {
         public:
         struct vga_char;
@@ -12,11 +12,10 @@ namespace AEX {
 
         static void clear();
 
-        TxTTY& setColorANSI(int ansi);
+        TxTTY& color(ansi_color_t ansi);
+        TxTTY& scroll(int amnt);
 
-        void scrollDown(int amnt);
-
-        vga_char* getOutputPointer();
+        vga_char* output();
 
         private:
         enum vga_color {
@@ -38,12 +37,12 @@ namespace AEX {
             VGA_WHITE        = 15,
         };
 
-        int m_bgColor = VGA_BLACK;
-        int m_fgColor = VGA_WHITE;
+        int m_bg = VGA_BLACK;
+        int m_fg = VGA_WHITE;
 
         vga_char* volatile m_output;
 
         protected:
-        void _writeChar(char c);
+        void _write(char c);
     };
 }

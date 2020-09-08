@@ -26,7 +26,7 @@ namespace AEX {
                     name = "no idea";
 
                 kpanic("spinlock 0x%p <%s+0x%x> hung (val: %i, cpu: %i)\n", this, name, delta,
-                       m_lock, Sys::CPU::getCurrentID());
+                       m_lock, Sys::CPU::currentID());
             }
 
             Thread::getCurrent()->addCritical();

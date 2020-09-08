@@ -5,8 +5,8 @@ namespace AEX::Sys {
 }
 
 namespace AEX::Sys::MCore {
-    extern int  cpu_count;
-    extern CPU* CPUs[64];
+    extern int   cpu_count;
+    extern CPU** CPUs;
 
     /**
      * Starts all CPUs in the system.

@@ -82,7 +82,7 @@ namespace AEX::Mem {
         debug_pptr_targets[index] = at;
         *pptr_entries[index]      = at | PAGE_WRITE | PAGE_PRESENT;
 
-        Sys::CPU::broadcastPacket(Sys::CPU::IPP_PG_INV, pptr_vaddr[index]);
+        Sys::CPU::broadcast(Sys::CPU::IPP_PG_INV, pptr_vaddr[index]);
 
         asm volatile("invlpg [%0]" : : "r"(pptr_vaddr[index]));
 
@@ -248,7 +248,7 @@ namespace AEX::Mem {
 
         __sync_synchronize();
 
-        Sys::CPU::broadcastPacket(Sys::CPU::IPP_PG_INV, virt);
+        Sys::CPU::broadcast(Sys::CPU::IPP_PG_INV, virt);
 
         asm volatile("invlpg [%0]" : : "r"(virt));
     }
@@ -262,7 +262,7 @@ namespace AEX::Mem {
         if (ptable[index] & PAGE_NOPHYS) {
             ptable[index] = 0x0000;
 
-            Sys::CPU::broadcastPacket(Sys::CPU::IPP_PG_INV, virt);
+            Sys::CPU::broadcast(Sys::CPU::IPP_PG_INV, virt);
 
             asm volatile("invlpg [%0]" : : "r"(virt));
             return;
@@ -273,7 +273,7 @@ namespace AEX::Mem {
 
         __sync_synchronize();
 
-        Sys::CPU::broadcastPacket(Sys::CPU::IPP_PG_INV, virt);
+        Sys::CPU::broadcast(Sys::CPU::IPP_PG_INV, virt);
         Mem::Phys::free(addr, Sys::CPU::PAGE_SIZE);
 
         asm volatile("invlpg [%0]" : : "r"(virt));
@@ -501,7 +501,7 @@ namespace AEX::Mem {
 
         free_pptr(pptr);
 
-        Sys::CPU::broadcastPacket(Sys::CPU::IPP_PG_FLUSH, nullptr);
+        Sys::CPU::broadcast(Sys::CPU::IPP_PG_FLUSH, nullptr);
 
         printk(PRINTK_OK "vmem: Bootstrap necessities cleaned\n");
     }

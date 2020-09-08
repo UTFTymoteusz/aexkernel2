@@ -111,17 +111,17 @@ namespace AEX::Sys {
         /**
          * Gets the ID of the executing CPU.
          */
-        static int getCurrentID();
+        static int currentID();
 
         /**
          * Gets a pointer to the class of the executing CPU.
          */
-        static CPU* getCurrent();
+        static CPU* current();
 
         /**
          * Gets a pointer to the current thread.
          */
-        static Proc::Thread* getCurrentThread();
+        static Proc::Thread* currentThread();
 
         /**
          * Broadcasts a packet to all processors (except the local one, unless you specify
@@ -130,7 +130,7 @@ namespace AEX::Sys {
          * @param data Optional data pointer.
          * @param ignore_self If true, the executing CPU will not receive this packet.
          */
-        static void broadcastPacket(ipp_type type, void* data = nullptr, bool ignore_self = true);
+        static void broadcast(ipp_type type, void* data = nullptr, bool ignore_self = true);
 
         /**
          * Triple faults the executing processor.
@@ -146,7 +146,7 @@ namespace AEX::Sys {
          * @param type Type of the packet.
          * @param data Optional data pointer.
          */
-        void sendPacket(ipp_type type, void* data = nullptr);
+        void send(ipp_type type, void* data = nullptr);
 
         void update(Proc::Thread* thread);
 

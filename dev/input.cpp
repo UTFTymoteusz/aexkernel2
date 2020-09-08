@@ -1,11 +1,11 @@
 #include "aex/dev/input.hpp"
 
 #include "aex/dev/inputdevice.hpp"
+#include "aex/dev/tty.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
 #include "aex/spinlock.hpp"
-#include "aex/tty.hpp"
 
 namespace AEX::Dev::Input {
     Spinlock lock;
@@ -28,8 +28,8 @@ namespace AEX::Dev::Input {
     void     tty_input_thread();
 
     void init() {
-        for (int i = 0; i < TTY_AMOUNT; i++) {
-            auto tty = VTTYs[i];
+        for (int i = 0; i < TTY::TTY_AMOUNT; i++) {
+            auto tty = TTY::VTTYs[i];
 
             tty->inputReady();
         }
@@ -200,7 +200,7 @@ namespace AEX::Dev::Input {
             if (event.mod & KEYMOD_RELEASE)
                 continue;
 
-            VTTYs[ROOT_TTY]->inputKeyPress(event);
+            TTY::VTTYs[TTY::ROOT_TTY]->inputKeyPress(event);
         }
     }
 }

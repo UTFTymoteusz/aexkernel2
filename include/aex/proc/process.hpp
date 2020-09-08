@@ -6,14 +6,13 @@
 #include "aex/proc.hpp"
 #include "aex/proc/affinity.hpp"
 #include "aex/proc/resource_usage.hpp"
+#include "aex/proc/types.hpp"
 
 namespace AEX::Mem {
     class Pagemap;
 }
 
 namespace AEX::Proc {
-    typedef int pid_t;
-
     class Process {
         public:
         pid_t pid;
