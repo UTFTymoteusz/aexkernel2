@@ -44,11 +44,11 @@ namespace AEX::Sys::IRQ {
         write(0x3E0, 0x03);
     }
 
-    uint32_t APIC::getTimerCounter() {
+    uint32_t APIC::getCounter() {
         return read(0x390);
     }
 
-    uint32_t APIC::getTimerInitial() {
+    uint32_t APIC::getInitial() {
         return read(0x380);
     }
 

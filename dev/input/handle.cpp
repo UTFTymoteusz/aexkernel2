@@ -22,13 +22,13 @@ namespace AEX::Dev::Input {
         register_handle(this);
     }
 
-    event Handle::readEvent() {
+    event Handle::read() {
         event m_evnt;
         m_buffer.read(&m_evnt, sizeof(event));
         return m_evnt;
     }
 
-    void Handle::writeEvent(event m_evnt) {
+    void Handle::write(event m_evnt) {
         if ((size_t) m_buffer.writeAvailable() < sizeof(event))
             return;
 

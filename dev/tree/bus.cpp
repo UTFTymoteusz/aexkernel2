@@ -15,7 +15,7 @@ namespace AEX::Dev::Tree {
         printk(PRINTK_OK "dev: Registered bus '%s'\n", this->name);
     }
 
-    void Bus::bindDriverToDevice(Driver* driver, Device* device) {
+    void Bus::bindDriver(Driver* driver, Device* device) {
         if (!driver->check(device))
             return;
 
@@ -28,7 +28,7 @@ namespace AEX::Dev::Tree {
         printk("dev: %s: Registered tree device '%s'\n", this->name, device->name);
 
         for (auto iterator = drivers.getIterator(); auto driver = iterator.next();)
-            bindDriverToDevice(driver, device);
+            bindDriver(driver, device);
     }
 
     void Bus::registerDriver(Driver* driver) {
@@ -37,6 +37,6 @@ namespace AEX::Dev::Tree {
         printk("dev: %s: Registered tree driver '%s'\n", this->name, driver->name);
 
         for (auto iterator = devices.getIterator(); auto device = iterator.next();)
-            bindDriverToDevice(driver, device);
+            bindDriver(driver, device);
     }
 }

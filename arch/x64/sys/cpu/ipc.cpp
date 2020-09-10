@@ -52,8 +52,8 @@ namespace AEX::Sys {
         while (!m_ipi_ack) {
             counter++;
 
-            if (counter == 4000000 * 7)
-                IRQ::APIC::sendNMI(apic_id);
+            // if (counter == 4000000 * 7)
+            // IRQ::APIC::sendNMI(apic_id);
 
             if (counter == 4000000 * 8)
                 kpanic("ipi to cpu%i from cpu%i stuck (%i, 0x%p)\n", this->id, CPU::currentID(),

@@ -21,7 +21,7 @@ namespace AEX::Dev::TTY {
         m_inputBuffer = new Mem::CircularBuffer(2048);
     }
 
-    void VTTY::inputKeyPress(event m_event) {
+    void VTTY::keyPress(event m_event) {
         if (!m_inputBuffer->writeAvailable())
             return;
 
@@ -32,7 +32,7 @@ namespace AEX::Dev::TTY {
             return;
         }
 
-        char c = translateEvent(&m_keymap, m_event);
+        char c = translate(&m_keymap, m_event);
         if (!c)
             return;
 

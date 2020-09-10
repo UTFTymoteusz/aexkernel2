@@ -25,16 +25,13 @@ namespace AEX::Dev::Input {
 
     void     update_leds();
     keymod_t get_mod();
-    void     tty_input_thread();
+    void     tty_loop();
 
     void init() {
-        for (int i = 0; i < TTY::TTY_AMOUNT; i++) {
-            auto tty = TTY::VTTYs[i];
+        for (int i = 0; i < TTY::TTY_AMOUNT; i++)
+            TTY::VTTYs[i]->inputReady();
 
-            tty->inputReady();
-        }
-
-        auto thread = new Proc::Thread(nullptr, (void*) tty_input_thread, 8192, nullptr);
+        auto thread = new Proc::Thread(nullptr, (void*) tty_loop, 8192, nullptr);
         thread->start();
     }
 
@@ -49,7 +46,7 @@ namespace AEX::Dev::Input {
             m_event.keycode = code;
             m_event.mod     = mod;
 
-            handle->writeEvent(m_event);
+            handle->write(m_event);
         }
 
         if (!pressed[code]) {
@@ -94,7 +91,7 @@ namespace AEX::Dev::Input {
             m_event.keycode = code;
             m_event.mod     = (keymod_t)(mod | KEYMOD_RELEASE);
 
-            handle->writeEvent(m_event);
+            handle->write(m_event);
         }
 
         if (pressed[code]) {
@@ -177,7 +174,7 @@ namespace AEX::Dev::Input {
         return mod;
     }
 
-    char translateEvent(keymap* m_keymap, event& m_event) {
+    char translate(keymap* m_keymap, event& m_event) {
         auto& key  = m_keymap->keys[m_event.keycode];
         bool  caps = m_event.mod & KEYMOD_CAPSLOCK;
 
@@ -191,16 +188,16 @@ namespace AEX::Dev::Input {
         return caps ? key.capslock : key.normal;
     }
 
-    void tty_input_thread() {
+    void tty_loop() {
         auto handle = Handle::getHandle(1024);
         handle.begin();
 
         while (true) {
-            auto event = handle.readEvent();
+            auto event = handle.read();
             if (event.mod & KEYMOD_RELEASE)
                 continue;
 
-            TTY::VTTYs[TTY::ROOT_TTY]->inputKeyPress(event);
+            TTY::VTTYs[TTY::ROOT_TTY]->keyPress(event);
         }
     }
 }

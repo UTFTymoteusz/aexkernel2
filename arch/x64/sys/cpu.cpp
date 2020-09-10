@@ -72,9 +72,7 @@ namespace AEX::Sys {
 
         wrmsr(MSR_PAT, pat);
 
-        // TSS, wooo
         asm volatile("mov eax, %0; ltr ax;" : : "r"(0x28 + id * 0x10));
-
         asm volatile("mov rax, cr3; mov cr3, rax;");
 
         in_interrupt = 1;
@@ -151,12 +149,12 @@ namespace AEX::Sys {
 
     void CPU::wrmsr(uint32_t reg, uint64_t data) {
         asm volatile(" \
-        mov rdx, %0; \
-        mov rax, %0; \
-        \
-        ror rdx, 32; \
-        \
-        wrmsr; \
+            mov rdx, %0; \
+            mov rax, %0; \
+            \
+            ror rdx, 32; \
+            \
+            wrmsr; \
         "
                      :
                      : "r"(data), "c"(reg)
@@ -167,11 +165,11 @@ namespace AEX::Sys {
         uint64_t out;
 
         asm volatile(" \
-        rdmsr; \
-        \
-        mov %0, rdx; \
-        shl %0, 32;  \
-        or  %0, rax; \
+            rdmsr; \
+            \
+            mov %0, rdx; \
+            shl %0, 32;  \
+            or  %0, rax; \
         "
                      : "=m"(out)
                      : "c"(reg)

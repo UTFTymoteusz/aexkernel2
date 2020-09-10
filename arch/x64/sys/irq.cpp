@@ -238,7 +238,7 @@ namespace AEX::Sys::IRQ {
         while (!IRQ::irq_mark)
             CPU::waitForInterrupt();
 
-        uint32_t ticks = -APIC::getTimerCounter() * 20;
+        uint32_t ticks = -APIC::getCounter() * 20;
 
         if (!ints)
             CPU::nointerrupts();

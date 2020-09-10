@@ -14,10 +14,10 @@
 
 using namespace AEX::Dev;
 
-constexpr auto CONFIG_ADDRESS = 0xCF8;
-constexpr auto CONFIG_DATA    = 0xCFC;
-
 namespace AEX::Sys::PCI {
+    constexpr auto CONFIG_ADDRESS = 0xCF8;
+    constexpr auto CONFIG_DATA    = 0xCFC;
+
     void scan_all_buses(Tree::Device* pci_root);
 
     Tree::Bus* dev_bus;
@@ -222,18 +222,18 @@ namespace AEX::Sys::PCI {
                 len &= 0xFFFF;
 
             if (io) {
-                auto resource = Tree::Device::resource();
+                auto resource = Tree::resource();
 
-                resource.type  = Tree::Device::resource::type_t::IO;
+                resource.type  = Tree::resource::type_t::IO;
                 resource.value = addr;
                 resource.end   = addr + len;
 
                 dev_device->addResource(resource);
             }
             else {
-                auto resource = Tree::Device::resource();
+                auto resource = Tree::resource();
 
-                resource.type  = Tree::Device::resource::type_t::MEMORY;
+                resource.type  = Tree::resource::type_t::MEMORY;
                 resource.value = addr;
                 resource.end   = addr + len;
 

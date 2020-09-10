@@ -193,7 +193,7 @@ namespace AEX::Proc {
             return Mem::atomic_read(&m_busy) > 0;
         }
 
-        inline uint16_t getBusy() {
+        inline uint16_t get_busy() {
             return Mem::atomic_read(&m_busy);
         }
 
