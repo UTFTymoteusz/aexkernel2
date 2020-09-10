@@ -36,22 +36,22 @@ namespace AEX::Dev {
 
         CPU::outportb(0x64, 0xAD);
         CPU::outportb(0x64, 0xA7);
-
         CPU::outportb(0x64, 0xAA);
 
         for (size_t i = 0; i < 200; i++) {
-            if (CPU::inportb(0x60) == 0x55) {
-                auto ps2 = new Device("ps2", nullptr);
+            if (CPU::inportb(0x60) != 0x55)
+                continue;
 
-                ps2->addResource(resource(resource::IO, 0x60));
-                ps2->addResource(resource(resource::IO, 0x64));
-                ps2->addResource(resource(resource::IRQ, 1));
-                ps2->addResource(resource(resource::IRQ, 12));
+            auto ps2 = new Device("ps2", nullptr);
 
-                mainbus->registerDevice(ps2);
+            ps2->addResource(resource(resource::IO, 0x60));
+            ps2->addResource(resource(resource::IO, 0x64));
+            ps2->addResource(resource(resource::IRQ, 1));
+            ps2->addResource(resource(resource::IRQ, 12));
 
-                break;
-            }
+            mainbus->registerDevice(ps2);
+
+            break;
         }
     }
 

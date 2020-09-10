@@ -50,7 +50,7 @@ namespace AEX::Dev::TTY {
         m_cursory = 25;
     }
 
-    void GrTTY::put_glyph(char c, uint32_t x, uint32_t y, uint32_t fg, uint32_t bg) {
+    void GrTTY::put_glyph(char c, uint32_t x, uint32_t y, rgb_t fg, rgb_t bg) {
         int height = psf_font->size;
 
         x *= GLYPH_WIDTH;
@@ -59,7 +59,7 @@ namespace AEX::Dev::TTY {
         uint8_t* current = psf_font->data + c * height;
 
         for (int cy = 0; cy < height; cy++) {
-            uint32_t* dst = m_output + x + m_px_width * (y + cy);
+            rgb_t* dst = m_output + x + m_px_width * (y + cy);
 
             for (int cx = GLYPH_WIDTH; cx > 0; cx--) {
                 *dst = (*current & (1 << cx)) ? fg : bg;
@@ -78,7 +78,7 @@ namespace AEX::Dev::TTY {
     }
 
     GrTTY& GrTTY::color(ansi_color_t ansi) {
-        const uint32_t ansi_to_color[16] = {
+        const rgb_t ansi_to_color[16] = {
             RGB_BLACK,      RGB_RED,          RGB_GREEN,       RGB_BROWN,
             RGB_BLUE,       RGB_PURPLE,       RGB_CYAN,        RGB_GRAY,
             RGB_DARK_GRAY,  RGB_LIGHT_RED,    RGB_LIGHT_GREEN, RGB_YELLOW,
