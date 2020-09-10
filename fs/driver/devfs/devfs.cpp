@@ -4,8 +4,10 @@
 #include "inode.hpp"
 
 namespace AEX::FS {
+    DevFS* devfs;
+
     void DevFS::init() {
-        new DevFS();
+        devfs = new DevFS();
     }
 
     DevFS::DevFS() : Filesystem("devfs") {}
