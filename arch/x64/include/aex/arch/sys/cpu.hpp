@@ -31,6 +31,7 @@ namespace AEX::Sys {
             IPP_CALL     = 2,
             IPP_PG_FLUSH = 3,
             IPP_PG_INV   = 4,
+            IPP_PG_INVM  = 5,
         };
 
         static constexpr int PAGE_SIZE = 4096;

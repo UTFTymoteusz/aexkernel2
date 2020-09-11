@@ -6,6 +6,11 @@
 #include "sys/mcore.hpp"
 
 namespace AEX::Sys {
+    struct invm_data {
+        size_t   addr;
+        uint32_t pages;
+    };
+
     extern "C" void proc_reshed();
 
     void CPU::broadcast(ipp_type type, void* data, bool ignore_self) {
@@ -112,6 +117,19 @@ namespace AEX::Sys {
             m_ipi_ack = true;
 
             break;
+        case IPP_PG_INVM: {
+            auto     bong  = (invm_data*) m_ipi_packet.data;
+            size_t   addr  = bong->addr;
+            uint32_t pages = bong->pages;
+
+            for (uint32_t i = 0; i < pages; i++) {
+                asm volatile("invlpg [%0]" : : "r"(addr));
+                addr += CPU::PAGE_SIZE;
+            }
+
+            m_ipi_ack = true;
+
+        } break;
         default:
             m_ipi_ack = true;
             printk(PRINTK_WARN "cpu%i: Received an IPP with an unknown type (%i)\n",
