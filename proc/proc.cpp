@@ -78,90 +78,6 @@ namespace AEX::Proc {
         Proc::Thread::yield();
     }
 
-    void schedule() {
-        auto cpu = CPU::current();
-
-        if (cpu->current_thread->isCritical())
-            return;
-
-        if (!lock.tryAcquireRaw()) {
-            if (cpu->current_thread->status != TS_RUNNABLE)
-                lock.acquireRaw();
-            else
-                return;
-        }
-
-        int i = cpu->current_tid;
-
-        Time::time_t curtime = Time::uptime_raw();
-        Time::time_t delta   = curtime - cpu->measurement_start_ns;
-
-        cpu->measurement_start_ns = curtime;
-
-        cpu->current_thread->parent->usage.cpu_time_ns += delta;
-        cpu->current_thread->lock.releaseRaw();
-
-        auto increment = [&i]() {
-            i++;
-            if (i >= thread_array_size)
-                i = 1;
-        };
-
-        for (int j = 1; j < thread_array_size; j++) {
-            increment();
-            if (!threads[i])
-                continue;
-
-            auto& status = threads[i]->status;
-            if (!(status & TF_RUNNABLE))
-                continue;
-
-            if (status & TF_BLOCKED) {
-                if (threads[i]->isAbortSet())
-                    break;
-
-                continue;
-            }
-
-            if (status & TF_SLEEPING) {
-                if (curtime < threads[i]->wakeup_at)
-                    continue;
-
-                status = TS_RUNNABLE;
-                break;
-            }
-
-            if (threads[i]->parent->cpu_affinity.isMasked(cpu->id))
-                continue;
-
-            if (!threads[i]->lock.tryAcquireRaw())
-                continue;
-
-            auto thread = threads[i];
-
-            cpu->current_tid     = i;
-            cpu->current_thread  = thread;
-            cpu->current_context = thread->context;
-
-            cpu->update(thread);
-            lock.releaseRaw();
-
-            return;
-        }
-
-        auto thread = idle_threads[cpu->id];
-
-        // We don't care, it's our private thread anyways
-        thread->lock.tryAcquireRaw();
-
-        cpu->current_tid     = 0;
-        cpu->current_thread  = thread;
-        cpu->current_context = thread->context;
-
-        cpu->update(thread);
-        lock.releaseRaw();
-    }
-
     pid_t add_process(Process* process) {
         return processes.addRef(process);
     }
@@ -232,7 +148,7 @@ namespace AEX::Proc {
 
         for (int i = 0; i < MCore::cpu_count; i++) {
             idle_threads[i] =
-                new Thread(idle_process, (void*) idle, 1024, Mem::kernel_pagemap, false, true);
+                new Thread(idle_process, (void*) idle, 512, Mem::kernel_pagemap, false, true);
         }
     }
 
@@ -257,7 +173,7 @@ namespace AEX::Proc {
     }
 
     void cleanup_voids() {
-        CPU::broadcast(CPU::IPP_RESHED, nullptr);
+        CPU::broadcast(CPU::IPP_RESHED);
 
         for (int i = 1; i < MCore::cpu_count; i++) {
             while (MCore::CPUs[i]->current_tid >= 2137)

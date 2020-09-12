@@ -1,9 +1,11 @@
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/assert.hpp"
 #include "aex/debug.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/mem/mmap.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
+#include "aex/utility.hpp"
 
 constexpr auto EXC_DEBUG      = 1;
 constexpr auto EXC_NMI        = 2;
@@ -60,7 +62,7 @@ namespace AEX::Sys {
         auto cpu    = CPU::current();
         auto thread = cpu->current_thread;
 
-        auto state = out(thread, cpu);
+        AEX_ASSERT_PEDANTIC(!CPU::checkInterrupts());
 
         switch (info->int_no) {
         case EXC_PAGE_FAULT:
@@ -68,14 +70,10 @@ namespace AEX::Sys {
                 break;
 
             CPU::current()->in_interrupt--;
-
-            in(state, thread, cpu);
             return;
         default:
             break;
         }
-
-        in(state, thread, cpu);
 
         int  delta = 0;
         auto name  = Debug::addr2name((void*) info->rip, delta);
@@ -100,8 +98,7 @@ namespace AEX::Sys {
             break;
         }
 
-        AEX::printk("TID: %8i (b%i, c%i, i%i)\n", cpu->current_tid, state.busy, state.critical,
-                    cpu->in_interrupt);
+        AEX::printk("TID: %8i (b%i, c%i, i%i)\n", cpu->current_tid, 2137, 2137, cpu->in_interrupt);
 
         if (info->int_no == EXC_PAGE_FAULT) {
             size_t cr2;
@@ -128,14 +125,12 @@ namespace AEX::Sys {
 
         printk("RFLAGS: 0x%016lx\n", info->rflags);
 
-        printk("URSP: 0x%p (%i, 0x%p)\n", thread->user_stack, thread->user_stack_size,
+        printk("USTK: 0x%p (%i, 0x%p)\n", thread->user_stack, thread->user_stack_size,
                thread->user_stack + thread->user_stack_size);
-        printk("KRSP: 0x%p (%i, 0x%p)\n", thread->kernel_stack, thread->kernel_stack_size,
+        printk("KSTK: 0x%p (%i, 0x%p)\n", thread->kernel_stack, thread->kernel_stack_size,
                thread->kernel_stack + thread->kernel_stack_size);
-        printk("FRSP: 0x%p (%i, 0x%p)\n", thread->fault_stack, thread->fault_stack_size,
+        printk("FSTK: 0x%p (%i, 0x%p)\n", thread->fault_stack, thread->fault_stack_size,
                thread->fault_stack + thread->fault_stack_size);
-
-        Sys::CPU::current()->printDebug();
 
         if (info->int_no == EXC_DEBUG) {
             Debug::stack_trace();
@@ -165,20 +160,15 @@ namespace AEX::Sys {
         CPU::current()->in_interrupt--;
     }
 
-    bool handle_page_fault(CPU::fault_info* info, CPU* cpu, Proc::Thread* thread) {
+    bool handle_page_fault(UNUSED CPU::fault_info* info, CPU* cpu, Proc::Thread* thread) {
+        auto state = out(thread, cpu);
+
         size_t cr2, cr3;
 
         asm volatile("mov rax, cr2; mov %0, rax;" : : "m"(cr2) : "memory");
         asm volatile("mov rax, cr3; mov %0, rax;" : : "m"(cr3) : "memory");
 
         void* addr = (void*) cr2;
-
-        int  delta = 0;
-        auto name  = Debug::addr2name((void*) info->rip, delta);
-        if (!name)
-            name = "no idea";
-
-        cpu = cpu;
 
         // AEX::printk("cpu%i, tid %i (b%i, c%i, i%i): Page fault @ 0x%lx (0x%lx)\n", cpu->id,
         //             cpu->current_tid, thread->m_busy, thread->m_critical, cpu->in_interrupt, cr2,
@@ -200,6 +190,7 @@ namespace AEX::Sys {
                cpu->current_tid, thread->m_busy, thread->m_critical,
                         cpu->in_interrupt, cr2, cr3, info->rip, name);*/
 
+            in(state, thread, cpu);
             return false;
         }
 
@@ -207,6 +198,7 @@ namespace AEX::Sys {
         size_t offset  = aligned - (size_t) region->start;
 
         region->read((void*) aligned, offset, CPU::PAGE_SIZE);
+        in(state, thread, cpu);
         return true;
     }
 

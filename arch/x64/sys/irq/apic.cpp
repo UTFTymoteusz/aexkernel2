@@ -52,7 +52,7 @@ namespace AEX::Sys::IRQ {
         return read(0x380);
     }
 
-    void APIC::sendInterrupt(uint8_t dst, uint8_t vector) {
+    void APIC::interrupt(uint8_t dst, uint8_t vector) {
         bool ints = CPU::checkInterrupts();
 
         CPU::nointerrupts();
@@ -73,7 +73,7 @@ namespace AEX::Sys::IRQ {
             CPU::interrupts();
     }
 
-    void APIC::sendINIT(uint8_t dst) {
+    void APIC::init(uint8_t dst) {
         bool ints = CPU::checkInterrupts();
 
         CPU::nointerrupts();
@@ -88,7 +88,7 @@ namespace AEX::Sys::IRQ {
             CPU::interrupts();
     }
 
-    void APIC::sendSIPI(uint8_t dst, uint8_t page) {
+    void APIC::sipi(uint8_t dst, uint8_t page) {
         bool ints = CPU::checkInterrupts();
 
         CPU::nointerrupts();
@@ -103,7 +103,7 @@ namespace AEX::Sys::IRQ {
             CPU::interrupts();
     }
 
-    void APIC::sendNMI(uint8_t dst) {
+    void APIC::nmi(uint8_t dst) {
         bool ints = CPU::checkInterrupts();
 
         CPU::nointerrupts();

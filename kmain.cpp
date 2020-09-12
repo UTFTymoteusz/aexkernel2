@@ -73,7 +73,7 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     MCore::init();
 
     CPU::interrupts();
-    IRQ::setup_timers_mcore(500);
+    IRQ::setup_timers_mcore(100);
 
     Proc::init();
 
@@ -323,6 +323,8 @@ void kmain_threaded() {
     AEX_ASSERT(file_try);
 
     file_try.value.get()->write((void*) "aaa it works\n", 13);*/
+
+    CPU::tripleFault();
 
     while (true) {
         switch (Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY]->read()) {

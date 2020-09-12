@@ -2,6 +2,7 @@
 
 #define PACKED __attribute((packed))
 #define WEAK __attribute((weak))
+#define UNUSED __attribute((unused))
 
 #define BIT64 INTPTR_MAX == INT64_MAX
 #define BIT32 INTPTR_MAX == INT32_MAX

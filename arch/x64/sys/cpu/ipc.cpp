@@ -14,10 +14,10 @@ namespace AEX::Sys {
 
     extern "C" void proc_reshed();
 
-    Mutex ipp_lock;
+    Spinlock ipp_lock;
 
     void CPU::broadcast(ipp_type type, void* data, bool ignore_self) {
-        ScopeMutex scopeLock(ipp_lock);
+        ScopeSpinlock scopeLock(ipp_lock);
 
         for (int i = 0; i < MCore::cpu_count; i++) {
             if (i == CPU::currentID() && ignore_self)
@@ -32,7 +32,7 @@ namespace AEX::Sys {
     }
 
     void CPU::send(ipp_type type, void* data) {
-        ScopeMutex scopeLock(ipp_lock);
+        ScopeSpinlock scopeLock(ipp_lock);
         sendInternal(type, data);
     }
 
@@ -50,7 +50,7 @@ namespace AEX::Sys {
             return;
         }
 
-        IRQ::APIC::sendInterrupt(apic_id, 32 + 13);
+        IRQ::APIC::interrupt(apic_id, 32 + 13);
 
         volatile size_t counter = 0;
 
@@ -58,6 +58,9 @@ namespace AEX::Sys {
             counter++;
 
             if (counter == 4000000 * 8)
+                IRQ::APIC::nmi(apic_id);
+
+            if (counter == 4000000 * 32)
                 kpanic("ipi to cpu%i from cpu%i stuck (%i, 0x%p)", this->id, CPU::currentID(), type,
                        data);
         }

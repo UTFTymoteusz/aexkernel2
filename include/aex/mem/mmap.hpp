@@ -56,7 +56,7 @@ namespace AEX::Mem {
             void*    referenced = nullptr;
         };
 
-        static constexpr auto CACHE_SLOTS = 4;
+        static constexpr auto CACHE_SLOTS = 8;
 
         Mutex m_lock;
 

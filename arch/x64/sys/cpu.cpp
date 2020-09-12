@@ -82,7 +82,6 @@ namespace AEX::Sys {
         printk(PRINTK_WARN "cpu%i: Halted\n", CPU::currentID());
 
         asm volatile("cli;");
-
         while (true)
             asm volatile("hlt;");
     }
@@ -237,10 +236,6 @@ namespace AEX::Sys {
 
     void CPU::update(Proc::Thread* thread) {
         m_tss->ist1 = thread->fault_stack;
-    }
-
-    void CPU::printDebug() {
-        printk("ist1: 0x%p\n", m_tss->ist1);
     }
 
     void CPU::getName() {

@@ -53,5 +53,7 @@ namespace AEX::Mem::Heap {
     [[nodiscard]] void* realloc(void* ptr, size_t size);
 
     template <typename T>
-    [[nodiscard]] T realloc(T ptr, size_t size) { return (T) realloc((void*) ptr, size); }
+    [[nodiscard]] T realloc(T ptr, size_t size) {
+        return (T) realloc((void*) ptr, size);
+    }
 }

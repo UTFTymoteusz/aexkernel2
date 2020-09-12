@@ -212,31 +212,13 @@ namespace AEX::Proc {
     }
 
     void Thread::addCritical() {
-        // if (!CPU::current()->in_interrupt)
-        //    CPU::nointerrupts();
-
         Mem::atomic_add(&m_busy, (uint16_t) 1);
         Mem::atomic_add(&m_critical, (uint16_t) 1);
     }
 
     void Thread::subCritical() {
-        // uint16_t fetched = Mem::atomic_sub_fetch(&m_critical, (uint16_t) 1);
-
-        /*if (fetched == 0 && CPU::getCurrent()->should_yield) {
-            Mem::atomic_sub(&m_busy, (uint16_t) 1);
-
-            if (!CPU::getCurrent()->in_interrupt)
-                CPU::interrupts();
-
-            Proc::Thread::yield();
-            return;
-        }*/
-
         Mem::atomic_sub(&m_critical, (uint16_t) 1);
         Mem::atomic_sub(&m_busy, (uint16_t) 1);
-
-        // if (fetched == 0 && !CPU::current()->in_interrupt)
-        //    CPU::interrupts();
     }
 
     Thread::state Thread::saveState() {

@@ -66,8 +66,7 @@ namespace AEX::Sys::PCI {
         }
     };
 
-    PCI* driver;
-
+    PCI*     driver;
     Spinlock lock;
 
     void init() {
@@ -77,7 +76,6 @@ namespace AEX::Sys::PCI {
 
     int PCIDevice::getIRQ() {
         uint8_t (*set_pin)(uint8_t, uint8_t, uint8_t, uint8_t);
-
         while (!(set_pin = (decltype(set_pin)) get_dynamic_symbol("acpi_set_pci_pin")))
             Proc::Thread::sleep(250);
 
@@ -100,10 +98,8 @@ namespace AEX::Sys::PCI {
     void    set_interrupt_pin(uint16_t bus, uint8_t device, uint8_t function, uint8_t pin);
 
     uint32_t read_dword(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset) {
-        uint32_t address = 0x00;
-
-        address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
-                  ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
+        uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
+                           ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
         ScopeSpinlock scopeLock(lock);
 
@@ -112,10 +108,8 @@ namespace AEX::Sys::PCI {
     }
 
     uint16_t read_word(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset) {
-        uint32_t address = 0x00;
-
-        address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
-                  ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
+        uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
+                           ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
         ScopeSpinlock scopeLock(lock);
 
@@ -124,10 +118,8 @@ namespace AEX::Sys::PCI {
     }
 
     uint8_t read_byte(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset) {
-        uint32_t address = 0x00;
-
-        address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
-                  ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
+        uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
+                           ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
         ScopeSpinlock scopeLock(lock);
 
@@ -172,7 +164,6 @@ namespace AEX::Sys::PCI {
         ScopeSpinlock scopeLock(lock);
 
         Sys::CPU::outportd(CONFIG_ADDRESS, address);
-
         return Sys::CPU::outportd(CONFIG_DATA, val);
     }
 
