@@ -5,7 +5,6 @@
 #include "aex/dev/blockhandle.hpp"
 #include "aex/dev/device.hpp"
 #include "aex/errno.hpp"
-#include "aex/kpanic.hpp"
 #include "aex/math.hpp"
 #include "aex/mem.hpp"
 #include "aex/optional.hpp"

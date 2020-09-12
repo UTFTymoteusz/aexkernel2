@@ -1,5 +1,6 @@
 #include "aex/mem/mmap.hpp"
 
+#include "aex/kpanic.hpp"
 #include "aex/proc/process.hpp"
 
 namespace AEX::Mem {

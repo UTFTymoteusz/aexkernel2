@@ -127,8 +127,8 @@ namespace AEX::Mem::Phys {
             return piece->start + start * Sys::CPU::PAGE_SIZE;
         } while ((piece = piece->next) != nullptr);
 
-        kpanic("Failed to AEX::Mem::Phys::alloc()");
         lock.release();
+        kpanic("Failed to AEX::Mem::Phys::alloc()");
 
         return 0;
     }
@@ -156,7 +156,7 @@ namespace AEX::Mem::Phys {
             return;
         } while ((piece = piece->next) != nullptr);
 
-        kpanic("Failed to AEX::Mem::Phys::free()");
         lock.release();
+        kpanic("Failed to AEX::Mem::Phys::free()");
     }
 }

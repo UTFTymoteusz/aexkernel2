@@ -1,5 +1,6 @@
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/kpanic.hpp"
+#include "aex/mutex.hpp"
 #include "aex/printk.hpp"
 
 #include "sys/irq/apic.hpp"
@@ -13,10 +14,10 @@ namespace AEX::Sys {
 
     extern "C" void proc_reshed();
 
-    void CPU::broadcast(ipp_type type, void* data, bool ignore_self) {
-        bool ints = CPU::checkInterrupts();
+    Mutex ipp_lock;
 
-        CPU::nointerrupts();
+    void CPU::broadcast(ipp_type type, void* data, bool ignore_self) {
+        ScopeMutex scopeLock(ipp_lock);
 
         for (int i = 0; i < MCore::cpu_count; i++) {
             if (i == CPU::currentID() && ignore_self)
@@ -26,17 +27,16 @@ namespace AEX::Sys {
             if (cpu == nullptr)
                 continue;
 
-            cpu->send(type, data);
+            cpu->sendInternal(type, data);
         }
-
-        if (ints)
-            CPU::interrupts();
     }
 
     void CPU::send(ipp_type type, void* data) {
-        static Spinlock lock;
-        ScopeSpinlock   scopeLock(lock);
+        ScopeMutex scopeLock(ipp_lock);
+        sendInternal(type, data);
+    }
 
+    void CPU::sendInternal(ipp_type type, void* data) {
         m_ipi_lock.acquire();
         m_ipi_ack = false;
 
@@ -57,12 +57,9 @@ namespace AEX::Sys {
         while (!m_ipi_ack) {
             counter++;
 
-            // if (counter == 4000000 * 7)
-            // IRQ::APIC::sendNMI(apic_id);
-
             if (counter == 4000000 * 8)
-                kpanic("ipi to cpu%i from cpu%i stuck (%i, 0x%p)\n", this->id, CPU::currentID(),
-                       type, data);
+                kpanic("ipi to cpu%i from cpu%i stuck (%i, 0x%p)", this->id, CPU::currentID(), type,
+                       data);
         }
 
         m_ipi_lock.release();

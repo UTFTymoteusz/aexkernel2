@@ -12,10 +12,16 @@ using CPU = AEX::Sys::CPU;
 
 namespace AEX {
     void kpanic(const char* format, ...) {
+        static int panicked = false;
+
         va_list args;
         va_start(args, format);
 
         CPU::nointerrupts();
+
+        if (Mem::atomic_add_fetch(&panicked, 1) > 3)
+            while (true)
+                CPU::waitForInterrupt();
 
         printk_fault();
         printk(PRINTK_FAIL "Kernel Panic (cpu%i)\n", CPU::currentID());

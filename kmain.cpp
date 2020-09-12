@@ -134,7 +134,7 @@ void mount_fs() {
 
     auto res = FS::mount("/dev/sra", "/", nullptr);
     if (res != ENONE)
-        kpanic("Failed to mount iso9660: %s\n", strerror((error_t) res));
+        kpanic("Failed to mount iso9660: %s", strerror((error_t) res));
 
     printk("\n");
 }
@@ -327,8 +327,8 @@ void kmain_threaded() {
     while (true) {
         switch (Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY]->read()) {
         case 't': {
-            time_t ns    = uptime();
-            time_t clock = clocktime();
+            auto ns    = uptime();
+            auto clock = clocktime();
 
             auto dt = epoch2dt(clock);
 

@@ -10,6 +10,8 @@ using Thread = AEX::Proc::Thread;
 
 namespace AEX {
     void Spinlock::acquire() {
+        static bool faulted = false;
+
         volatile size_t count = 0;
         Thread::getCurrent()->addCritical();
 
@@ -25,8 +27,12 @@ namespace AEX {
                 if (!name)
                     name = "no idea";
 
-                kpanic("spinlock 0x%p <%s+0x%x> hung (val: %i, cpu: %i)\n", this, name, delta,
-                       m_lock, Sys::CPU::currentID());
+                if (__sync_bool_compare_and_swap(&faulted, false, true)) {
+                    kpanic("spinlock 0x%p <%s+0x%x> hung (val: %i, cpu: %i)", this, name, delta,
+                           m_lock, Sys::CPU::currentID());
+                }
+                else
+                    Sys::CPU::halt();
             }
 
             Thread::getCurrent()->addCritical();
@@ -106,5 +112,9 @@ namespace AEX {
         __sync_synchronize();
 
         return __sync_bool_compare_and_swap(&m_lock, true, false);
+    }
+
+    ScopeSpinlock Spinlock::scope() {
+        return ScopeSpinlock(*this);
     }
 }

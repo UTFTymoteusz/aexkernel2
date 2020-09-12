@@ -58,7 +58,7 @@ namespace AEX::Debug {
                 break;
             }
 
-            for (volatile size_t i = 0; i < 243243243; i++)
+            for (volatile size_t i = 0; i < 2423243; i++)
                 ;
 
             frame = frame->rbp;

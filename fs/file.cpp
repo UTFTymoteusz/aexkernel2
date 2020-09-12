@@ -1,6 +1,7 @@
 #include "aex/fs/file.hpp"
 
 #include "aex/fs/inode.hpp"
+#include "aex/kpanic.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 

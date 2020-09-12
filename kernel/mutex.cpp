@@ -24,7 +24,7 @@ namespace AEX {
                 if (!name)
                     name = "no idea";
 
-                kpanic("mutex 0x%p <%s+0x%x> hung (val: %i, cpu: %i)\n", this, name, delta, m_lock,
+                kpanic("mutex 0x%p <%s+0x%x> hung (val: %i, cpu: %i)", this, name, delta, m_lock,
                        Sys::CPU::currentID());
             }
 

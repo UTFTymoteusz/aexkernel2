@@ -1,6 +1,8 @@
 #pragma once
 
 namespace AEX {
+    class ScopeSpinlock;
+
     class Spinlock {
         public:
         void acquire();
@@ -13,6 +15,8 @@ namespace AEX {
 
         bool tryAcquireRaw();
         bool tryReleaseRaw();
+
+        ScopeSpinlock scope();
 
         private:
         volatile int m_lock = 0;

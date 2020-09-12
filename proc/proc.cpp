@@ -81,6 +81,9 @@ namespace AEX::Proc {
     void schedule() {
         auto cpu = CPU::current();
 
+        if (cpu->current_thread->isCritical())
+            return;
+
         if (!lock.tryAcquireRaw()) {
             if (cpu->current_thread->status != TS_RUNNABLE)
                 lock.acquireRaw();

@@ -1,5 +1,6 @@
 #include "aex/ipc/event.hpp"
 
+#include "aex/assert.hpp"
 #include "aex/proc.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/sys/time.hpp"
@@ -78,8 +79,8 @@ namespace AEX::IPC {
 
         auto current_sptr = Thread::getCurrent()->getSmartPointer();
 
-        if (m_tiddie)
-            kpanic("simpleevent: Tried to wait while another boi was waiting already");
+        // We need to make sure anybody isn't waiting already.
+        AEX_ASSERT(m_tiddie);
 
         m_tiddie = current_sptr;
 

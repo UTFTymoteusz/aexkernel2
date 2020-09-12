@@ -18,7 +18,7 @@ namespace AEX::Dev {
 
             for (size_t i = 0; i < sizeof(this->current); i++) {
                 if (this->current[i] == '\0')
-                    kpanic("Invalid name pattern\n");
+                    kpanic("Invalid name pattern");
 
                 if (this->current[i] == '%') {
                     start            = i;

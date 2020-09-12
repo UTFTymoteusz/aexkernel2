@@ -1,7 +1,7 @@
 #include "sys/irq.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
-#include "aex/kpanic.hpp"
+#include "aex/assert.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/sys/acpi.hpp"
@@ -41,8 +41,7 @@ namespace AEX::Sys::IRQ {
         CPU::cpuid(0x01, &eax, &ebx, &ecx, &edx);
 
         is_apic_present = edx & CPUID_EDX_FEAT_APIC;
-        if (!is_apic_present)
-            kpanic("This computer is too ancient to run this OS");
+        AEX_ASSERT(is_apic_present);
 
         pics[0] = PIC(0x20, 0x21);
         pics[1] = PIC(0xA0, 0xA1);
@@ -56,8 +55,7 @@ namespace AEX::Sys::IRQ {
         size_t addr = 0xFEE00000;
 
         madt = (ACPI::madt*) ACPI::find_table("APIC", 0);
-        if (!madt)
-            kpanic("This computer is too ancient to run this OS");
+        AEX_ASSERT(madt);
 
         addr = madt->apic_addr;
 
@@ -83,8 +81,7 @@ namespace AEX::Sys::IRQ {
             ioapics.pushBack(m_ioapic);
         }
 
-        if (ioapics.count() == 0)
-            kpanic("There are no IOAPICs on this computer");
+        AEX_ASSERT(ioapics.count() > 0);
 
         APIC::map(addr);
         APIC::init();

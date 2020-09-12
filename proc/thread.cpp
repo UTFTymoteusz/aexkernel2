@@ -1,6 +1,7 @@
 #include "aex/proc/thread.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/assert.hpp"
 #include "aex/ipc/event.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
@@ -133,8 +134,7 @@ namespace AEX::Proc {
 
     void Thread::exit() {
         auto thread = Thread::getCurrent();
-        if (thread->isBusy())
-            kpanic("Attempt to exit a thread while it's still busy\n");
+        AEX_ASSERT(!thread->isBusy());
 
         Mem::atomic_compare_and_swap(&thread->m_finished, (uint8_t) 0, (uint8_t) 1);
         Mem::atomic_compare_and_swap(&thread->m_abort, (uint8_t) 0, (uint8_t) 1);
@@ -212,15 +212,15 @@ namespace AEX::Proc {
     }
 
     void Thread::addCritical() {
-        if (!CPU::current()->in_interrupt)
-            CPU::nointerrupts();
+        // if (!CPU::current()->in_interrupt)
+        //    CPU::nointerrupts();
 
         Mem::atomic_add(&m_busy, (uint16_t) 1);
         Mem::atomic_add(&m_critical, (uint16_t) 1);
     }
 
     void Thread::subCritical() {
-        uint16_t fetched = Mem::atomic_sub_fetch(&m_critical, (uint16_t) 1);
+        // uint16_t fetched = Mem::atomic_sub_fetch(&m_critical, (uint16_t) 1);
 
         /*if (fetched == 0 && CPU::getCurrent()->should_yield) {
             Mem::atomic_sub(&m_busy, (uint16_t) 1);
@@ -232,10 +232,11 @@ namespace AEX::Proc {
             return;
         }*/
 
+        Mem::atomic_sub(&m_critical, (uint16_t) 1);
         Mem::atomic_sub(&m_busy, (uint16_t) 1);
 
-        if (fetched == 0 && !CPU::current()->in_interrupt)
-            CPU::interrupts();
+        // if (fetched == 0 && !CPU::current()->in_interrupt)
+        //    CPU::interrupts();
     }
 
     Thread::state Thread::saveState() {

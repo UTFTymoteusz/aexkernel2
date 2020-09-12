@@ -129,7 +129,7 @@ namespace AEX::Dev {
     int64_t BlockHandle::write(const void*, uint64_t, uint32_t) {
         AEX_ASSERT(m_dev.isValid());
 
-        kpanic("Block::write is unimplemented, I'm too lazy atm\n");
+        kpanic("Block::write is unimplemented, I'm too lazy atm");
     }
 
     bool BlockHandle::isAligned(void* addr) {

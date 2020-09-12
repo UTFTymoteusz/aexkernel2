@@ -1,7 +1,6 @@
 #include "aex/mem/paging.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
-#include "aex/kpanic.hpp"
 #include "aex/math.hpp"
 #include "aex/mem.hpp"
 #include "aex/mutex.hpp"

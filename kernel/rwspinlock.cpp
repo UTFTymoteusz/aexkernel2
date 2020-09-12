@@ -1,5 +1,6 @@
 #include "aex/rwspinlock.hpp"
 
+#include "aex/assert.hpp"
 #include "aex/proc/thread.hpp"
 
 using namespace AEX::Proc;
@@ -61,8 +62,7 @@ namespace AEX {
     }
 
     void RWSpinlock::release_read() {
-        if (Mem::atomic_read(&m_read) <= 0)
-            kpanic("_read <= 0");
+        AEX_ASSERT(Mem::atomic_read(&m_read) > 0);
 
         Mem::atomic_sub(&m_read, 1);
         Thread::getCurrent()->subCritical();
@@ -71,8 +71,7 @@ namespace AEX {
     }
 
     void RWSpinlock::release_write() {
-        if (Mem::atomic_read(&m_write) <= 0)
-            kpanic("_read <= 0");
+        AEX_ASSERT(Mem::atomic_read(&m_write) > 0);
 
         Mem::atomic_sub(&m_write, 1);
         Thread::getCurrent()->subCritical();

@@ -108,7 +108,6 @@ namespace AEX::Sys::PCI {
         ScopeSpinlock scopeLock(lock);
 
         Sys::CPU::outportd(CONFIG_ADDRESS, address);
-
         return Sys::CPU::inportd(CONFIG_DATA);
     }
 
@@ -121,7 +120,6 @@ namespace AEX::Sys::PCI {
         ScopeSpinlock scopeLock(lock);
 
         Sys::CPU::outportd(CONFIG_ADDRESS, address);
-
         return (uint16_t)((Sys::CPU::inportd(CONFIG_DATA) >> ((offset & 2) * 8)) & 0xFFFF);
     }
 
@@ -134,7 +132,6 @@ namespace AEX::Sys::PCI {
         ScopeSpinlock scopeLock(lock);
 
         Sys::CPU::outportd(CONFIG_ADDRESS, address);
-
         return (uint16_t)((Sys::CPU::inportd(CONFIG_DATA) >> ((offset & 3) * 8)) & 0xFF);
     }
 

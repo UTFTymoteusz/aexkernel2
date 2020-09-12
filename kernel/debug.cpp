@@ -47,6 +47,10 @@ namespace AEX::Debug {
     void load_symbols(void* addr) {
         auto elf = ELF(addr);
 
+        Debug::dump_bytes((char*) addr - 32, 64);
+
+        printk("0x%x, 0x%x, 0x%x\n", elf.m_header.bitness, elf.m_header.endianiness,
+               elf.m_header.instruction_set);
         AEX_ASSERT(elf.isValid(ELF::BIT_64, ELF::EN_LITTLE, ELF::ISA_AMD64));
 
         elf.loadStrings();
