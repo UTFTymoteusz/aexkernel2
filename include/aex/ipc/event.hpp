@@ -31,7 +31,7 @@ namespace AEX::IPC {
         private:
         Spinlock m_lock;
 
-        Mem::Vector<Mem::SmartPointer<Proc::Thread>, 4, 4> m_tiddies;
+        Mem::Vector<Proc::Thread*, 4, 4> m_tiddies;
 
         bool m_defunct = false;
     };
@@ -59,7 +59,7 @@ namespace AEX::IPC {
         private:
         Spinlock m_lock;
 
-        Mem::SmartPointer<Proc::Thread> m_tiddie;
+        Proc::Thread* m_tiddie;
 
         bool m_defunct = false;
     };

@@ -42,11 +42,13 @@ namespace AEX::Proc {
         Process(const char* image_path, pid_t parent_pid, Mem::Pagemap* pagemap,
                 const char* name = nullptr);
 
+        ~Process();
+
         /**
          * Gets the current process.
          * @returns The SmartPointer to the process.
          */
-        static Mem::SmartPointer<Process> getCurrent();
+        static Mem::SmartPointer<Process> current();
 
         private:
     };

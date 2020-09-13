@@ -45,6 +45,20 @@ void kmain_threaded();
 void init_mem(multiboot_info_t* mbinfo);
 void mount_fs();
 
+void boi_a() {
+    while (true) {
+        printk("a");
+        Proc::Thread::sleep(1000);
+    }
+}
+
+void boi_b() {
+    while (true) {
+        printk("b");
+        Proc::Thread::sleep(4000);
+    }
+}
+
 extern "C" void kmain(multiboot_info_t* mbinfo) {
     // Dirty workaround but meh, it works
     CPU::current()->in_interrupt++;
@@ -57,6 +71,8 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
         init_mem(mbinfo);
         load_symbols(mbinfo);
     }
+
+    AEX_ASSERT(Debug::symbols_loaded);
 
     ACPI::init();
     printk("\n");
@@ -73,7 +89,7 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     MCore::init();
 
     CPU::interrupts();
-    IRQ::setup_timers_mcore(100);
+    IRQ::setup_timers_mcore(10);
 
     Proc::init();
 
@@ -90,8 +106,6 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     printk("\n");
 
     mount_fs();
-    if (!Debug::symbols_loaded)
-        Debug::load_symbols("/sys/aexkrnl.elf");
 
     Net::init();
     printk("\n");
@@ -300,7 +314,7 @@ void kmain_threaded() {
     using namespace AEX::Sys::Time;
 
     auto idle    = Proc::processes.get(0);
-    auto process = Proc::Thread::getCurrent()->getProcess();
+    auto process = Proc::Thread::current()->getProcess();
 
     time_t start_epoch = clocktime();
 
@@ -324,7 +338,7 @@ void kmain_threaded() {
 
     file_try.value.get()->write((void*) "aaa it works\n", 13);*/
 
-    CPU::tripleFault();
+    // CPU::tripleFault();
 
     while (true) {
         switch (Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY]->read()) {
@@ -344,12 +358,13 @@ void kmain_threaded() {
             printk("bytes read: %li\n", process->usage.block_bytes_read);
             printk("heap free : %li\n", Heap::heap_free);
 
-            printk("tid: %i\n", Proc::Thread::getCurrentTID());
-
             Proc::debug_print_cpu_jobs();
         } break;
         case 'r':
             CPU::tripleFault();
+            break;
+        case 'l':
+            Proc::debug_print_list();
             break;
         default:
             break;

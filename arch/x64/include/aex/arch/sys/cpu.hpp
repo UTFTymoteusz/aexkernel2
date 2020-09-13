@@ -159,7 +159,7 @@ namespace AEX::Sys {
 
         AEX::Proc::Context* current_context; // 0x08
         AEX::Proc::Thread*  current_thread;  // 0x10
-        volatile int        current_tid;     // 0x18
+        volatile int        unused;          // 0x18
 
         // Safe to change again
         uint8_t in_interrupt = 1;

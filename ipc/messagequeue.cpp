@@ -63,7 +63,7 @@ namespace AEX::IPC {
         m_free -= total_len;
 
         message_header header;
-        header.pid = Thread::getCurrent()->getProcess()->pid;
+        header.pid = Thread::current()->getProcess()->pid;
         header.len = len;
 
         m_circ_buffer.write((uint8_t*) &header, sizeof(header));

@@ -10,10 +10,6 @@
 
 namespace AEX::Proc {
     extern Mem::SmartArray<Process> processes;
-    extern Thread**                 threads;
-
-    int add_process(Process* process);
-    int add_thread(Thread* thread);
 
     /**
      * Creates a new thread that's gonna run the specified function with the specified arguments.
@@ -23,7 +19,11 @@ namespace AEX::Proc {
      */
     template <typename Func, typename... Args>
     Thread* threaded_call(Func func, Args... args) {
-        auto thread = new Thread(nullptr, (void*) func, Thread::KERNEL_STACK_SIZE, nullptr);
+        auto thread_try = Thread::create(nullptr, (void*) func, Thread::KERNEL_STACK_SIZE, nullptr);
+        if (!thread_try)
+            return nullptr;
+
+        auto thread = thread_try.value;
 
         thread->setArguments(args...);
         thread->start();

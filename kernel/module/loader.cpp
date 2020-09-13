@@ -218,24 +218,24 @@ namespace AEX {
         }
 
         // 2 goddamned hours + sleep for this goddamned thing (stack size)
-        auto thread = new Proc::Thread(Proc::processes.get(1).get(), (void*) module->enter, 16384,
-                                       Mem::kernel_pagemap);
+        auto thread = Proc::Thread::create(Proc::processes.get(1).get(), (void*) module->enter,
+                                           16384, Mem::kernel_pagemap);
 
         if (block) {
-            Proc::Thread::getCurrent()->addCritical();
+            Proc::Thread::current()->addCritical();
 
-            thread->start();
+            thread.value->start();
             if (block)
-                thread->join();
+                thread.value->join();
 
-            Proc::Thread::getCurrent()->subCritical();
+            Proc::Thread::current()->subCritical();
             Proc::Thread::yield();
 
             delete[] sections;
             return ENONE;
         }
 
-        thread->start();
+        thread.value->start();
 
         delete[] sections;
         return ENONE;

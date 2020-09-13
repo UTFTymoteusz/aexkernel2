@@ -9,70 +9,61 @@ using namespace AEX::Sys;
 namespace AEX::Proc {
     extern Spinlock lock;
 
-    extern Thread** threads;
     extern Thread** idle_threads;
 
-    extern int thread_array_size;
+    extern int     thread_list_size;
+    extern Thread* thread_list_head;
+    extern Thread* thread_list_tail;
 
     void schedule() {
-        auto cpu = CPU::current();
+        auto cpu    = CPU::current();
+        auto thread = Thread::current();
 
-        if (cpu->current_thread->isCritical())
+        if (thread->isCritical())
             return;
 
         if (!lock.tryAcquireRaw()) {
-            if (!(cpu->current_thread->status & TF_RUNNABLE))
+            if (!(thread->status & TF_RUNNABLE))
                 lock.acquireRaw();
             else
                 return;
         }
-
-        tid_t i = cpu->current_tid;
 
         auto curtime = Time::uptime_raw();
         auto delta   = curtime - cpu->measurement_start_ns;
 
         cpu->measurement_start_ns = curtime;
 
-        cpu->current_thread->parent->usage.cpu_time_ns += delta;
-        cpu->current_thread->lock.releaseRaw();
+        thread->parent->usage.cpu_time_ns += delta;
+        thread->lock.releaseRaw();
 
-        auto increment = [&i]() {
-            i++;
-            if (i >= thread_array_size)
-                i = 1;
-        };
+        for (int i = 0; i <= thread_list_size; i++) {
+            thread = thread->next;
 
-        for (int j = 1; j < thread_array_size; j++) {
-            increment();
-            if (!threads[i])
-                continue;
-
-            auto& status = threads[i]->status;
+            auto& status = thread->status;
             if (!(status & TF_RUNNABLE))
                 continue;
 
             if (status & TF_BLOCKED) {
-                if (!threads[i]->isAbortSet())
-                    continue;
+                // if (!thread->isAbortSet())
+                //    continue;
+
+                continue;
             }
 
             if (status & TF_SLEEPING) {
-                if (curtime < threads[i]->wakeup_at)
+                if (curtime < thread->wakeup_at)
                     continue;
 
                 status = TS_RUNNABLE;
             }
 
-            if (threads[i]->parent->cpu_affinity.isMasked(cpu->id))
+            if (thread->parent->cpu_affinity.isMasked(cpu->id))
                 continue;
 
-            if (!threads[i]->lock.tryAcquireRaw())
+            if (!thread->lock.tryAcquireRaw())
                 continue;
 
-            auto thread = threads[i];
-
-            cpu->current_tid     = i;
             cpu->current_thread  = thread;
             cpu->current_context = thread->context;
 
@@ -82,16 +73,17 @@ namespace AEX::Proc {
             return;
         }
 
-        auto thread = idle_threads[cpu->id];
+        auto idle = idle_threads[cpu->id];
 
         // We don't care, it's our private thread anyways
-        thread->lock.tryAcquireRaw();
+        idle->lock.tryAcquireRaw();
 
-        cpu->current_tid     = 0;
-        cpu->current_thread  = thread;
-        cpu->current_context = thread->context;
+        cpu->current_thread  = idle;
+        cpu->current_context = idle->context;
 
-        cpu->update(thread);
+        idle->next = thread;
+
+        cpu->update(idle);
         lock.releaseRaw();
     }
 }

@@ -25,7 +25,11 @@ namespace AEX::Proc {
         this->pagemap           = pagemap;
     }
 
-    Mem::SmartPointer<Process> Process::getCurrent() {
-        return Thread::getCurrent()->getProcess();
+    Process::~Process() {
+        kpanic("process is gone\n");
+    }
+
+    Mem::SmartPointer<Process> Process::current() {
+        return processes.get(Thread::current()->parent->pid);
     }
 }

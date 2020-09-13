@@ -45,7 +45,7 @@ namespace AEX::Mem {
     }
 
     error_t FileBackedMMapRegion::read(void* dst, int64_t offset, uint32_t count) {
-        auto process = Proc::Process::getCurrent();
+        auto process = Proc::Process::current();
 
         ScopeMutex scopeLock(m_lock);
 
@@ -108,7 +108,7 @@ namespace AEX::Mem {
         if (!(flags & MAP_ANONYMOUS) && !file)
             return EBADF;
 
-        auto process = Proc::Process::getCurrent();
+        auto process = Proc::Process::current();
 
         MMapRegion* region;
 
@@ -128,8 +128,7 @@ namespace AEX::Mem {
         if (!dupd_try)
             return dupd_try.error_code;
 
-        auto dupd = dupd_try.value;
-
+        auto  dupd       = dupd_try.value;
         void* alloc_addr = process->pagemap->map(len, 0, PAGE_ARBITRARY);
 
         region = new FileBackedMMapRegion(process->pagemap, alloc_addr, len, dupd, offset);
@@ -143,7 +142,7 @@ namespace AEX::Mem {
 
     // Make len work properly
     error_t munmap(void* addr, size_t) {
-        auto process = Proc::Process::getCurrent();
+        auto process = Proc::Process::current();
 
         remove_region(process.get(), addr);
 

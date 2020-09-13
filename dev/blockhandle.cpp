@@ -35,8 +35,6 @@ namespace AEX::Dev {
         if (m_dev.isValid())
             m_dev->releaseExt();
 
-        Debug::stack_trace();
-
         delete m_shared->m_buffer;
         delete m_shared;
 
@@ -47,7 +45,7 @@ namespace AEX::Dev {
         AEX_ASSERT(m_dev.isValid());
         AEX_ASSERT(m_shared);
 
-        auto current_usage = &Proc::Thread::getCurrent()->getProcess()->usage;
+        auto current_usage = &Proc::Thread::current()->getProcess()->usage;
 
         // this needs to be checked properly
         while (!isAligned(buffer)) {
