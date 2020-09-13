@@ -105,7 +105,7 @@ namespace AEX::Sys {
         return flags & 0x200;
     }
 
-    void CPU::waitForInterrupt() {
+    void CPU::wait() {
         asm volatile("hlt");
     }
 

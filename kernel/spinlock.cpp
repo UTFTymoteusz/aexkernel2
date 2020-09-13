@@ -13,10 +13,10 @@ namespace AEX {
         static bool faulted = false;
 
         volatile size_t count = 0;
-        Thread::getCurrent()->addCritical();
+        Thread::current()->addCritical();
 
         while (!__sync_bool_compare_and_swap(&m_lock, false, true)) {
-            Thread::getCurrent()->subCritical();
+            Thread::current()->subCritical();
 
             asm volatile("pause");
             count++;
@@ -35,7 +35,7 @@ namespace AEX {
                     Sys::CPU::halt();
             }
 
-            Thread::getCurrent()->addCritical();
+            Thread::current()->addCritical();
         }
 
         __sync_synchronize();
@@ -59,15 +59,15 @@ namespace AEX {
             kpanic("spinlock: Too many releases");
         }
 
-        Thread::getCurrent()->subCritical();
+        Thread::current()->subCritical();
     }
 
     bool Spinlock::tryAcquire() {
-        Thread::getCurrent()->addCritical();
+        Thread::current()->addCritical();
 
         bool ret = __sync_bool_compare_and_swap(&m_lock, false, true);
         if (!ret)
-            Thread::getCurrent()->subCritical();
+            Thread::current()->subCritical();
 
         __sync_synchronize();
 

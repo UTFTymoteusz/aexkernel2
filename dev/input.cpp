@@ -31,8 +31,9 @@ namespace AEX::Dev::Input {
         for (int i = 0; i < TTY::TTY_AMOUNT; i++)
             TTY::VTTYs[i]->inputReady();
 
-        auto thread = new Proc::Thread(nullptr, (void*) tty_loop, 8192, nullptr);
-        thread->start();
+        auto thread = Proc::Thread::create(nullptr, (void*) tty_loop, 8192, nullptr);
+        thread.value->start();
+        thread.value->detach();
     }
 
     void key_press(hid_keycode_t code) {

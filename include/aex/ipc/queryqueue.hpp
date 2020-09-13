@@ -105,7 +105,7 @@ namespace AEX::IPC {
             m_query->event.wait(timeout);
             m_lock.release();
 
-            if (!Proc::Thread::getCurrent()->isCritical())
+            if (!Proc::Thread::current()->isCritical())
                 Proc::Thread::yield();
 
             return m_promise;

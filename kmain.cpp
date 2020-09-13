@@ -58,6 +58,8 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
         load_symbols(mbinfo);
     }
 
+    AEX_ASSERT(Debug::symbols_loaded);
+
     ACPI::init();
     printk("\n");
 
@@ -73,7 +75,7 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     MCore::init();
 
     CPU::interrupts();
-    IRQ::setup_timers_mcore(100);
+    IRQ::setup_timers_mcore(500);
 
     Proc::init();
 
@@ -90,8 +92,6 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     printk("\n");
 
     mount_fs();
-    if (!Debug::symbols_loaded)
-        Debug::load_symbols("/sys/aexkrnl.elf");
 
     Net::init();
     printk("\n");
@@ -255,7 +255,8 @@ void test_server() {
         b->socket = sock2;
 
         printk("accepted\n");
-        Proc::threaded_call(test_server_handle, b);
+        auto thread = Proc::threaded_call(test_server_handle, b);
+        thread->detach();
     }
 
     Proc::Thread::sleep(1250);
@@ -300,7 +301,7 @@ void kmain_threaded() {
     using namespace AEX::Sys::Time;
 
     auto idle    = Proc::processes.get(0);
-    auto process = Proc::Thread::getCurrent()->getProcess();
+    auto process = Proc::Thread::current()->getProcess();
 
     time_t start_epoch = clocktime();
 
@@ -344,12 +345,13 @@ void kmain_threaded() {
             printk("bytes read: %li\n", process->usage.block_bytes_read);
             printk("heap free : %li\n", Heap::heap_free);
 
-            printk("tid: %i\n", Proc::Thread::getCurrentTID());
-
             Proc::debug_print_cpu_jobs();
         } break;
         case 'r':
             CPU::tripleFault();
+            break;
+        case 'l':
+            Proc::debug_print_list();
             break;
         default:
             break;

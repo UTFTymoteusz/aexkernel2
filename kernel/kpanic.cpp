@@ -21,7 +21,7 @@ namespace AEX {
 
         if (Mem::atomic_add_fetch(&panicked, 1) > 2)
             while (true)
-                CPU::waitForInterrupt();
+                CPU::wait();
 
         printk_fault();
         printk(PRINTK_FAIL "Kernel Panic (cpu%i)\n", CPU::currentID());
@@ -32,7 +32,7 @@ namespace AEX {
             Proc::debug_print_cpu_jobs();
 
         printk("Stack trace:\n");
-        Debug::stack_trace(1);
+        // Debug::stack_trace(1);
 
         va_end(args);
 

@@ -67,7 +67,7 @@ namespace AEX::Sys::IRQ {
         // State saving is possible because only the executing thread changes it's criticality and
         // busies.
 
-        auto thread = Thread::getCurrent();
+        auto thread = Thread::current();
         auto state  = thread->saveState();
 
         thread->setCritical(1);

@@ -14,8 +14,8 @@ namespace AEX::Sys::ACPI {
     uint8_t                  revision;
 
     bool add_table(acpi_table* table) {
-        auto header = (sdt_header*) table;
-        char buffer[4];
+        auto header    = (sdt_header*) table;
+        char buffer[8] = {};
 
         memcpy((void*) buffer, (void*) header->signature, 4);
 
