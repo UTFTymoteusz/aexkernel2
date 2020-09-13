@@ -176,8 +176,7 @@ namespace AEX::Proc {
 
         if (status & TF_DEAD)
             cleanup();
-
-        if (Thread::current()->aborting()) {
+        else if (Thread::current()->aborting()) {
             m_detached = true;
             m_joiner   = nullptr;
         }
@@ -211,10 +210,8 @@ namespace AEX::Proc {
                 setStatus(TS_DEAD);
                 cleanup();
             }
-            else if (m_joiner) {
+            else if (m_joiner)
                 m_joiner->setStatus(TS_RUNNABLE);
-                m_joiner = nullptr;
-            }
         }
 
         return ENONE;
