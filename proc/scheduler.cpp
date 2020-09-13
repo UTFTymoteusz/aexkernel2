@@ -1,20 +1,14 @@
+#include "aex/assert.hpp"
 #include "aex/proc.hpp"
 #include "aex/sys/time.hpp"
 
+#include "proc/proc.hpp"
 #include "sys/time.hpp"
 
 using namespace AEX::Mem;
 using namespace AEX::Sys;
 
 namespace AEX::Proc {
-    extern Spinlock lock;
-
-    extern Thread** idle_threads;
-
-    extern int     thread_list_size;
-    extern Thread* thread_list_head;
-    extern Thread* thread_list_tail;
-
     void schedule() {
         auto cpu    = CPU::current();
         auto thread = Thread::current();

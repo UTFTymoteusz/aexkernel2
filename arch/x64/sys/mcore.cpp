@@ -158,6 +158,6 @@ namespace AEX::Sys::MCore {
         cpu->in_interrupt--;
 
         while (true)
-            CPU::waitForInterrupt();
+            CPU::wait();
     }
 }

@@ -6,6 +6,7 @@
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
+#include "aex/proc/broker.hpp"
 #include "aex/sys/time.hpp"
 
 #include "proc/proc.hpp"
@@ -37,6 +38,8 @@ namespace AEX::Proc {
     }
 
     Thread::~Thread() {
+        this->lock.acquire();
+
         delete context;
 
         if (user_stack)
@@ -47,6 +50,8 @@ namespace AEX::Proc {
 
         if (fault_stack)
             parent->pagemap->free((void*) fault_stack, fault_stack_size);
+
+        this->lock.release();
     }
 
     optional<Thread*> Thread::create(Process* parent, void* entry, size_t stack_size,
@@ -133,7 +138,7 @@ namespace AEX::Proc {
         Thread::yield();
 
         while (true)
-            CPU::waitForInterrupt();
+            CPU::wait();
     }
 
     Thread* Thread::current() {
@@ -149,7 +154,7 @@ namespace AEX::Proc {
     }
 
     error_t Thread::join() {
-        auto scope = lock.scope();
+        auto scope = this->lock.scope();
 
         if (m_detached || m_joiner)
             return EINVAL;
@@ -161,11 +166,11 @@ namespace AEX::Proc {
 
         m_joiner = Thread::current();
         Thread::current()->setStatus(TS_BLOCKED);
-        lock.release();
+        this->lock.release();
 
         Thread::yield();
 
-        lock.acquire();
+        this->lock.acquire();
         if (status & TF_DEAD)
             cleanup();
 
@@ -175,7 +180,7 @@ namespace AEX::Proc {
     }
 
     error_t Thread::detach() {
-        auto scope = lock.scope();
+        auto scope = this->lock.scope();
 
         if (m_detached || m_joiner)
             return EINVAL;
@@ -185,7 +190,7 @@ namespace AEX::Proc {
     }
 
     error_t Thread::abort() {
-        auto scope = lock.scope();
+        auto scope = this->lock.scope();
 
         if (!isBusy()) {
             setStatus(TS_DEAD);
@@ -206,8 +211,13 @@ namespace AEX::Proc {
         return m_aborting;
     }
 
+    void broker_cleanup(Thread* thread) {
+        delete thread;
+    }
+
     void Thread::cleanup() {
         remove_thread(this);
+        broker(broker_cleanup, this);
     }
 
     Process* Thread::getProcess() {

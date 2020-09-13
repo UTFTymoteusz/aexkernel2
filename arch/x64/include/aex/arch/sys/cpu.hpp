@@ -78,7 +78,7 @@ namespace AEX::Sys {
         /**
          * Waits for an interrupt on the local CPU.
          */
-        static void waitForInterrupt();
+        static void wait();
 
         /**
          * Corresponds to the x86 CPUID instruction.

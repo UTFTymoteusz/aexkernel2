@@ -297,18 +297,11 @@ void test_udp_client() {
     }
 }
 
-void test_detaching() {
-    Proc::Thread::sleep(5000);
-}
-
 void kmain_threaded() {
     using namespace AEX::Sys::Time;
 
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::current()->getProcess();
-
-    auto thread = Proc::threaded_call(test_detaching);
-    thread->detach();
 
     time_t start_epoch = clocktime();
 
@@ -332,7 +325,7 @@ void kmain_threaded() {
 
     file_try.value.get()->write((void*) "aaa it works\n", 13);*/
 
-    // CPU::tripleFault();
+    CPU::tripleFault();
 
     while (true) {
         switch (Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY]->read()) {

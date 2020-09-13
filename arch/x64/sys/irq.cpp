@@ -121,7 +121,7 @@ namespace AEX::Sys::IRQ {
         APIC::setupTimer(0x20 + 31, (size_t)(apic_tps * (ms / 1000.0)), false);
 
         while (!irq_mark)
-            CPU::waitForInterrupt();
+            CPU::wait();
     }
 
     double timer_hz = 0;
@@ -233,7 +233,7 @@ namespace AEX::Sys::IRQ {
         CPU::interrupts();
 
         while (!IRQ::irq_mark)
-            CPU::waitForInterrupt();
+            CPU::wait();
 
         uint32_t ticks = -APIC::getCounter() * 20;
 

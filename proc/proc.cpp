@@ -9,6 +9,7 @@
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
 
+#include "proc/broker.hpp"
 #include "sys/mcore.hpp"
 #include "sys/time.hpp"
 
@@ -58,8 +59,10 @@ namespace AEX::Proc {
         thread_list_head->prev = bsp_thread;
         thread_list_tail       = bsp_thread;
 
-        // auto thread_reaper = Thread::create(kernel_process, (void*) thread_reaper_loop, 8192,
-        //                                    kernel_process->pagemap);
+        bsp_thread->prev = bsp_thread;
+        bsp_thread->next = bsp_thread;
+
+        broker_init();
 
         setup_idle_threads(idle_process);
         setup_cores(bsp_thread);
@@ -95,6 +98,10 @@ namespace AEX::Proc {
 
         AEX_ASSERT(thread_list_size > 0);
 
+        for (int i = 0; i < MCore::cpu_count; i++)
+            if (idle_threads[i]->next == thread)
+                idle_threads[i]->next = thread->next;
+
         thread_list_size--;
         thread->next->prev = thread->prev;
         thread->prev->next = thread->next;
@@ -108,7 +115,7 @@ namespace AEX::Proc {
 
     void idle() {
         while (true)
-            CPU::waitForInterrupt();
+            CPU::wait();
     }
 
     void setup_idle_threads(Process* idle_process) {
@@ -142,11 +149,11 @@ namespace AEX::Proc {
     }
 
     void cleanup_voids() {
-        CPU::broadcast(CPU::IPP_RESHED, nullptr);
+        CPU::broadcast(CPU::IPP_RESHED);
 
-        for (int i = 1; i < MCore::cpu_count; i++) {
+        for (int i = 0; i < MCore::cpu_count; i++) {
             while ((volatile Thread*) MCore::CPUs[i]->current_thread == void_threads[i])
-                ;
+                CPU::wait();
 
             delete void_threads[i];
         }

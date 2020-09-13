@@ -5,7 +5,14 @@
 
 namespace AEX::Proc {
     extern Mem::SmartArray<Process> processes;
-    extern Thread**                 threads;
+
+    extern Spinlock lock;
+
+    extern Thread** idle_threads;
+
+    extern int     thread_list_size;
+    extern Thread* thread_list_head;
+    extern Thread* thread_list_tail;
 
     extern bool ready;
 

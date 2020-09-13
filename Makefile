@@ -21,7 +21,7 @@ OBJS := $(patsubst %.o, $(OBJ_DEST)%.o, $(CXXFILES:.cpp=.cpp.o) $(ASMFILES:.asm=
 ISO  = $(BIN)grubiso/
 SYS  = $(ISO)sys/
 
-GFLAGS = -O0 -Wall -Wextra -Werror -nostdlib -pipe -lgcc
+GFLAGS = -O3 -Wall -Wextra -Werror -nostdlib -pipe -lgcc
 
 INCLUDES := -I. -I$(ARCH) -I$(ARCH)include/ -Iinclude/
 
