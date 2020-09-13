@@ -22,7 +22,9 @@ namespace AEX::Proc {
     void schedule();
 
     pid_t add_process(Process* process);
-    void  add_thread(Thread* thread);
+
+    void add_thread(Thread* thread);
+    void remove_thread(Thread* thread);
 
     void debug_print_cpu_jobs();
     void debug_print_list();

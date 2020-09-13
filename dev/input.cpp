@@ -33,6 +33,7 @@ namespace AEX::Dev::Input {
 
         auto thread = Proc::Thread::create(nullptr, (void*) tty_loop, 8192, nullptr);
         thread.value->start();
+        thread.value->detach();
     }
 
     void key_press(hid_keycode_t code) {

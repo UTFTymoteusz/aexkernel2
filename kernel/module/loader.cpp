@@ -222,14 +222,9 @@ namespace AEX {
                                            16384, Mem::kernel_pagemap);
 
         if (block) {
-            Proc::Thread::current()->addCritical();
-
             thread.value->start();
             if (block)
                 thread.value->join();
-
-            Proc::Thread::current()->subCritical();
-            Proc::Thread::yield();
 
             delete[] sections;
             return ENONE;

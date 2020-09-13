@@ -45,8 +45,8 @@ namespace AEX::Proc {
                 continue;
 
             if (status & TF_BLOCKED) {
-                // if (!thread->isAbortSet())
-                //    continue;
+                if (thread->aborting())
+                    break;
 
                 continue;
             }

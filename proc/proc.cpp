@@ -2,6 +2,7 @@
 
 #include "aex/arch/proc/context.hpp"
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/assert.hpp"
 #include "aex/debug.hpp"
 #include "aex/ipc/messagequeue.hpp"
 #include "aex/mem.hpp"
@@ -77,6 +78,8 @@ namespace AEX::Proc {
     void add_thread(Thread* thread) {
         auto scope = lock.scope();
 
+        AEX_ASSERT(thread_list_size > 0);
+
         thread_list_size++;
         thread_list_tail->next = thread;
 
@@ -85,6 +88,22 @@ namespace AEX::Proc {
 
         thread_list_tail       = thread;
         thread_list_head->prev = thread_list_tail;
+    }
+
+    void remove_thread(Thread* thread) {
+        auto scope = lock.scope();
+
+        AEX_ASSERT(thread_list_size > 0);
+
+        thread_list_size--;
+        thread->next->prev = thread->prev;
+        thread->prev->next = thread->next;
+
+        if (thread_list_head == thread)
+            thread_list_head = thread->next;
+
+        if (thread_list_tail == thread)
+            thread_list_tail = thread->prev;
     }
 
     void idle() {
@@ -133,33 +152,5 @@ namespace AEX::Proc {
         }
 
         delete void_threads;
-    }
-
-    void debug_print_cpu_jobs() {
-        for (int i = 0; i < MCore::cpu_count; i++) {
-            auto cpu = MCore::CPUs[i];
-
-            void* addr = (void*) cpu->current_thread->context->rip;
-
-            int         delta = 0;
-            const char* name  = Debug::addr2name(addr, delta);
-
-            printk("cpu%i: PID %8i, TID %8i @ 0x%p <%s+0x%x> (b%i, c%i, i%i)\n", i,
-                   cpu->current_thread->parent->pid, cpu->unused, addr, name ? name : "no idea",
-                   delta, cpu->current_thread->m_busy, cpu->current_thread->m_critical,
-                   cpu->in_interrupt);
-        }
-    }
-
-    void debug_print_list() {
-        printk("Head: 0x%p, Count: %i\n", thread_list_head, thread_list_size);
-        auto thread = thread_list_head;
-
-        for (int i = 0; i < thread_list_size; i++) {
-            printk("0x%p (p: 0x%p, n: 0x%p)\n", thread, thread->prev, thread->next);
-            thread = thread->next;
-        }
-
-        printk("Tail: 0x%p\n", thread_list_tail);
     }
 }

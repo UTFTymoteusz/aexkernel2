@@ -16,18 +16,17 @@ namespace AEX::Proc {
     extern "C" void proc_reshed();
 
     // create &
+    // start  &
     // join   &
-    // detach
+    // detach &
     // yield  &
     // sleep  &
-    // abort
+    // abort  &?
     // exit   &
 
     Thread::Thread() {
         this->self   = this;
         this->status = TS_FRESH;
-
-        this->m_exit_event = new IPC::Event();
     }
 
     Thread::Thread(Process* process) {
@@ -35,12 +34,9 @@ namespace AEX::Proc {
         this->context = new Context();
         this->parent  = process;
         this->status  = TS_FRESH;
-
-        this->m_exit_event = new IPC::Event();
     }
 
     Thread::~Thread() {
-        delete m_exit_event;
         delete context;
 
         if (user_stack)
@@ -91,8 +87,6 @@ namespace AEX::Proc {
         thread->status = TS_RUNNABLE;
         thread->parent = parent;
 
-        thread->m_exit_event = new IPC::Event();
-
         if (dont_add)
             return thread;
 
@@ -116,7 +110,7 @@ namespace AEX::Proc {
         currentThread->wakeup_at = Sys::Time::uptime() + ((Sys::Time::time_t) ms) * 1000000;
         currentThread->status    = TS_SLEEPING;
 
-        yield();
+        Thread::yield();
     }
 
     void Thread::exit() {
@@ -125,8 +119,18 @@ namespace AEX::Proc {
         AEX_ASSERT(!thread->isBusy());
         AEX_ASSERT(CPU::checkInterrupts());
 
-        thread->setStatus(TS_DEAD);
-        thread->m_exit_event->defunct();
+        thread->addCritical();
+
+        Thread::current()->setStatus(TS_DEAD);
+
+        if (thread->m_joiner)
+            thread->m_joiner->setStatus(TS_RUNNABLE);
+
+        if (thread->m_detached)
+            thread->cleanup();
+
+        thread->subCritical();
+        Thread::yield();
 
         while (true)
             CPU::waitForInterrupt();
@@ -137,13 +141,73 @@ namespace AEX::Proc {
         return CPU::currentThread();
     }
 
-    void Thread::start() {
+    error_t Thread::start() {
         if (status == TS_FRESH)
             status = TS_RUNNABLE;
+
+        return ENONE;
     }
 
-    void Thread::join() {
-        this->m_exit_event->wait();
+    error_t Thread::join() {
+        auto scope = lock.scope();
+
+        if (m_detached || m_joiner)
+            return EINVAL;
+
+        if (this == current())
+            return EDEADLK;
+
+        Thread::current()->addBusy();
+
+        m_joiner = Thread::current();
+        Thread::current()->setStatus(TS_BLOCKED);
+        lock.release();
+
+        Thread::yield();
+
+        lock.acquire();
+        if (status & TF_DEAD)
+            cleanup();
+
+        Thread::current()->subBusy();
+
+        return ENONE;
+    }
+
+    error_t Thread::detach() {
+        auto scope = lock.scope();
+
+        if (m_detached || m_joiner)
+            return EINVAL;
+
+        m_detached = true;
+        return ENONE;
+    }
+
+    error_t Thread::abort() {
+        auto scope = lock.scope();
+
+        if (!isBusy()) {
+            setStatus(TS_DEAD);
+            cleanup();
+        }
+
+        if (m_joiner) {
+            m_joiner->setStatus(TS_BLOCKED);
+            m_joiner   = nullptr;
+            m_detached = true;
+        }
+
+        m_aborting = true;
+        return ENONE;
+    }
+
+    bool Thread::aborting() {
+        return m_aborting;
+    }
+
+    void Thread::cleanup() {
+        remove_thread(this);
     }
 
     Process* Thread::getProcess() {

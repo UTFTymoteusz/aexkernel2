@@ -12,10 +12,6 @@
 // pls consider making thread functions accept and return smartpointers
 // make the eventbong use an int or whatever
 
-namespace AEX::IPC {
-    class Event;
-}
-
 namespace AEX::Proc {
     class Process;
     class Event;
@@ -90,8 +86,13 @@ namespace AEX::Proc {
 
         static Thread* current();
 
-        void start();
-        void join();
+        error_t start();
+        error_t join();
+        error_t detach();
+        error_t abort();
+        bool    aborting();
+
+        void cleanup();
 
         Process* getProcess();
 
@@ -182,7 +183,9 @@ namespace AEX::Proc {
         uint16_t m_busy     = 0;
         uint16_t m_critical = 0;
 
-        IPC::Event* m_exit_event = nullptr;
+        bool    m_detached = false;
+        bool    m_aborting = false;
+        Thread* m_joiner   = nullptr;
     };
 
     typedef Mem::SmartPointer<Thread> Thread_SP;

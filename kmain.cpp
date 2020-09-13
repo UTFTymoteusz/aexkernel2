@@ -45,20 +45,6 @@ void kmain_threaded();
 void init_mem(multiboot_info_t* mbinfo);
 void mount_fs();
 
-void boi_a() {
-    while (true) {
-        printk("a");
-        Proc::Thread::sleep(1000);
-    }
-}
-
-void boi_b() {
-    while (true) {
-        printk("b");
-        Proc::Thread::sleep(4000);
-    }
-}
-
 extern "C" void kmain(multiboot_info_t* mbinfo) {
     // Dirty workaround but meh, it works
     CPU::current()->in_interrupt++;
@@ -89,7 +75,7 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     MCore::init();
 
     CPU::interrupts();
-    IRQ::setup_timers_mcore(10);
+    IRQ::setup_timers_mcore(500);
 
     Proc::init();
 
@@ -269,7 +255,8 @@ void test_server() {
         b->socket = sock2;
 
         printk("accepted\n");
-        Proc::threaded_call(test_server_handle, b);
+        auto thread = Proc::threaded_call(test_server_handle, b);
+        thread->detach();
     }
 
     Proc::Thread::sleep(1250);
@@ -310,11 +297,18 @@ void test_udp_client() {
     }
 }
 
+void test_detaching() {
+    Proc::Thread::sleep(5000);
+}
+
 void kmain_threaded() {
     using namespace AEX::Sys::Time;
 
     auto idle    = Proc::processes.get(0);
     auto process = Proc::Thread::current()->getProcess();
+
+    auto thread = Proc::threaded_call(test_detaching);
+    thread->detach();
 
     time_t start_epoch = clocktime();
 
