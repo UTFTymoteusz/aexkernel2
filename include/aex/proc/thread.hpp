@@ -140,7 +140,7 @@ namespace AEX::Proc {
             return Mem::atomic_read(&m_busy) > 0;
         }
 
-        inline uint16_t get_busy() {
+        inline uint16_t getBusy() {
             return Mem::atomic_read(&m_busy);
         }
 
@@ -177,15 +177,25 @@ namespace AEX::Proc {
             m_critical = critical;
         }
 
+        Thread* joiner() {
+            return m_joiner;
+        }
+
+        bool detached() {
+            return m_detached;
+        }
+
         state saveState();
         void  loadState(state& m_state);
 
+        private:
         uint16_t m_busy     = 0;
         uint16_t m_critical = 0;
 
-        bool    m_detached = false;
-        bool    m_aborting = false;
-        Thread* m_joiner   = nullptr;
+        bool m_detached = false;
+        bool m_aborting = false;
+
+        Thread* m_joiner = nullptr;
     };
 
     typedef Mem::SmartPointer<Thread> Thread_SP;

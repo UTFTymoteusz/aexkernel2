@@ -31,7 +31,7 @@ namespace AEX::Proc {
 
     Thread** void_threads;
 
-    void setup_idle_threads(Process* process);
+    void setup_idles(Process* process);
     void setup_cores(Thread* bsp_thread);
     void cleanup_voids();
 
@@ -64,7 +64,7 @@ namespace AEX::Proc {
 
         broker_init();
 
-        setup_idle_threads(idle_process);
+        setup_idles(idle_process);
         setup_cores(bsp_thread);
         setup_irq();
         cleanup_voids();
@@ -118,7 +118,7 @@ namespace AEX::Proc {
             CPU::wait();
     }
 
-    void setup_idle_threads(Process* idle_process) {
+    void setup_idles(Process* idle_process) {
         idle_threads = (Thread**) new Thread*[MCore::cpu_count];
 
         for (int i = 0; i < MCore::cpu_count; i++) {

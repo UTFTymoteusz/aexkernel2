@@ -38,7 +38,7 @@ namespace AEX::Proc {
 
             printk("cpu%i: PID %8i, TID %8i @ 0x%p <%s+0x%x> (b%i, c%i, i%i)\n", i,
                    cpu->current_thread->parent->pid, cpu->unused, addr, name ? name : "no idea",
-                   delta, cpu->current_thread->m_busy, cpu->current_thread->m_critical,
+                   delta, cpu->current_thread->getBusy(), cpu->current_thread->getCritical(),
                    cpu->in_interrupt);
         }
     }
@@ -52,8 +52,8 @@ namespace AEX::Proc {
             debug_serialize_flags(buffer, thread->status);
 
             printk("0x%p (p: 0x%p, n: 0x%p) <%s> %s 0x%p\n", thread, thread->prev, thread->next,
-                   buffer, thread->m_detached ? "detached" : (thread->m_joiner ? "joining" : ""),
-                   thread->m_joiner);
+                   buffer, thread->detached() ? "detached" : (thread->joiner() ? "joining" : ""),
+                   thread->joiner());
             thread = thread->next;
         }
 

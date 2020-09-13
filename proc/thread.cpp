@@ -40,6 +40,8 @@ namespace AEX::Proc {
     Thread::~Thread() {
         this->lock.acquire();
 
+        AEX_ASSERT(!m_joiner);
+
         delete context;
 
         if (user_stack)
@@ -134,6 +136,9 @@ namespace AEX::Proc {
         if (thread->m_detached)
             thread->cleanup();
 
+        thread->m_detached = true;
+        thread->m_joiner   = nullptr;
+
         thread->subCritical();
         Thread::yield();
 
@@ -198,7 +203,7 @@ namespace AEX::Proc {
         }
 
         if (m_joiner) {
-            m_joiner->setStatus(TS_BLOCKED);
+            m_joiner->setStatus(TS_RUNNABLE);
             m_joiner   = nullptr;
             m_detached = true;
         }
