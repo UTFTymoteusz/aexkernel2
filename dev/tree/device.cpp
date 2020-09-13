@@ -25,13 +25,13 @@ namespace AEX::Dev::Tree {
         // children.~RCPArray();
     }
 
-    void Device::addResource(Device::resource resource) {
+    void Device::addResource(resource resource) {
         ScopeSpinlock scopeLock(m_lock);
 
         m_resources.pushBack(resource);
     }
 
-    optional<Device::resource> Device::getResource(int index) {
+    optional<resource> Device::getResource(int index) {
         ScopeSpinlock scopeLock(m_lock);
 
         if (index < 0 || index >= m_resources.count())

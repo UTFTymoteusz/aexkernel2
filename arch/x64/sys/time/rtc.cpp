@@ -1,7 +1,6 @@
 #include "sys/time/rtc.hpp"
 
 #include "aex/byte.hpp"
-#include "aex/kpanic.hpp"
 #include "aex/mem.hpp"
 #include "aex/sys/acpi.hpp"
 #include "aex/sys/acpi/fadt.hpp"

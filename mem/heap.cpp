@@ -292,7 +292,7 @@ namespace AEX::Mem::Heap {
             slab = slab->next;
         } while (slab != nullptr);
 
-        kpanic("heap: malloc(%li) failed [t%li, f%li]\n", size, heap_allocated, heap_free);
+        kpanic("heap: malloc(%li) failed [t%li, f%li]", size, heap_allocated, heap_free);
     }
 
     void free(void* ptr) {

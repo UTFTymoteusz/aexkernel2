@@ -14,10 +14,10 @@
 
 using namespace AEX::Dev;
 
-constexpr auto CONFIG_ADDRESS = 0xCF8;
-constexpr auto CONFIG_DATA    = 0xCFC;
-
 namespace AEX::Sys::PCI {
+    constexpr auto CONFIG_ADDRESS = 0xCF8;
+    constexpr auto CONFIG_DATA    = 0xCFC;
+
     void scan_all_buses(Tree::Device* pci_root);
 
     Tree::Bus* dev_bus;
@@ -66,8 +66,7 @@ namespace AEX::Sys::PCI {
         }
     };
 
-    PCI* driver;
-
+    PCI*     driver;
     Spinlock lock;
 
     void init() {
@@ -77,7 +76,6 @@ namespace AEX::Sys::PCI {
 
     int PCIDevice::getIRQ() {
         uint8_t (*set_pin)(uint8_t, uint8_t, uint8_t, uint8_t);
-
         while (!(set_pin = (decltype(set_pin)) get_dynamic_symbol("acpi_set_pci_pin")))
             Proc::Thread::sleep(250);
 
@@ -100,41 +98,32 @@ namespace AEX::Sys::PCI {
     void    set_interrupt_pin(uint16_t bus, uint8_t device, uint8_t function, uint8_t pin);
 
     uint32_t read_dword(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset) {
-        uint32_t address = 0x00;
-
-        address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
-                  ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
+        uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
+                           ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
         ScopeSpinlock scopeLock(lock);
 
         Sys::CPU::outportd(CONFIG_ADDRESS, address);
-
         return Sys::CPU::inportd(CONFIG_DATA);
     }
 
     uint16_t read_word(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset) {
-        uint32_t address = 0x00;
-
-        address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
-                  ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
+        uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
+                           ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
         ScopeSpinlock scopeLock(lock);
 
         Sys::CPU::outportd(CONFIG_ADDRESS, address);
-
         return (uint16_t)((Sys::CPU::inportd(CONFIG_DATA) >> ((offset & 2) * 8)) & 0xFFFF);
     }
 
     uint8_t read_byte(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset) {
-        uint32_t address = 0x00;
-
-        address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
-                  ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
+        uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
+                           ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
         ScopeSpinlock scopeLock(lock);
 
         Sys::CPU::outportd(CONFIG_ADDRESS, address);
-
         return (uint16_t)((Sys::CPU::inportd(CONFIG_DATA) >> ((offset & 3) * 8)) & 0xFF);
     }
 
@@ -175,7 +164,6 @@ namespace AEX::Sys::PCI {
         ScopeSpinlock scopeLock(lock);
 
         Sys::CPU::outportd(CONFIG_ADDRESS, address);
-
         return Sys::CPU::outportd(CONFIG_DATA, val);
     }
 
@@ -222,18 +210,18 @@ namespace AEX::Sys::PCI {
                 len &= 0xFFFF;
 
             if (io) {
-                auto resource = Tree::Device::resource();
+                auto resource = Tree::resource();
 
-                resource.type  = Tree::Device::resource::type_t::IO;
+                resource.type  = Tree::resource::type_t::IO;
                 resource.value = addr;
                 resource.end   = addr + len;
 
                 dev_device->addResource(resource);
             }
             else {
-                auto resource = Tree::Device::resource();
+                auto resource = Tree::resource();
 
-                resource.type  = Tree::Device::resource::type_t::MEMORY;
+                resource.type  = Tree::resource::type_t::MEMORY;
                 resource.value = addr;
                 resource.end   = addr + len;
 

@@ -1,7 +1,6 @@
 #include "aex/mem/paging.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
-#include "aex/kpanic.hpp"
 #include "aex/math.hpp"
 #include "aex/mem.hpp"
 #include "aex/mutex.hpp"
@@ -82,8 +81,7 @@ namespace AEX::Mem {
         debug_pptr_targets[index] = at;
         *pptr_entries[index]      = at | PAGE_WRITE | PAGE_PRESENT;
 
-        Sys::CPU::broadcast(Sys::CPU::IPP_PG_INV, pptr_vaddr[index]);
-
+        // Sys::CPU::broadcast(Sys::CPU::IPP_PG_INV, pptr_vaddr[index]);
         asm volatile("invlpg [%0]" : : "r"(pptr_vaddr[index]));
 
         return pptr_vaddr[index];
@@ -137,6 +135,8 @@ namespace AEX::Mem {
 
         // proot->frames_used += amount;
         free_pptr(pptr);
+        recache((void*) start, bytes);
+
         m_lock.release();
 
         memset((void*) start, 0, amount * Sys::CPU::PAGE_SIZE);
@@ -168,6 +168,8 @@ namespace AEX::Mem {
         }
 
         free_pptr(pptr);
+        recache((void*) start, bytes);
+
         m_lock.release();
 
         memset((void*) start, 0, amount * Sys::CPU::PAGE_SIZE);
@@ -213,6 +215,8 @@ namespace AEX::Mem {
             }
 
         free_pptr(pptr);
+        recache((void*) start, bytes);
+
         m_lock.release();
 
         return (void*) (start + offset);
@@ -226,13 +230,37 @@ namespace AEX::Mem {
         size_t amount = ceiltopg(bytes);
         size_t vaddr  = (size_t) addr;
 
+        phys_addr free_buff[256];
+        int       free_ptr = 0;
+
+        auto free_phys = [this, addr, bytes, &free_buff, &free_ptr]() {
+            for (int i = 0; i < free_ptr; i++)
+                Mem::Phys::free(free_buff[i], Sys::CPU::PAGE_SIZE);
+
+            free_ptr = 0;
+            recache(addr, bytes);
+        };
+
         for (size_t i = 0; i < amount; i++) {
-            unassign(pptr, (void*) vaddr);
+            phys_addr addr = unassign(pptr, (void*) vaddr);
+
+            if (addr == 0x0000) {
+                vaddr += Sys::CPU::PAGE_SIZE;
+                continue;
+            }
+
+            free_buff[free_ptr] = addr;
+            free_ptr++;
+
+            if (free_ptr == 256)
+                free_phys();
 
             vaddr += Sys::CPU::PAGE_SIZE;
         }
 
         free_pptr(pptr);
+        free_phys();
+
         m_lock.release();
     }
 
@@ -247,25 +275,17 @@ namespace AEX::Mem {
         ptable[index] = paddr | flags;
 
         __sync_synchronize();
-
-        Sys::CPU::broadcast(Sys::CPU::IPP_PG_INV, virt);
-
-        asm volatile("invlpg [%0]" : : "r"(virt));
     }
 
     // Make this unalloc page tables pls
-    void Pagemap::unassign(int pptr, void* virt) {
+    phys_addr Pagemap::unassign(int pptr, void* virt) {
         uint64_t  vaddr  = (uint64_t) virt & MEM_PAGE_MASK;
         uint64_t* ptable = findTableEnsure(pptr, vaddr);
         uint64_t  index  = (vaddr >> 12) & 0x1FF;
 
         if (ptable[index] & PAGE_NOPHYS) {
             ptable[index] = 0x0000;
-
-            Sys::CPU::broadcast(Sys::CPU::IPP_PG_INV, virt);
-
-            asm volatile("invlpg [%0]" : : "r"(virt));
-            return;
+            return 0x0000;
         }
 
         size_t addr   = ptable[index] & MEM_PAGE_MASK;
@@ -273,10 +293,29 @@ namespace AEX::Mem {
 
         __sync_synchronize();
 
-        Sys::CPU::broadcast(Sys::CPU::IPP_PG_INV, virt);
-        Mem::Phys::free(addr, Sys::CPU::PAGE_SIZE);
+        return addr;
+    }
 
-        asm volatile("invlpg [%0]" : : "r"(virt));
+    struct invm_data {
+        size_t   addr;
+        uint32_t pages;
+    };
+
+    void Pagemap::recache(void* addr, size_t bytes) {
+        auto bong = invm_data();
+
+        bong.addr  = (size_t) addr;
+        bong.pages = ceiltopg(bytes);
+
+        Sys::CPU::broadcast(Sys::CPU::IPP_PG_INVM, &bong);
+
+        size_t   _addr  = (size_t) addr;
+        uint32_t _pages = ceiltopg(bytes);
+
+        for (uint32_t i = 0; i < _pages; i++) {
+            asm volatile("invlpg [%0]" : : "r"(_addr));
+            _addr += Sys::CPU::PAGE_SIZE;
+        }
     }
 
     uint64_t* find_table(phys_addr root, int pptr, uint64_t virt_addr, uint64_t* skip_by) {
@@ -448,7 +487,6 @@ namespace AEX::Mem {
         uint64_t boi = table[index];
 
         free_pptr(pptr);
-
         m_lock.release();
 
         return boi;

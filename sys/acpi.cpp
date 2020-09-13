@@ -1,6 +1,6 @@
 #include "aex/sys/acpi.hpp"
 
-#include "aex/kpanic.hpp"
+#include "aex/assert.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
@@ -14,8 +14,8 @@ namespace AEX::Sys::ACPI {
     uint8_t                  revision;
 
     bool add_table(acpi_table* table) {
-        auto header = (sdt_header*) table;
-        char buffer[4];
+        auto header    = (sdt_header*) table;
+        char buffer[8] = {};
 
         memcpy((void*) buffer, (void*) header->signature, 4);
 
@@ -97,8 +97,7 @@ namespace AEX::Sys::ACPI {
 
     void facp_init() {
         auto _fadt = (fadt*) find_table("FACP", 0);
-        if (!_fadt)
-            kpanic("This system has no FADT, what the hell?");
+        AEX_ASSERT(_fadt);
 
         auto table_hdr = (sdt_header*) Mem::kernel_pagemap->map(sizeof(sdt_header), _fadt->dsdt, 0);
         auto table     = (acpi_table*) Mem::kernel_pagemap->map(table_hdr->length, _fadt->dsdt, 0);
@@ -107,8 +106,7 @@ namespace AEX::Sys::ACPI {
 
         add_table(table);
 
-        if (_fadt->pm_timer_block == 0)
-            kpanic("acpi: no power management timer :(\n");
+        AEX_ASSERT(_fadt->pm_timer_block);
     }
 
     bool validate_table(const void* tbl, size_t len) {

@@ -1,7 +1,6 @@
 #include "aex/sys/time.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
-#include "aex/kpanic.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"

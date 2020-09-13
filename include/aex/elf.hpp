@@ -388,7 +388,7 @@ namespace AEX {
 
         void loadRelocations();
 
-        private:
+        // private:
         header m_header;
 
         uint8_t* m_addr;

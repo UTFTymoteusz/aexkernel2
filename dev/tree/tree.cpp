@@ -15,6 +15,12 @@ namespace AEX::Dev::Tree {
 
     Spinlock lock;
 
+    void init() {
+        Tree::register_base_drivers();
+
+        root_device = new Tree::Device("root", nullptr);
+    }
+
     bool register_device(const char* bus_name, Device* device) {
         for (auto iterator = buses.getIterator(); auto bus = iterator.next();) {
             if (strcmp(bus->name, bus_name) != 0)
@@ -41,7 +47,7 @@ namespace AEX::Dev::Tree {
         return false;
     }
 
-    Mem::SmartPointer<Bus> getBus(const char* bus_name) {
+    Mem::SmartPointer<Bus> get_bus(const char* bus_name) {
         int index = -1;
 
         for (auto iterator = buses.getIterator(); auto bus = iterator.next();) {
@@ -102,11 +108,5 @@ namespace AEX::Dev::Tree {
             walk_bus(bus);
 
         printk("\n");
-    }
-
-    void init() {
-        Tree::register_base_drivers();
-
-        root_device = new Tree::Device("root", nullptr);
     }
 }

@@ -1,10 +1,12 @@
 #include "aex/proc/thread.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/assert.hpp"
 #include "aex/ipc/event.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
+#include "aex/proc/broker.hpp"
 #include "aex/sys/time.hpp"
 
 #include "proc/proc.hpp"
@@ -14,77 +16,29 @@ using CPU = AEX::Sys::CPU;
 namespace AEX::Proc {
     extern "C" void proc_reshed();
 
+    // create &
+    // start  &
+    // join   &
+    // detach &
+    // yield  &
+    // sleep  &
+    // abort  &?
+    // exit   &
+
     Thread::Thread() {
-        this->self = this;
-
-        this->context      = new Context();
-        this->m_exit_event = new IPC::Event();
+        this->self   = this;
+        this->status = TS_FRESH;
     }
 
-    Thread::Thread(Process* parent) {
-        this->self = this;
-
-        status  = TS_FRESH;
-        context = new Context();
-
-        this->parent       = parent;
-        this->m_exit_event = new IPC::Event();
-    }
-
-    Thread::Thread(Process* parent, void* entry, size_t stack_size, Mem::Pagemap* pagemap,
-                   bool usermode, bool dont_add) {
-        this->self = this;
-
-        if (!parent)
-            parent = processes.get(1).get();
-
-        if (!pagemap)
-            pagemap = parent->pagemap;
-
-        if (usermode) {
-            user_stack      = (size_t) pagemap->alloc(stack_size, PAGE_WRITE);
-            user_stack_size = stack_size;
-
-            kernel_stack      = (size_t) Mem::kernel_pagemap->alloc(KERNEL_STACK_SIZE, PAGE_WRITE);
-            kernel_stack_size = KERNEL_STACK_SIZE;
-
-            context = new Context(entry, (void*) user_stack, stack_size, pagemap, true);
-        }
-        else {
-            user_stack      = 0;
-            user_stack_size = 0;
-
-            kernel_stack      = (size_t) Mem::kernel_pagemap->alloc(stack_size, PAGE_WRITE);
-            kernel_stack_size = stack_size;
-
-            context =
-                new Context(entry, (void*) kernel_stack, stack_size, pagemap, false, Thread::exit);
-        }
-
-        fault_stack      = (size_t) pagemap->alloc(FAULT_STACK_SIZE, PAGE_WRITE);
-        fault_stack_size = FAULT_STACK_SIZE;
-
-        status = TS_FRESH;
-
-        this->parent       = parent;
-        this->m_exit_event = new IPC::Event();
-
-        if (dont_add)
-            return;
-
-        Proc::add_thread(this);
-
-        parent->lock.acquire();
-
-        this->shared->increment();
-        parent->threads.addRef(this, this->shared);
-
-        parent->lock.release();
+    Thread::Thread(Process* process) {
+        this->self    = this;
+        this->context = new Context();
+        this->parent  = process;
+        this->status  = TS_FRESH;
     }
 
     Thread::~Thread() {
-        delete shared;
-        delete m_exit_event;
+        this->lock.acquire();
 
         delete context;
 
@@ -96,13 +50,61 @@ namespace AEX::Proc {
 
         if (fault_stack)
             parent->pagemap->free((void*) fault_stack, fault_stack_size);
+
+        this->lock.release();
+    }
+
+    optional<Thread*> Thread::create(Process* parent, void* entry, size_t stack_size,
+                                     Mem::Pagemap* pagemap, bool usermode, bool dont_add) {
+        auto thread = new Thread();
+
+        if (!parent)
+            parent = processes.get(1).get();
+
+        if (!pagemap)
+            pagemap = parent->pagemap;
+
+        if (usermode) {
+            thread->user_stack      = (size_t) pagemap->alloc(stack_size, PAGE_WRITE);
+            thread->user_stack_size = stack_size;
+
+            thread->kernel_stack =
+                (size_t) Mem::kernel_pagemap->alloc(KERNEL_STACK_SIZE, PAGE_WRITE);
+            thread->kernel_stack_size = KERNEL_STACK_SIZE;
+
+            thread->context =
+                new Context(entry, (void*) thread->user_stack, stack_size, pagemap, true);
+        }
+        else {
+            thread->user_stack      = 0;
+            thread->user_stack_size = 0;
+
+            thread->kernel_stack      = (size_t) Mem::kernel_pagemap->alloc(stack_size, PAGE_WRITE);
+            thread->kernel_stack_size = stack_size;
+
+            thread->context = new Context(entry, (void*) thread->kernel_stack, stack_size, pagemap,
+                                          false, Thread::exit);
+        }
+
+        thread->fault_stack      = (size_t) pagemap->alloc(FAULT_STACK_SIZE, PAGE_WRITE);
+        thread->fault_stack_size = FAULT_STACK_SIZE;
+
+        thread->status = TS_RUNNABLE;
+        thread->parent = parent;
+
+        thread->original_entry = entry;
+
+        if (dont_add)
+            return thread;
+
+        Proc::add_thread(thread);
+        return thread;
     }
 
     void Thread::yield() {
         bool ints = CPU::checkInterrupts();
         CPU::nointerrupts();
 
-        // CPU::getCurrent()->willingly_yielded = true;
         proc_reshed();
 
         if (ints)
@@ -110,132 +112,141 @@ namespace AEX::Proc {
     }
 
     void Thread::sleep(int ms) {
-        auto currentThread = Thread::getCurrent();
+        auto currentThread = Thread::current();
 
         currentThread->wakeup_at = Sys::Time::uptime() + ((Sys::Time::time_t) ms) * 1000000;
         currentThread->status    = TS_SLEEPING;
 
-        yield();
+        Thread::yield();
     }
 
-    Thread* Thread::getCurrent() {
+    void Thread::exit() {
+        auto thread = Thread::current();
+
+        AEX_ASSERT(!thread->isBusy());
+        AEX_ASSERT(CPU::checkInterrupts());
+
+        thread->addCritical();
+
+        Thread::current()->setStatus(TS_DEAD);
+
+        if (thread->m_joiner)
+            thread->m_joiner->setStatus(TS_RUNNABLE);
+
+        if (thread->m_detached)
+            thread->cleanup();
+
+        thread->subCritical();
+        Thread::yield();
+
+        while (true)
+            CPU::wait();
+    }
+
+    Thread* Thread::current() {
         // We need atomicity here
         return CPU::currentThread();
     }
 
-    tid_t Thread::getCurrentTID() {
-        return getCurrent()->tid;
-    }
-
-    bool Thread::shouldExit() {
-        return getCurrent()->isAbortSet();
-    }
-
-    void Thread::exit() {
-        auto thread = Thread::getCurrent();
-        if (thread->isBusy())
-            kpanic("Attempt to exit a thread while it's still busy\n");
-
-        Mem::atomic_compare_and_swap(&thread->m_finished, (uint8_t) 0, (uint8_t) 1);
-        Mem::atomic_compare_and_swap(&thread->m_abort, (uint8_t) 0, (uint8_t) 1);
-
-        abort_thread(thread);
-
-        // A while(true) is boring
-
-        volatile size_t a = 0;
-        volatile size_t b = 1;
-        volatile size_t c;
-
-        while (true) {
-            c = a + b;
-
-            a = b;
-            b = c;
-        }
-    }
-
-    Mem::SmartPointer<Process> Thread::getProcess() {
-        return processes.get(this->parent->pid);
-    }
-
-    void Thread::start() {
+    error_t Thread::start() {
         if (status == TS_FRESH)
             status = TS_RUNNABLE;
+
+        return ENONE;
     }
 
-    void Thread::join() {
-        auto sp = this->getSmartPointer();
-        sp->m_exit_event->wait();
-    }
+    error_t Thread::join() {
+        auto scope = this->lock.scope();
 
-    void Thread::abort(bool block) {
-        auto sp = this->getSmartPointer();
-        sp->lock.acquire();
+        if (m_detached || m_joiner)
+            return EINVAL;
 
-        Mem::atomic_compare_and_swap(&m_abort, (uint8_t) 0, (uint8_t) 1);
+        if (this == current())
+            return EDEADLK;
 
-        if (!sp->isBusy()) {
-            Mem::atomic_compare_and_swap(&sp->m_finished, (uint8_t) 0, (uint8_t) 1);
+        Thread::current()->addBusy();
+        auto state = Thread::current()->saveState();
 
-            sp->lock.release();
-            abort_thread(sp.get());
+        m_joiner = Thread::current();
+        Thread::current()->setStatus(TS_BLOCKED);
 
-            return;
+        this->lock.release();
+        Thread::yield();
+        this->lock.acquire();
+
+        if (status & TF_DEAD)
+            cleanup();
+        else if (Thread::current()->aborting()) {
+            m_detached = true;
+            m_joiner   = nullptr;
         }
 
-        sp->lock.release();
+        Thread::current()->loadState(state);
+        Thread::current()->subBusy();
 
-        if (block)
-            sp->join();
+        return ENONE;
     }
 
-    bool Thread::isAbortSet() {
-        return Mem::atomic_read(&m_abort) > 0;
+    error_t Thread::detach() {
+        auto scope = this->lock.scope();
+
+        if (m_detached || m_joiner)
+            return EINVAL;
+
+        if (status == TS_DEAD)
+            cleanup();
+
+        m_detached = true;
+        return ENONE;
     }
 
-    bool Thread::isFinished() {
-        return Mem::atomic_read(&m_finished) > 0;
+    error_t Thread::abort() {
+        auto scope = this->lock.scope();
+
+        m_aborting = true;
+
+        if (!isBusy()) {
+            if (m_detached) {
+                setStatus(TS_DEAD);
+                cleanup();
+            }
+            else if (m_joiner)
+                m_joiner->setStatus(TS_RUNNABLE);
+        }
+
+        return ENONE;
     }
 
-    Mem::SmartPointer<Thread> Thread::getSmartPointer() {
-        this->shared->increment();
-        return Mem::SmartPointer<Thread>(this, this->shared);
+    bool Thread::aborting() {
+        return m_aborting;
+    }
+
+    void broker_cleanup(Thread* thread) {
+        delete thread;
+    }
+
+    void Thread::cleanup() {
+        remove_thread(this);
+        broker(broker_cleanup, this);
+    }
+
+    Process* Thread::getProcess() {
+        // We need atomicity here
+        return this->parent;
     }
 
     void Thread::setStatus(thread_status_t status) {
         this->status = status;
     }
 
-    void Thread::announceExit() {
-        m_exit_event->defunct();
-    }
-
     void Thread::addCritical() {
-        if (!CPU::current()->in_interrupt)
-            CPU::nointerrupts();
-
         Mem::atomic_add(&m_busy, (uint16_t) 1);
         Mem::atomic_add(&m_critical, (uint16_t) 1);
     }
 
     void Thread::subCritical() {
-        uint16_t fetched = Mem::atomic_sub_fetch(&m_critical, (uint16_t) 1);
-
-        /*if (fetched == 0 && CPU::getCurrent()->should_yield) {
-            Mem::atomic_sub(&m_busy, (uint16_t) 1);
-
-            if (!CPU::getCurrent()->in_interrupt)
-                CPU::interrupts();
-
-            Proc::Thread::yield();
-            return;
-        }*/
-
+        Mem::atomic_sub(&m_critical, (uint16_t) 1);
         Mem::atomic_sub(&m_busy, (uint16_t) 1);
-
-        if (fetched == 0 && !CPU::current()->in_interrupt)
-            CPU::interrupts();
     }
 
     Thread::state Thread::saveState() {

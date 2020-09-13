@@ -1,6 +1,6 @@
 #pragma once
 
-#include "aex/mutex.hpp"
+#include "aex/spinlock.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -106,10 +106,12 @@ namespace AEX::Mem {
         size_t rawof(void* vaddr);
 
         private:
-        Mutex m_lock;
+        Spinlock m_lock;
 
-        void assign(int pptr, void* virt, phys_addr phys, uint16_t flags);
-        void unassign(int pptr, void* virt);
+        void      assign(int pptr, void* virt, phys_addr phys, uint16_t flags);
+        phys_addr unassign(int pptr, void* virt);
+
+        void recache(void* virt, size_t bytes);
 
         uint64_t* findTable(int pptr, uint64_t virt_addr) {
             uint64_t skip_by;

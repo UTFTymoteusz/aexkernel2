@@ -1,6 +1,6 @@
 #pragma once
 
-#include "aex/dev/blockdevice.hpp"
+#include "aex/dev/blockhandle.hpp"
 #include "aex/fs/directory.hpp"
 #include "aex/mem/smartptr.hpp"
 #include "aex/optional.hpp"
@@ -19,8 +19,6 @@ namespace AEX::FS {
 
         int      root_inode_id;
         uint16_t block_size;
-
-        Dev::BlockDevice_SP block_dev = Dev::BlockDevice_SP::getNull();
 
         virtual ~ControlBlock();
 

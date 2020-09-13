@@ -41,22 +41,24 @@ namespace AEX::Dev::TTY {
             RGB_WHITE        = 0xFFFFFF,
         };
 
-        const uint32_t m_ega_to_color[16]{
+        typedef uint32_t rgb_t;
+
+        const rgb_t m_ega_to_color[16]{
             RGB_BLACK,     RGB_BLUE,         RGB_GREEN,       RGB_CYAN,
             RGB_RED,       RGB_PURPLE,       RGB_BROWN,       RGB_GRAY,
             RGB_DARK_GRAY, RGB_LIGHT_BLUE,   RGB_LIGHT_GREEN, RGB_LIGHT_CYAN,
             RGB_LIGHT_RED, RGB_LIGHT_PURPLE, RGB_YELLOW,      RGB_WHITE,
         };
 
-        uint32_t m_bg = RGB_BLACK;
-        uint32_t m_fg = RGB_WHITE;
+        rgb_t m_bg = RGB_BLACK;
+        rgb_t m_fg = RGB_WHITE;
 
         uint32_t m_px_width, m_px_height;
 
         static uint32_t* volatile m_output;
         uint32_t* m_double_buffer;
 
-        void put_glyph(char c, uint32_t x, uint32_t y, uint32_t fg, uint32_t bg);
+        void put_glyph(char c, uint32_t x, uint32_t y, rgb_t fg, rgb_t bg);
 
         protected:
         void _write(char c);

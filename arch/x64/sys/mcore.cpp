@@ -117,12 +117,12 @@ namespace AEX::Sys::MCore {
     bool start(int id, int apic_id) {
         setup_trampoline(id);
 
-        IRQ::APIC::sendINIT(apic_id);
+        IRQ::APIC::init(apic_id);
 
         for (int j = 0; j < 50; j++)
             CPU::inportb(0x20);
 
-        IRQ::APIC::sendSIPI(apic_id, TRAMPOLINE_ADDR / CPU::PAGE_SIZE);
+        IRQ::APIC::sipi(apic_id, TRAMPOLINE_ADDR / CPU::PAGE_SIZE);
 
         bool success             = false;
         uint8_t* volatile signal = (uint8_t*) TRAMPOLINE_ADDR;
@@ -158,6 +158,6 @@ namespace AEX::Sys::MCore {
         cpu->in_interrupt--;
 
         while (true)
-            CPU::waitForInterrupt();
+            CPU::wait();
     }
 }

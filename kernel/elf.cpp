@@ -1,7 +1,7 @@
 #include "aex/elf.hpp"
 
+#include "aex/assert.hpp"
 #include "aex/mem/mmap.hpp"
-#include "aex/printk.hpp"
 
 namespace AEX {
     ELF::ELF(void* addr) {
@@ -190,9 +190,7 @@ namespace AEX {
         for (int i = 0; i < section_headers.count(); i++) {
             auto section_header = section_headers[i];
 
-            if (section_header.type == ELF::sc_type_t::SC_RELOC)
-                kpanic("%s: reloc\n", section_header.name);
-
+            AEX_ASSERT(section_header.type != ELF::sc_type_t::SC_RELOC);
             if (section_header.type != ELF::sc_type_t::SC_RELOCA)
                 continue;
 
@@ -220,8 +218,7 @@ namespace AEX {
             if (symbol_id == 0)
                 continue;
 
-            if (section.link != symbol_table_id)
-                kpanic("section link doesnt match");
+            AEX_ASSERT(section.link == symbol_table_id);
 
             auto m_relocation = relocation();
 

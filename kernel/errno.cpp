@@ -16,6 +16,7 @@ namespace AEX {
         [EBADF]   = "Bad file number",
         [EAGAIN]  = "Try again",
         [EPIPE]   = "Broken pipe",
+        [EDEADLK] = "Resource deadlock avoided",
 
         [EPROTOTYPE]      = "Protocol wrong type for socket",
         [ENOPROTOOPT]     = "Protocol not available",

@@ -5,7 +5,14 @@
 
 namespace AEX::Proc {
     extern Mem::SmartArray<Process> processes;
-    extern Thread**                 threads;
+
+    extern Spinlock lock;
+
+    extern Thread** idle_threads;
+
+    extern int     thread_list_size;
+    extern Thread* thread_list_head;
+    extern Thread* thread_list_tail;
 
     extern bool ready;
 
@@ -22,11 +29,10 @@ namespace AEX::Proc {
     void schedule();
 
     pid_t add_process(Process* process);
-    tid_t add_thread(Thread* thread);
 
-    void abort_thread(Thread* thread);
-
-    void reap_thread(Thread* thread);
+    void add_thread(Thread* thread);
+    void remove_thread(Thread* thread);
 
     void debug_print_cpu_jobs();
+    void debug_print_list();
 }

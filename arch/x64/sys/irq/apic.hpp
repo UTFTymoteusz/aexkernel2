@@ -21,13 +21,13 @@ namespace AEX::Sys::IRQ {
         static void setupTimer(uint32_t vector);
         static void setupTimer(uint32_t vector, uint32_t initial_count, bool periodic);
 
-        static uint32_t getTimerCounter();
-        static uint32_t getTimerInitial();
+        static uint32_t getCounter();
+        static uint32_t getInitial();
 
-        static void sendInterrupt(uint8_t dst, uint8_t vector);
-        static void sendINIT(uint8_t dst);
-        static void sendSIPI(uint8_t dst, uint8_t page);
-        static void sendNMI(uint8_t dst);
+        static void interrupt(uint8_t dst, uint8_t vector);
+        static void init(uint8_t dst);
+        static void sipi(uint8_t dst, uint8_t page);
+        static void nmi(uint8_t dst);
 
         static void eoi();
     };

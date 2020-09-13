@@ -58,6 +58,8 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
         load_symbols(mbinfo);
     }
 
+    AEX_ASSERT(Debug::symbols_loaded);
+
     ACPI::init();
     printk("\n");
 
@@ -90,8 +92,6 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     printk("\n");
 
     mount_fs();
-    if (!Debug::symbols_loaded)
-        Debug::load_symbols("/sys/aexkrnl.elf");
 
     Net::init();
     printk("\n");
@@ -134,7 +134,7 @@ void mount_fs() {
 
     auto res = FS::mount("/dev/sra", "/", nullptr);
     if (res != ENONE)
-        kpanic("Failed to mount iso9660: %s\n", strerror((error_t) res));
+        kpanic("Failed to mount iso9660: %s", strerror((error_t) res));
 
     printk("\n");
 }
@@ -255,7 +255,8 @@ void test_server() {
         b->socket = sock2;
 
         printk("accepted\n");
-        Proc::threaded_call(test_server_handle, b);
+        auto thread = Proc::threaded_call(test_server_handle, b);
+        thread->detach();
     }
 
     Proc::Thread::sleep(1250);
@@ -300,7 +301,7 @@ void kmain_threaded() {
     using namespace AEX::Sys::Time;
 
     auto idle    = Proc::processes.get(0);
-    auto process = Proc::Thread::getCurrent()->getProcess();
+    auto process = Proc::Thread::current()->getProcess();
 
     time_t start_epoch = clocktime();
 
@@ -324,11 +325,13 @@ void kmain_threaded() {
 
     file_try.value.get()->write((void*) "aaa it works\n", 13);*/
 
+    // CPU::tripleFault();
+
     while (true) {
         switch (Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY]->read()) {
         case 't': {
-            time_t ns    = uptime();
-            time_t clock = clocktime();
+            auto ns    = uptime();
+            auto clock = clocktime();
 
             auto dt = epoch2dt(clock);
 
@@ -342,12 +345,13 @@ void kmain_threaded() {
             printk("bytes read: %li\n", process->usage.block_bytes_read);
             printk("heap free : %li\n", Heap::heap_free);
 
-            printk("tid: %i\n", Proc::Thread::getCurrentTID());
-
             Proc::debug_print_cpu_jobs();
         } break;
         case 'r':
             CPU::tripleFault();
+            break;
+        case 'l':
+            Proc::debug_print_list();
             break;
         default:
             break;

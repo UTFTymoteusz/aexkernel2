@@ -21,7 +21,7 @@ namespace AEX::Dev::Input {
 
         void begin();
 
-        event readEvent();
+        event read();
 
         private:
         Mem::CircularBuffer m_buffer;
@@ -29,7 +29,7 @@ namespace AEX::Dev::Input {
 
         Handle(int buffer_size);
 
-        void writeEvent(event evnt);
+        void write(event evnt);
 
         friend void key_press(hid_keycode_t code);
         friend void key_release(hid_keycode_t code);
@@ -37,5 +37,5 @@ namespace AEX::Dev::Input {
 
     extern keymap default_keymap;
 
-    char translateEvent(keymap* m_keymap, event& m_event);
+    char translate(keymap* m_keymap, event& m_event);
 }

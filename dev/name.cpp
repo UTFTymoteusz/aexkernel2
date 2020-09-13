@@ -18,7 +18,7 @@ namespace AEX::Dev {
 
             for (size_t i = 0; i < sizeof(this->current); i++) {
                 if (this->current[i] == '\0')
-                    kpanic("Invalid name pattern\n");
+                    kpanic("Invalid name pattern");
 
                 if (this->current[i] == '%') {
                     start            = i;
@@ -93,7 +93,6 @@ namespace AEX::Dev {
         auto new_incrementation = letter_incrementation(pattern);
 
         int index = letter_incrementations.pushBack(new_incrementation);
-
         letter_incrementations[index].get(buffer, buffer_len);
     }
 
@@ -113,7 +112,6 @@ namespace AEX::Dev {
         auto new_incrementation = number_incrementation(pattern);
 
         int index = number_incrementations.pushBack(new_incrementation);
-
         number_incrementations[index].get(buffer, buffer_len);
     }
 }

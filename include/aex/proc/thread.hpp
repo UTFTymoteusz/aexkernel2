@@ -4,16 +4,13 @@
 #include "aex/mem/atomic.hpp"
 #include "aex/mem/paging.hpp"
 #include "aex/mem/smartptr.hpp"
+#include "aex/optional.hpp"
 #include "aex/proc/resource_usage.hpp"
 #include "aex/proc/types.hpp"
 #include "aex/spinlock.hpp"
 
 // pls consider making thread functions accept and return smartpointers
 // make the eventbong use an int or whatever
-
-namespace AEX::IPC {
-    class Event;
-}
 
 namespace AEX::Proc {
     class Process;
@@ -51,13 +48,10 @@ namespace AEX::Proc {
         };
 
         Thread* self = this;
-
-        tid_t tid;
+        tid_t   tid;
 
         Context* context;
-
-        Spinlock        lock;
-        Mem::sp_shared* shared = new Mem::sp_shared(1);
+        Spinlock lock;
 
         thread_status_t status;
         union {
@@ -65,6 +59,11 @@ namespace AEX::Proc {
         };
 
         Process* parent;
+
+        Thread* next;
+        Thread* prev;
+
+        void* original_entry;
 
         size_t user_stack;
         size_t kernel_stack;
@@ -76,58 +75,28 @@ namespace AEX::Proc {
 
         Thread();
         Thread(Process* parent);
-        Thread(Process* parent, void* entry, size_t stack_size, Mem::Pagemap* pagemap,
-               bool usermode = false, bool dont_add = false);
 
         ~Thread();
 
-        /**
-         * Yields the currently executing thread's CPU timeshare. Will return immediately if no
-         * other threads are available.
-         */
+        [[nodiscard]] static optional<Thread*> create(Process* parent, void* entry,
+                                                      size_t stack_size, Mem::Pagemap* pagemap,
+                                                      bool usermode = false, bool dont_add = false);
+
         static void yield();
-
-        /**
-         * Sleeps the currently running thread.
-         * @param ms Amount of time to sleep for in milliseconds.
-         */
         static void sleep(int ms);
+        static void exit();
 
-        /**
-         * Gets the currently running thread.
-         * @returns Pointer to the currently running thread.
-         */
-        static Thread* getCurrent();
+        static Thread* current();
 
-        /**
-         * Gets the currently running thread's ID.
-         * @returns Thread ID of the currently running thread.
-         */
-        static tid_t getCurrentTID();
+        error_t start();
+        error_t join();
+        error_t detach();
+        error_t abort();
+        bool    aborting();
 
-        /**
-         * Checks if the currently running thread has received the abort signal.
-         * @returns True if abort has been received.
-         */
-        static bool shouldExit();
+        void cleanup();
 
-        [[noreturn]] static void exit();
-
-        /**
-         * Gets the parent process of the thread.
-         * @returns The SmartPointer to the parent process.
-         */
-        Mem::SmartPointer<Process> getProcess();
-
-        /**
-         * Adds the thread to the run queue and sets its status as RUNNABLE.
-         */
-        void start();
-
-        /**
-         * Waits until the thread finishes execution.
-         */
-        void join();
+        Process* getProcess();
 
         /**
          * Sets the arguments of the thread.
@@ -137,26 +106,6 @@ namespace AEX::Proc {
         void setArguments(U... args) {
             context->setArguments(args...);
         }
-
-        /**
-         * Aborts the thread.
-         * @param block Whenever to wait for the thread to exit fully.
-         */
-        void abort(bool block = false);
-
-        /**
-         * Checks if the thread has received the abort signal.
-         * @returns True if abort has been received.
-         */
-        bool isAbortSet();
-
-        bool isFinished();
-
-        /**
-         * Returns a smart pointer to the thread.
-         * @returns The smart pointer.
-         */
-        Mem::SmartPointer<Thread> getSmartPointer();
 
         /**
          * Sets the status of the thread.
@@ -180,7 +129,7 @@ namespace AEX::Proc {
         inline void subBusy() {
             uint16_t busy = Mem::atomic_sub_fetch(&m_busy, (uint16_t) 1);
 
-            if (Mem::atomic_read(&m_abort) == 1 && !isFinished() && busy == 0)
+            if (busy == 0 && aborting())
                 Thread::exit();
         }
 
@@ -230,21 +179,25 @@ namespace AEX::Proc {
             m_critical = critical;
         }
 
+        Thread* joiner() {
+            return m_joiner;
+        }
+
+        bool detached() {
+            return m_detached;
+        }
+
         state saveState();
-
-        void loadState(state& m_state);
-
-        void announceExit();
+        void  loadState(state& m_state);
 
         private:
-        IPC::Event* m_exit_event = nullptr;
-
-        public:
         uint16_t m_busy     = 0;
         uint16_t m_critical = 0;
 
-        uint8_t m_abort    = 0;
-        uint8_t m_finished = 0;
+        bool m_detached = false;
+        bool m_aborting = false;
+
+        Thread* m_joiner = nullptr;
     };
 
     typedef Mem::SmartPointer<Thread> Thread_SP;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aex/dev/tree/resource.hpp"
 #include "aex/mem.hpp"
 #include "aex/mem/vector.hpp"
 #include "aex/optional.hpp"
@@ -12,36 +13,6 @@
 namespace AEX::Dev::Tree {
     class Device {
         public:
-        struct resource {
-            enum type_t : uint8_t {
-                MEMORY = 0,
-                IO     = 1,
-                IRQ    = 2,
-            };
-
-            type_t type;
-
-            union {
-                size_t start;
-                size_t value;
-            };
-            size_t end;
-
-            resource() {}
-
-            resource(type_t type, size_t value) {
-                this->type  = type;
-                this->value = value;
-                this->end   = value;
-            }
-
-            resource(type_t type, size_t start, size_t end) {
-                this->type  = type;
-                this->start = start;
-                this->end   = end;
-            }
-        };
-
         Device*                 parent = nullptr;
         Mem::SmartArray<Device> children;
 
@@ -52,8 +23,8 @@ namespace AEX::Dev::Tree {
         Device(const char* name, Device* parent);
         virtual ~Device();
 
-        void                       addResource(resource resource);
-        optional<Device::resource> getResource(int index);
+        void               addResource(resource resource);
+        optional<resource> getResource(int index);
 
         virtual void registerDevice(Device* device);
 

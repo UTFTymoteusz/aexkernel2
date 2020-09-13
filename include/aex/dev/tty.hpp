@@ -13,7 +13,7 @@ typedef struct multiboot_info multiboot_info_t;
 
 namespace AEX::Dev::Input {
     void init();
-    void tty_input_thread();
+    void tty_loop();
 }
 
 namespace AEX::Dev::TTY {
@@ -120,10 +120,10 @@ namespace AEX::Dev::TTY {
         Dev::Input::keymap   m_keymap = Dev::Input::default_keymap;
 
         void inputReady();
-        void inputKeyPress(Dev::Input::event m_event);
+        void keyPress(Dev::Input::event m_event);
 
         friend void AEX::Dev::Input::init();
-        friend void AEX::Dev::Input::tty_input_thread();
+        friend void AEX::Dev::Input::tty_loop();
 
         protected:
         int m_cursorx = 0;

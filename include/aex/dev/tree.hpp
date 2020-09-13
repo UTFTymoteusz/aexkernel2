@@ -35,7 +35,7 @@ namespace AEX::Dev::Tree {
      * @param bus_name The bus name.
      * @returns A smart pointer that points to the bus. Will be null on failure.
      */
-    Mem::SmartPointer<Bus> getBus(const char* bus_name);
+    Mem::SmartPointer<Bus> get_bus(const char* bus_name);
 
     /**
      * Checks if a bus exists.

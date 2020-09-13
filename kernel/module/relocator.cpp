@@ -95,7 +95,7 @@ namespace AEX {
                 *((int32_t*) self) = S + A;
                 break;
             default:
-                kpanic("module: Unknown relocation type encountered: %i\n",
+                kpanic("module: Unknown relocation type encountered: %i",
                        relocation.arch_info & 0xFFFFFFFF);
                 break;
             }

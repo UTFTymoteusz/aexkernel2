@@ -115,7 +115,7 @@ namespace AEX::FS {
                 uint32_t offset = start - int_floor<uint64_t>(start, m_block_size);
                 uint32_t llen   = min(m_block_size - offset, len);
 
-                if (!isPerfectFit(start, llen)) {
+                if (!isPerfect(start, llen)) {
                     if (combo) {
                         m_inode->readBlocks(buffer, combo_start, combo_count);
                         buffer = (void*) ((uint8_t*) buffer + combo_count * m_block_size);
@@ -147,7 +147,7 @@ namespace AEX::FS {
                 m_inode->readBlocks(buffer, combo_start, combo_count);
         }
 
-        bool isPerfectFit(uint64_t start, uint32_t len) {
+        bool isPerfect(uint64_t start, uint32_t len) {
             if (start % m_block_size != 0)
                 return false;
 

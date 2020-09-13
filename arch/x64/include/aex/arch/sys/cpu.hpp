@@ -31,6 +31,7 @@ namespace AEX::Sys {
             IPP_CALL     = 2,
             IPP_PG_FLUSH = 3,
             IPP_PG_INV   = 4,
+            IPP_PG_INVM  = 5,
         };
 
         static constexpr int PAGE_SIZE = 4096;
@@ -77,7 +78,7 @@ namespace AEX::Sys {
         /**
          * Waits for an interrupt on the local CPU.
          */
-        static void waitForInterrupt();
+        static void wait();
 
         /**
          * Corresponds to the x86 CPUID instruction.
@@ -158,7 +159,7 @@ namespace AEX::Sys {
 
         AEX::Proc::Context* current_context; // 0x08
         AEX::Proc::Thread*  current_thread;  // 0x10
-        volatile int        current_tid;     // 0x18
+        volatile int        unused;          // 0x18
 
         // Safe to change again
         uint8_t in_interrupt = 1;
@@ -181,6 +182,7 @@ namespace AEX::Sys {
 
         void getName();
 
+        void sendInternal(ipp_type type, void* data = nullptr);
         void handleIPP();
 
         friend void ipi_handle();

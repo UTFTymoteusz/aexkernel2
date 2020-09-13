@@ -21,41 +21,47 @@ namespace AEX::Dev {
     }
 
     void detect_pci() {
+        using namespace AEX::Dev::Tree;
+
         auto pci = new Device("pci", nullptr);
 
-        pci->addResource(Device::resource(Device::resource::IO, 0xCF8));
-        pci->addResource(Device::resource(Device::resource::IO, 0xCFC));
+        pci->addResource(resource(resource::IO, 0xCF8));
+        pci->addResource(resource(resource::IO, 0xCFC));
 
         mainbus->registerDevice(pci);
     }
 
     void detect_ps2() {
+        using namespace AEX::Dev::Tree;
+
         CPU::outportb(0x64, 0xAD);
         CPU::outportb(0x64, 0xA7);
-
         CPU::outportb(0x64, 0xAA);
 
         for (size_t i = 0; i < 200; i++) {
-            if (CPU::inportb(0x60) == 0x55) {
-                auto ps2 = new Device("ps2", nullptr);
+            if (CPU::inportb(0x60) != 0x55)
+                continue;
 
-                ps2->addResource(Device::resource(Device::resource::IO, 0x60));
-                ps2->addResource(Device::resource(Device::resource::IO, 0x64));
-                ps2->addResource(Device::resource(Device::resource::IRQ, 1));
-                ps2->addResource(Device::resource(Device::resource::IRQ, 12));
+            auto ps2 = new Device("ps2", nullptr);
 
-                mainbus->registerDevice(ps2);
+            ps2->addResource(resource(resource::IO, 0x60));
+            ps2->addResource(resource(resource::IO, 0x64));
+            ps2->addResource(resource(resource::IRQ, 1));
+            ps2->addResource(resource(resource::IRQ, 12));
 
-                break;
-            }
+            mainbus->registerDevice(ps2);
+
+            break;
         }
     }
 
     void detect_rtc() {
+        using namespace AEX::Dev::Tree;
+
         auto rtc = new Device("rtc", nullptr);
 
-        rtc->addResource(Device::resource(Device::resource::IO, 0x70, 2));
-        rtc->addResource(Device::resource(Device::resource::IRQ, 8));
+        rtc->addResource(resource(resource::IO, 0x70, 2));
+        rtc->addResource(resource(resource::IRQ, 8));
 
         mainbus->registerDevice(rtc);
     }

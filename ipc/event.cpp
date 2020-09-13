@@ -1,5 +1,6 @@
 #include "aex/ipc/event.hpp"
 
+#include "aex/assert.hpp"
 #include "aex/proc.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/sys/time.hpp"
@@ -15,28 +16,28 @@ namespace AEX::IPC {
             return;
         }
 
-        auto current_sptr = Thread::getCurrent()->getSmartPointer();
-        bool is_on_queue  = false;
+        auto current     = Thread::current();
+        bool is_on_queue = false;
 
         for (int i = 0; i < m_tiddies.count(); i++)
-            if (m_tiddies[i].get() == current_sptr.get()) {
+            if (m_tiddies[i] == current) {
                 is_on_queue = true;
                 break;
             }
 
         if (!is_on_queue)
-            m_tiddies.pushBack(current_sptr);
+            m_tiddies.pushBack(current);
 
         if (timeout == 0)
-            current_sptr->setStatus(TS_BLOCKED);
+            current->setStatus(TS_BLOCKED);
         else {
-            current_sptr->setStatus(TS_SLEEPING);
-            current_sptr->wakeup_at = Sys::Time::uptime() + (uint64_t) timeout * 1000000;
+            current->setStatus(TS_SLEEPING);
+            current->wakeup_at = Sys::Time::uptime() + (uint64_t) timeout * 1000000;
         }
 
         m_lock.release();
 
-        if (!current_sptr->isCritical())
+        if (!current->isCritical())
             Thread::yield();
     }
 
@@ -76,23 +77,23 @@ namespace AEX::IPC {
             return;
         }
 
-        auto current_sptr = Thread::getCurrent()->getSmartPointer();
+        auto current = Thread::current();
 
-        if (m_tiddie)
-            kpanic("simpleevent: Tried to wait while another boi was waiting already");
+        // We need to make sure anybody isn't waiting already.
+        AEX_ASSERT(!m_tiddie);
 
-        m_tiddie = current_sptr;
+        m_tiddie = current;
 
         if (timeout == 0)
-            current_sptr->setStatus(TS_BLOCKED);
+            current->setStatus(TS_BLOCKED);
         else {
-            current_sptr->setStatus(TS_SLEEPING);
-            current_sptr->wakeup_at = Sys::Time::uptime() + (uint64_t) timeout * 1000000;
+            current->setStatus(TS_SLEEPING);
+            current->wakeup_at = Sys::Time::uptime() + (uint64_t) timeout * 1000000;
         }
 
         m_lock.release();
 
-        if (!current_sptr->isCritical())
+        if (!current->isCritical())
             Thread::yield();
     }
 
@@ -102,7 +103,7 @@ namespace AEX::IPC {
         if (m_tiddie)
             m_tiddie->setStatus(TS_RUNNABLE);
 
-        m_tiddie = Mem::SmartPointer<Proc::Thread>(nullptr, nullptr);
+        m_tiddie = nullptr;
         m_lock.release();
     }
 
@@ -114,7 +115,7 @@ namespace AEX::IPC {
         if (m_tiddie)
             m_tiddie->setStatus(TS_RUNNABLE);
 
-        m_tiddie = Mem::SmartPointer<Proc::Thread>(nullptr, nullptr);
+        m_tiddie = nullptr;
         m_lock.release();
     }
 }
