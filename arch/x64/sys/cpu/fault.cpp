@@ -7,6 +7,8 @@
 #include "aex/proc.hpp"
 #include "aex/utility.hpp"
 
+#include "proc/proc.hpp"
+
 constexpr auto EXC_DEBUG      = 1;
 constexpr auto EXC_NMI        = 2;
 constexpr auto EXC_PAGE_FAULT = 14;

@@ -51,8 +51,9 @@ namespace AEX::Proc {
             char buffer[32];
             debug_serialize_flags(buffer, thread->status);
 
-            printk("0x%p (p: 0x%p, n: 0x%p) <%s> %s 0x%p\n", thread, thread->prev, thread->next,
-                   buffer, thread->detached() ? "detached" : (thread->joiner() ? "joining" : ""),
+            printk("0x%p (p: 0x%p, n: 0x%p) <%s> <%s> %s 0x%p\n", thread, thread->prev,
+                   thread->next, buffer, Debug::addr2name(thread->original_entry),
+                   thread->detached() ? "detached" : (thread->joiner() ? "joined by" : ""),
                    thread->joiner());
             thread = thread->next;
         }

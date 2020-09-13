@@ -325,7 +325,7 @@ void kmain_threaded() {
 
     file_try.value.get()->write((void*) "aaa it works\n", 13);*/
 
-    CPU::tripleFault();
+    // CPU::tripleFault();
 
     while (true) {
         switch (Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY]->read()) {

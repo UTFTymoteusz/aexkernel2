@@ -63,6 +63,8 @@ namespace AEX::Proc {
         Thread* next;
         Thread* prev;
 
+        void* original_entry;
+
         size_t user_stack;
         size_t kernel_stack;
         size_t fault_stack;
@@ -76,9 +78,9 @@ namespace AEX::Proc {
 
         ~Thread();
 
-        static optional<Thread*> create(Process* parent, void* entry, size_t stack_size,
-                                        Mem::Pagemap* pagemap, bool usermode = false,
-                                        bool dont_add = false);
+        [[nodiscard]] static optional<Thread*> create(Process* parent, void* entry,
+                                                      size_t stack_size, Mem::Pagemap* pagemap,
+                                                      bool usermode = false, bool dont_add = false);
 
         static void yield();
         static void sleep(int ms);
@@ -125,10 +127,10 @@ namespace AEX::Proc {
          * cannot be killed.
          */
         inline void subBusy() {
-            Mem::atomic_sub_fetch(&m_busy, (uint16_t) 1);
+            uint16_t busy = Mem::atomic_sub_fetch(&m_busy, (uint16_t) 1);
 
-            // if (busy == 0)
-            // Thread::exit();
+            if (busy == 0 && aborting())
+                Thread::exit();
         }
 
         /**

@@ -59,9 +59,6 @@ namespace AEX::Proc {
         thread_list_head->prev = bsp_thread;
         thread_list_tail       = bsp_thread;
 
-        bsp_thread->prev = bsp_thread;
-        bsp_thread->next = bsp_thread;
-
         broker_init();
 
         setup_idles(idle_process);
@@ -103,14 +100,15 @@ namespace AEX::Proc {
                 idle_threads[i]->next = thread->next;
 
         thread_list_size--;
-        thread->next->prev = thread->prev;
-        thread->prev->next = thread->next;
 
         if (thread_list_head == thread)
             thread_list_head = thread->next;
 
         if (thread_list_tail == thread)
             thread_list_tail = thread->prev;
+
+        thread->next->prev = thread->prev;
+        thread->prev->next = thread->next;
     }
 
     void idle() {

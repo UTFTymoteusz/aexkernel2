@@ -18,7 +18,7 @@ namespace AEX::Proc {
      * @returns The created thread.
      */
     template <typename Func, typename... Args>
-    Thread* threaded_call(Func func, Args... args) {
+    [[nodiscard]] Thread* threaded_call(Func func, Args... args) {
         auto thread_try = Thread::create(nullptr, (void*) func, Thread::KERNEL_STACK_SIZE, nullptr);
         if (!thread_try)
             return nullptr;

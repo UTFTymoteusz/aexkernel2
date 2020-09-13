@@ -40,8 +40,6 @@ namespace AEX::Proc {
     Thread::~Thread() {
         this->lock.acquire();
 
-        AEX_ASSERT(!m_joiner);
-
         delete context;
 
         if (user_stack)
@@ -94,6 +92,8 @@ namespace AEX::Proc {
         thread->status = TS_RUNNABLE;
         thread->parent = parent;
 
+        thread->original_entry = entry;
+
         if (dont_add)
             return thread;
 
@@ -136,9 +136,6 @@ namespace AEX::Proc {
         if (thread->m_detached)
             thread->cleanup();
 
-        thread->m_detached = true;
-        thread->m_joiner   = nullptr;
-
         thread->subCritical();
         Thread::yield();
 
@@ -168,17 +165,24 @@ namespace AEX::Proc {
             return EDEADLK;
 
         Thread::current()->addBusy();
+        auto state = Thread::current()->saveState();
 
         m_joiner = Thread::current();
         Thread::current()->setStatus(TS_BLOCKED);
+
         this->lock.release();
-
         Thread::yield();
-
         this->lock.acquire();
+
         if (status & TF_DEAD)
             cleanup();
 
+        if (Thread::current()->aborting()) {
+            m_detached = true;
+            m_joiner   = nullptr;
+        }
+
+        Thread::current()->loadState(state);
         Thread::current()->subBusy();
 
         return ENONE;
@@ -190,6 +194,9 @@ namespace AEX::Proc {
         if (m_detached || m_joiner)
             return EINVAL;
 
+        if (status == TS_DEAD)
+            cleanup();
+
         m_detached = true;
         return ENONE;
     }
@@ -197,18 +204,19 @@ namespace AEX::Proc {
     error_t Thread::abort() {
         auto scope = this->lock.scope();
 
-        if (!isBusy()) {
-            setStatus(TS_DEAD);
-            cleanup();
-        }
-
-        if (m_joiner) {
-            m_joiner->setStatus(TS_RUNNABLE);
-            m_joiner   = nullptr;
-            m_detached = true;
-        }
-
         m_aborting = true;
+
+        if (!isBusy()) {
+            if (m_detached) {
+                setStatus(TS_DEAD);
+                cleanup();
+            }
+            else if (m_joiner) {
+                m_joiner->setStatus(TS_RUNNABLE);
+                m_joiner = nullptr;
+            }
+        }
+
         return ENONE;
     }
 

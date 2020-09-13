@@ -39,10 +39,8 @@ namespace AEX::Proc {
                 continue;
 
             if (status & TF_BLOCKED) {
-                if (thread->aborting())
-                    break;
-
-                continue;
+                if (!thread->aborting())
+                    continue;
             }
 
             if (status & TF_SLEEPING) {
@@ -68,6 +66,8 @@ namespace AEX::Proc {
         }
 
         auto idle = idle_threads[cpu->id];
+        if (thread == idle)
+            thread = thread_list_head;
 
         // We don't care, it's our private thread anyways
         idle->lock.tryAcquireRaw();
