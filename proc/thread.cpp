@@ -137,11 +137,8 @@ namespace AEX::Proc {
         if (thread->m_joiner) {
             thread->m_joiner->lock.acquire();
             thread->m_joiner->setStatus(TS_RUNNABLE);
-            PRINTK_DEBUG1("Woke up 0x%p", thread->m_joiner);
             thread->m_joiner->lock.release();
         }
-
-        PRINTK_DEBUG1("Exitting 0x%p", thread);
 
         if (thread->m_detached)
             thread->finish();

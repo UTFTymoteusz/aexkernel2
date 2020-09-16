@@ -327,16 +327,7 @@ void kmain_threaded() {
 
     Proc::Thread::sleep(100);
 
-    Proc::debug_print_list();
-
-    if (Proc::thread_list_size > 7) {
-        Proc::Thread::sleep(500);
-
-        if (Proc::thread_list_size > 7)
-            kpanic("aa");
-    }
-
-    CPU::tripleFault();
+    // CPU::tripleFault();
 
     while (true) {
         switch (Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY]->read()) {

@@ -17,21 +17,12 @@ namespace AEX::Proc {
     class Event;
     class Context;
 
-    enum thread_flag_t : uint8_t {
-        TF_NONE     = 0x00,
-        TF_RUNNABLE = 0x01,
-        TF_SLEEPING = 0x02,
-        TF_BLOCKED  = 0x04,
-        TF_DEAD     = 0x80,
-    };
-
     enum thread_status_t : uint8_t {
-        TS_FRESH         = TF_NONE,
-        TS_RUNNABLE      = TF_RUNNABLE,
-        TS_SLEEPING      = TF_SLEEPING | TF_RUNNABLE,
-        TS_BLOCKED       = TF_BLOCKED | TF_RUNNABLE,
-        TS_BLOCKED_SLEEP = TF_SLEEPING | TF_BLOCKED | TF_RUNNABLE,
-        TS_DEAD          = TF_DEAD,
+        TS_FRESH    = 0x00,
+        TS_RUNNABLE = 0x01,
+        TS_SLEEPING = 0x02,
+        TS_BLOCKED  = 0x04,
+        TS_DEAD     = 0x80,
     };
 
     class Thread {

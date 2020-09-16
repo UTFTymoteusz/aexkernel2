@@ -23,10 +23,10 @@ namespace AEX::Proc {
                 return;
         }
 
-        auto curtime = Time::uptime_raw();
-        auto delta   = curtime - cpu->measurement_start_ns;
+        auto uptime = Time::uptime_raw();
+        auto delta  = uptime - cpu->measurement_start_ns;
 
-        cpu->measurement_start_ns = curtime;
+        cpu->measurement_start_ns = uptime;
 
         thread->parent->usage.cpu_time_ns += delta;
         thread->lock.releaseRaw();
@@ -34,20 +34,22 @@ namespace AEX::Proc {
         for (int i = 0; i <= thread_list_size; i++) {
             thread = thread->next;
 
-            auto& status = thread->status;
-            if (!(status & TF_RUNNABLE))
-                continue;
-
-            if (status & TF_BLOCKED) {
+            switch (thread->status) {
+            case TS_RUNNABLE:
+                break;
+            case TS_BLOCKED:
                 if (!thread->aborting())
                     continue;
-            }
 
-            if (status & TF_SLEEPING) {
-                if (curtime < thread->wakeup_at)
+                break;
+            case TS_SLEEPING:
+                if (uptime < thread->wakeup_at)
                     continue;
 
-                status = TS_RUNNABLE;
+                thread->status = TS_RUNNABLE;
+                break;
+            default:
+                continue;
             }
 
             if (thread->parent->cpu_affinity.isMasked(cpu->id))
