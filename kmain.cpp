@@ -96,9 +96,9 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     Net::init();
     printk("\n");
 
-    load_core_modules();
-
     Dev::Input::init();
+
+    load_core_modules();
 
     // Let's get to it
     kmain_threaded();
@@ -325,7 +325,18 @@ void kmain_threaded() {
 
     file_try.value.get()->write((void*) "aaa it works\n", 13);*/
 
-    // CPU::tripleFault();
+    Proc::Thread::sleep(100);
+
+    Proc::debug_print_list();
+
+    if (Proc::thread_list_size > 7) {
+        Proc::Thread::sleep(500);
+
+        if (Proc::thread_list_size > 7)
+            kpanic("aa");
+    }
+
+    CPU::tripleFault();
 
     while (true) {
         switch (Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY]->read()) {
@@ -352,6 +363,9 @@ void kmain_threaded() {
             break;
         case 'l':
             Proc::debug_print_list();
+            break;
+        case 'p':
+            Proc::debug_print_processes();
             break;
         default:
             break;

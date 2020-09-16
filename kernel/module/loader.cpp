@@ -223,8 +223,11 @@ namespace AEX {
 
         if (block) {
             thread.value->start();
-            if (block)
-                thread.value->join();
+            if (block) {
+                auto error = thread.value->join();
+                if (error)
+                    kpanic("Failed to join: %s", strerror(error));
+            }
 
             delete[] sections;
             return ENONE;

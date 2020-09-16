@@ -59,6 +59,8 @@ namespace AEX::Proc {
         thread_list_head->prev = bsp_thread;
         thread_list_tail       = bsp_thread;
 
+        kernel_process->threads.pushBack(bsp_thread);
+
         broker_init();
 
         setup_idles(idle_process);

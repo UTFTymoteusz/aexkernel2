@@ -47,7 +47,17 @@ namespace AEX::Sys::Time {
     }
 
     void RTC::irq(void*) {
-        ScopeSpinlock scopeLock(m_lock);
+        // ScopeSpinlock scopeLock(m_lock);
+
+        /*Sys::CPU::outportb(0xE9, 'r');
+        Sys::CPU::outportb(0xE9, 't');
+        Sys::CPU::outportb(0xE9, 'c');
+        Sys::CPU::outportb(0xE9, ':');
+        Sys::CPU::outportb(0xE9, ' ');
+        Sys::CPU::outportb(0xE9, 'i');
+        Sys::CPU::outportb(0xE9, 'r');
+        Sys::CPU::outportb(0xE9, 'q');
+        Sys::CPU::outportb(0xE9, '\n');*/
 
         CMOS::read(CMOS::STATUS_C);
 

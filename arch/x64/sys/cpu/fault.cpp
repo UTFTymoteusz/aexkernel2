@@ -93,6 +93,7 @@ namespace AEX::Sys {
                    CPU::currentID(), exception_names[info->int_no], info->int_no, info->err,
                    info->rip, name, delta);
 
+            Proc::debug_print_list();
             break;
         default:
             printk(PRINTK_FAIL
@@ -100,6 +101,7 @@ namespace AEX::Sys {
                    CPU::currentID(), exception_names[info->int_no], info->int_no, info->err,
                    info->rip, name, delta);
 
+            Proc::debug_print_list();
             break;
         }
 

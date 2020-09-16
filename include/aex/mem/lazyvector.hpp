@@ -29,6 +29,8 @@ namespace AEX::Mem {
         }
 
         int pushBack(T val) {
+            m_rcount++;
+
             for (int i = 0; i < m_count; i++) {
                 if (m_array[i] == nullboi) {
                     m_array[i] = val;
@@ -48,6 +50,7 @@ namespace AEX::Mem {
             if (index < 0 || index >= m_count)
                 return;
 
+            m_rcount--;
             m_array[index] = nullboi;
 
             if (index == m_count - 1) {
@@ -60,9 +63,14 @@ namespace AEX::Mem {
             return m_count;
         }
 
+        int realCount() {
+            return m_rcount;
+        }
+
         private:
-        int m_count = 0;
-        T*  m_array = nullptr;
+        int m_count  = 0;
+        int m_rcount = 0;
+        T*  m_array  = nullptr;
 
         template <typename T1>
         void pushRecursive(T1 bong) {

@@ -94,10 +94,13 @@ namespace AEX::Proc {
 
         thread->original_entry = entry;
 
-        if (dont_add)
-            return thread;
+        parent->lock.acquire();
+        parent->threads.pushBack(thread);
+        parent->lock.release();
 
-        Proc::add_thread(thread);
+        if (!dont_add)
+            Proc::add_thread(thread);
+
         return thread;
     }
 
@@ -121,20 +124,27 @@ namespace AEX::Proc {
     }
 
     void Thread::exit() {
+        // If we're running we have the lock acquired
         auto thread = Thread::current();
 
+        AEX_ASSERT(!thread->lock.tryAcquire());
         AEX_ASSERT(!thread->isBusy());
         AEX_ASSERT(CPU::checkInterrupts());
 
         thread->addCritical();
+        thread->setStatus(TS_DEAD);
 
-        Thread::current()->setStatus(TS_DEAD);
-
-        if (thread->m_joiner)
+        if (thread->m_joiner) {
+            thread->m_joiner->lock.acquire();
             thread->m_joiner->setStatus(TS_RUNNABLE);
+            PRINTK_DEBUG1("Woke up 0x%p", thread->m_joiner);
+            thread->m_joiner->lock.release();
+        }
+
+        PRINTK_DEBUG1("Exitting 0x%p", thread);
 
         if (thread->m_detached)
-            thread->cleanup();
+            thread->finish();
 
         thread->subCritical();
         Thread::yield();
@@ -161,10 +171,19 @@ namespace AEX::Proc {
         if (m_detached || m_joiner)
             return EINVAL;
 
-        if (this == current())
+        if (this == Thread::current())
             return EDEADLK;
 
         Thread::current()->addBusy();
+
+        // I've forgotten about joining an already-exitted thread.
+        if (status == TS_DEAD) {
+            finish();
+            Thread::current()->subBusy();
+
+            return ENONE;
+        }
+
         auto state = Thread::current()->saveState();
 
         m_joiner = Thread::current();
@@ -174,12 +193,21 @@ namespace AEX::Proc {
         Thread::yield();
         this->lock.acquire();
 
-        if (status & TF_DEAD)
-            cleanup();
-        else if (Thread::current()->aborting()) {
+        if (Thread::current()->aborting()) {
+            printk("we hath been interrupted\n");
+
             m_detached = true;
             m_joiner   = nullptr;
+
+            Thread::current()->loadState(state);
+            Thread::current()->subBusy();
+
+            return EINTR;
         }
+
+        AEX_ASSERT(Thread::current()->status == TS_RUNNABLE);
+
+        finish();
 
         Thread::current()->loadState(state);
         Thread::current()->subBusy();
@@ -194,7 +222,7 @@ namespace AEX::Proc {
             return EINVAL;
 
         if (status == TS_DEAD)
-            cleanup();
+            finish();
 
         m_detached = true;
         return ENONE;
@@ -208,10 +236,13 @@ namespace AEX::Proc {
         if (!isBusy()) {
             if (m_detached) {
                 setStatus(TS_DEAD);
-                cleanup();
+                finish();
             }
-            else if (m_joiner)
+            else if (m_joiner) {
+                m_joiner->lock.acquire();
                 m_joiner->setStatus(TS_RUNNABLE);
+                m_joiner->lock.release();
+            }
         }
 
         return ENONE;
@@ -225,7 +256,19 @@ namespace AEX::Proc {
         delete thread;
     }
 
-    void Thread::cleanup() {
+    void Thread::finish() {
+        parent->lock.acquire();
+
+        for (int i = 0; i < parent->threads.count(); i++) {
+            if (parent->threads[i] != this)
+                continue;
+
+            parent->threads.erase(i);
+            break;
+        }
+
+        parent->lock.release();
+
         remove_thread(this);
         broker(broker_cleanup, this);
     }
@@ -242,9 +285,16 @@ namespace AEX::Proc {
     void Thread::addCritical() {
         Mem::atomic_add(&m_busy, (uint16_t) 1);
         Mem::atomic_add(&m_critical, (uint16_t) 1);
+
+        // if (!CPU::current()->in_interrupt)
+        //    CPU::nointerrupts();
     }
 
     void Thread::subCritical() {
+        // if (Mem::atomic_sub_fetch(&m_critical, (uint16_t) 1) == 0 &&
+        // !CPU::current()->in_interrupt)
+        //    CPU::interrupts();
+
         Mem::atomic_sub(&m_critical, (uint16_t) 1);
         Mem::atomic_sub(&m_busy, (uint16_t) 1);
     }

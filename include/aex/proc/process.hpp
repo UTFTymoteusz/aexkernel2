@@ -26,7 +26,7 @@ namespace AEX::Proc {
 
         Spinlock lock;
 
-        Mem::SmartArray<Thread> threads;
+        Mem::LazyVector<Thread*, nullptr> threads;
 
         Mem::Pagemap*                 pagemap;
         Mem::Vector<Mem::MMapRegion*> mmap_regions;

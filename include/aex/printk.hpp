@@ -7,6 +7,18 @@
 #define PRINTK_WARN "^2"
 #define PRINTK_FAIL "^3"
 
+#define PRINTK_DEBUG(msg) printk("%s:%i: %s\n", __FILE__, __LINE__, msg)
+#define PRINTK_DEBUG1(fmt, a) printk("%s:%i: " fmt "\n", __FILE__, __LINE__, a)
+#define PRINTK_DEBUG2(fmt, a, b) printk("%s:%i: " fmt "\n", __FILE__, __LINE__, a, b)
+#define PRINTK_DEBUG3(fmt, a, b, c) printk("%s:%i: " fmt "\n", __FILE__, __LINE__, a, b, c)
+
+#define PRINTK_DEBUG_WARN(msg) printk(PRINTK_WARN "%s:%i: %s\n", __FILE__, __LINE__, msg)
+#define PRINTK_DEBUG_WARN1(fmt, a) printk(PRINTK_WARN "%s:%i: " fmt "\n", __FILE__, __LINE__, a)
+#define PRINTK_DEBUG_WARN2(fmt, a, b) \
+    printk(PRINTK_WARN "%s:%i: " fmt "\n", __FILE__, __LINE__, a, b)
+#define PRINTK_DEBUG_WARN3(fmt, a, b, c) \
+    printk(PRINTK_WARN "%s:%i: " fmt "\n", __FILE__, __LINE__, a, b, c)
+
 namespace AEX {
     void printk(const char* format, ...);
     void printk(const char* format, va_list args);

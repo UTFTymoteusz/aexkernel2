@@ -94,7 +94,7 @@ namespace AEX::Proc {
         error_t abort();
         bool    aborting();
 
-        void cleanup();
+        void finish();
 
         Process* getProcess();
 

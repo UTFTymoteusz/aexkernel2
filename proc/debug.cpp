@@ -59,5 +59,33 @@ namespace AEX::Proc {
         }
 
         printk("tail: 0x%p\n", thread_list_tail);
+        printk("idles:\n");
+
+        for (int i = 0; i < Sys::MCore::cpu_count; i++) {
+            thread = idle_threads[i];
+
+            char buffer[32];
+            debug_serialize_flags(buffer, thread->status);
+
+            printk("0x%p (p: 0x%p, n: 0x%p) <%s> <%s> %s 0x%p\n", thread, thread->prev,
+                   thread->next, buffer, Debug::addr2name(thread->original_entry),
+                   thread->detached() ? "detached" : (thread->joiner() ? "joined by" : ""),
+                   thread->joiner());
+        }
+    }
+
+    void debug_print_processes() {
+        for (auto iterator = processes.getIterator(); auto process = iterator.next();) {
+            printk("%i. %s, %i\n", process->pid, process->name, process->threads.realCount());
+
+            process->lock.acquire();
+
+            for (int i = 0; i < process->threads.count(); i++)
+                printk("0x%x ", (size_t) process->threads[i] & 0xFFFFFF);
+
+            process->lock.release();
+
+            printk("\n");
+        }
     }
 }

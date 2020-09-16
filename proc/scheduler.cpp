@@ -17,7 +17,7 @@ namespace AEX::Proc {
             return;
 
         if (!lock.tryAcquireRaw()) {
-            if (!(thread->status & TF_RUNNABLE))
+            if (thread->status != TS_RUNNABLE)
                 lock.acquireRaw();
             else
                 return;

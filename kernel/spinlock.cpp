@@ -9,9 +9,9 @@
 using Thread = AEX::Proc::Thread;
 
 namespace AEX {
-    void Spinlock::acquire() {
-        static bool faulted = false;
+    bool spinlock_faulted = false;
 
+    void Spinlock::acquire() {
         volatile size_t count = 0;
         Thread::current()->addCritical();
 
@@ -27,7 +27,7 @@ namespace AEX {
                 if (!name)
                     name = "no idea";
 
-                if (__sync_bool_compare_and_swap(&faulted, false, true)) {
+                if (__sync_bool_compare_and_swap(&spinlock_faulted, false, true)) {
                     kpanic("spinlock 0x%p <%s+0x%x> hung (val: %i, cpu: %i)", this, name, delta,
                            m_lock, Sys::CPU::currentID());
                 }
@@ -76,8 +76,26 @@ namespace AEX {
 
 
     void Spinlock::acquireRaw() {
-        while (!__sync_bool_compare_and_swap(&m_lock, false, true))
+        volatile size_t count = 0;
+
+        while (!__sync_bool_compare_and_swap(&m_lock, false, true)) {
             asm volatile("pause");
+            count++;
+
+            if (count > 12212222) {
+                int  delta = 0;
+                auto name  = Debug::addr2name((void*) this, delta);
+                if (!name)
+                    name = "no idea";
+
+                if (__sync_bool_compare_and_swap(&spinlock_faulted, false, true)) {
+                    kpanic("spinlock 0x%p <%s+0x%x> hung (val: %i, cpu: %i) *RAW*", this, name,
+                           delta, m_lock, Sys::CPU::currentID());
+                }
+                else
+                    Sys::CPU::halt();
+            }
+        }
 
         __sync_synchronize();
     }
