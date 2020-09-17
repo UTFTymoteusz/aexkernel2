@@ -75,7 +75,10 @@ namespace AEX::Proc {
     }
 
     void debug_print_processes() {
-        for (auto iterator = processes.getIterator(); auto process = iterator.next();) {
+        printk("head: 0x%p, Count: %i\n", process_list_head, process_list_size);
+        auto process = process_list_head;
+
+        for (int i = 0; i < process_list_size; i++) {
             printk("%i. %s, %i\n", process->pid, process->name, process->threads.realCount());
 
             process->lock.acquire();
@@ -86,6 +89,10 @@ namespace AEX::Proc {
             process->lock.release();
 
             printk("\n");
+
+            process = process->next;
         }
+
+        printk("tail: 0x%p\n", thread_list_tail);
     }
 }

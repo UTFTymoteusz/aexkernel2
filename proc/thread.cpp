@@ -59,7 +59,7 @@ namespace AEX::Proc {
         auto thread = new Thread();
 
         if (!parent)
-            parent = processes.get(1).get();
+            parent = get_process(1);
 
         if (!pagemap)
             pagemap = parent->pagemap;
@@ -265,6 +265,9 @@ namespace AEX::Proc {
         }
 
         parent->lock.release();
+
+        if (parent->threads.realCount() == 0)
+            parent->exit(0);
 
         remove_thread(this);
         broker(broker_cleanup, this);

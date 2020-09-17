@@ -10,7 +10,7 @@ namespace AEX::Sys::Time {
         public:
         static void init();
 
-        static int64_t get_epoch();
+        static int64_t epoch();
 
         private:
         static Spinlock         m_lock;

@@ -300,8 +300,8 @@ void test_udp_client() {
 void kmain_threaded() {
     using namespace AEX::Sys::Time;
 
-    auto idle    = Proc::processes.get(0);
-    auto process = Proc::Thread::current()->getProcess();
+    auto idle    = Proc::get_process(0);
+    auto process = Proc::Process::current();
 
     time_t start_epoch = clocktime();
 

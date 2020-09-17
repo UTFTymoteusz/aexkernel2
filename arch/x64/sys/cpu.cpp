@@ -38,7 +38,7 @@ constexpr auto CPUID_FEAT_PAT = (1 << 16);
 namespace AEX::Sys {
     CPU::CPU(int id) {
         this->id = id;
-        apic_id  = IRQ::APIC::getID();
+        apic_id  = IRQ::APIC::id();
         self     = this;
 
         getName();
@@ -178,12 +178,12 @@ namespace AEX::Sys {
     }
 
 
-    int CPU::currentID() {
-        return CURRENT_CPU->id;
-    }
-
     CPU* CPU::current() {
         return CURRENT_CPU;
+    }
+
+    int CPU::currentID() {
+        return CURRENT_CPU->id;
     }
 
     Proc::Thread* CPU::currentThread() {

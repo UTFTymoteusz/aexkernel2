@@ -16,9 +16,9 @@ namespace AEX::Proc {
         if (thread->isCritical())
             return;
 
-        if (!lock.tryAcquireRaw()) {
+        if (!sched_lock.tryAcquireRaw()) {
             if (thread->status != TS_RUNNABLE)
-                lock.acquireRaw();
+                sched_lock.acquireRaw();
             else
                 return;
         }
@@ -62,7 +62,7 @@ namespace AEX::Proc {
             cpu->current_context = thread->context;
 
             cpu->update(thread);
-            lock.releaseRaw();
+            sched_lock.releaseRaw();
 
             return;
         }
@@ -80,6 +80,6 @@ namespace AEX::Proc {
         idle->next = thread;
 
         cpu->update(idle);
-        lock.releaseRaw();
+        sched_lock.releaseRaw();
     }
 }

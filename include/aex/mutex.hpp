@@ -1,12 +1,16 @@
 #pragma once
 
 namespace AEX {
+    class ScopeMutex;
+
     class Mutex {
         public:
         void acquire();
         void release();
 
         bool tryAcquire();
+
+        ScopeMutex scope();
 
         private:
         volatile int m_lock = 0;

@@ -45,8 +45,6 @@ namespace AEX::Mem {
     }
 
     error_t FileBackedMMapRegion::read(void* dst, int64_t offset, uint32_t count) {
-        auto process = Proc::Process::current();
-
         ScopeMutex scopeLock(m_lock);
 
         int32_t id = offset / Sys::CPU::PAGE_SIZE;
@@ -144,7 +142,7 @@ namespace AEX::Mem {
     error_t munmap(void* addr, size_t) {
         auto process = Proc::Process::current();
 
-        remove_region(process.get(), addr);
+        remove_region(process, addr);
 
         return ENONE;
     }

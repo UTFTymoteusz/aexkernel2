@@ -53,10 +53,13 @@ namespace AEX::Mem {
             m_rcount--;
             m_array[index] = nullboi;
 
-            if (index == m_count - 1) {
+            int prev = m_count;
+
+            while (m_count > 0 && m_array[m_count - 1] == nullboi)
                 m_count--;
+
+            if (m_count != prev)
                 m_array = (T*) Heap::realloc((void*) m_array, m_count * sizeof(T));
-            }
         }
 
         int count() {

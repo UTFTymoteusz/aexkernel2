@@ -22,7 +22,7 @@ namespace AEX::Dev::TTY {
 
     VTTY& VTTY::write(char c) {
         m_lock.acquire();
-        // Sys::CPU::outportb(0xE9, c);
+        Sys::CPU::outportb(0xE9, c);
         _write(c);
         m_lock.release();
 
@@ -33,7 +33,7 @@ namespace AEX::Dev::TTY {
         m_lock.acquire();
 
         while (*str != '\0') {
-            // Sys::CPU::outportb(0xE9, *str);
+            Sys::CPU::outportb(0xE9, *str);
             _write(*str++);
         }
 

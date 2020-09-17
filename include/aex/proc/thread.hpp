@@ -50,9 +50,8 @@ namespace AEX::Proc {
         };
 
         Process* parent;
-
-        Thread* next;
-        Thread* prev;
+        Thread*  next;
+        Thread*  prev;
 
         void* original_entry;
 
@@ -190,6 +189,4 @@ namespace AEX::Proc {
 
         Thread* m_joiner = nullptr;
     };
-
-    typedef Mem::SmartPointer<Thread> Thread_SP;
 }

@@ -26,10 +26,17 @@ namespace AEX::Proc {
     }
 
     Process::~Process() {
-        kpanic("process is gone\n");
+        //
     }
 
-    Mem::SmartPointer<Process> Process::current() {
-        return processes.get(Thread::current()->parent->pid);
+    Process* Process::current() {
+        return Thread::current()->parent;
+    }
+
+    void Process::exit(int status) {
+        auto scope = processes_lock.scope();
+
+        PRINTK_DEBUG2("pid%i: exit(%i)", pid, status);
+        // delete this;
     }
 }

@@ -17,15 +17,19 @@ using namespace AEX::Mem;
 using namespace AEX::Sys;
 
 namespace AEX::Proc {
-    Mem::SmartArray<Process> processes;
+    Mutex processes_lock;
 
-    Thread** idle_threads = nullptr;
+    int      process_list_size;
+    Process* process_list_head;
+    Process* process_list_tail;
 
-    Spinlock lock;
+    Spinlock sched_lock;
 
     int     thread_list_size = 0;
     Thread* thread_list_head = nullptr;
     Thread* thread_list_tail = nullptr;
+
+    Thread** idle_threads = nullptr;
 
     bool ready = false;
 
@@ -74,11 +78,67 @@ namespace AEX::Proc {
     }
 
     pid_t add_process(Process* process) {
-        return processes.addRef(process);
+        static pid_t counter = 0;
+
+        auto scope = sched_lock.scope();
+
+        if (process_list_head == nullptr) {
+            process_list_size++;
+
+            process_list_head = process;
+            process_list_tail = process;
+
+            process->next = process;
+            process->prev = process;
+
+            return counter++;
+        }
+
+        process_list_size++;
+        process_list_tail->next = process;
+
+        process->next = process_list_head;
+        process->prev = process_list_tail;
+
+        process_list_tail       = process;
+        process_list_head->prev = process_list_tail;
+
+        return counter++;
+    }
+
+    void remove_process(Process* process) {
+        auto scope = sched_lock.scope();
+
+        AEX_ASSERT(process_list_size > 0);
+
+        process_list_size--;
+
+        if (process_list_head == process)
+            process_list_head = process->next;
+
+        if (process_list_tail == process)
+            process_list_tail = process->prev;
+
+        process->next->prev = process->prev;
+        process->prev->next = process->next;
+    }
+
+    Process* get_process(pid_t pid) {
+        auto scope   = sched_lock.scope();
+        auto process = process_list_head;
+
+        for (int i = 0; i < process_list_size; i++) {
+            if (process->pid == pid)
+                return process;
+
+            process = process->next;
+        }
+
+        return nullptr;
     }
 
     void add_thread(Thread* thread) {
-        auto scope = lock.scope();
+        auto scope = sched_lock.scope();
 
         AEX_ASSERT(thread_list_size > 0);
 
@@ -93,7 +153,7 @@ namespace AEX::Proc {
     }
 
     void remove_thread(Thread* thread) {
-        auto scope = lock.scope();
+        auto scope = sched_lock.scope();
 
         AEX_ASSERT(thread_list_size > 0);
 

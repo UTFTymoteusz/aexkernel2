@@ -10,7 +10,7 @@ constexpr auto ICW4_8086 = 0x01;
 namespace AEX::Sys::IRQ {
     PIC pics[2];
 
-    void PIC::setMask(uint8_t mask) {
+    void PIC::mask(uint8_t mask) {
         CPU::outportb(data, mask);
     }
 

@@ -77,7 +77,7 @@ namespace AEX::Sys::Time {
     }
 
     time_t clocktime() {
-        return RTC::get_epoch();
+        return RTC::epoch();
     }
 
     void lazy_sleep(uint64_t ms) {

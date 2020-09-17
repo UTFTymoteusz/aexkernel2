@@ -25,11 +25,15 @@ namespace AEX::Proc {
         resource_usage usage;
 
         Spinlock lock;
+        Mutex    thread_lock;
 
         Mem::LazyVector<Thread*, nullptr> threads;
 
         Mem::Pagemap*                 pagemap;
         Mem::Vector<Mem::MMapRegion*> mmap_regions;
+
+        Process* next;
+        Process* prev;
 
         Process() = default;
 
@@ -48,7 +52,9 @@ namespace AEX::Proc {
          * Gets the current process.
          * @returns The SmartPointer to the process.
          */
-        static Mem::SmartPointer<Process> current();
+        static Process* current();
+
+        void exit(int status);
 
         private:
     };
