@@ -35,6 +35,8 @@ namespace AEX::Proc {
         this->context = new Context();
         this->parent  = process;
         this->status  = TS_FRESH;
+
+        Mem::atomic_add(&process->thread_counter, 1);
     }
 
     Thread::~Thread() {
@@ -51,15 +53,17 @@ namespace AEX::Proc {
         if (fault_stack)
             parent->pagemap->free((void*) fault_stack, fault_stack_size);
 
+        Mem::atomic_sub(&parent->thread_counter, 1);
+
         this->lock.release();
     }
 
-    optional<Thread*> Thread::create(Process* parent, void* entry, size_t stack_size,
+    optional<Thread*> Thread::create(pid_t ppid, void* entry, size_t stack_size,
                                      Mem::Pagemap* pagemap, bool usermode, bool dont_add) {
-        auto thread = new Thread();
+        auto pscope = processes_lock.scope();
 
-        if (!parent)
-            parent = get_process(1);
+        auto thread = new Thread();
+        auto parent = get_process(ppid);
 
         if (!pagemap)
             pagemap = parent->pagemap;
@@ -93,6 +97,8 @@ namespace AEX::Proc {
         thread->parent = parent;
 
         thread->original_entry = entry;
+
+        Mem::atomic_add(&parent->thread_counter, 1);
 
         parent->lock.acquire();
         parent->threads.push(thread);
@@ -232,8 +238,12 @@ namespace AEX::Proc {
 
         if (!isBusy()) {
             if (m_detached) {
+                Thread::current()->addBusy();
+
                 setStatus(TS_DEAD);
                 finish();
+
+                Thread::current()->subBusy();
             }
             else if (m_joiner) {
                 m_joiner->lock.acquire();
@@ -266,7 +276,7 @@ namespace AEX::Proc {
 
         parent->lock.release();
 
-        if (parent->threads.realCount() == 0)
+        if (Mem::atomic_read(&parent->thread_counter) == 1)
             parent->exit(0);
 
         remove_thread(this);

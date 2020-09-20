@@ -218,8 +218,7 @@ namespace AEX {
         }
 
         // 2 goddamned hours + sleep for this goddamned thing (stack size)
-        auto thread = Proc::Thread::create(Proc::get_process(1), (void*) module->enter, 16384,
-                                           Mem::kernel_pagemap);
+        auto thread = Proc::Thread::create(1, (void*) module->enter, 16384, Mem::kernel_pagemap);
 
         if (block) {
             thread.value->start();

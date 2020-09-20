@@ -35,7 +35,7 @@ namespace AEX::Proc {
 
     Thread** void_threads;
 
-    void setup_idles(Process* process);
+    void setup_idles();
     void setup_cores(Thread* bsp_thread);
     void cleanup_voids();
 
@@ -44,7 +44,7 @@ namespace AEX::Proc {
 
         auto bsp = MCore::CPUs[0];
 
-        auto idle_process   = new Process("/sys/aexkrnl.elf", 0, Mem::kernel_pagemap, "idle");
+        new Process("/sys/aexkrnl.elf", 0, Mem::kernel_pagemap, "idle");
         auto kernel_process = new Process("/sys/aexkrnl.elf", 0, Mem::kernel_pagemap);
 
         auto bsp_thread = new Thread(kernel_process);
@@ -67,7 +67,7 @@ namespace AEX::Proc {
 
         broker_init();
 
-        setup_idles(idle_process);
+        setup_idles();
         setup_cores(bsp_thread);
         setup_irq();
         cleanup_voids();
@@ -79,6 +79,8 @@ namespace AEX::Proc {
 
     pid_t add_process(Process* process) {
         static pid_t counter = 0;
+
+        AEX_ASSERT(!processes_lock.tryAcquire());
 
         auto scope = sched_lock.scope();
 
@@ -107,6 +109,8 @@ namespace AEX::Proc {
     }
 
     void remove_process(Process* process) {
+        AEX_ASSERT(!processes_lock.tryAcquire());
+
         auto scope = sched_lock.scope();
 
         AEX_ASSERT(process_list_size > 0);
@@ -124,6 +128,8 @@ namespace AEX::Proc {
     }
 
     Process* get_process(pid_t pid) {
+        AEX_ASSERT(!processes_lock.tryAcquire());
+
         auto scope   = sched_lock.scope();
         auto process = process_list_head;
 
@@ -178,14 +184,12 @@ namespace AEX::Proc {
             CPU::wait();
     }
 
-    void setup_idles(Process* idle_process) {
+    void setup_idles() {
         idle_threads = (Thread**) new Thread*[MCore::cpu_count];
 
-        for (int i = 0; i < MCore::cpu_count; i++) {
+        for (int i = 0; i < MCore::cpu_count; i++)
             idle_threads[i] =
-                Thread::create(idle_process, (void*) idle, 512, Mem::kernel_pagemap, false, true)
-                    .value;
-        }
+                Thread::create(0, (void*) idle, 512, Mem::kernel_pagemap, false, true).value;
     }
 
     void setup_cores(Thread* bsp_thread) {

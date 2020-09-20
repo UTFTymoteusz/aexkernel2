@@ -79,7 +79,11 @@ namespace AEX::Proc {
         auto process = process_list_head;
 
         for (int i = 0; i < process_list_size; i++) {
-            printk("%i. %s, %i\n", process->pid, process->name, process->threads.realCount());
+            char buffer[32];
+            debug_serialize_flags(buffer, process->status);
+
+            printk("%i. %s, %i <%s>\n", process->pid, process->name, process->threads.realCount(),
+                   buffer);
 
             process->lock.acquire();
 

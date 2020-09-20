@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aex/ipc/event.hpp"
 #include "aex/mem.hpp"
 #include "aex/mem/lazyvector.hpp"
 #include "aex/mem/mmap.hpp"
@@ -27,6 +28,7 @@ namespace AEX::Proc {
         Spinlock lock;
         Mutex    thread_lock;
 
+        int                               thread_counter;
         Mem::LazyVector<Thread*, nullptr> threads;
 
         Mem::Pagemap*                 pagemap;
@@ -34,6 +36,10 @@ namespace AEX::Proc {
 
         Process* next;
         Process* prev;
+
+        IPC::Event child_event;
+        int        status;
+        int        ret_code;
 
         Process() = default;
 
@@ -48,9 +54,12 @@ namespace AEX::Proc {
 
         ~Process();
 
+        static error_t         kill(pid_t pid);
+        static optional<pid_t> wait(int& status);
+
         /**
          * Gets the current process.
-         * @returns The SmartPointer to the process.
+         * @returns The pointer to the process.
          */
         static Process* current();
 
@@ -58,6 +67,4 @@ namespace AEX::Proc {
 
         private:
     };
-
-    typedef Mem::SmartPointer<Process> Process_SP;
 }

@@ -5,6 +5,7 @@
 #include "aex/mem/paging.hpp"
 #include "aex/mem/smartptr.hpp"
 #include "aex/optional.hpp"
+#include "aex/printk.hpp"
 #include "aex/proc/resource_usage.hpp"
 #include "aex/proc/types.hpp"
 #include "aex/spinlock.hpp"
@@ -68,9 +69,9 @@ namespace AEX::Proc {
 
         ~Thread();
 
-        [[nodiscard]] static optional<Thread*> create(Process* parent, void* entry,
-                                                      size_t stack_size, Mem::Pagemap* pagemap,
-                                                      bool usermode = false, bool dont_add = false);
+        [[nodiscard]] static optional<Thread*> create(pid_t parent, void* entry, size_t stack_size,
+                                                      Mem::Pagemap* pagemap, bool usermode = false,
+                                                      bool dont_add = false);
 
         static void yield();
         static void sleep(int ms);
@@ -119,7 +120,7 @@ namespace AEX::Proc {
         inline void subBusy() {
             uint16_t busy = Mem::atomic_sub_fetch(&m_busy, (uint16_t) 1);
 
-            if (busy == 0 && aborting())
+            if (!busy && aborting())
                 Thread::exit();
         }
 

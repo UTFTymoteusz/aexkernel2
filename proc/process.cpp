@@ -1,8 +1,10 @@
 #include "aex/proc/process.hpp"
 
+#include "aex/assert.hpp"
 #include "aex/fs.hpp"
 #include "aex/mem.hpp"
 #include "aex/proc.hpp"
+#include "aex/proc/broker.hpp"
 #include "aex/string.hpp"
 
 #include "proc/proc.hpp"
@@ -19,24 +21,132 @@ namespace AEX::Proc {
 
         strncpy(this->image_path, image_path, strlen(image_path) + 1);
 
+        processes_lock.acquire();
+
         this->parent_pid        = parent_pid;
         this->usage.cpu_time_ns = 0;
         this->pid               = add_process(this);
         this->pagemap           = pagemap;
+
+        processes_lock.release();
     }
 
     Process::~Process() {
-        //
+        remove_process(this);
     }
 
     Process* Process::current() {
         return Thread::current()->parent;
     }
 
+    void exit_threaded(Process* process) {
+        for (int i = 0; i < process->threads.count(); i++) {
+            if (!process->threads[i])
+                continue;
+
+            process->threads.at(i)->abort();
+        }
+
+        while (Mem::atomic_read(&process->thread_counter) != 0)
+            Proc::Thread::sleep(50);
+
+        processes_lock.acquire();
+        process->status = TS_DEAD;
+
+        get_process(process->parent_pid)->child_event.raise();
+        PRINTK_DEBUG1("pid%i: full exit", process->pid);
+
+        processes_lock.release();
+    }
+
+    void exit_threaded_broker(Process* process) {
+        auto thread_try = threaded_call(exit_threaded, process);
+        AEX_ASSERT(thread_try);
+
+        thread_try->detach();
+    }
+
     void Process::exit(int status) {
         auto scope = processes_lock.scope();
 
         PRINTK_DEBUG2("pid%i: exit(%i)", pid, status);
-        // delete this;
+
+        broker(exit_threaded_broker, this);
+    }
+
+    error_t Process::kill(pid_t pid) {
+        auto scope   = processes_lock.scope();
+        auto process = get_process(pid);
+        if (!process)
+            return ESRCH;
+
+        process->exit(0);
+        return ENONE;
+    }
+
+    struct wait_args {
+        pid_t pid;
+        int   code;
+
+        wait_args() {}
+
+        wait_args(pid_t pid, int code) {
+            this->pid  = pid;
+            this->code = code;
+        }
+    };
+
+    optional<wait_args> try_get(int pid) {
+        auto    scope   = processes_lock.scope();
+        auto    process = process_list_head;
+        error_t error   = ECHILD;
+
+        for (int i = 0; i < process_list_size; i++) {
+            if (process->parent_pid != pid) {
+                process = process->next;
+                continue;
+            }
+
+            error = EAGAIN;
+
+            if (process->status != TS_DEAD) {
+                process = process->next;
+                continue;
+            }
+
+            pid_t pid   = process->pid;
+            int   rcode = process->ret_code;
+
+            delete process;
+            return wait_args(pid, rcode);
+        }
+
+        return error;
+    }
+
+    optional<pid_t> Process::wait(int& status) {
+        auto scope = Process::current()->lock.scope();
+
+        while (true) {
+            auto val = try_get(Process::current()->pid);
+            if (!val.has_value && val.error_code == ECHILD)
+                return val.error_code;
+
+            if (val.has_value) {
+                PRINTK_DEBUG2("pid%i: cleaned up pid%i", Process::current()->pid, val.value.pid);
+
+                status = val.value.code;
+                return val.value.pid;
+            }
+
+            Process::current()->child_event.wait();
+            Process::current()->lock.release();
+
+            Thread::yield();
+
+            Process::current()->lock.acquire();
+            if (Thread::current()->aborting())
+                return EINTR;
+        }
     }
 }
