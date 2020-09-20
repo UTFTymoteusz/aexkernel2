@@ -35,4 +35,9 @@ namespace AEX {
     constexpr T int_ceil(T val, T alignment) {
         return ((val + alignment - 1) / alignment) * alignment;
     }
+
+    template <typename T, typename A, typename B>
+    constexpr bool inrange(T val, A min, B max) {
+        return val >= min && val <= max;
+    }
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "aex/math.hpp"
+
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -71,16 +73,10 @@ namespace AEX {
     int  memcmp(const void* a, const void* b, size_t num);
 
     inline char tolower(char c) {
-        if (c >= 'A' && c <= 'Z')
-            return c + ('a' - 'A');
-
-        return c;
+        return inrange(c, 'A', 'Z') ? c + 32 : c;
     }
 
     inline char toupper(char c) {
-        if (c >= 'a' && c <= 'z')
-            return c + ('A' - 'a');
-
-        return c;
+        return inrange(c, 'a', 'z') ? c - 32 : c;
     }
 }
