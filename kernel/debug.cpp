@@ -75,7 +75,7 @@ namespace AEX::Debug {
             m_symbol.name    = name;
             m_symbol.address = symbol.address;
 
-            kernel_symbols.pushBack(m_symbol);
+            kernel_symbols.push(m_symbol);
         }
 
         symbols_loaded = true;

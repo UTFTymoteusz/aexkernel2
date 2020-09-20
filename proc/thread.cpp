@@ -95,7 +95,7 @@ namespace AEX::Proc {
         thread->original_entry = entry;
 
         parent->lock.acquire();
-        parent->threads.pushBack(thread);
+        parent->threads.push(thread);
         parent->lock.release();
 
         if (!dont_add)

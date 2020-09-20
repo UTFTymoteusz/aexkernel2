@@ -120,7 +120,7 @@ namespace AEX::Dev::Input {
     }
 
     void register_handle(Handle* handle) {
-        handles.pushBack(handle);
+        handles.push(handle);
     }
 
     void unregister_handle(Handle* m_handle) {

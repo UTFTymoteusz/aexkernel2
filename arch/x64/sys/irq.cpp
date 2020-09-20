@@ -78,7 +78,7 @@ namespace AEX::Sys::IRQ {
                 m_ioapic->mode(j, IOAPIC::irq_mode::IRQ_NORMAL);
             }
 
-            ioapics.pushBack(m_ioapic);
+            ioapics.push(m_ioapic);
         }
 
         AEX_ASSERT(ioapics.count() > 0);

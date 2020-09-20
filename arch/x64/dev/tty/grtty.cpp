@@ -44,13 +44,13 @@ namespace AEX::Dev::TTY {
         for (int y = 0; y < 25; y++)
             for (int x = 0; x < 80; x++) {
                 auto c = ega_buffer[x + y * 80];
-                put_glyph(c.ascii, x, y, m_ega_to_color[c.fg], m_ega_to_color[c.bg]);
+                put(c.ascii, x, y, m_ega_to_color[c.fg], m_ega_to_color[c.bg]);
             }
 
         m_cursory = 25;
     }
 
-    void GrTTY::put_glyph(char c, uint32_t x, uint32_t y, rgb_t fg, rgb_t bg) {
+    void GrTTY::put(char c, uint32_t x, uint32_t y, rgb_t fg, rgb_t bg) {
         int height = psf_font->size;
 
         x *= GLYPH_WIDTH;
@@ -119,7 +119,7 @@ namespace AEX::Dev::TTY {
             m_cursorx = 0;
             break;
         default:
-            put_glyph(c, m_cursorx, m_cursory, m_fg, m_bg);
+            put(c, m_cursorx, m_cursory, m_fg, m_bg);
 
             m_cursorx++;
 

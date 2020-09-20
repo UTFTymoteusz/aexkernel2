@@ -36,7 +36,7 @@ namespace AEX::Mem {
             return m_array[index];
         }
 
-        int pushBack(T val) {
+        int push(T val) {
             m_count++;
 
             int new_mem_count = int_ceil(m_count, chunk_count);
@@ -90,12 +90,12 @@ namespace AEX::Mem {
 
         template <typename T1>
         void pushRecursive(T1 bong) {
-            pushBack(bong);
+            push(bong);
         }
 
         template <typename T1, typename... T2>
         void pushRecursive(T1 bong, T2... rest) {
-            pushBack(bong);
+            push(bong);
             pushRecursive(rest...);
         }
 

@@ -116,7 +116,7 @@ namespace AEX::Mem {
             region = new MMapRegion(process->pagemap, alloc_addr, len);
 
             process->lock.acquire();
-            process->mmap_regions.pushBack(region);
+            process->mmap_regions.push(region);
             process->lock.release();
 
             return region->start;
@@ -132,7 +132,7 @@ namespace AEX::Mem {
         region = new FileBackedMMapRegion(process->pagemap, alloc_addr, len, dupd, offset);
 
         process->lock.acquire();
-        process->mmap_regions.pushBack(region);
+        process->mmap_regions.push(region);
         process->lock.release();
 
         return region->start;

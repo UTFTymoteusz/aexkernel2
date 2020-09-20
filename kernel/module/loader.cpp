@@ -101,7 +101,7 @@ namespace AEX {
             sections[i].addr = ptr;
             sections[i].size = section_header.size;
 
-            module->sections.pushBack(sections[i]);
+            module->sections.push(sections[i]);
         }
 
         for (int i = 0; i < elf.symbols.count(); i++) {
@@ -123,7 +123,7 @@ namespace AEX {
                 m_symbol.addr =
                     (void*) ((size_t) sections[symbol.section_index].addr + symbol.address);
 
-            module->symbols.pushBack(m_symbol);
+            module->symbols.push(m_symbol);
         }
 
         for (int i = 0; i < elf.symbols.count(); i++) {
@@ -138,7 +138,7 @@ namespace AEX {
             m_symbol.name = symbol.name;
             m_symbol.addr = (void*) ((size_t) sections[symbol.section_index].addr + symbol.address);
 
-            module->symbols.pushBack(m_symbol);
+            module->symbols.push(m_symbol);
         }
 
         elf.loadRelocations();

@@ -58,7 +58,7 @@ namespace AEX::Dev::TTY {
         static uint32_t* volatile m_output;
         uint32_t* m_double_buffer;
 
-        void put_glyph(char c, uint32_t x, uint32_t y, rgb_t fg, rgb_t bg);
+        void put(char c, uint32_t x, uint32_t y, rgb_t fg, rgb_t bg);
 
         protected:
         void _write(char c);

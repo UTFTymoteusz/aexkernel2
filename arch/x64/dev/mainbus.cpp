@@ -34,12 +34,12 @@ namespace AEX::Dev {
     void detect_ps2() {
         using namespace AEX::Dev::Tree;
 
-        CPU::outportb(0x64, 0xAD);
-        CPU::outportb(0x64, 0xA7);
-        CPU::outportb(0x64, 0xAA);
+        CPU::outb(0x64, 0xAD);
+        CPU::outb(0x64, 0xA7);
+        CPU::outb(0x64, 0xAA);
 
         for (size_t i = 0; i < 200; i++) {
-            if (CPU::inportb(0x60) != 0x55)
+            if (CPU::inb(0x60) != 0x55)
                 continue;
 
             auto ps2 = new Device("ps2", nullptr);

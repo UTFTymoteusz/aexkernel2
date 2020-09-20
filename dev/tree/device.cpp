@@ -28,7 +28,7 @@ namespace AEX::Dev::Tree {
     void Device::addResource(resource resource) {
         ScopeSpinlock scopeLock(m_lock);
 
-        m_resources.pushBack(resource);
+        m_resources.push(resource);
     }
 
     optional<resource> Device::getResource(int index) {

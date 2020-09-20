@@ -24,7 +24,7 @@ namespace AEX::Sys::ACPI {
             return false;
         }
 
-        tables.pushBack(table);
+        tables.push(table);
 
         printk("acpi: Found table %s, len %i\n", buffer, header->length);
 

@@ -48,7 +48,7 @@ namespace AEX {
                 if (referencedBy[i] == referencer)
                     return;
 
-            referencedBy.pushBack(referencer);
+            referencedBy.push(referencer);
         }
 
         void removeReferencedBy(Module* referencer) {
@@ -68,7 +68,7 @@ namespace AEX {
                 if (references[i] == reference)
                     return;
 
-            references.pushBack(reference);
+            references.push(reference);
         }
     };
 

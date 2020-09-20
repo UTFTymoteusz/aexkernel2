@@ -120,7 +120,7 @@ namespace AEX::Sys::MCore {
         IRQ::APIC::init(apic_id);
 
         for (int j = 0; j < 50; j++)
-            CPU::inportb(0x20);
+            CPU::inb(0x20);
 
         IRQ::APIC::sipi(apic_id, TRAMPOLINE_ADDR / CPU::PAGE_SIZE);
 
@@ -129,7 +129,7 @@ namespace AEX::Sys::MCore {
 
         for (int j = 0; j < 16000; j++) {
             for (int k = 0; k < 300; k++)
-                CPU::inportb(0x20);
+                CPU::inb(0x20);
 
             if (*signal == 0xAA) {
                 success = true;

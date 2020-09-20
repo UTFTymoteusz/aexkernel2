@@ -10,9 +10,9 @@ namespace AEX::Sys::IRQ {
 
         int divisor = 1193181.66666666 / hz;
 
-        CPU::outportb(0x43, 0x36);
-        CPU::outportb(0x40, divisor & 0xFF);
-        CPU::outportb(0x40, divisor >> 8);
+        CPU::outb(0x43, 0x36);
+        CPU::outb(0x40, divisor & 0xFF);
+        CPU::outb(0x40, divisor >> 8);
     }
 
     void PIT::setInterval(double ms) {
@@ -25,8 +25,8 @@ namespace AEX::Sys::IRQ {
         double hz      = 1000.0 / ms;
         int    divisor = 1193181.66666666 / hz;
 
-        CPU::outportb(0x43, 0x30);
-        CPU::outportb(0x40, divisor & 0xFF);
-        CPU::outportb(0x40, divisor >> 8);
+        CPU::outb(0x43, 0x30);
+        CPU::outb(0x40, divisor & 0xFF);
+        CPU::outb(0x40, divisor >> 8);
     }
 }

@@ -96,7 +96,7 @@ namespace AEX {
             strncpy(entry.name, entry_try.value.name, sizeof(entry.name));
             entry.order = get_order(entry_try.value);
 
-            list.pushBack(entry);
+            list.push(entry);
         }
 
         // No need for a fancy algorithm atm
@@ -190,7 +190,7 @@ namespace AEX {
         symbol.name = name;
         symbol.addr = addr;
 
-        global_symbols.pushBack(symbol);
+        global_symbols.push(symbol);
     }
 
     void* get_dynamic_symbol(const char* name) {
