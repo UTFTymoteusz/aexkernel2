@@ -235,7 +235,8 @@ namespace AEX::Sys {
     }
 
     void CPU::update(Proc::Thread* thread) {
-        m_tss->ist1 = thread->fault_stack;
+        // 3 weeks of rest because of the goddamned + thread->fault_stack_size
+        m_tss->ist1 = thread->fault_stack + thread->fault_stack_size;
     }
 
     void CPU::getName() {
