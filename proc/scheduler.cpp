@@ -60,6 +60,8 @@ namespace AEX::Proc {
 
             cpu->current_thread  = thread;
             cpu->current_context = thread->context;
+            cpu->kernel_stack    = thread->kernel_stack + thread->kernel_stack_size;
+            cpu->syscall_table   = thread->getProcess()->syscall_table;
 
             cpu->update(thread);
             sched_lock.releaseRaw();

@@ -25,6 +25,8 @@ namespace AEX {
 
             memcpy((void*) section_names, m_addr + header_with_names.file_offset,
                    header_with_names.size);
+
+            entry = (void*) (size_t) m_header.entry_position32;
         }
         else {
             int header_name_index = m_header.section_header_name_index;
@@ -39,6 +41,8 @@ namespace AEX {
 
             memcpy((void*) section_names, m_addr + header_with_names.file_offset,
                    header_with_names.size);
+
+            entry = (void*) (size_t) m_header.entry_position;
         }
 
         if (m_header.bitness == bitness_t::BIT_32) {

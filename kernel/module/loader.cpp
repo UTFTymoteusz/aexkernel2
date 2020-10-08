@@ -91,8 +91,6 @@ namespace AEX {
                 continue;
 
             void* ptr = Mem::kernel_pagemap->alloc(section_header.size, PAGE_WRITE | PAGE_EXEC);
-            if (!(section_header.flags & ELF::SC_ALLOC))
-                continue;
 
             // 6 hours of debugging for this god forsaken thing (the entire if)
             if (section_header.type != ELF::sc_type_t::SC_NO_DATA)
@@ -218,7 +216,7 @@ namespace AEX {
         }
 
         // 2 goddamned hours + sleep for this goddamned thing (stack size)
-        auto thread = Proc::Thread::create(1, (void*) module->enter, 16384, Mem::kernel_pagemap);
+        auto thread = Proc::Thread::create(1, (void*) module->enter, 32768, Mem::kernel_pagemap);
 
         if (block) {
             thread.value->start();

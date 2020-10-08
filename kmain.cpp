@@ -9,6 +9,7 @@
 #include "aex/net.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
+#include "aex/proc/exec.hpp"
 #include "aex/sys/acpi.hpp"
 #include "aex/sys/irq.hpp"
 #include "aex/sys/time.hpp"
@@ -26,6 +27,7 @@
 #include "sys/irq.hpp"
 #include "sys/irq_i.hpp"
 #include "sys/mcore.hpp"
+#include "sys/syscall.hpp"
 #include "sys/time.hpp"
 
 using namespace AEX;
@@ -96,6 +98,7 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     Net::init();
     printk("\n");
 
+    Sys::syscall_init();
     Dev::Input::init();
 
     load_core_modules();
@@ -306,6 +309,11 @@ void kmain_threaded() {
     auto process = Proc::Process::current();
 
     Proc::processes_lock.release();
+
+    int status;
+
+    AEX_ASSERT(Proc::exec("/bin/test") == ENONE);
+    Proc::Process::wait(status);
 
     time_t start_epoch = clocktime();
 

@@ -42,10 +42,13 @@ namespace AEX::Proc {
     void init() {
         void_threads = new Thread*[MCore::cpu_count];
 
-        auto bsp = MCore::CPUs[0];
+        auto& bsp = MCore::CPUs[0];
 
-        new Process("/sys/aexkrnl.elf", 0, Mem::kernel_pagemap, "idle");
+        auto idle_process   = new Process("/sys/aexkrnl.elf", 0, Mem::kernel_pagemap, "idle");
         auto kernel_process = new Process("/sys/aexkrnl.elf", 0, Mem::kernel_pagemap);
+
+        idle_process->ready();
+        kernel_process->ready();
 
         auto bsp_thread = new Thread(kernel_process);
         bsp_thread->fault_stack =

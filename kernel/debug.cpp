@@ -22,6 +22,7 @@ namespace AEX::Debug {
     };
 
     bool symbols_loaded = false;
+    bool flag           = false;
 
     Mem::Vector<kernel_symbol> kernel_symbols;
     char*                      kernel_image_strings = nullptr;

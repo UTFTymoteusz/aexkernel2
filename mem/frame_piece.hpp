@@ -40,10 +40,7 @@ namespace AEX::Mem::Phys {
             for (size_t i = 0; i < amount; i++) {
                 tmp = 1 << ib;
 
-                if (m_bitmap[ii] & tmp)
-                    kpanic("frame_piece::Alloc(%i, %u) tried to alloc an "
-                           "alloced frame.",
-                           lid, amount);
+                AEX_ASSERT(!(m_bitmap[ii] & tmp));
 
                 m_bitmap[ii] |= tmp;
 

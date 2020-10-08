@@ -19,7 +19,7 @@ namespace AEX {
 
         CPU::nointerrupts();
 
-        if (Mem::atomic_add_fetch(&panicked, 1) > 2)
+        if (Mem::atomic_add_fetch(&panicked, 1) > 20)
             while (true)
                 CPU::wait();
 

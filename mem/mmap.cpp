@@ -49,8 +49,6 @@ namespace AEX::Mem {
 
         int32_t id = offset / Sys::CPU::PAGE_SIZE;
 
-        // printk("reading from %li to 0x%p\n", offset, dst);
-
         int slot = findSlot(id);
         if (slot == -1) {
             printk("failed\n");
@@ -154,6 +152,8 @@ namespace AEX::Mem {
 
         for (int i = 0; i < process->mmap_regions.count(); i++) {
             auto region = process->mmap_regions[i];
+            if (!region)
+                continue;
 
             size_t start = (size_t) region->start;
             size_t len   = region->len;
@@ -178,6 +178,8 @@ namespace AEX::Mem {
 
         for (int i = 0; i < process->mmap_regions.count(); i++) {
             auto m_region = process->mmap_regions[i];
+            if (!m_region)
+                continue;
 
             size_t start = (size_t) m_region->start;
             size_t len   = m_region->len;

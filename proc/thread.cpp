@@ -4,6 +4,7 @@
 #include "aex/assert.hpp"
 #include "aex/ipc/event.hpp"
 #include "aex/mem.hpp"
+#include "aex/mem/atomic.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
 #include "aex/proc/broker.hpp"
@@ -69,7 +70,7 @@ namespace AEX::Proc {
             pagemap = parent->pagemap;
 
         if (usermode) {
-            thread->user_stack      = (size_t) pagemap->alloc(stack_size, PAGE_WRITE);
+            thread->user_stack      = (size_t) pagemap->alloc(stack_size, PAGE_WRITE | PAGE_USER);
             thread->user_stack_size = stack_size;
 
             thread->kernel_stack =
@@ -80,8 +81,8 @@ namespace AEX::Proc {
                 new Context(entry, (void*) thread->user_stack, stack_size, pagemap, true);
         }
         else {
-            thread->user_stack      = 0;
-            thread->user_stack_size = 0;
+            thread->user_stack      = 0x2137;
+            thread->user_stack_size = 0x2137;
 
             thread->kernel_stack      = (size_t) Mem::kernel_pagemap->alloc(stack_size, PAGE_WRITE);
             thread->kernel_stack_size = stack_size;
@@ -90,7 +91,7 @@ namespace AEX::Proc {
                                           false, Thread::exit);
         }
 
-        thread->fault_stack      = (size_t) pagemap->alloc(FAULT_STACK_SIZE, PAGE_WRITE);
+        thread->fault_stack = (size_t) Mem::kernel_pagemap->alloc(FAULT_STACK_SIZE, PAGE_WRITE);
         thread->fault_stack_size = FAULT_STACK_SIZE;
 
         thread->status = TS_RUNNABLE;
@@ -134,8 +135,12 @@ namespace AEX::Proc {
         auto thread = Thread::current();
 
         AEX_ASSERT(!thread->lock.tryAcquire());
-        AEX_ASSERT(!thread->isBusy());
         AEX_ASSERT(CPU::checkInterrupts());
+
+        if (thread->isBusy()) {
+            thread->abortInternal();
+            return;
+        }
 
         thread->addCritical();
         thread->setStatus(TS_DEAD);
@@ -146,7 +151,7 @@ namespace AEX::Proc {
             thread->m_joiner->lock.release();
         }
 
-        if (thread->m_detached)
+        if (thread->m_detached || Mem::atomic_read(&thread->parent->thread_counter) == 1)
             thread->finish();
 
         thread->subCritical();
@@ -234,25 +239,30 @@ namespace AEX::Proc {
     error_t Thread::abort() {
         auto scope = this->lock.scope();
 
-        m_aborting = true;
-
-        if (!isBusy()) {
-            if (m_detached) {
-                Thread::current()->addBusy();
-
-                setStatus(TS_DEAD);
-                finish();
-
-                Thread::current()->subBusy();
-            }
-            else if (m_joiner) {
-                m_joiner->lock.acquire();
-                m_joiner->setStatus(TS_RUNNABLE);
-                m_joiner->lock.release();
-            }
-        }
+        abortInternal();
 
         return ENONE;
+    }
+
+    void Thread::abortInternal() {
+        m_aborting = true;
+
+        if (isBusy())
+            return;
+
+        if (m_detached) {
+            Thread::current()->addBusy();
+
+            setStatus(TS_DEAD);
+            finish();
+
+            Thread::current()->subBusy();
+        }
+        else if (m_joiner) {
+            m_joiner->lock.acquire();
+            m_joiner->setStatus(TS_RUNNABLE);
+            m_joiner->lock.release();
+        }
     }
 
     bool Thread::aborting() {

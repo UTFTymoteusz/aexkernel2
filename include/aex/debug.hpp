@@ -11,6 +11,7 @@ namespace AEX::Debug {
     };
 
     extern bool symbols_loaded;
+    extern bool flag;
 
     void stack_trace(int skip = 0);
 

@@ -6,6 +6,7 @@
 #include "aex/proc.hpp"
 #include "aex/proc/broker.hpp"
 #include "aex/string.hpp"
+#include "aex/sys/syscall.hpp"
 
 #include "proc/proc.hpp"
 
@@ -27,12 +28,20 @@ namespace AEX::Proc {
         this->usage.cpu_time_ns = 0;
         this->pid               = add_process(this);
         this->pagemap           = pagemap;
+        this->syscall_table     = Sys::default_table();
 
         processes_lock.release();
     }
 
     Process::~Process() {
+        if (pagemap != Mem::kernel_pagemap)
+            delete pagemap;
+
         remove_process(this);
+    }
+
+    void Process::ready() {
+        status = TS_RUNNABLE;
     }
 
     Process* Process::current() {
@@ -69,15 +78,26 @@ namespace AEX::Proc {
     void Process::exit(int status) {
         auto scope = processes_lock.scope();
 
+        if (m_exiting)
+            return;
+
+        m_exiting = true;
+
         PRINTK_DEBUG2("pid%i: exit(%i)", pid, status);
 
         broker(exit_threaded_broker, this);
+
+        // if (Process::current() == this)
+        //    Thread::current()->abort();
     }
 
     error_t Process::kill(pid_t pid) {
         auto scope   = processes_lock.scope();
         auto process = get_process(pid);
         if (!process)
+            return ESRCH;
+
+        if (process->status == TS_FRESH)
             return ESRCH;
 
         process->exit(0);

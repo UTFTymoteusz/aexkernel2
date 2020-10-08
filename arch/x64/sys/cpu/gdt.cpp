@@ -9,6 +9,8 @@
 #include "sys/mcore.hpp"
 
 namespace AEX::Sys {
+    gdt_entry* gdt;
+
     void load_gdt(gdt_entry* gdt, int entry_count) {
         uint8_t gdt_descriptor[10];
 
@@ -22,7 +24,7 @@ namespace AEX::Sys {
     }
 
     void mcore_gdt(tss** tsses) {
-        auto gdt = new gdt_entry[5 + MCore::cpu_count * 2];
+        gdt = new gdt_entry[5 + MCore::cpu_count * 2];
 
         gdt[0].setBase(0).setLimit(0);
         gdt[0].access = AC_NONE;

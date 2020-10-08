@@ -30,7 +30,7 @@ namespace AEX::Proc {
         public:
         static constexpr auto USER_STACK_SIZE   = 16384;
         static constexpr auto KERNEL_STACK_SIZE = 16384;
-        static constexpr auto FAULT_STACK_SIZE  = 16384;
+        static constexpr auto FAULT_STACK_SIZE  = 32768;
 
         struct state {
             uint16_t busy;
@@ -64,6 +64,8 @@ namespace AEX::Proc {
         int kernel_stack_size;
         int fault_stack_size;
 
+        bool faulting;
+
         Thread();
         Thread(Process* parent);
 
@@ -85,6 +87,7 @@ namespace AEX::Proc {
         error_t abort();
         bool    aborting();
 
+        void abortInternal();
         void finish();
 
         Process* getProcess();
@@ -120,7 +123,7 @@ namespace AEX::Proc {
         inline void subBusy() {
             uint16_t busy = Mem::atomic_sub_fetch(&m_busy, (uint16_t) 1);
 
-            if (!busy && aborting())
+            if (!busy && aborting() && this == Thread::current())
                 Thread::exit();
         }
 

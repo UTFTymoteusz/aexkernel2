@@ -8,6 +8,7 @@
 #include "aex/proc/affinity.hpp"
 #include "aex/proc/resource_usage.hpp"
 #include "aex/proc/types.hpp"
+#include "aex/sys/syscall.hpp"
 
 namespace AEX::Mem {
     class Pagemap;
@@ -31,8 +32,10 @@ namespace AEX::Proc {
         int                               thread_counter;
         Mem::LazyVector<Thread*, nullptr> threads;
 
-        Mem::Pagemap*                 pagemap;
-        Mem::Vector<Mem::MMapRegion*> mmap_regions;
+        Mem::Pagemap*                              pagemap;
+        Mem::LazyVector<Mem::MMapRegion*, nullptr> mmap_regions;
+
+        Sys::syscall_t* syscall_table;
 
         Process* next;
         Process* prev;
@@ -63,8 +66,11 @@ namespace AEX::Proc {
          */
         static Process* current();
 
+        void ready();
+
         void exit(int status);
 
         private:
+        bool m_exiting = false;
     };
 }
