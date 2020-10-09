@@ -23,6 +23,10 @@ namespace AEX::Dev::TTY {
         return m_output;
     }
 
+    void TxTTY::remap(void* addr) {
+        m_output = (vga_char*) addr;
+    }
+
     void TxTTY::clear() {
         vga_char* volatile buffer = (vga_char*) 0xFFFFFFFF800B8000;
 

@@ -16,6 +16,7 @@ namespace AEX::Dev::TTY {
         TxTTY& scroll(int amnt);
 
         vga_char* output();
+        void      remap(void* addr);
 
         private:
         enum vga_color {

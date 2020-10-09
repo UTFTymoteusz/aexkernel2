@@ -312,7 +312,7 @@ void kmain_threaded() {
 
     int status;
 
-    AEX_ASSERT(Proc::exec("/bin/test") == ENONE);
+    AEX_ASSERT(Proc::exec("/sys/aexinit.elf") == ENONE);
     Proc::Process::wait(status);
 
     time_t start_epoch = clocktime();
