@@ -29,11 +29,12 @@ namespace AEX::Proc {
         Spinlock lock;
         Mutex    thread_lock;
 
-        int                               thread_counter;
-        Mem::LazyVector<Thread*, nullptr> threads;
+        int                          thread_counter;
+        Mem::LazyVector<Thread*>     threads;
+        Mem::LazyVector<FS::File_SP> files;
 
-        Mem::Pagemap*                              pagemap;
-        Mem::LazyVector<Mem::MMapRegion*, nullptr> mmap_regions;
+        Mem::Pagemap*                     pagemap;
+        Mem::LazyVector<Mem::MMapRegion*> mmap_regions;
 
         Sys::syscall_t* syscall_table;
 

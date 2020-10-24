@@ -50,7 +50,7 @@ namespace AEX::Proc {
 
     void exit_threaded(Process* process) {
         for (int i = 0; i < process->threads.count(); i++) {
-            if (!process->threads[i])
+            if (!process->threads.present(i))
                 continue;
 
             process->threads.at(i)->abort();

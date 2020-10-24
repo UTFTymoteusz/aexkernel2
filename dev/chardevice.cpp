@@ -1,0 +1,48 @@
+#include "aex/dev/chardevice.hpp"
+
+#include "aex/dev.hpp"
+
+#include <stddef.h>
+#include <stdint.h>
+
+namespace AEX::Dev {
+    CharDevice::CharDevice(const char* name) : Device(name, DEV_CHAR) {
+        //
+    }
+
+    CharDevice::~CharDevice() {
+        //
+    }
+
+    error_t CharDevice::open(CharHandle*) {
+        return ENONE;
+    }
+
+    error_t CharDevice::close(CharHandle*) {
+        return ENONE;
+    }
+
+    optional<uint32_t> CharDevice::read(CharHandle*, void*, uint32_t) {
+        return ENOSYS;
+    }
+
+    optional<uint32_t> CharDevice::write(CharHandle*, const void*, uint32_t) {
+        return ENOSYS;
+    }
+
+    optional<CharHandle_SP> open_char_handle(int id) {
+        auto device = devices.get(id);
+        if (!device || device->type != DEV_CHAR)
+            return {};
+
+        auto chr_device = (Dev::CharDevice_SP) device;
+        auto handle     = new CharHandle(chr_device);
+        auto error      = chr_device->open(handle);
+        if (error) {
+            delete handle;
+            return error;
+        }
+
+        return CharHandle_SP(handle);
+    }
+}

@@ -277,7 +277,7 @@ namespace AEX::Proc {
         parent->lock.acquire();
 
         for (int i = 0; i < parent->threads.count(); i++) {
-            if (parent->threads[i] != this)
+            if (!parent->threads.present(i) || parent->threads[i] != this)
                 continue;
 
             parent->threads.erase(i);

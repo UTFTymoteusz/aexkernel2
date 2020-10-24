@@ -310,10 +310,10 @@ void kmain_threaded() {
 
     Proc::processes_lock.release();
 
-    int status;
+    // int status;
 
-    AEX_ASSERT(Proc::exec("/sys/aexinit.elf") == ENONE);
-    Proc::Process::wait(status);
+    // AEX_ASSERT(Proc::exec("/sys/aexinit.elf") == ENONE);
+    // Proc::Process::wait(status);
 
     time_t start_epoch = clocktime();
 
@@ -321,7 +321,7 @@ void kmain_threaded() {
 
     // Dev::Tree::print_debug();
 
-    /*auto dir_try = FS::File::opendir("/dev/");
+    auto dir_try = FS::File::opendir("/dev/");
     AEX_ASSERT(dir_try);
 
     while (true) {
@@ -333,9 +333,9 @@ void kmain_threaded() {
     }
 
     auto file_try = FS::File::open("/dev/tty0");
-    AEX_ASSERT(file_try);
 
-    file_try.value.get()->write((void*) "aaa it works\n", 13);*/
+    AEX_ASSERT(file_try);
+    AEX_ASSERT(file_try.value.get()->write((void*) "aaa it works\n", 13));
 
     Proc::Thread::sleep(100);
 

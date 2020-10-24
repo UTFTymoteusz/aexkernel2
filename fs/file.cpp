@@ -37,7 +37,11 @@ namespace AEX::FS {
             if (!device)
                 return ENOENT;
 
-            return File_SP(new DevFile(device));
+            auto dev_try = DevFile::open(device);
+            if (!dev_try)
+                return dev_try.error_code;
+
+            return File_SP(dev_try.value);
         }
 
         return File_SP(new INodeFile(inode));

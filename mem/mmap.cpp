@@ -151,9 +151,10 @@ namespace AEX::Mem {
         process->lock.acquire();
 
         for (int i = 0; i < process->mmap_regions.count(); i++) {
-            auto region = process->mmap_regions[i];
-            if (!region)
+            if (!process->mmap_regions.present(i))
                 continue;
+
+            auto region = process->mmap_regions[i];
 
             size_t start = (size_t) region->start;
             size_t len   = region->len;
@@ -177,9 +178,10 @@ namespace AEX::Mem {
         process->lock.acquire();
 
         for (int i = 0; i < process->mmap_regions.count(); i++) {
-            auto m_region = process->mmap_regions[i];
-            if (!m_region)
+            if (!process->mmap_regions.present(i))
                 continue;
+
+            auto m_region = process->mmap_regions[i];
 
             size_t start = (size_t) m_region->start;
             size_t len   = m_region->len;

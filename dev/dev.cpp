@@ -11,6 +11,10 @@ namespace AEX::Dev {
         extern void init();
     }
 
+    namespace TTY {
+        void create_tty_devs();
+    }
+
     Mem::SmartArray<Device> devices;
 
     extern void mainbus_init();
@@ -22,6 +26,7 @@ namespace AEX::Dev {
         Tree::init();
         mainbus_init();
         arch_drivers_init();
+        TTY::create_tty_devs();
 
         printk(PRINTK_OK "dev: Initialized\n");
     }
