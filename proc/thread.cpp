@@ -94,7 +94,7 @@ namespace AEX::Proc {
         thread->fault_stack = (size_t) Mem::kernel_pagemap->alloc(FAULT_STACK_SIZE, PAGE_WRITE);
         thread->fault_stack_size = FAULT_STACK_SIZE;
 
-        thread->status = TS_RUNNABLE;
+        thread->status = TS_FRESH;
         thread->parent = parent;
 
         thread->original_entry = entry;

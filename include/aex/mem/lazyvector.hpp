@@ -15,7 +15,7 @@ namespace AEX::Mem {
             pushRecursive(rest...);
         }
 
-        T& operator[](int index) {
+        const T& operator[](int index) {
             if (index < 0 || index >= m_count)
                 return m_array[0].value;
 
@@ -27,6 +27,19 @@ namespace AEX::Mem {
                 return m_array[0].value;
 
             return m_array[index].value;
+        }
+
+        void set(int index, T value) {
+            if (index >= m_count) {
+                m_count = index + 1;
+                resize();
+            }
+
+            if (!m_array[index].has_value)
+                m_rcount++;
+
+            m_array[index].value     = value;
+            m_array[index].has_value = true;
         }
 
         bool present(int index) {
@@ -50,7 +63,7 @@ namespace AEX::Mem {
             }
 
             m_count++;
-            m_array = (optional<T>*) Heap::realloc((void*) m_array, m_count * sizeof(T));
+            resize();
 
             m_array[m_count - 1].value     = val;
             m_array[m_count - 1].has_value = true;
@@ -73,7 +86,7 @@ namespace AEX::Mem {
                 m_count--;
 
             if (m_count != prev)
-                m_array = (optional<T>*) Heap::realloc((void*) m_array, m_count * sizeof(T));
+                resize();
         }
 
         int count() {
@@ -88,6 +101,10 @@ namespace AEX::Mem {
         int          m_count  = 0;
         int          m_rcount = 0;
         optional<T>* m_array  = nullptr;
+
+        void resize() {
+            m_array = (optional<T>*) Heap::realloc((void*) m_array, m_count * sizeof(optional<T>));
+        }
 
         template <typename T1>
         void pushRecursive(T1 bong) {

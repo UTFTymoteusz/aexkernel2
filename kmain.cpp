@@ -300,6 +300,30 @@ void test_udp_client() {
     }
 }
 
+void exec_init() {
+    auto tty_try = FS::File::open("/dev/tty0");
+    AEX_ASSERT(tty_try);
+
+    auto dupA = tty_try.value->dup();
+    auto dupB = tty_try.value->dup();
+
+    AEX_ASSERT(dupA);
+    AEX_ASSERT(dupB);
+
+    auto info = Proc::exec_opt{
+        .stdin  = tty_try.value,
+        .stdout = dupA.value,
+        .stderr = dupB.value,
+    };
+
+    int status;
+
+    AEX_ASSERT(Proc::exec("/sys/aexinit.elf", &info) == ENONE);
+    Proc::Process::wait(status);
+
+    printk("init exited with a code %i\n", status);
+}
+
 void kmain_threaded() {
     using namespace AEX::Sys::Time;
 
@@ -310,32 +334,11 @@ void kmain_threaded() {
 
     Proc::processes_lock.release();
 
-    // int status;
-
-    // AEX_ASSERT(Proc::exec("/sys/aexinit.elf") == ENONE);
-    // Proc::Process::wait(status);
-
     time_t start_epoch = clocktime();
 
+    exec_init();
+
     printk(PRINTK_OK "mm it works\n");
-
-    // Dev::Tree::print_debug();
-
-    auto dir_try = FS::File::opendir("/dev/");
-    AEX_ASSERT(dir_try);
-
-    while (true) {
-        auto dentry_try = dir_try.value->readdir();
-        if (!dentry_try)
-            break;
-
-        printk(" - %s\n", dentry_try.value.name);
-    }
-
-    auto file_try = FS::File::open("/dev/tty0");
-
-    AEX_ASSERT(file_try);
-    AEX_ASSERT(file_try.value.get()->write((void*) "aaa it works\n", 13));
 
     Proc::Thread::sleep(100);
 

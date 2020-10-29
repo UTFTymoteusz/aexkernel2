@@ -16,4 +16,12 @@ namespace AEX::FS {
     optional<uint32_t> CharFile::write(void* buf, uint32_t count) {
         return m_handle->write(buf, count);
     }
+
+    optional<File_SP> CharFile::dup() {
+        auto dfile = new CharFile(m_handle);
+
+        // Make this proper pls
+
+        return File_SP(dfile);
+    }
 }

@@ -15,6 +15,8 @@ namespace AEX::FS {
         optional<uint32_t> read(void* buf, uint32_t count);
         optional<uint32_t> write(void* buf, uint32_t count);
 
+        optional<File_SP> dup();
+
         private:
         Dev::CharHandle_SP m_handle;
     };

@@ -12,7 +12,7 @@ namespace AEX::Proc {
         executors.push(executor);
     }
 
-    error_t exec(const char* path) {
+    error_t exec(const char* path, exec_opt* options) {
         auto scope = executor_mutex.scope();
 
         auto process = new Process(path, Process::current()->pid,
@@ -22,7 +22,18 @@ namespace AEX::Proc {
             if (executors[i]->exec(path, process))
                 continue;
 
+            process->files.set(0, options->stdin);
+            process->files.set(1, options->stdout);
+            process->files.set(2, options->stderr);
+
             process->ready();
+
+            for (int i = 0; i < process->threads.count(); i++) {
+                if (!process->threads.present(i))
+                    continue;
+
+                process->threads[i]->start();
+            }
 
             return ENONE;
         }

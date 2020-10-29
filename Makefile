@@ -1,6 +1,8 @@
 CXX ?= g++
 AS   = nasm
 
+ARCH ?= x64
+
 MKDIR = mkdir -p
 
 BIN  := bin/
@@ -8,13 +10,11 @@ BOOT := boot/
 DEP_DEST := $(BIN)dep/
 OBJ_DEST := $(BIN)obj/
 
-ARCH = arch/x64/
-
-CXXFILES  := $(shell find . -type f -name '*.cpp'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.cpp')
-HXXFILES  := $(shell find . -type f -name '*.hpp'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.hpp')
-ASMFILES  := $(shell find . -type f -name '*.asm'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.asm')
-PSFFILES  := $(shell find . -type f -name '*.psf'  -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.psf')
-ASMRFILES := $(shell find . -type f -name '*.asmr' -not -path './arch/*') $(shell find './$(ARCH).' -type f -name '*.asmr')
+CXXFILES  := $(shell find . -type f -name '*.cpp'  -not -path './arch/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.cpp')
+HXXFILES  := $(shell find . -type f -name '*.hpp'  -not -path './arch/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.hpp')
+ASMFILES  := $(shell find . -type f -name '*.asm'  -not -path './arch/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.asm')
+PSFFILES  := $(shell find . -type f -name '*.psf'  -not -path './arch/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.psf')
+ASMRFILES := $(shell find . -type f -name '*.asmr' -not -path './arch/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.asmr')
 
 OBJS := $(patsubst %.o, $(OBJ_DEST)%.o, $(CXXFILES:.cpp=.cpp.o) $(ASMFILES:.asm=.asm.o) $(PSFFILES:.psf=.psf.o) $(ASMRFILES:.asmr=.asmr.o))
 
@@ -23,7 +23,7 @@ SYS  = $(ISO)sys/
 
 GFLAGS = -O3 -Wall -Wextra -Werror -nostdlib -pipe -lgcc
 
-INCLUDES := -I. -I$(ARCH) -I$(ARCH)include/ -Iinclude/
+INCLUDES := -I. -Iinclude/ -Iarch/$(ARCH)/ -Iarch/$(ARCH)/include/
 
 CXXFLAGS := $(GFLAGS)		\
 	-std=c++17				\
