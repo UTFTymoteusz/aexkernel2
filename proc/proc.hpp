@@ -40,6 +40,6 @@ namespace AEX::Proc {
     void remove_thread(Thread* thread);
 
     void debug_print_cpu_jobs();
-    void debug_print_list();
+    void debug_print_threads();
     void debug_print_processes();
 }

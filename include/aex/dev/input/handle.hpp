@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aex/dev/input/code.hpp"
 #include "aex/dev/input/event.hpp"
 #include "aex/mem/circularbuffer.hpp"
 

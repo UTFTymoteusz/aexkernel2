@@ -1,5 +1,7 @@
 #pragma once
 
+#include "aex/dev/input/code.hpp"
+
 #include <stdint.h>
 
 namespace AEX::Dev::Input {

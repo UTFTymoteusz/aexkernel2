@@ -29,7 +29,7 @@ namespace AEX {
         printk("\n");
 
         if (Proc::ready)
-            Proc::debug_print_list();
+            Proc::debug_print_threads();
 
         printk("Stack trace:\n");
         Debug::stack_trace(1);
