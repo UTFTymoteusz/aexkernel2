@@ -1,5 +1,7 @@
 #pragma once
 
+#include "aex/utility.hpp"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -23,14 +25,46 @@ namespace AEX {
     }
 
     template <typename T>
+    inline T from_little_endian(T x) {
+        return BIG_ENDIAN ? bswap(x) : x;
+    }
+
+    template <typename T>
+    inline T to_little_endian(T x) {
+        return BIG_ENDIAN ? bswap(x) : x;
+    }
+
+    template <typename T>
     inline T from_big_endian(T x) {
-        return bswap(x);
+        return LITTLE_ENDIAN ? bswap(x) : x;
     }
 
     template <typename T>
     inline T to_big_endian(T x) {
-        return bswap(x);
+        return LITTLE_ENDIAN ? bswap(x) : x;
     }
+
+    template <typename T>
+    struct little_endian {
+        T m_value;
+
+        T get() {
+            return from_little_endian<T>(m_value);
+        }
+
+        void set(T value) {
+            m_value = to_little_endian<T>(value);
+        }
+
+        operator T() {
+            return get();
+        }
+
+        little_endian& operator=(const T& value) {
+            set(value);
+            return *this;
+        }
+    } __attribute__((packed));
 
     template <typename T>
     struct big_endian {
