@@ -19,7 +19,7 @@ namespace AEX {
     bool relocate(const char* path, ELF& elf, Module* module, module_section* sections);
 
     error_t load_module(const char* path, bool block) {
-        auto file_try = FS::File::open(path);
+        auto file_try = FS::File::open(path, FS::O_RD);
         if (!file_try)
             return file_try.error_code;
 

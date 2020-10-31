@@ -301,19 +301,19 @@ void test_udp_client() {
 }
 
 void exec_init() {
-    auto tty_try = FS::File::open("/dev/tty0");
-    AEX_ASSERT(tty_try);
+    auto tty_rd = FS::File::open("/dev/tty0", FS::O_RD);
+    AEX_ASSERT(tty_rd);
 
-    auto dupA = tty_try.value->dup();
-    auto dupB = tty_try.value->dup();
+    auto tty_wr = FS::File::open("/dev/tty0", FS::O_WR);
+    AEX_ASSERT(tty_wr);
 
-    AEX_ASSERT(dupA);
-    AEX_ASSERT(dupB);
+    auto tty_wre = tty_wr.value->dup();
+    AEX_ASSERT(tty_wre);
 
     auto info = Proc::exec_opt{
-        .stdin  = tty_try.value,
-        .stdout = dupA.value,
-        .stderr = dupB.value,
+        .stdin  = tty_rd.value,
+        .stdout = tty_wr.value,
+        .stderr = tty_wre.value,
     };
 
     int status;

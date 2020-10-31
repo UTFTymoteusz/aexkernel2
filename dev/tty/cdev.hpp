@@ -16,7 +16,7 @@ namespace AEX::Dev {
         public:
         TTYChar(int index, const char* name);
 
-        error_t open(CharHandle* handle);
+        error_t open(CharHandle* handle, int mode);
         error_t close(CharHandle* handle);
 
         optional<uint32_t> read(CharHandle* handle, void* ptr, uint32_t len);

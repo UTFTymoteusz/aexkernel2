@@ -11,7 +11,7 @@ namespace AEX::Dev {
         m_vtty  = TTY::VTTYs[index];
     }
 
-    error_t TTYChar::open(CharHandle* handle) {
+    error_t TTYChar::open(CharHandle* handle, int) {
         auto scope = m_mutex.scope();
 
         // m_stack.push(handle); // i need an insert() method

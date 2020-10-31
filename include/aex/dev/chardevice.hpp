@@ -16,7 +16,7 @@ namespace AEX::Dev {
 
         virtual ~CharDevice();
 
-        virtual error_t open(CharHandle* handle);
+        virtual error_t open(CharHandle* handle, int mode);
         virtual error_t close(CharHandle* handle);
 
         virtual optional<uint32_t> read(CharHandle* handle, void* ptr, uint32_t len);
@@ -25,5 +25,5 @@ namespace AEX::Dev {
 
     typedef Mem::SmartPointer<CharDevice> CharDevice_SP;
 
-    optional<CharHandle_SP> open_char_handle(int id);
+    optional<CharHandle_SP> open_char_handle(int id, int mode);
 }

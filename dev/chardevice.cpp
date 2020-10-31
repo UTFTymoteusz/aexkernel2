@@ -14,7 +14,7 @@ namespace AEX::Dev {
         //
     }
 
-    error_t CharDevice::open(CharHandle*) {
+    error_t CharDevice::open(CharHandle*, int) {
         return ENONE;
     }
 
@@ -30,14 +30,14 @@ namespace AEX::Dev {
         return ENOSYS;
     }
 
-    optional<CharHandle_SP> open_char_handle(int id) {
+    optional<CharHandle_SP> open_char_handle(int id, int mode) {
         auto device = devices.get(id);
         if (!device || device->type != DEV_CHAR)
             return {};
 
         auto chr_device = (Dev::CharDevice_SP) device;
         auto handle     = new CharHandle(chr_device);
-        auto error      = chr_device->open(handle);
+        auto error      = chr_device->open(handle, mode);
         if (error) {
             delete handle;
             return error;

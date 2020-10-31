@@ -28,7 +28,7 @@ namespace AEX::Debug {
     char*                      kernel_image_strings = nullptr;
 
     void load_symbols(const char* elf_path) {
-        auto file_try = FS::File::open(elf_path);
+        auto file_try = FS::File::open(elf_path, FS::O_RD);
         AEX_ASSERT(file_try);
 
         auto    file = file_try.value;
