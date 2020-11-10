@@ -16,8 +16,8 @@ namespace AEX::Dev::TTY {
         GrTTY(multiboot_info_t* mbinfo);
 
         GrTTY& color(ansi_color_t ansi);
-
         GrTTY& scroll(int amnt);
+        GrTTY& clear();
 
         void fromVGA(vga_char* ega_buffer);
 

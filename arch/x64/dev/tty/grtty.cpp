@@ -109,6 +109,13 @@ namespace AEX::Dev::TTY {
         return *this;
     }
 
+    GrTTY& GrTTY::clear() {
+        memset32(m_output, m_bg, m_px_width * m_px_height);
+        memset32(m_double_buffer, m_bg, m_px_width * m_px_height);
+
+        return *this;
+    }
+
     void GrTTY::_write(char c) {
         switch (c) {
         case '\n':

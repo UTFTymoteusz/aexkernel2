@@ -67,6 +67,11 @@ namespace AEX::Dev::TTY {
         virtual VTTY& scroll(int amnt);
 
         /**
+         * Clears the virtual terminal with the current background clor;
+         */
+        virtual VTTY& clear();
+
+        /**
          * Sets the keymap of the virtual terminal.
          * @param m_keymap Pointer to the new keymap. Will be copied over.
          */

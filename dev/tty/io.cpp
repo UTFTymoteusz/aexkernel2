@@ -6,11 +6,15 @@ namespace AEX::Dev::TTY {
     }
 
     VTTY& VTTY::scroll(int) {
-        kpanic("VTTY::scrollDown() not implemented");
+        kpanic("VTTY::scroll() not implemented");
     }
 
     VTTY& VTTY::color(ansi_color_t) {
-        kpanic("VTTY::setColorANSI() not implemented");
+        kpanic("VTTY::color() not implemented");
+    }
+
+    VTTY& VTTY::clear() {
+        kpanic("VTTY::clear() not implemented");
     }
 
     char VTTY::read() {

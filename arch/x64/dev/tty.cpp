@@ -22,7 +22,7 @@ namespace AEX::Dev::TTY {
     uint16_t buffer[80 * 25];
 
     void init(multiboot_info_t* mbinfo) {
-        TxTTY::clear();
+        tx_init_tty.clear();
 
         if ((mbinfo->flags & (1 << 2)) &&
             mbinfo->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT) {

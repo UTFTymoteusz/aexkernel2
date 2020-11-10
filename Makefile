@@ -36,6 +36,7 @@ CXXFLAGS := $(GFLAGS)		\
 	-fno-stack-protector	\
 	-fno-omit-frame-pointer \
 	-mno-red-zone			\
+	-DBSOD_PARODY           \
 	$(INCLUDES)
 
 ASFLAGS := -felf64
