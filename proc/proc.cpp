@@ -8,6 +8,7 @@
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
+#include "aex/utility.hpp"
 
 #include "proc/broker.hpp"
 #include "sys/mcore.hpp"

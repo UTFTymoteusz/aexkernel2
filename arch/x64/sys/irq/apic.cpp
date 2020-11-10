@@ -129,7 +129,7 @@ namespace AEX::Sys::IRQ {
         data_reg = (uint32_t*) ((size_t) mapped + 0x10);
     }
 
-    int IOAPIC::irqAmount() {
+    int IOAPIC::amount() {
         return (read(0x01) >> 16) & 0xFF;
     }
 

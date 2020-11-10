@@ -86,7 +86,6 @@ namespace AEX::Dev {
                 continue;
 
             letter_incrementations[i].get(buffer, buffer_len);
-
             return;
         }
 
@@ -105,7 +104,6 @@ namespace AEX::Dev {
                 continue;
 
             number_incrementations[i].get(buffer, buffer_len);
-
             return;
         }
 

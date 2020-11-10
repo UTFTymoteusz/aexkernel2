@@ -40,8 +40,8 @@ namespace AEX::Sys::Time {
         ScopeSpinlock scopeLock(uptime_lock);
 
         uint64_t delta;
-
         uint64_t ticks = Sys::CPU::ind(acpi_pm_timer_addr);
+
         if (ticks < acpi_pm_timer_ticks)
             delta = ticks + acpi_pm_timer_overflow_correction - acpi_pm_timer_ticks;
         else
@@ -59,8 +59,8 @@ namespace AEX::Sys::Time {
         uptime_lock.acquireRaw();
 
         uint64_t delta;
-
         uint64_t ticks = Sys::CPU::ind(acpi_pm_timer_addr);
+
         if (ticks < acpi_pm_timer_ticks)
             delta = ticks + acpi_pm_timer_overflow_correction - acpi_pm_timer_ticks;
         else

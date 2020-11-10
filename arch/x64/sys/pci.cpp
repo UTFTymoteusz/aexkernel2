@@ -206,6 +206,7 @@ namespace AEX::Sys::PCI {
 
             if (type == 0x01)
                 len &= 0xFFFF;
+
             if ((len & 0xFFFF0000) > 0)
                 len &= 0xFFFF;
 

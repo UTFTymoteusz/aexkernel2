@@ -47,7 +47,7 @@ namespace AEX::Sys::IRQ {
 
         IOAPIC(void* mapped, int base);
 
-        int irqAmount();
+        int amount();
 
         void vector(int irq, uint8_t vector);
         void mask(int irq, bool mask);

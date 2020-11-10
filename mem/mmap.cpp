@@ -167,7 +167,6 @@ namespace AEX::Mem {
         }
 
         process->lock.release();
-
         return nullptr;
     }
 

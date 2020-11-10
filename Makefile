@@ -16,7 +16,8 @@ ASMFILES  := $(shell find . -type f -name '*.asm'  -not -path './arch/*') $(shel
 PSFFILES  := $(shell find . -type f -name '*.psf'  -not -path './arch/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.psf')
 ASMRFILES := $(shell find . -type f -name '*.asmr' -not -path './arch/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.asmr')
 
-OBJS := $(patsubst %.o, $(OBJ_DEST)%.o, $(CXXFILES:.cpp=.cpp.o) $(ASMFILES:.asm=.asm.o) $(PSFFILES:.psf=.psf.o) $(ASMRFILES:.asmr=.asmr.o))
+OBJS    := $(patsubst %.o, $(OBJ_DEST)%.o, $(CXXFILES:.cpp=.cpp.o) $(ASMFILES:.asm=.asm.o) $(PSFFILES:.psf=.psf.o) $(ASMRFILES:.asmr=.asmr.o))
+VERSION := $(shell date '+%d.%m.%Y').$(shell date '+%s' | tail -c 6)
 
 ISO  = $(BIN)grubiso/
 SYS  = $(ISO)sys/
@@ -25,18 +26,20 @@ GFLAGS = -O3 -Wall -Wextra -Werror -nostdlib -pipe -lgcc
 
 INCLUDES := -I. -Iinclude/ -Iarch/$(ARCH)/ -Iarch/$(ARCH)/include/
 
-CXXFLAGS := $(GFLAGS)		\
-	-std=c++17				\
-	-fno-rtti				\
-	-fno-exceptions			\
-	-ffreestanding			\
-	-masm=intel				\
-	-mcmodel=kernel			\
-	-fno-pic				\
-	-fno-stack-protector	\
-	-fno-omit-frame-pointer \
-	-mno-red-zone			\
-	-DBSOD_PARODY           \
+CXXFLAGS := $(GFLAGS)		   \
+	-std=c++17				   \
+	-fno-rtti				   \
+	-fno-exceptions			   \
+	-ffreestanding			   \
+	-masm=intel				   \
+	-mcmodel=kernel			   \
+	-fno-pic			   	   \
+	-fno-stack-protector       \
+	-fno-omit-frame-pointer    \
+	-mno-red-zone		       \
+	-DBSOD_PARODY              \
+	-DARCH="\"$(ARCH)\""       \
+	-DVERSION="\"$(VERSION)\"" \
 	$(INCLUDES)
 
 ASFLAGS := -felf64

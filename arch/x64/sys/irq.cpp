@@ -69,11 +69,10 @@ namespace AEX::Sys::IRQ {
             if (!ioapic)
                 break;
 
-            void* mapped = Mem::kernel_pagemap->map(sizeof(IOAPIC), ioapic->addr, PAGE_WRITE);
+            void* mapped   = Mem::kernel_pagemap->map(sizeof(IOAPIC), ioapic->addr, PAGE_WRITE);
+            auto  m_ioapic = new IOAPIC(mapped, ioapic->global_interrupt_base);
 
-            auto m_ioapic = new IOAPIC(mapped, ioapic->global_interrupt_base);
-
-            for (int j = 0; j < m_ioapic->irqAmount(); j++) {
+            for (int j = 0; j < m_ioapic->amount(); j++) {
                 m_ioapic->mask(j, true);
                 m_ioapic->mode(j, IOAPIC::irq_mode::IRQ_NORMAL);
             }
@@ -155,7 +154,7 @@ namespace AEX::Sys::IRQ {
             if (ioapic->irq_base > irq)
                 continue;
 
-            if (ioapic->irq_base + ioapic->irqAmount() < irq)
+            if (ioapic->irq_base + ioapic->amount() < irq)
                 continue;
 
             return ioapic;
@@ -227,7 +226,7 @@ namespace AEX::Sys::IRQ {
 
         IRQ::irq_mark = false;
 
-        PIT::interruptIn(50);
+        PIT::interrupt(50);
         APIC::timer(0x20 + 0);
 
         CPU::interrupts();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aex/assert.hpp"
+#include "aex/bool.hpp"
 #include "aex/byte.hpp"
 #include "aex/debug.hpp"
 #include "aex/dev.hpp"
@@ -16,8 +17,8 @@
 #include "aex/optional.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
+#include "aex/rwspinlock.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/std.hpp"
 #include "aex/string.hpp"
-#include "aex/tty.hpp"
 #include "aex/utility.hpp"

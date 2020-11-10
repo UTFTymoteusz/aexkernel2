@@ -18,3 +18,11 @@
           .test)
 
 #define LITTLE_ENDIAN (!BIG_ENDIAN)
+
+#ifndef ARCH
+#define ARCH "inv"
+#endif
+
+#ifndef VERSION
+#define VERSION "inv"
+#endif

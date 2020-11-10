@@ -27,7 +27,6 @@ namespace AEX::Debug {
             }
 
             level++;
-
             if (level > max)
                 return;
 
@@ -52,15 +51,15 @@ namespace AEX::Debug {
 
                 printk("  0x%p <%s+0x%x>\n", frame->rip, name ? name : "no idea", delta);
 
-                // if ((frame->rip & 0xFFFFFFFFF0000000) != 0xFFFFFFFF80000000)
-                //    return;
+                if ((frame->rip & 0xFFFFFFFFF0000000) != 0xFFFFFFFF80000000)
+                    return;
 
                 break;
             }
 
             frame = frame->rbp;
-            // if (((size_t) frame & 0xFFFF000000000000) != 0xFFFF000000000000)
-            //    return;
+            if (!Mem::kernel_pagemap->paddrof(frame))
+                return;
         }
     }
 }

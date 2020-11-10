@@ -12,6 +12,7 @@
 #include "aex/proc/exec.hpp"
 #include "aex/sys/acpi.hpp"
 #include "aex/sys/irq.hpp"
+#include "aex/sys/power.hpp"
 #include "aex/sys/time.hpp"
 
 #include "boot/mboot.h"
@@ -53,7 +54,7 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
 
     Dev::TTY::init(mbinfo);
     Init::init_print_header();
-    printk(PRINTK_INIT "Booting AEX/2\n\n");
+    printk(PRINTK_INIT "Booting AEX/2 on " ARCH ", build " VERSION "\n\n");
 
     if (mbinfo->flags & MULTIBOOT_INFO_MODS) {
         init_mem(mbinfo);
@@ -339,10 +340,9 @@ void kmain_threaded() {
     exec_init();
 
     printk(PRINTK_OK "mm it works\n");
-
     Proc::Thread::sleep(100);
 
-    // CPU::tripleFault();
+    Power::poweroff();
 
     while (true) {
         switch (Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY]->read()) {
@@ -368,7 +368,7 @@ void kmain_threaded() {
             CPU::tripleFault();
             break;
         case 'l':
-            Proc::debug_print_list();
+            Proc::debug_print_threads();
             break;
         case 'p':
             Proc::debug_print_processes();

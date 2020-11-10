@@ -6,16 +6,7 @@
 #include "aex/sys/acpi/xsdt.hpp"
 
 namespace AEX::Sys::ACPI {
-    void* _find_rsdptr(size_t start, size_t length) {
-        for (size_t i = start; i < start + length; i += 0x10) {
-            void* ptr = (void*) i;
-
-            if (memcmp(ptr, "RSD PTR ", 8) == 0)
-                return ptr;
-        }
-
-        return nullptr;
-    }
+    void* _find_rsdptr(size_t start, size_t length);
 
     void* find_rsdptr() {
         void* rsdptr;
@@ -27,6 +18,17 @@ namespace AEX::Sys::ACPI {
         rsdptr = _find_rsdptr(0x000E0000, 131071);
         if (rsdptr)
             return rsdptr;
+
+        return nullptr;
+    }
+
+    void* _find_rsdptr(size_t start, size_t length) {
+        for (size_t i = start; i < start + length; i += 0x10) {
+            void* ptr = (void*) i;
+
+            if (memcmp(ptr, "RSD PTR ", 8) == 0)
+                return ptr;
+        }
 
         return nullptr;
     }

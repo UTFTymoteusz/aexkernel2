@@ -431,7 +431,7 @@ namespace AEX::Mem {
         if (tb == nullptr)
             tb = findTableEnsure(pptr, vaddr);
 
-        while (true) {
+        while (vaddr < m_vend) {
             if (index >= 512) {
                 index = 0;
 

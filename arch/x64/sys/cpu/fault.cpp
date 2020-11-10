@@ -53,7 +53,6 @@ namespace AEX::Sys {
     };
 
     bool handle_page_fault(CPU::fault_info* info, CPU* cpu, Proc::Thread* thread);
-
     void print_info(CPU::fault_info* info);
 
     inline Proc::Thread::state out(Proc::Thread* thread, CPU*& cpu);
@@ -104,7 +103,8 @@ namespace AEX::Sys {
                    CPU::currentID(), exception_names[info->int_no], info->int_no, info->err,
                    info->rip, name, delta);
 
-            // Proc::debug_print_list();
+            Proc::debug_print_threads();
+            Proc::debug_print_processes();
             break;
         default:
             printk(PRINTK_FAIL
@@ -112,7 +112,6 @@ namespace AEX::Sys {
                    CPU::currentID(), exception_names[info->int_no], info->int_no, info->err,
                    info->rip, name, delta);
 
-            // Proc::debug_print_list();
             break;
         }
 
@@ -161,7 +160,7 @@ namespace AEX::Sys {
             Debug::stack_trace();
 
             Proc::debug_print_processes();
-            Proc::debug_print_list();
+            Proc::debug_print_threads();
 
             thread->faulting = false;
             CPU::current()->in_interrupt--;
@@ -246,6 +245,10 @@ namespace AEX::Sys {
         printk("R12: 0x%016lx  R13: 0x%016lx  R14: 0x%016lx  R15: 0x%016lx\n", info->r12, info->r13,
                info->r14, info->r15);
 
+        int   delta;
+        auto* name = Debug::addr2name((void*) info->rip, delta);
+
+        printk("RIP: 0x%p <%s+0x%x>\n", info->rip, name, delta);
         printk("RFLAGS: 0x%016lx\n", info->rflags);
 
         size_t cr0, cr2, cr3, cr4;
