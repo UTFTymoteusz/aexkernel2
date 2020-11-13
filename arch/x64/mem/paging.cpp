@@ -15,7 +15,7 @@
 
 using namespace AEX::Mem::Phys;
 
-constexpr auto PPTR_AMOUNT   = 16;
+constexpr auto PPTR_AMOUNT   = 32;
 constexpr auto MEM_PAGE_MASK = ~0xFFF;
 
 extern void* pml4;
@@ -31,8 +31,6 @@ const int m_page_nophys    = 0x200;
 const int m_page_exec      = 0x1000;
 const int m_page_fixed     = 0x2000;
 const int m_page_arbitrary = 0x4000;
-
-// I need to make invlpg clump together
 
 namespace AEX::Mem {
     Pagemap* kernel_pagemap;
@@ -81,7 +79,6 @@ namespace AEX::Mem {
         debug_pptr_targets[index] = at;
         *pptr_entries[index]      = at | PAGE_WRITE | PAGE_PRESENT;
 
-        // Sys::CPU::broadcast(Sys::CPU::IPP_PG_INV, pptr_vaddr[index]);
         asm volatile("invlpg [%0]" : : "r"(pptr_vaddr[index]));
 
         return pptr_vaddr[index];

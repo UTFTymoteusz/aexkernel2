@@ -328,21 +328,21 @@ void exec_init() {
 void kmain_threaded() {
     using namespace AEX::Sys::Time;
 
-    Proc::processes_lock.acquire();
+    // Proc::processes_lock.acquire();
 
-    auto idle    = Proc::get_process(0);
-    auto process = Proc::Process::current();
+    // auto idle    = Proc::get_process(0);
+    // auto process = Proc::Process::current();
 
-    Proc::processes_lock.release();
+    // Proc::processes_lock.release();
 
-    time_t start_epoch = clocktime();
+    // time_t start_epoch = clocktime();
 
     exec_init();
 
-    printk(PRINTK_OK "mm it works\n");
-    Proc::Thread::sleep(100);
+    AEX_ASSERT(Power::poweroff());
 
-    Power::poweroff();
+    /*printk(PRINTK_OK "mm it works\n");
+    Proc::Thread::sleep(100);
 
     while (true) {
         switch (Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY]->read()) {
@@ -378,5 +378,5 @@ void kmain_threaded() {
         }
     }
 
-    Proc::Thread::exit();
+    Proc::Thread::exit();*/
 }

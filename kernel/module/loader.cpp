@@ -140,9 +140,7 @@ namespace AEX {
         }
 
         elf.loadRelocations();
-        bool success = relocate(label, elf, module, sections);
-
-        if (!success) {
+        if (!relocate(label, elf, module, sections)) {
             delete module;
             delete[] sections;
 
@@ -156,21 +154,15 @@ namespace AEX {
         module->enter = (void (*)())((size_t) sections[entry.section_index].addr + entry.address);
         module->exit  = (void (*)())((size_t) sections[exit.section_index].addr + exit.address);
 
-        bool already_loaded = false;
-
         for (auto iterator = modules.getIterator(); auto m_module = iterator.next();) {
             if (strcmp(module->name, m_module->name) != 0)
                 continue;
 
-            already_loaded = true;
-            break;
-        }
-
-        if (already_loaded) {
             printk(PRINTK_WARN "Not loading module '%s' as it's already loaded\n", module->name);
 
             delete module;
             delete[] sections;
+
             return ENONE;
         }
 
