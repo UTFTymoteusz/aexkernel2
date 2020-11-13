@@ -43,16 +43,16 @@ namespace AEX {
     }
 
     // This will need to be changed in the future, though
-    // Or I'll just need to make the /sys/core/ directory not modifyable by users
+    // Or I'll just need to make the /sys/mod/core/ directory not modifyable by users
     void load_core_modules() {
         struct module_entry {
             char name[FS::Path::MAX_FILENAME_LEN];
             int  order = 99999;
         };
 
-        auto dir_try = FS::File::opendir("/sys/core/");
+        auto dir_try = FS::File::opendir("/sys/mod/core/");
         if (!dir_try) {
-            printk(PRINTK_WARN "module: Failed to opendir /sys/core/: %s\n", strerror(dir_try));
+            printk(PRINTK_WARN "module: Failed to opendir /sys/mod/core/: %s\n", strerror(dir_try));
             return;
         }
 
@@ -96,7 +96,7 @@ namespace AEX {
             strncpy(entry.name, entry_try.value.name, sizeof(entry.name));
             entry.order = get_order(entry_try.value);
 
-            list.pushBack(entry);
+            list.push(entry);
         }
 
         // No need for a fancy algorithm atm
@@ -113,7 +113,7 @@ namespace AEX {
         for (int i = 0; i < list.count(); i++) {
             char name[FS::Path::MAX_PATH_LEN];
 
-            FS::Path::canonize_path(list[i].name, "/sys/core/", name, sizeof(name));
+            FS::Path::canonize_path(list[i].name, "/sys/mod/core/", name, sizeof(name));
             load_module(name, true);
         }
 
@@ -190,7 +190,7 @@ namespace AEX {
         symbol.name = name;
         symbol.addr = addr;
 
-        global_symbols.pushBack(symbol);
+        global_symbols.push(symbol);
     }
 
     void* get_dynamic_symbol(const char* name) {

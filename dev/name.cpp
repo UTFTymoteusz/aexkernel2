@@ -86,13 +86,12 @@ namespace AEX::Dev {
                 continue;
 
             letter_incrementations[i].get(buffer, buffer_len);
-
             return;
         }
 
         auto new_incrementation = letter_incrementation(pattern);
 
-        int index = letter_incrementations.pushBack(new_incrementation);
+        int index = letter_incrementations.push(new_incrementation);
         letter_incrementations[index].get(buffer, buffer_len);
     }
 
@@ -105,13 +104,12 @@ namespace AEX::Dev {
                 continue;
 
             number_incrementations[i].get(buffer, buffer_len);
-
             return;
         }
 
         auto new_incrementation = number_incrementation(pattern);
 
-        int index = number_incrementations.pushBack(new_incrementation);
+        int index = number_incrementations.push(new_incrementation);
         number_incrementations[index].get(buffer, buffer_len);
     }
 }

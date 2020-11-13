@@ -18,7 +18,7 @@ namespace AEX::Proc {
 
     void broker_init() {
         broker_loop_th =
-            Thread::create(nullptr, (void*) broker_loop, Thread::KERNEL_STACK_SIZE, nullptr).value;
+            Thread::create(1, (void*) broker_loop, Thread::KERNEL_STACK_SIZE, nullptr).value;
         broker_loop_th->start();
         broker_loop_th->detach();
 

@@ -47,10 +47,10 @@ namespace AEX::Sys::IRQ {
         pics[1] = PIC(0xA0, 0xA1);
 
         MASTER_PIC->init(32, false);
-        MASTER_PIC->setMask(0b11111111);
+        MASTER_PIC->mask(0b11111111);
 
         SLAVE_PIC->init(40, true);
-        SLAVE_PIC->setMask(0b11111111);
+        SLAVE_PIC->mask(0b11111111);
 
         size_t addr = 0xFEE00000;
 
@@ -69,16 +69,15 @@ namespace AEX::Sys::IRQ {
             if (!ioapic)
                 break;
 
-            void* mapped = Mem::kernel_pagemap->map(sizeof(IOAPIC), ioapic->addr, PAGE_WRITE);
+            void* mapped   = Mem::kernel_pagemap->map(sizeof(IOAPIC), ioapic->addr, PAGE_WRITE);
+            auto  m_ioapic = new IOAPIC(mapped, ioapic->global_interrupt_base);
 
-            auto m_ioapic = new IOAPIC(mapped, ioapic->global_interrupt_base);
-
-            for (int j = 0; j < m_ioapic->getIRQAmount(); j++) {
-                m_ioapic->setMask(j, true);
-                m_ioapic->setMode(j, IOAPIC::irq_mode::IRQ_NORMAL);
+            for (int j = 0; j < m_ioapic->amount(); j++) {
+                m_ioapic->mask(j, true);
+                m_ioapic->mode(j, IOAPIC::irq_mode::IRQ_NORMAL);
             }
 
-            ioapics.pushBack(m_ioapic);
+            ioapics.push(m_ioapic);
         }
 
         AEX_ASSERT(ioapics.count() > 0);
@@ -110,7 +109,7 @@ namespace AEX::Sys::IRQ {
     }
 
     void setup_timer(double hz) {
-        APIC::setupTimer(0x20 + 0, (size_t)(apic_tps / hz), true);
+        APIC::timer(0x20 + 0, (size_t)(apic_tps / hz), true);
     }
 
     void irq_sleep(double ms) {
@@ -118,7 +117,7 @@ namespace AEX::Sys::IRQ {
             apic_tps = find_apic_tps();
 
         irq_mark = false;
-        APIC::setupTimer(0x20 + 31, (size_t)(apic_tps * (ms / 1000.0)), false);
+        APIC::timer(0x20 + 31, (size_t)(apic_tps * (ms / 1000.0)), false);
 
         while (!irq_mark)
             CPU::wait();
@@ -155,7 +154,7 @@ namespace AEX::Sys::IRQ {
             if (ioapic->irq_base > irq)
                 continue;
 
-            if (ioapic->irq_base + ioapic->getIRQAmount() < irq)
+            if (ioapic->irq_base + ioapic->amount() < irq)
                 continue;
 
             return ioapic;
@@ -186,7 +185,7 @@ namespace AEX::Sys::IRQ {
         auto ioapic = find_ioapic(irq);
         irq -= ioapic->irq_base;
 
-        ioapic->setVector(irq, vector);
+        ioapic->vector(irq, vector);
     }
 
     void set_mask(int irq, bool mask) {
@@ -195,7 +194,7 @@ namespace AEX::Sys::IRQ {
         auto ioapic = find_ioapic(irq);
         irq -= ioapic->irq_base;
 
-        ioapic->setMask(irq, mask);
+        ioapic->mask(irq, mask);
     }
 
     void set_destination(int irq, uint8_t destination) {
@@ -204,7 +203,7 @@ namespace AEX::Sys::IRQ {
         auto ioapic = find_ioapic(irq);
         irq -= ioapic->irq_base;
 
-        ioapic->setDestination(irq, destination);
+        ioapic->destination(irq, destination);
     }
 
     void set_mode(int irq, uint8_t mode) {
@@ -213,7 +212,7 @@ namespace AEX::Sys::IRQ {
         auto ioapic = find_ioapic(irq);
         irq -= ioapic->irq_base;
 
-        ioapic->setMode(irq, mode);
+        ioapic->mode(irq, mode);
     }
 
     size_t find_apic_tps() {
@@ -227,15 +226,15 @@ namespace AEX::Sys::IRQ {
 
         IRQ::irq_mark = false;
 
-        PIT::interruptIn(50);
-        APIC::setupTimer(0x20 + 0);
+        PIT::interrupt(50);
+        APIC::timer(0x20 + 0);
 
         CPU::interrupts();
 
         while (!IRQ::irq_mark)
             CPU::wait();
 
-        uint32_t ticks = -APIC::getCounter() * 20;
+        uint32_t ticks = -APIC::counter() * 20;
 
         if (!ints)
             CPU::nointerrupts();

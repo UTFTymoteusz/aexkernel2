@@ -10,6 +10,8 @@ namespace AEX::FS {
             m_dev = dev;
         }
 
+        static optional<File*> open(Mem::SmartPointer<Dev::Device> dev, int mode);
+
         private:
         Mem::SmartPointer<Dev::Device> m_dev;
     };

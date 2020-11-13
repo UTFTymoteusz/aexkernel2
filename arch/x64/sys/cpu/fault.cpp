@@ -53,6 +53,7 @@ namespace AEX::Sys {
     };
 
     bool handle_page_fault(CPU::fault_info* info, CPU* cpu, Proc::Thread* thread);
+    void print_info(CPU::fault_info* info);
 
     inline Proc::Thread::state out(Proc::Thread* thread, CPU*& cpu);
     inline void                in(Proc::Thread::state& state, Proc::Thread* thread, CPU*& cpu);
@@ -66,19 +67,28 @@ namespace AEX::Sys {
 
         AEX_ASSERT_PEDANTIC(!CPU::checkInterrupts());
 
+        if (thread->faulting) {
+            // kpanic("recursive fault (%i)", info->int_no);
+            printk("recursive fault @ 0x%p\n", info->rip);
+            Debug::stack_trace();
+
+            CPU::broadcast(CPU::IPP_HALT);
+            CPU::wait();
+        }
+
+        thread->faulting = true;
+
         switch (info->int_no) {
         case EXC_PAGE_FAULT:
             if (!handle_page_fault(info, cpu, thread))
                 break;
 
             CPU::current()->in_interrupt--;
+            thread->faulting = false;
             return;
         default:
             break;
         }
-
-        // We might be on a different core by now
-        cpu = CPU::current();
 
         int  delta = 0;
         auto name  = Debug::addr2name((void*) info->rip, delta);
@@ -93,6 +103,8 @@ namespace AEX::Sys {
                    CPU::currentID(), exception_names[info->int_no], info->int_no, info->err,
                    info->rip, name, delta);
 
+            Proc::debug_print_threads();
+            Proc::debug_print_processes();
             break;
         default:
             printk(PRINTK_FAIL
@@ -118,17 +130,7 @@ namespace AEX::Sys {
             printk("actual: 0x%lx\n", thread->parent->pagemap->rawof((void*) cr2));
         }
 
-        printk("RAX: 0x%016lx  RBX: 0x%016lx  RCX: 0x%016lx  RDX: 0x%016lx\n", info->rax, info->rbx,
-               info->rcx, info->rdx);
-        printk("RSI: 0x%016lx  RDI: 0x%016lx  RSP: 0x%016lx  RBP: 0x%016lx\n", info->rsi, info->rdi,
-               info->rsp, info->rbp);
-
-        printk("R8 : 0x%016lx  R9 : 0x%016lx  R10: 0x%016lx  R11: 0x%016lx\n", info->r8, info->r9,
-               info->r10, info->r11);
-        printk("R12: 0x%016lx  R13: 0x%016lx  R14: 0x%016lx  R15: 0x%016lx\n", info->r12, info->r13,
-               info->r14, info->r15);
-
-        printk("RFLAGS: 0x%016lx\n", info->rflags);
+        print_info(info);
 
         printk("USTK: 0x%p (%i, 0x%p)\n", thread->user_stack, thread->user_stack_size,
                thread->user_stack + thread->user_stack_size);
@@ -149,6 +151,7 @@ namespace AEX::Sys {
             for (volatile size_t i = 0; i < 484354325; i++)
                 ;
 
+            thread->faulting = false;
             CPU::current()->in_interrupt--;
             return;
         }
@@ -156,12 +159,17 @@ namespace AEX::Sys {
         if (info->int_no == EXC_NMI) {
             Debug::stack_trace();
 
+            Proc::debug_print_processes();
+            Proc::debug_print_threads();
+
+            thread->faulting = false;
             CPU::current()->in_interrupt--;
             return;
         }
 
         kpanic("Unrecoverable processor exception occured in CPU %i", CPU::currentID());
 
+        thread->faulting = false;
         CPU::current()->in_interrupt--;
     }
 
@@ -175,9 +183,7 @@ namespace AEX::Sys {
 
         void* addr = (void*) cr2;
 
-        // AEX::printk("cpu%i, tid %i (b%i, c%i, i%i): Page fault @ 0x%lx (0x%lx)\n", cpu->id,
-        //             cpu->unused, thread->m_busy, thread->m_critical, cpu->in_interrupt, cr2,
-        //             cr3);
+        // AEX::printk("cpu%i: Page fault @ 0x%lx (0x%lx)\n", cpu->id, cr2, cr3);
 
         // AEX::printk("RIP: 0x%p <%s+0x%x>\n", info->rip, name, delta);
         // Debug::stack_trace();
@@ -190,10 +196,9 @@ namespace AEX::Sys {
         auto process = thread->getProcess();
         auto region  = Mem::find_mmap_region(process, addr);
         if (!region) {
-            /*AEX::printk("cpu%i, tid %i (b%i, c%i, i%i): Unrecoverable page fault @
-               0x%lx (0x%lx)\n" "RIP: 0x%016lx <%s+0x%x>\n", cpu->id,
-               cpu->unused, thread->m_busy, thread->m_critical,
-                        cpu->in_interrupt, cr2, cr3, info->rip, name);*/
+            AEX::printk("cpu%i: Unrecoverable page fault @ 0x%lx (0x%lx)\n"
+                        "RIP: 0x%016lx\n",
+                        cpu->id, cr2, cr3, info->rip);
 
             in(state, thread, cpu);
             return false;
@@ -203,6 +208,7 @@ namespace AEX::Sys {
         size_t offset  = aligned - (size_t) region->start;
 
         region->read((void*) aligned, offset, CPU::PAGE_SIZE);
+
         in(state, thread, cpu);
         return true;
     }
@@ -226,5 +232,33 @@ namespace AEX::Sys {
         cpu->in_interrupt++;
 
         thread->loadState(state);
+    }
+
+    void print_info(CPU::fault_info* info) {
+        printk("RAX: 0x%016lx  RBX: 0x%016lx  RCX: 0x%016lx  RDX: 0x%016lx\n", info->rax, info->rbx,
+               info->rcx, info->rdx);
+        printk("RSI: 0x%016lx  RDI: 0x%016lx  RSP: 0x%016lx  RBP: 0x%016lx\n", info->rsi, info->rdi,
+               info->rsp, info->rbp);
+
+        printk("R8 : 0x%016lx  R9 : 0x%016lx  R10: 0x%016lx  R11: 0x%016lx\n", info->r8, info->r9,
+               info->r10, info->r11);
+        printk("R12: 0x%016lx  R13: 0x%016lx  R14: 0x%016lx  R15: 0x%016lx\n", info->r12, info->r13,
+               info->r14, info->r15);
+
+        int   delta;
+        auto* name = Debug::addr2name((void*) info->rip, delta);
+
+        printk("RIP: 0x%p <%s+0x%x>\n", info->rip, name, delta);
+        printk("RFLAGS: 0x%016lx\n", info->rflags);
+
+        size_t cr0, cr2, cr3, cr4;
+
+        asm volatile("mov rax, cr0; mov %0, rax;" : : "m"(cr0) : "memory");
+        asm volatile("mov rax, cr2; mov %0, rax;" : : "m"(cr2) : "memory");
+        asm volatile("mov rax, cr3; mov %0, rax;" : : "m"(cr3) : "memory");
+        asm volatile("mov rax, cr4; mov %0, rax;" : : "m"(cr4) : "memory");
+
+        printk("CR0: 0x%016lx  CR1: ud :)  CR2: 0x%016lx  CR3: 0x%016lx  CR4: 0x%016lx\n", cr0, cr2,
+               cr3, cr4);
     }
 }

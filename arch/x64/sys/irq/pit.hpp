@@ -7,10 +7,10 @@
 namespace AEX::Sys::IRQ {
     class PIT {
         public:
-        static void setHz(int hz);
-        static void setInterval(double ms);
+        static void hz(int hz);
+        static void interval(double ms);
 
-        static void interruptIn(double ms);
+        static void interrupt(double ms);
 
         private:
         static Spinlock m_lock;

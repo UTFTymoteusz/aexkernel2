@@ -22,12 +22,13 @@ namespace AEX::Debug {
     };
 
     bool symbols_loaded = false;
+    bool flag           = false;
 
     Mem::Vector<kernel_symbol> kernel_symbols;
     char*                      kernel_image_strings = nullptr;
 
     void load_symbols(const char* elf_path) {
-        auto file_try = FS::File::open(elf_path);
+        auto file_try = FS::File::open(elf_path, FS::O_RD);
         AEX_ASSERT(file_try);
 
         auto    file = file_try.value;
@@ -46,11 +47,6 @@ namespace AEX::Debug {
 
     void load_symbols(void* addr) {
         auto elf = ELF(addr);
-
-        Debug::dump_bytes((char*) addr - 32, 64);
-
-        printk("0x%x, 0x%x, 0x%x\n", elf.m_header.bitness, elf.m_header.endianiness,
-               elf.m_header.instruction_set);
         AEX_ASSERT(elf.isValid(ELF::BIT_64, ELF::EN_LITTLE, ELF::ISA_AMD64));
 
         elf.loadStrings();
@@ -75,7 +71,7 @@ namespace AEX::Debug {
             m_symbol.name    = name;
             m_symbol.address = symbol.address;
 
-            kernel_symbols.pushBack(m_symbol);
+            kernel_symbols.push(m_symbol);
         }
 
         symbols_loaded = true;

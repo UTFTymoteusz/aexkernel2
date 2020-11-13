@@ -35,5 +35,10 @@ namespace AEX {
         operator error_t() {
             return error_code;
         }
+
+        // idk
+        operator T() {
+            return value;
+        }
     };
 }

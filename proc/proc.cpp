@@ -8,6 +8,7 @@
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
+#include "aex/utility.hpp"
 
 #include "proc/broker.hpp"
 #include "sys/mcore.hpp"
@@ -17,31 +18,38 @@ using namespace AEX::Mem;
 using namespace AEX::Sys;
 
 namespace AEX::Proc {
-    Mem::SmartArray<Process> processes;
+    Mutex processes_lock;
 
-    Thread** idle_threads = nullptr;
+    int      process_list_size;
+    Process* process_list_head;
+    Process* process_list_tail;
 
-    Spinlock lock;
+    Spinlock sched_lock;
 
     int     thread_list_size = 0;
     Thread* thread_list_head = nullptr;
     Thread* thread_list_tail = nullptr;
 
+    Thread** idle_threads = nullptr;
+
     bool ready = false;
 
     Thread** void_threads;
 
-    void setup_idles(Process* process);
+    void setup_idles();
     void setup_cores(Thread* bsp_thread);
     void cleanup_voids();
 
     void init() {
         void_threads = new Thread*[MCore::cpu_count];
 
-        auto bsp = MCore::CPUs[0];
+        auto& bsp = MCore::CPUs[0];
 
         auto idle_process   = new Process("/sys/aexkrnl.elf", 0, Mem::kernel_pagemap, "idle");
         auto kernel_process = new Process("/sys/aexkrnl.elf", 0, Mem::kernel_pagemap);
+
+        idle_process->ready();
+        kernel_process->ready();
 
         auto bsp_thread = new Thread(kernel_process);
         bsp_thread->fault_stack =
@@ -59,9 +67,11 @@ namespace AEX::Proc {
         thread_list_head->prev = bsp_thread;
         thread_list_tail       = bsp_thread;
 
+        kernel_process->threads.push(bsp_thread);
+
         broker_init();
 
-        setup_idles(idle_process);
+        setup_idles();
         setup_cores(bsp_thread);
         setup_irq();
         cleanup_voids();
@@ -72,11 +82,73 @@ namespace AEX::Proc {
     }
 
     pid_t add_process(Process* process) {
-        return processes.addRef(process);
+        static pid_t counter = 0;
+
+        AEX_ASSERT(!processes_lock.tryAcquire());
+
+        auto scope = sched_lock.scope();
+
+        if (process_list_head == nullptr) {
+            process_list_size++;
+
+            process_list_head = process;
+            process_list_tail = process;
+
+            process->next = process;
+            process->prev = process;
+
+            return counter++;
+        }
+
+        process_list_size++;
+        process_list_tail->next = process;
+
+        process->next = process_list_head;
+        process->prev = process_list_tail;
+
+        process_list_tail       = process;
+        process_list_head->prev = process_list_tail;
+
+        return counter++;
+    }
+
+    void remove_process(Process* process) {
+        AEX_ASSERT(!processes_lock.tryAcquire());
+
+        auto scope = sched_lock.scope();
+
+        AEX_ASSERT(process_list_size > 0);
+
+        process_list_size--;
+
+        if (process_list_head == process)
+            process_list_head = process->next;
+
+        if (process_list_tail == process)
+            process_list_tail = process->prev;
+
+        process->next->prev = process->prev;
+        process->prev->next = process->next;
+    }
+
+    Process* get_process(pid_t pid) {
+        AEX_ASSERT(!processes_lock.tryAcquire());
+
+        auto scope   = sched_lock.scope();
+        auto process = process_list_head;
+
+        for (int i = 0; i < process_list_size; i++) {
+            if (process->pid == pid)
+                return process;
+
+            process = process->next;
+        }
+
+        return nullptr;
     }
 
     void add_thread(Thread* thread) {
-        auto scope = lock.scope();
+        auto scope = sched_lock.scope();
 
         AEX_ASSERT(thread_list_size > 0);
 
@@ -91,7 +163,7 @@ namespace AEX::Proc {
     }
 
     void remove_thread(Thread* thread) {
-        auto scope = lock.scope();
+        auto scope = sched_lock.scope();
 
         AEX_ASSERT(thread_list_size > 0);
 
@@ -116,14 +188,12 @@ namespace AEX::Proc {
             CPU::wait();
     }
 
-    void setup_idles(Process* idle_process) {
+    void setup_idles() {
         idle_threads = (Thread**) new Thread*[MCore::cpu_count];
 
-        for (int i = 0; i < MCore::cpu_count; i++) {
+        for (int i = 0; i < MCore::cpu_count; i++)
             idle_threads[i] =
-                Thread::create(idle_process, (void*) idle, 512, Mem::kernel_pagemap, false, true)
-                    .value;
-        }
+                Thread::create(0, (void*) idle, 512, Mem::kernel_pagemap, false, true).value;
     }
 
     void setup_cores(Thread* bsp_thread) {

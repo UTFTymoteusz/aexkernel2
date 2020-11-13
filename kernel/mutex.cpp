@@ -54,4 +54,8 @@ namespace AEX {
 
         return ret;
     }
+
+    ScopeMutex Mutex::scope() {
+        return ScopeMutex(*this);
+    }
 }

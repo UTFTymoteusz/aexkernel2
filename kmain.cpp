@@ -9,8 +9,10 @@
 #include "aex/net.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
+#include "aex/proc/exec.hpp"
 #include "aex/sys/acpi.hpp"
 #include "aex/sys/irq.hpp"
+#include "aex/sys/power.hpp"
 #include "aex/sys/time.hpp"
 
 #include "boot/mboot.h"
@@ -26,6 +28,7 @@
 #include "sys/irq.hpp"
 #include "sys/irq_i.hpp"
 #include "sys/mcore.hpp"
+#include "sys/syscall.hpp"
 #include "sys/time.hpp"
 
 using namespace AEX;
@@ -51,7 +54,7 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
 
     Dev::TTY::init(mbinfo);
     Init::init_print_header();
-    printk(PRINTK_INIT "Booting AEX/2\n\n");
+    printk(PRINTK_INIT "Booting AEX/2 on " ARCH ", build " VERSION "\n\n");
 
     if (mbinfo->flags & MULTIBOOT_INFO_MODS) {
         init_mem(mbinfo);
@@ -96,9 +99,10 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     Net::init();
     printk("\n");
 
-    load_core_modules();
-
+    Sys::syscall_init();
     Dev::Input::init();
+
+    load_core_modules();
 
     // Let's get to it
     kmain_threaded();
@@ -297,35 +301,48 @@ void test_udp_client() {
     }
 }
 
+void exec_init() {
+    auto tty_rd = FS::File::open("/dev/tty0", FS::O_RD);
+    AEX_ASSERT(tty_rd);
+
+    auto tty_wr = FS::File::open("/dev/tty0", FS::O_WR);
+    AEX_ASSERT(tty_wr);
+
+    auto tty_wre = tty_wr.value->dup();
+    AEX_ASSERT(tty_wre);
+
+    auto info = Proc::exec_opt{
+        .stdin  = tty_rd.value,
+        .stdout = tty_wr.value,
+        .stderr = tty_wre.value,
+    };
+
+    int status;
+
+    AEX_ASSERT(Proc::exec("/sys/aexinit.elf", &info) == ENONE);
+    Proc::Process::wait(status);
+
+    printk("init exited with a code %i\n", status);
+}
+
 void kmain_threaded() {
     using namespace AEX::Sys::Time;
 
-    auto idle    = Proc::processes.get(0);
-    auto process = Proc::Thread::current()->getProcess();
+    // Proc::processes_lock.acquire();
 
-    time_t start_epoch = clocktime();
+    // auto idle    = Proc::get_process(0);
+    // auto process = Proc::Process::current();
 
-    printk(PRINTK_OK "mm it works\n");
+    // Proc::processes_lock.release();
 
-    // Dev::Tree::print_debug();
+    // time_t start_epoch = clocktime();
 
-    /*auto dir_try = FS::File::opendir("/dev/");
-    AEX_ASSERT(dir_try);
+    exec_init();
 
-    while (true) {
-        auto dentry_try = dir_try.value->readdir();
-        if (!dentry_try)
-            break;
+    AEX_ASSERT(Power::poweroff());
 
-        printk(" - %s\n", dentry_try.value.name);
-    }
-
-    auto file_try = FS::File::open("/dev/tty0");
-    AEX_ASSERT(file_try);
-
-    file_try.value.get()->write((void*) "aaa it works\n", 13);*/
-
-    // CPU::tripleFault();
+    /*printk(PRINTK_OK "mm it works\n");
+    Proc::Thread::sleep(100);
 
     while (true) {
         switch (Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY]->read()) {
@@ -351,12 +368,15 @@ void kmain_threaded() {
             CPU::tripleFault();
             break;
         case 'l':
-            Proc::debug_print_list();
+            Proc::debug_print_threads();
+            break;
+        case 'p':
+            Proc::debug_print_processes();
             break;
         default:
             break;
         }
     }
 
-    Proc::Thread::exit();
+    Proc::Thread::exit();*/
 }

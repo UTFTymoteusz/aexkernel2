@@ -19,7 +19,7 @@ namespace AEX {
     bool relocate(const char* path, ELF& elf, Module* module, module_section* sections);
 
     error_t load_module(const char* path, bool block) {
-        auto file_try = FS::File::open(path);
+        auto file_try = FS::File::open(path, FS::O_RD);
         if (!file_try)
             return file_try.error_code;
 
@@ -91,8 +91,6 @@ namespace AEX {
                 continue;
 
             void* ptr = Mem::kernel_pagemap->alloc(section_header.size, PAGE_WRITE | PAGE_EXEC);
-            if (!(section_header.flags & ELF::SC_ALLOC))
-                continue;
 
             // 6 hours of debugging for this god forsaken thing (the entire if)
             if (section_header.type != ELF::sc_type_t::SC_NO_DATA)
@@ -101,7 +99,7 @@ namespace AEX {
             sections[i].addr = ptr;
             sections[i].size = section_header.size;
 
-            module->sections.pushBack(sections[i]);
+            module->sections.push(sections[i]);
         }
 
         for (int i = 0; i < elf.symbols.count(); i++) {
@@ -123,7 +121,7 @@ namespace AEX {
                 m_symbol.addr =
                     (void*) ((size_t) sections[symbol.section_index].addr + symbol.address);
 
-            module->symbols.pushBack(m_symbol);
+            module->symbols.push(m_symbol);
         }
 
         for (int i = 0; i < elf.symbols.count(); i++) {
@@ -138,13 +136,11 @@ namespace AEX {
             m_symbol.name = symbol.name;
             m_symbol.addr = (void*) ((size_t) sections[symbol.section_index].addr + symbol.address);
 
-            module->symbols.pushBack(m_symbol);
+            module->symbols.push(m_symbol);
         }
 
         elf.loadRelocations();
-        bool success = relocate(label, elf, module, sections);
-
-        if (!success) {
+        if (!relocate(label, elf, module, sections)) {
             delete module;
             delete[] sections;
 
@@ -158,21 +154,15 @@ namespace AEX {
         module->enter = (void (*)())((size_t) sections[entry.section_index].addr + entry.address);
         module->exit  = (void (*)())((size_t) sections[exit.section_index].addr + exit.address);
 
-        bool already_loaded = false;
-
         for (auto iterator = modules.getIterator(); auto m_module = iterator.next();) {
             if (strcmp(module->name, m_module->name) != 0)
                 continue;
 
-            already_loaded = true;
-            break;
-        }
-
-        if (already_loaded) {
             printk(PRINTK_WARN "Not loading module '%s' as it's already loaded\n", module->name);
 
             delete module;
             delete[] sections;
+
             return ENONE;
         }
 
@@ -218,13 +208,16 @@ namespace AEX {
         }
 
         // 2 goddamned hours + sleep for this goddamned thing (stack size)
-        auto thread = Proc::Thread::create(Proc::processes.get(1).get(), (void*) module->enter,
-                                           16384, Mem::kernel_pagemap);
+        auto thread = Proc::Thread::create(1, (void*) module->enter,
+                                           Proc::Thread::KERNEL_STACK_SIZE, Mem::kernel_pagemap);
 
         if (block) {
             thread.value->start();
-            if (block)
-                thread.value->join();
+            if (block) {
+                auto error = thread.value->join();
+                if (error)
+                    kpanic("Failed to join: %s", strerror(error));
+            }
 
             delete[] sections;
             return ENONE;

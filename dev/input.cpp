@@ -31,7 +31,7 @@ namespace AEX::Dev::Input {
         for (int i = 0; i < TTY::TTY_AMOUNT; i++)
             TTY::VTTYs[i]->inputReady();
 
-        auto thread = Proc::Thread::create(nullptr, (void*) tty_loop, 8192, nullptr);
+        auto thread = Proc::Thread::create(1, (void*) tty_loop, 8192, nullptr);
         thread.value->start();
         thread.value->detach();
     }
@@ -120,7 +120,7 @@ namespace AEX::Dev::Input {
     }
 
     void register_handle(Handle* handle) {
-        handles.pushBack(handle);
+        handles.push(handle);
     }
 
     void unregister_handle(Handle* m_handle) {

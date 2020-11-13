@@ -12,14 +12,14 @@ namespace AEX::Dev {
     class BlockHandle {
         public:
         BlockHandle();
-        BlockHandle(Mem::SmartPointer<BlockDevice> blkdev);
+        BlockHandle(Mem::SmartPointer<BlockDevice> blkhndl);
         BlockHandle(const BlockHandle& bh);
         ~BlockHandle();
 
         int64_t read(void* buffer, uint64_t start, uint32_t len);
         int64_t write(const void* buffer, uint64_t start, uint32_t len);
 
-        // private:
+        private:
         struct shared {
             uint8_t* m_buffer = nullptr;
             Mutex    m_mutex;

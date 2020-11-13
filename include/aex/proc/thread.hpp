@@ -5,6 +5,7 @@
 #include "aex/mem/paging.hpp"
 #include "aex/mem/smartptr.hpp"
 #include "aex/optional.hpp"
+#include "aex/printk.hpp"
 #include "aex/proc/resource_usage.hpp"
 #include "aex/proc/types.hpp"
 #include "aex/spinlock.hpp"
@@ -17,28 +18,19 @@ namespace AEX::Proc {
     class Event;
     class Context;
 
-    enum thread_flag_t : uint8_t {
-        TF_NONE     = 0x00,
-        TF_RUNNABLE = 0x01,
-        TF_SLEEPING = 0x02,
-        TF_BLOCKED  = 0x04,
-        TF_DEAD     = 0x80,
-    };
-
     enum thread_status_t : uint8_t {
-        TS_FRESH         = TF_NONE,
-        TS_RUNNABLE      = TF_RUNNABLE,
-        TS_SLEEPING      = TF_SLEEPING | TF_RUNNABLE,
-        TS_BLOCKED       = TF_BLOCKED | TF_RUNNABLE,
-        TS_BLOCKED_SLEEP = TF_SLEEPING | TF_BLOCKED | TF_RUNNABLE,
-        TS_DEAD          = TF_DEAD,
+        TS_FRESH    = 0x00,
+        TS_RUNNABLE = 0x01,
+        TS_SLEEPING = 0x02,
+        TS_BLOCKED  = 0x04,
+        TS_DEAD     = 0x80,
     };
 
     class Thread {
         public:
         static constexpr auto USER_STACK_SIZE   = 16384;
         static constexpr auto KERNEL_STACK_SIZE = 16384;
-        static constexpr auto FAULT_STACK_SIZE  = 16384;
+        static constexpr auto FAULT_STACK_SIZE  = 32768;
 
         struct state {
             uint16_t busy;
@@ -59,9 +51,8 @@ namespace AEX::Proc {
         };
 
         Process* parent;
-
-        Thread* next;
-        Thread* prev;
+        Thread*  next;
+        Thread*  prev;
 
         void* original_entry;
 
@@ -73,14 +64,16 @@ namespace AEX::Proc {
         int kernel_stack_size;
         int fault_stack_size;
 
+        bool faulting;
+
         Thread();
         Thread(Process* parent);
 
         ~Thread();
 
-        [[nodiscard]] static optional<Thread*> create(Process* parent, void* entry,
-                                                      size_t stack_size, Mem::Pagemap* pagemap,
-                                                      bool usermode = false, bool dont_add = false);
+        [[nodiscard]] static optional<Thread*> create(pid_t parent, void* entry, size_t stack_size,
+                                                      Mem::Pagemap* pagemap, bool usermode = false,
+                                                      bool dont_add = false);
 
         static void yield();
         static void sleep(int ms);
@@ -94,7 +87,8 @@ namespace AEX::Proc {
         error_t abort();
         bool    aborting();
 
-        void cleanup();
+        void abortInternal();
+        void finish();
 
         Process* getProcess();
 
@@ -129,7 +123,7 @@ namespace AEX::Proc {
         inline void subBusy() {
             uint16_t busy = Mem::atomic_sub_fetch(&m_busy, (uint16_t) 1);
 
-            if (busy == 0 && aborting())
+            if (!busy && aborting() && this == Thread::current())
                 Thread::exit();
         }
 
@@ -199,6 +193,4 @@ namespace AEX::Proc {
 
         Thread* m_joiner = nullptr;
     };
-
-    typedef Mem::SmartPointer<Thread> Thread_SP;
 }

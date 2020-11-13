@@ -7,6 +7,12 @@
 #include "aex/optional.hpp"
 
 namespace AEX::FS {
+    enum file_mode_t {
+        O_RD   = 0x01,
+        O_WR   = 0x02,
+        O_RDWR = O_RD | O_WR,
+    };
+
     struct file_info {
         Dev::devid_t  containing_dev_id = -1;
         FS::fs_type_t type              = FT_UNKNOWN;
@@ -39,7 +45,7 @@ namespace AEX::FS {
 
         virtual ~File();
 
-        static optional<File_SP> open(const char* path);
+        static optional<File_SP> open(const char* path, int mode);
         static optional<File_SP> opendir(const char* path);
 
         static optional<file_info> info(const char* path);

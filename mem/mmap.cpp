@@ -45,13 +45,9 @@ namespace AEX::Mem {
     }
 
     error_t FileBackedMMapRegion::read(void* dst, int64_t offset, uint32_t count) {
-        auto process = Proc::Process::current();
-
         ScopeMutex scopeLock(m_lock);
 
         int32_t id = offset / Sys::CPU::PAGE_SIZE;
-
-        // printk("reading from %li to 0x%p\n", offset, dst);
 
         int slot = findSlot(id);
         if (slot == -1) {
@@ -118,7 +114,7 @@ namespace AEX::Mem {
             region = new MMapRegion(process->pagemap, alloc_addr, len);
 
             process->lock.acquire();
-            process->mmap_regions.pushBack(region);
+            process->mmap_regions.push(region);
             process->lock.release();
 
             return region->start;
@@ -134,7 +130,7 @@ namespace AEX::Mem {
         region = new FileBackedMMapRegion(process->pagemap, alloc_addr, len, dupd, offset);
 
         process->lock.acquire();
-        process->mmap_regions.pushBack(region);
+        process->mmap_regions.push(region);
         process->lock.release();
 
         return region->start;
@@ -144,7 +140,7 @@ namespace AEX::Mem {
     error_t munmap(void* addr, size_t) {
         auto process = Proc::Process::current();
 
-        remove_region(process.get(), addr);
+        remove_region(process, addr);
 
         return ENONE;
     }
@@ -155,6 +151,9 @@ namespace AEX::Mem {
         process->lock.acquire();
 
         for (int i = 0; i < process->mmap_regions.count(); i++) {
+            if (!process->mmap_regions.present(i))
+                continue;
+
             auto region = process->mmap_regions[i];
 
             size_t start = (size_t) region->start;
@@ -168,7 +167,6 @@ namespace AEX::Mem {
         }
 
         process->lock.release();
-
         return nullptr;
     }
 
@@ -179,6 +177,9 @@ namespace AEX::Mem {
         process->lock.acquire();
 
         for (int i = 0; i < process->mmap_regions.count(); i++) {
+            if (!process->mmap_regions.present(i))
+                continue;
+
             auto m_region = process->mmap_regions[i];
 
             size_t start = (size_t) m_region->start;

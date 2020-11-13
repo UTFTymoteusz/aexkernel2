@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aex/ipc/event.hpp"
 #include "aex/mem.hpp"
 #include "aex/mem/lazyvector.hpp"
 #include "aex/mem/mmap.hpp"
@@ -7,6 +8,7 @@
 #include "aex/proc/affinity.hpp"
 #include "aex/proc/resource_usage.hpp"
 #include "aex/proc/types.hpp"
+#include "aex/sys/syscall.hpp"
 
 namespace AEX::Mem {
     class Pagemap;
@@ -25,11 +27,23 @@ namespace AEX::Proc {
         resource_usage usage;
 
         Spinlock lock;
+        Mutex    thread_lock;
 
-        Mem::SmartArray<Thread> threads;
+        int                          thread_counter;
+        Mem::LazyVector<Thread*>     threads;
+        Mem::LazyVector<FS::File_SP> files;
 
-        Mem::Pagemap*                 pagemap;
-        Mem::Vector<Mem::MMapRegion*> mmap_regions;
+        Mem::Pagemap*                     pagemap;
+        Mem::LazyVector<Mem::MMapRegion*> mmap_regions;
+
+        Sys::syscall_t* syscall_table;
+
+        Process* next;
+        Process* prev;
+
+        IPC::Event child_event;
+        int        status;
+        int        ret_code;
 
         Process() = default;
 
@@ -44,14 +58,20 @@ namespace AEX::Proc {
 
         ~Process();
 
+        static error_t         kill(pid_t pid);
+        static optional<pid_t> wait(int& status);
+
         /**
          * Gets the current process.
-         * @returns The SmartPointer to the process.
+         * @returns The pointer to the process.
          */
-        static Mem::SmartPointer<Process> current();
+        static Process* current();
+
+        void ready();
+
+        void exit(int status);
 
         private:
+        bool m_exiting = false;
     };
-
-    typedef Mem::SmartPointer<Process> Process_SP;
 }

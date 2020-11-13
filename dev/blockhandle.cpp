@@ -94,8 +94,12 @@ namespace AEX::Dev {
                     combo  = false;
                 }
 
+                m_shared->m_mutex.acquire();
+
                 m_dev->readBlock(m_shared->m_buffer, start / m_sector_size, 1);
                 memcpy(buffer, m_shared->m_buffer + offset, llen);
+
+                m_shared->m_mutex.release();
 
                 current_usage->block_bytes_read += m_sector_size;
 

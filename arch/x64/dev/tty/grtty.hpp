@@ -16,8 +16,8 @@ namespace AEX::Dev::TTY {
         GrTTY(multiboot_info_t* mbinfo);
 
         GrTTY& color(ansi_color_t ansi);
-
         GrTTY& scroll(int amnt);
+        GrTTY& clear();
 
         void fromVGA(vga_char* ega_buffer);
 
@@ -58,7 +58,7 @@ namespace AEX::Dev::TTY {
         static uint32_t* volatile m_output;
         uint32_t* m_double_buffer;
 
-        void put_glyph(char c, uint32_t x, uint32_t y, rgb_t fg, rgb_t bg);
+        void put(char c, uint32_t x, uint32_t y, rgb_t fg, rgb_t bg);
 
         protected:
         void _write(char c);

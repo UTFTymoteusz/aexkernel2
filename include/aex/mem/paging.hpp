@@ -42,6 +42,7 @@ namespace AEX::Mem {
 
         Pagemap();
         Pagemap(phys_addr pageRoot);
+        Pagemap(size_t start, size_t end);
 
         /**
          * Allocates enough pages to fit the specified size and zeroes them out.
@@ -56,9 +57,10 @@ namespace AEX::Mem {
          * Allocates enough pages to fit the specified size and zeroes them out.
          * @param bytes Requested size in bytes.
          * @param flags Optional flags.
+         * @param source Optional source address.
          * @returns Virtual address or nullptr on failure.
          */
-        void* alloc(size_t bytes, uint32_t flags);
+        void* alloc(size_t bytes, uint32_t flags, void* source = nullptr);
 
         /**
          * Allocates enough physically contiguous pages to fit the specified size and
@@ -75,9 +77,10 @@ namespace AEX::Mem {
          * zeroes them out.
          * @param bytes Requested size in bytes.
          * @param flags Optional flags.
+         * @param source Optional source address.
          * @returns Virtual address or nullptr on failure.
          */
-        void* allocContinuous(size_t bytes, uint32_t flags);
+        void* allocContinuous(size_t bytes, uint32_t flags, void* source = nullptr);
 
         /**
          * Maps the specified size to a physical address.

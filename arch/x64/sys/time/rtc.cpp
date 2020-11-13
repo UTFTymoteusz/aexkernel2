@@ -38,7 +38,7 @@ namespace AEX::Sys::Time {
             m_century_index = 0x32;
     }
 
-    int64_t RTC::get_epoch() {
+    int64_t RTC::epoch() {
         int64_t ret = Mem::atomic_read(&m_epoch);
         while (!ret)
             ret = Mem::atomic_read(&m_epoch);
@@ -47,8 +47,6 @@ namespace AEX::Sys::Time {
     }
 
     void RTC::irq(void*) {
-        ScopeSpinlock scopeLock(m_lock);
-
         CMOS::read(CMOS::STATUS_C);
 
         uint8_t hours   = CMOS::read(0x04);

@@ -26,7 +26,7 @@ namespace AEX::IPC {
             }
 
         if (!is_on_queue)
-            m_tiddies.pushBack(current);
+            m_tiddies.push(current);
 
         if (timeout == 0)
             current->setStatus(TS_BLOCKED);

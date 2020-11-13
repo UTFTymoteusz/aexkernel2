@@ -16,17 +16,17 @@ namespace AEX::Proc {
         if (thread->isCritical())
             return;
 
-        if (!lock.tryAcquireRaw()) {
-            if (!(thread->status & TF_RUNNABLE))
-                lock.acquireRaw();
+        if (!sched_lock.tryAcquireRaw()) {
+            if (thread->status != TS_RUNNABLE)
+                sched_lock.acquireRaw();
             else
                 return;
         }
 
-        auto curtime = Time::uptime_raw();
-        auto delta   = curtime - cpu->measurement_start_ns;
+        auto uptime = Time::uptime_raw();
+        auto delta  = uptime - cpu->measurement_start_ns;
 
-        cpu->measurement_start_ns = curtime;
+        cpu->measurement_start_ns = uptime;
 
         thread->parent->usage.cpu_time_ns += delta;
         thread->lock.releaseRaw();
@@ -34,20 +34,22 @@ namespace AEX::Proc {
         for (int i = 0; i <= thread_list_size; i++) {
             thread = thread->next;
 
-            auto& status = thread->status;
-            if (!(status & TF_RUNNABLE))
-                continue;
-
-            if (status & TF_BLOCKED) {
+            switch (thread->status) {
+            case TS_RUNNABLE:
+                break;
+            case TS_BLOCKED:
                 if (!thread->aborting())
                     continue;
-            }
 
-            if (status & TF_SLEEPING) {
-                if (curtime < thread->wakeup_at)
+                break;
+            case TS_SLEEPING:
+                if (uptime < thread->wakeup_at)
                     continue;
 
-                status = TS_RUNNABLE;
+                thread->status = TS_RUNNABLE;
+                break;
+            default:
+                continue;
             }
 
             if (thread->parent->cpu_affinity.isMasked(cpu->id))
@@ -58,9 +60,11 @@ namespace AEX::Proc {
 
             cpu->current_thread  = thread;
             cpu->current_context = thread->context;
+            cpu->kernel_stack    = thread->kernel_stack + thread->kernel_stack_size;
+            cpu->syscall_table   = thread->getProcess()->syscall_table;
 
             cpu->update(thread);
-            lock.releaseRaw();
+            sched_lock.releaseRaw();
 
             return;
         }
@@ -78,6 +82,6 @@ namespace AEX::Proc {
         idle->next = thread;
 
         cpu->update(idle);
-        lock.releaseRaw();
+        sched_lock.releaseRaw();
     }
 }

@@ -15,7 +15,7 @@
 
 using namespace AEX::Mem::Phys;
 
-constexpr auto PPTR_AMOUNT   = 16;
+constexpr auto PPTR_AMOUNT   = 32;
 constexpr auto MEM_PAGE_MASK = ~0xFFF;
 
 extern void* pml4;
@@ -31,8 +31,6 @@ const int m_page_nophys    = 0x200;
 const int m_page_exec      = 0x1000;
 const int m_page_fixed     = 0x2000;
 const int m_page_arbitrary = 0x4000;
-
-// I need to make invlpg clump together
 
 namespace AEX::Mem {
     Pagemap* kernel_pagemap;
@@ -81,7 +79,6 @@ namespace AEX::Mem {
         debug_pptr_targets[index] = at;
         *pptr_entries[index]      = at | PAGE_WRITE | PAGE_PRESENT;
 
-        // Sys::CPU::broadcast(Sys::CPU::IPP_PG_INV, pptr_vaddr[index]);
         asm volatile("invlpg [%0]" : : "r"(pptr_vaddr[index]));
 
         return pptr_vaddr[index];
@@ -98,6 +95,7 @@ namespace AEX::Mem {
         uint64_t* a = aim_pptr(pptr_a, pageRoot);
         uint64_t* b = aim_pptr(pptr_b, kernel_pagemap->pageRoot);
 
+        memset64(a, 0, 256);
         memcpy(&a[256], &b[256], sizeof(uint64_t) * 256);
 
         free_pptr(pptr_b);
@@ -110,7 +108,30 @@ namespace AEX::Mem {
         pageRoot = rootAddr;
     }
 
-    void* Pagemap::alloc(size_t bytes, uint32_t flags) {
+    Pagemap::Pagemap(size_t start, size_t end) {
+        m_lock.acquire();
+
+        pageRoot = Phys::alloc(1);
+
+        int pptr_a = alloc_pptr();
+        int pptr_b = alloc_pptr();
+
+        uint64_t* a = aim_pptr(pptr_a, pageRoot);
+        uint64_t* b = aim_pptr(pptr_b, kernel_pagemap->pageRoot);
+
+        memset64(a, 0, 256);
+        memcpy(&a[256], &b[256], sizeof(uint64_t) * 256);
+
+        free_pptr(pptr_b);
+        free_pptr(pptr_a);
+
+        vstart = (void*) start;
+        vend   = (void*) end;
+
+        m_lock.release();
+    }
+
+    void* Pagemap::alloc(size_t bytes, uint32_t flags, void* source) {
         if (bytes == 0)
             return nullptr;
 
@@ -119,14 +140,16 @@ namespace AEX::Mem {
         int pptr = alloc_pptr();
 
         size_t amount = ceiltopg(bytes);
-        size_t vaddr  = (size_t) findContiguous(pptr, amount, flags & PAGE_EXEC);
-        size_t start  = vaddr;
+        size_t vaddr  = (size_t)(
+            (flags & PAGE_FIXED) ? source : findContiguous(pptr, amount, flags & PAGE_EXEC));
+        size_t start = vaddr;
 
         flags &= 0xFFF;
         flags |= PAGE_PRESENT;
 
         for (size_t i = 0; i < amount; i++) {
             phys_addr phys = AEX::Mem::Phys::alloc(Sys::CPU::PAGE_SIZE);
+            memset64(aim_pptr(pptr, phys), 0, 4096 / sizeof(uint64_t));
 
             assign(pptr, (void*) vaddr, phys, flags);
 
@@ -139,12 +162,10 @@ namespace AEX::Mem {
 
         m_lock.release();
 
-        memset((void*) start, 0, amount * Sys::CPU::PAGE_SIZE);
-
         return (void*) start;
     }
 
-    void* Pagemap::allocContinuous(size_t bytes, uint32_t flags) {
+    void* Pagemap::allocContinuous(size_t bytes, uint32_t flags, void* source) {
         if (bytes == 0)
             return nullptr;
 
@@ -153,14 +174,17 @@ namespace AEX::Mem {
         int pptr = alloc_pptr();
 
         size_t amount = ceiltopg(bytes);
-        size_t vaddr  = (size_t) findContiguous(pptr, amount, flags & PAGE_EXEC);
-        size_t paddr  = AEX::Mem::Phys::alloc(bytes);
-        size_t start  = vaddr;
+        size_t vaddr  = (size_t)(
+            (flags & PAGE_FIXED) ? source : findContiguous(pptr, amount, flags & PAGE_EXEC));
+        size_t paddr = AEX::Mem::Phys::alloc(bytes);
+        size_t start = vaddr;
 
         flags &= 0xFFF;
         flags |= PAGE_PRESENT;
 
         for (size_t i = 0; i < amount; i++) {
+            memset64(aim_pptr(pptr, paddr), 0, 4096 / sizeof(uint64_t));
+
             assign(pptr, (void*) vaddr, paddr, flags);
 
             vaddr += Sys::CPU::PAGE_SIZE;
@@ -171,8 +195,6 @@ namespace AEX::Mem {
         recache((void*) start, bytes);
 
         m_lock.release();
-
-        memset((void*) start, 0, amount * Sys::CPU::PAGE_SIZE);
 
         return (void*) start;
     }
@@ -272,6 +294,8 @@ namespace AEX::Mem {
         uint64_t* ptable = findTableEnsure(pptr, vaddr);
         uint64_t  index  = (vaddr >> 12) & 0x1FF;
 
+        // printk("assign 0x%016p 0x%x\n", vaddr, flags);
+
         ptable[index] = paddr | flags;
 
         __sync_synchronize();
@@ -365,12 +389,11 @@ namespace AEX::Mem {
             if (!(ptable[index] & PAGE_PRESENT)) {
                 phys_addr phys = AEX::Mem::Phys::alloc(Sys::CPU::PAGE_SIZE);
 
-                ptable[index] = phys | PAGE_USER | PAGE_WRITE | PAGE_PRESENT;
+                ptable[index] = phys;
                 reset         = true;
             }
-            else
-                ptable[index] |= PAGE_USER | PAGE_WRITE | PAGE_PRESENT;
 
+            ptable[index] |= PAGE_USER | PAGE_WRITE | PAGE_PRESENT;
             ptable = aim_pptr(pptr, ptable[index] & MEM_PAGE_MASK);
 
             if (reset) {
@@ -405,7 +428,7 @@ namespace AEX::Mem {
         if (tb == nullptr)
             tb = findTableEnsure(pptr, vaddr);
 
-        while (true) {
+        while (vaddr < m_vend) {
             if (index >= 512) {
                 index = 0;
 

@@ -10,12 +10,12 @@ namespace AEX::Dev::TTY {
         TxTTY();
         TxTTY(void* output);
 
-        static void clear();
-
         TxTTY& color(ansi_color_t ansi);
         TxTTY& scroll(int amnt);
+        TxTTY& clear();
 
         vga_char* output();
+        void      remap(void* addr);
 
         private:
         enum vga_color {

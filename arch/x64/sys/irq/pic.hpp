@@ -16,7 +16,7 @@ namespace AEX::Sys::IRQ {
         }
 
         void init(uint8_t start, bool slave = false);
-        void setMask(uint8_t mask);
+        void mask(uint8_t mask);
     };
 
     extern PIC pics[2];

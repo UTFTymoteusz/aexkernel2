@@ -25,6 +25,8 @@ namespace AEX {
 
             memcpy((void*) section_names, m_addr + header_with_names.file_offset,
                    header_with_names.size);
+
+            entry = (void*) (size_t) m_header.entry_position32;
         }
         else {
             int header_name_index = m_header.section_header_name_index;
@@ -39,6 +41,8 @@ namespace AEX {
 
             memcpy((void*) section_names, m_addr + header_with_names.file_offset,
                    header_with_names.size);
+
+            entry = (void*) (size_t) m_header.entry_position;
         }
 
         if (m_header.bitness == bitness_t::BIT_32) {
@@ -49,7 +53,7 @@ namespace AEX {
                 program_header32 m_program_header32;
                 file->read(&m_program_header32, sizeof(m_program_header32));
 
-                program_headers.pushBack((program_header_agn) m_program_header32);
+                program_headers.push((program_header_agn) m_program_header32);
             }
 
             int sect_count = m_header.section_header_entry_count32;
@@ -59,7 +63,7 @@ namespace AEX {
                 section_header32 m_section_header32;
                 file->read(&m_section_header32, sizeof(m_section_header32));
 
-                section_headers.pushBack(section_header_agn(
+                section_headers.push(section_header_agn(
                     section_names + m_section_header32.name_offset, m_section_header32));
             }*/
         }
@@ -73,7 +77,7 @@ namespace AEX {
                            i * sizeof(m_program_header64),
                        sizeof(m_program_header64));
 
-                program_headers.pushBack((program_header_agn) m_program_header64);
+                program_headers.push((program_header_agn) m_program_header64);
             }
 
             int sect_count = m_header.section_header_entry_count;
@@ -85,7 +89,7 @@ namespace AEX {
                            i * sizeof(m_section_header64),
                        sizeof(m_section_header64));
 
-                section_headers.pushBack(section_header_agn(
+                section_headers.push(section_header_agn(
                     section_names + m_section_header64.name_offset, m_section_header64));
             }
         }
@@ -163,7 +167,7 @@ namespace AEX {
                 m_symbol.name          = section_headers[symbol.symbol_index].name;
                 m_symbol.section_index = symbol.symbol_index;
 
-                symbols.pushBack(m_symbol);
+                symbols.push(m_symbol);
 
                 continue;
             }
@@ -177,7 +181,7 @@ namespace AEX {
             m_symbol.info          = symbol.info;
             m_symbol.other         = symbol.other;
 
-            symbols.pushBack(m_symbol);
+            symbols.push(m_symbol);
         }
     }
 
@@ -229,7 +233,7 @@ namespace AEX {
             m_relocation.target_section_id = section.info;
             m_relocation.symbol_id         = symbol_id;
 
-            relocations.pushBack(m_relocation);
+            relocations.push(m_relocation);
         }
     }
 }

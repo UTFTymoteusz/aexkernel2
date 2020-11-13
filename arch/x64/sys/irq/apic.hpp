@@ -16,13 +16,13 @@ namespace AEX::Sys::IRQ {
         static void     write(int reg, uint32_t val);
 
         static void init();
-        static int  getID();
+        static int  id();
 
-        static void setupTimer(uint32_t vector);
-        static void setupTimer(uint32_t vector, uint32_t initial_count, bool periodic);
+        static void timer(uint32_t vector);
+        static void timer(uint32_t vector, uint32_t initial_count, bool periodic);
 
-        static uint32_t getCounter();
-        static uint32_t getInitial();
+        static uint32_t counter();
+        static uint32_t initial();
 
         static void interrupt(uint8_t dst, uint8_t vector);
         static void init(uint8_t dst);
@@ -47,15 +47,12 @@ namespace AEX::Sys::IRQ {
 
         IOAPIC(void* mapped, int base);
 
-        int getIRQAmount();
+        int amount();
 
-        void setVector(int irq, uint8_t vector);
-
-        void setMask(int irq, bool mask);
-
-        void setDestination(int irq, uint8_t destination);
-
-        void setMode(int irq, uint8_t mode);
+        void vector(int irq, uint8_t vector);
+        void mask(int irq, bool mask);
+        void destination(int irq, uint8_t destination);
+        void mode(int irq, uint8_t mode);
 
         private:
         volatile uint32_t* addr_reg;

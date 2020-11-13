@@ -28,27 +28,27 @@ namespace AEX::Sys::IRQ {
         write(0xF0, 0x1FF);
     }
 
-    int APIC::getID() {
+    int APIC::id() {
         return read(0x20) >> 24;
     }
 
-    void APIC::setupTimer(uint32_t vector) {
+    void APIC::timer(uint32_t vector) {
         write(0x320, vector);
         write(0x380, -1);
         write(0x3E0, 0x03);
     }
 
-    void APIC::setupTimer(uint32_t vector, uint32_t initial_count, bool periodic) {
+    void APIC::timer(uint32_t vector, uint32_t initial_count, bool periodic) {
         write(0x320, vector | (periodic ? (1 << 17) : 0x00));
         write(0x380, initial_count);
         write(0x3E0, 0x03);
     }
 
-    uint32_t APIC::getCounter() {
+    uint32_t APIC::counter() {
         return read(0x390);
     }
 
-    uint32_t APIC::getInitial() {
+    uint32_t APIC::initial() {
         return read(0x380);
     }
 
@@ -129,11 +129,11 @@ namespace AEX::Sys::IRQ {
         data_reg = (uint32_t*) ((size_t) mapped + 0x10);
     }
 
-    int IOAPIC::getIRQAmount() {
+    int IOAPIC::amount() {
         return (read(0x01) >> 16) & 0xFF;
     }
 
-    void IOAPIC::setVector(int irq, uint8_t vector) {
+    void IOAPIC::vector(int irq, uint8_t vector) {
         uint32_t val = read(0x10 + irq * 2);
 
         val &= 0xFFFFFF00;
@@ -142,7 +142,7 @@ namespace AEX::Sys::IRQ {
         write(0x10 + irq * 2, val);
     }
 
-    void IOAPIC::setMask(int irq, bool mask) {
+    void IOAPIC::mask(int irq, bool mask) {
         uint32_t val = read(0x10 + irq * 2);
 
         if (mask)
@@ -153,7 +153,7 @@ namespace AEX::Sys::IRQ {
         write(0x10 + irq * 2, val);
     }
 
-    void IOAPIC::setDestination(int irq, uint8_t destination) {
+    void IOAPIC::destination(int irq, uint8_t destination) {
         uint32_t vala = read(0x10 + irq * 2);
         uint32_t valb = read(0x10 + irq * 2 + 1);
 
@@ -166,7 +166,7 @@ namespace AEX::Sys::IRQ {
         write(0x10 + irq * 2 + 1, valb);
     }
 
-    void IOAPIC::setMode(int irq, uint8_t mode) {
+    void IOAPIC::mode(int irq, uint8_t mode) {
         uint32_t val = read(0x10 + irq * 2);
 
         val &= ~(0b111 << 8);

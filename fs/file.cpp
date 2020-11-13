@@ -19,7 +19,7 @@ namespace AEX::FS {
 
     File::~File() {}
 
-    optional<File_SP> File::open(const char* path) {
+    optional<File_SP> File::open(const char* path, int mode) {
         auto mount_info = find_mount(path);
         if (!mount_info.mount)
             return mount_info.mount.error_code;
@@ -37,7 +37,11 @@ namespace AEX::FS {
             if (!device)
                 return ENOENT;
 
-            return File_SP(new DevFile(device));
+            auto dev_try = DevFile::open(device, mode);
+            if (!dev_try)
+                return dev_try.error_code;
+
+            return File_SP(dev_try.value);
         }
 
         return File_SP(new INodeFile(inode));

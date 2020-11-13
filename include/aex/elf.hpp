@@ -377,6 +377,8 @@ namespace AEX {
 
         size_t string_array_size = 0;
 
+        void* entry;
+
         ELF(void* preferably_mmaped);
         ~ELF();
 

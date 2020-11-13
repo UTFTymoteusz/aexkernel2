@@ -22,7 +22,7 @@ namespace AEX::Dev::TTY {
     uint16_t buffer[80 * 25];
 
     void init(multiboot_info_t* mbinfo) {
-        TxTTY::clear();
+        tx_init_tty.clear();
 
         if ((mbinfo->flags & (1 << 2)) &&
             mbinfo->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT) {
@@ -39,9 +39,13 @@ namespace AEX::Dev::TTY {
     void init_mem(multiboot_info_t* mbinfo) {
         if ((mbinfo->flags & (1 << 2)) &&
             mbinfo->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT) {
-            for (int i = 1; i < TTY_AMOUNT; i++)
-                VTTYs[i] = new TxTTY((void*) 0xFFFFFFFF800B8000);
+            uint32_t* mapped = (uint32_t*) Mem::kernel_pagemap->map(
+                2 * 80 * 25, mbinfo->framebuffer_addr, PAGE_COMBINE | PAGE_WRITE);
 
+            for (int i = 1; i < TTY_AMOUNT; i++)
+                VTTYs[i] = new TxTTY((void*) mapped);
+
+            tx_init_tty.remap(mapped);
             return;
         }
 

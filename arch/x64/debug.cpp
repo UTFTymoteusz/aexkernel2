@@ -27,7 +27,6 @@ namespace AEX::Debug {
             }
 
             level++;
-
             if (level > max)
                 return;
 
@@ -58,11 +57,8 @@ namespace AEX::Debug {
                 break;
             }
 
-            for (volatile size_t i = 0; i < 2423243; i++)
-                ;
-
             frame = frame->rbp;
-            if (((size_t) frame & 0xFFFF000000000000) != 0xFFFF000000000000)
+            if (!Mem::kernel_pagemap->paddrof(frame))
                 return;
         }
     }

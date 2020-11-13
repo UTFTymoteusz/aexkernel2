@@ -23,7 +23,11 @@ namespace AEX::Dev::TTY {
         return m_output;
     }
 
-    void TxTTY::clear() {
+    void TxTTY::remap(void* addr) {
+        m_output = (vga_char*) addr;
+    }
+
+    TxTTY& TxTTY::clear() {
         vga_char* volatile buffer = (vga_char*) 0xFFFFFFFF800B8000;
 
         const int width  = 80;
@@ -32,9 +36,11 @@ namespace AEX::Dev::TTY {
         for (int y = 0; y < height; y++)
             for (int x = 0; x < width; x++) {
                 buffer[x + y * width].ascii = '\0';
-                buffer[x + y * width].bg    = VGA_BLACK;
-                buffer[x + y * width].fg    = VGA_BLUE;
+                buffer[x + y * width].bg    = m_bg;
+                buffer[x + y * width].fg    = m_fg;
             }
+
+        return *this;
     }
 
     TxTTY& TxTTY::color(ansi_color_t ansi) {

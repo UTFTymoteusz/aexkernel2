@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aex/spinlock.hpp"
+#include "aex/sys/syscall.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -86,14 +87,14 @@ namespace AEX::Sys {
         static void cpuid(uint32_t code, uint32_t* eax, uint32_t* ebx, uint32_t* ecx,
                           uint32_t* edx);
 
-        static uint8_t inportb(uint16_t m_port);
-        static void    outportb(uint16_t m_port, uint8_t m_data);
+        static uint8_t inb(uint16_t m_port);
+        static void    outb(uint16_t m_port, uint8_t m_data);
 
-        static uint16_t inportw(uint16_t m_port);
-        static void     outportw(uint16_t m_port, uint16_t m_data);
+        static uint16_t inw(uint16_t m_port);
+        static void     outw(uint16_t m_port, uint16_t m_data);
 
-        static uint32_t inportd(uint16_t m_port);
-        static void     outportd(uint16_t m_port, uint32_t m_data);
+        static uint32_t ind(uint16_t m_port);
+        static void     outd(uint16_t m_port, uint32_t m_data);
 
         /**
          * Writes to a model specific register.
@@ -138,7 +139,7 @@ namespace AEX::Sys {
          */
         static void tripleFault();
 
-        static void setBreakpoint(int index, size_t addr, uint8_t mode, uint8_t size, bool enabled);
+        static void breakpoint(int index, size_t addr, uint8_t mode, uint8_t size, bool enabled);
 
         void printDebug();
 
@@ -157,9 +158,11 @@ namespace AEX::Sys {
 
         CPU* self; // 0x00
 
-        AEX::Proc::Context* current_context; // 0x08
-        AEX::Proc::Thread*  current_thread;  // 0x10
-        volatile int        unused;          // 0x18
+        Proc::Context*    current_context; // 0x08
+        Proc::Thread*     current_thread;  // 0x10
+        volatile uint64_t unused;          // 0x18
+        uint64_t          kernel_stack;    // 0x20
+        Sys::syscall_t*   syscall_table;   // 0x28
 
         // Safe to change again
         uint8_t in_interrupt = 1;

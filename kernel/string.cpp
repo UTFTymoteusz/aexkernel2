@@ -74,22 +74,6 @@ namespace AEX {
 
         for (size_t i = 0; i < size; i++)
             dst_b[i] = src_b[i];
-
-        /*size_t aligned = size / sizeof(size_t);
-
-        size_t* dst_st = (size_t*) dst;
-        size_t* src_st = (size_t*) src;
-
-        for (size_t i = 0; i < aligned; i++)
-            dst_st[i] = src_st[i];
-
-        size_t remainder = size - aligned * sizeof(size_t);
-
-        uint8_t* dst_b = (uint8_t*) dst + aligned * sizeof(size_t);
-        uint8_t* src_b = (uint8_t*) src + aligned * sizeof(size_t);
-
-        for (size_t i = 0; i < remainder; i++)
-            dst_b[i] = src_b[i];*/
     }
 
     int WEAK memcmp(const void* a, const void* b, size_t num) {

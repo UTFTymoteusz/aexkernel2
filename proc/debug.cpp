@@ -43,7 +43,7 @@ namespace AEX::Proc {
         }
     }
 
-    void debug_print_list() {
+    void debug_print_threads() {
         printk("head: 0x%p, Count: %i\n", thread_list_head, thread_list_size);
         auto thread = thread_list_head;
 
@@ -55,7 +55,54 @@ namespace AEX::Proc {
                    thread->next, buffer, Debug::addr2name(thread->original_entry),
                    thread->detached() ? "detached" : (thread->joiner() ? "joined by" : ""),
                    thread->joiner());
+
+            // const char* name = Debug::addr2name(thread->original_entry);
+            // name             = name ? name : "no idea";
+
+            /*printk("0x%p, <%s>, 0x%p-0x%p (0x%lx), 0x%p-0x%p (0x%lx)\n", thread, name,
+                   thread->kernel_stack, thread->kernel_stack + thread->kernel_stack_size,
+                   thread->kernel_stack_size, thread->fault_stack,
+                   thread->fault_stack + thread->fault_stack_size, thread->fault_stack_size);*/
             thread = thread->next;
+        }
+
+        printk("tail: 0x%p\n", thread_list_tail);
+        printk("idles:\n");
+
+        for (int i = 0; i < Sys::MCore::cpu_count; i++) {
+            thread = idle_threads[i];
+
+            char buffer[32];
+            debug_serialize_flags(buffer, thread->status);
+
+            printk("0x%p (p: 0x%p, n: 0x%p) <%s> <%s> %s 0x%p\n", thread, thread->prev,
+                   thread->next, buffer, Debug::addr2name(thread->original_entry),
+                   thread->detached() ? "detached" : (thread->joiner() ? "joined by" : ""),
+                   thread->joiner());
+        }
+    }
+
+    void debug_print_processes() {
+        printk("head: 0x%p, Count: %i\n", process_list_head, process_list_size);
+        auto process = process_list_head;
+
+        for (int i = 0; i < process_list_size; i++) {
+            char buffer[32];
+            debug_serialize_flags(buffer, process->status);
+
+            printk("%i. %s, %i <%s>\n", process->pid, process->name, process->threads.realCount(),
+                   buffer);
+
+            process->lock.acquire();
+
+            for (int i = 0; i < process->threads.count(); i++)
+                printk("0x%x ", (size_t) process->threads[i] & 0xFFFFFF);
+
+            process->lock.release();
+
+            printk("\n");
+
+            process = process->next;
         }
 
         printk("tail: 0x%p\n", thread_list_tail);

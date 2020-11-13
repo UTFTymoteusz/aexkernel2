@@ -1,10 +1,11 @@
 #pragma once
 
 #include "aex/mem/heap.hpp"
+#include "aex/optional.hpp"
 #include "aex/string.hpp"
 
 namespace AEX::Mem {
-    template <typename T, T nullboi>
+    template <typename T>
     class LazyVector {
         public:
         LazyVector() = default;
@@ -14,32 +15,58 @@ namespace AEX::Mem {
             pushRecursive(rest...);
         }
 
-        T& operator[](int index) {
+        const T& operator[](int index) {
             if (index < 0 || index >= m_count)
-                return m_array[0];
+                return m_array[0].value;
 
-            return m_array[index];
+            return m_array[index].value;
         }
 
         T at(int index) {
             if (index < 0 || index >= m_count)
-                return m_array[0];
+                return m_array[0].value;
 
-            return m_array[index];
+            return m_array[index].value;
         }
 
-        int pushBack(T val) {
+        void set(int index, T value) {
+            if (index >= m_count) {
+                m_count = index + 1;
+                resize();
+            }
+
+            if (!m_array[index].has_value)
+                m_rcount++;
+
+            m_array[index].value     = value;
+            m_array[index].has_value = true;
+        }
+
+        bool present(int index) {
+            if (index < 0 || index >= m_count)
+                return false;
+
+            return m_array[index].has_value;
+        }
+
+        int push(T val) {
+            m_rcount++;
+
             for (int i = 0; i < m_count; i++) {
-                if (m_array[i] == nullboi) {
-                    m_array[i] = val;
-                    return i;
-                }
+                if (m_array[i].has_value)
+                    continue;
+
+                m_array[i].value     = val;
+                m_array[i].has_value = true;
+
+                return i;
             }
 
             m_count++;
-            m_array = (T*) Heap::realloc((void*) m_array, m_count * sizeof(T));
+            resize();
 
-            memcpy(&m_array[m_count - 1], &val, sizeof(T));
+            m_array[m_count - 1].value     = val;
+            m_array[m_count - 1].has_value = true;
 
             return m_count - 1;
         }
@@ -48,30 +75,45 @@ namespace AEX::Mem {
             if (index < 0 || index >= m_count)
                 return;
 
-            m_array[index] = nullboi;
+            m_rcount--;
 
-            if (index == m_count - 1) {
+            m_array[index].value     = {};
+            m_array[index].has_value = false;
+
+            int prev = m_count;
+
+            while (m_count > 0 && m_array[m_count - 1].has_value)
                 m_count--;
-                m_array = (T*) Heap::realloc((void*) m_array, m_count * sizeof(T));
-            }
+
+            if (m_count != prev)
+                resize();
         }
 
         int count() {
             return m_count;
         }
 
+        int realCount() {
+            return m_rcount;
+        }
+
         private:
-        int m_count = 0;
-        T*  m_array = nullptr;
+        int          m_count  = 0;
+        int          m_rcount = 0;
+        optional<T>* m_array  = nullptr;
+
+        void resize() {
+            m_array = (optional<T>*) Heap::realloc((void*) m_array, m_count * sizeof(optional<T>));
+        }
 
         template <typename T1>
         void pushRecursive(T1 bong) {
-            pushBack(bong);
+            push(bong);
         }
 
         template <typename T1, typename... T2>
         void pushRecursive(T1 bong, T2... rest) {
-            pushBack(bong);
+            push(bong);
             pushRecursive(rest...);
         }
     };

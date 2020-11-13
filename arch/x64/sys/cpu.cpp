@@ -38,7 +38,7 @@ constexpr auto CPUID_FEAT_PAT = (1 << 16);
 namespace AEX::Sys {
     CPU::CPU(int id) {
         this->id = id;
-        apic_id  = IRQ::APIC::getID();
+        apic_id  = IRQ::APIC::id();
         self     = this;
 
         getName();
@@ -116,33 +116,33 @@ namespace AEX::Sys {
                      : "memory");
     }
 
-    uint8_t CPU::inportb(uint16_t m_port) {
+    uint8_t CPU::inb(uint16_t m_port) {
         uint8_t val;
         asm volatile("inb %0, %1" : "=a"(val) : "dN"(m_port));
         return val;
     }
 
-    void CPU::outportb(uint16_t m_port, uint8_t m_data) {
+    void CPU::outb(uint16_t m_port, uint8_t m_data) {
         asm volatile("outb %0, %1" : : "dN"(m_port), "a"(m_data));
     }
 
-    uint16_t CPU::inportw(uint16_t m_port) {
+    uint16_t CPU::inw(uint16_t m_port) {
         uint16_t val;
         asm volatile("inw %0, %1" : "=a"(val) : "dN"(m_port));
         return val;
     }
 
-    void CPU::outportw(uint16_t m_port, uint16_t m_data) {
+    void CPU::outw(uint16_t m_port, uint16_t m_data) {
         asm volatile("outw %0, %1" : : "dN"(m_port), "a"(m_data));
     }
 
-    uint32_t CPU::inportd(uint16_t m_port) {
+    uint32_t CPU::ind(uint16_t m_port) {
         uint32_t val;
         asm volatile("ind %0, %1" : "=a"(val) : "d"(m_port));
         return val;
     }
 
-    void CPU::outportd(uint16_t m_port, uint32_t m_data) {
+    void CPU::outd(uint16_t m_port, uint32_t m_data) {
         asm volatile("outd %0, %1" : : "d"(m_port), "a"(m_data));
     }
 
@@ -178,12 +178,12 @@ namespace AEX::Sys {
     }
 
 
-    int CPU::currentID() {
-        return CURRENT_CPU->id;
-    }
-
     CPU* CPU::current() {
         return CURRENT_CPU;
+    }
+
+    int CPU::currentID() {
+        return CURRENT_CPU->id;
     }
 
     Proc::Thread* CPU::currentThread() {
@@ -198,7 +198,7 @@ namespace AEX::Sys {
         asm volatile("int 0;");
     }
 
-    void CPU::setBreakpoint(int index, size_t addr, uint8_t trigger, uint8_t size, bool enabled) {
+    void CPU::breakpoint(int index, size_t addr, uint8_t trigger, uint8_t size, bool enabled) {
         switch (index) {
         case 0:
             asm volatile("mov dr0, rsi");
@@ -235,7 +235,8 @@ namespace AEX::Sys {
     }
 
     void CPU::update(Proc::Thread* thread) {
-        m_tss->ist1 = thread->fault_stack;
+        // 3 weeks of rest because of the goddamned + thread->fault_stack_size
+        m_tss->ist1 = thread->fault_stack + thread->fault_stack_size;
     }
 
     void CPU::getName() {

@@ -6,11 +6,15 @@ namespace AEX::Dev::TTY {
     }
 
     VTTY& VTTY::scroll(int) {
-        kpanic("VTTY::scrollDown() not implemented");
+        kpanic("VTTY::scroll() not implemented");
     }
 
     VTTY& VTTY::color(ansi_color_t) {
-        kpanic("VTTY::setColorANSI() not implemented");
+        kpanic("VTTY::color() not implemented");
+    }
+
+    VTTY& VTTY::clear() {
+        kpanic("VTTY::clear() not implemented");
     }
 
     char VTTY::read() {
@@ -22,6 +26,7 @@ namespace AEX::Dev::TTY {
 
     VTTY& VTTY::write(char c) {
         m_lock.acquire();
+        Sys::CPU::outb(0xE9, c);
         _write(c);
         m_lock.release();
 
@@ -31,8 +36,10 @@ namespace AEX::Dev::TTY {
     VTTY& VTTY::write(const char* str) {
         m_lock.acquire();
 
-        while (*str != '\0')
+        while (*str != '\0') {
+            Sys::CPU::outb(0xE9, *str);
             _write(*str++);
+        }
 
         m_lock.release();
         return *this;
