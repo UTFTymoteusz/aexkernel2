@@ -10,11 +10,11 @@ BOOT := boot/
 DEP_DEST := $(BIN)dep/
 OBJ_DEST := $(BIN)obj/
 
-CXXFILES  := $(shell find . -type f -name '*.cpp'  -not -path './arch/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.cpp')
-HXXFILES  := $(shell find . -type f -name '*.hpp'  -not -path './arch/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.hpp')
-ASMFILES  := $(shell find . -type f -name '*.asm'  -not -path './arch/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.asm')
-PSFFILES  := $(shell find . -type f -name '*.psf'  -not -path './arch/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.psf')
-ASMRFILES := $(shell find . -type f -name '*.asmr' -not -path './arch/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.asmr')
+CXXFILES  := $(shell find . -type f -name '*.cpp'  -not -path './arch/*' -not -path './mod/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.cpp'  -not -path './arch/$(ARCH)/./mod/*')
+HXXFILES  := $(shell find . -type f -name '*.hpp'  -not -path './arch/*' -not -path './mod/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.hpp'  -not -path './arch/$(ARCH)/./mod/*')
+ASMFILES  := $(shell find . -type f -name '*.asm'  -not -path './arch/*' -not -path './mod/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.asm'  -not -path './arch/$(ARCH)/./mod/*')
+PSFFILES  := $(shell find . -type f -name '*.psf'  -not -path './arch/*' -not -path './mod/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.psf'  -not -path './arch/$(ARCH)/./mod/*')
+ASMRFILES := $(shell find . -type f -name '*.asmr' -not -path './arch/*' -not -path './mod/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.asmr' -not -path './arch/$(ARCH)/./mod/*')
 
 OBJS    := $(patsubst %.o, $(OBJ_DEST)%.o, $(CXXFILES:.cpp=.cpp.o) $(ASMFILES:.asm=.asm.o) $(PSFFILES:.psf=.psf.o) $(ASMRFILES:.asmr=.asmr.o))
 VERSION := $(shell date '+%d.%m.%Y').$(shell date '+%s' | tail -c 6)
@@ -25,6 +25,8 @@ SYS  = $(ISO)sys/
 GFLAGS = -O3 -Wall -Wextra -Werror -nostdlib -pipe -lgcc
 
 INCLUDES := -I. -Iinclude/ -Iarch/$(ARCH)/ -Iarch/$(ARCH)/include/
+
+KERNEL_SRC := $(shell pwd)/
 
 CXXFLAGS := $(GFLAGS)		   \
 	-std=c++17				   \
@@ -53,16 +55,28 @@ format:
 	@$(MKDIR) $(ISO) $(SYS)
 	clang-format -style=file -i ${CXXFILES} ${HXXFILES}
 
-all: $(OBJS)
-	@$(MKDIR) $(ISO) $(SYS)
+all: $(OBJS)	
+	@$(MKDIR) $(ISO) $(SYS) $(SYS)core/ $(SYS)init/
+
+	cd mod/core && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../..
+	cd mod/init && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../..
+	cd arch/$(ARCH)/mod/core && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../../../..
+	cd arch/$(ARCH)/mod/init && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../../../..
+
 	@$(CXX) $(OBJS) $(LDFLAGS) -T linker.ld -o $(SYS)aexkrnl.elf
 
 copy:
-	@cp $(SYS)aexkrnl.elf "$(SYSTEM_DIR)"
+	@cp $(SYS)aexkrnl.elf "$(ROOT_DIR)sys/"
 
 include $(shell find $(DEP_DEST) -type f -name *.d)
 
 clean:
+	cd mod/core && $(MAKE) clean && cd ../..
+	cd mod/init && $(MAKE) clean && cd ../..
+
+	cd arch/$(ARCH)/mod/core && $(MAKE) clean && cd ../../../..
+	cd arch/$(ARCH)/mod/init && $(MAKE) clean && cd ../../../..
+
 	rm -rf $(DEP_DEST)
 	rm -rf $(OBJ_DEST)
 
