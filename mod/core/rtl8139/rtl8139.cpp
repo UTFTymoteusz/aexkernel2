@@ -97,7 +97,7 @@ class RTL8139 : public Dev::NetDevice {
         Net::mac_addr mac;
 
         for (int i = 0; i < 6; i++)
-            mac[i] = CPU::inb(m_io_base + i);
+            mac[i] = inb(i);
 
         m_irq = device->getIRQ();
 
@@ -108,12 +108,12 @@ class RTL8139 : public Dev::NetDevice {
         info.ipv4.mac = mac;
 
         // Power on
-        CPU::outb(m_io_base + CONFIG_1, 0x00);
+        outb(CONFIG_1, 0x00);
 
         // Software reset
-        CPU::outb(m_io_base + CMD, CMD_RST);
+        outb(CMD, CMD_RST);
 
-        while (CPU::inb(m_io_base + CMD) & CMD_RST)
+        while (inb(CMD) & CMD_RST)
             Proc::Thread::yield();
 
         Mem::phys_addr tx_paddr = Mem::kernel_pagemap->paddrof(m_tx_buffers);
@@ -124,23 +124,23 @@ class RTL8139 : public Dev::NetDevice {
 
         // Set transmit buffers addresses
         for (int i = 0; i < 4; i++)
-            CPU::outd(m_io_base + TSAD0 + 4 * i, tx_paddr + 2048 * i);
+            outd(TSAD0 + 4 * i, tx_paddr + 2048 * i);
 
         // Set receive buffer address
-        CPU::outd(m_io_base + RB_START, rx_paddr);
+        outd(RB_START, rx_paddr);
 
         // Enable transmitting and receiving
-        CPU::outb(m_io_base + CMD, CMD_TE | CMD_RE);
+        outb(CMD, CMD_TE | CMD_RE);
 
         // Let's set the params
-        CPU::outd(m_io_base + TCR, TSD_CRC | TSD_MXDMA_1024);
-        CPU::outd(m_io_base + RCR, RCR_B32K | RCR_WRAP | RCR_AAP | RCR_AB | RCR_AM | RCR_AR);
+        outd(TCR, TSD_CRC | TSD_MXDMA_1024);
+        outd(RCR, RCR_B32K | RCR_WRAP | RCR_AAP | RCR_AB | RCR_AM | RCR_AR);
 
         Sys::IRQ::register_handler(
             m_irq, [](void* dev) { ((RTL8139*) dev)->handleIRQ(); }, this);
 
         // IMR time
-        CPU::outw(m_io_base + IMR, IMR_ROK | IMR_ROV | IMR_FOV);
+        outw(IMR, IMR_ROK | IMR_ROV | IMR_FOV);
 
         printk(PRINTK_OK "rtl8139: %s: Ready\n", name);
     }
@@ -153,8 +153,8 @@ class RTL8139 : public Dev::NetDevice {
 
         len = min<size_t>(len, 1792);
 
-        uint16_t io_port = m_io_base + TSD0 + 4 * m_tx_buffer_current;
-        while (!(CPU::ind(io_port) & TSD_OWN)) {
+        uint16_t io_port = TSD0 + 4 * m_tx_buffer_current;
+        while (!(ind(io_port) & TSD_OWN)) {
             m_tx_lock.release();
             m_tx_lock.acquire();
         }
@@ -206,7 +206,7 @@ class RTL8139 : public Dev::NetDevice {
             break;
         }
 
-        CPU::outd(io_port, len);
+        outd(io_port, len);
 
         m_tx_buffer_current++;
         if (m_tx_buffer_current == 4)
@@ -263,7 +263,7 @@ class RTL8139 : public Dev::NetDevice {
 
         lock.acquire();
 
-        uint16_t status = CPU::inw(m_io_base + ISR);
+        uint16_t status = inw(ISR);
         uint16_t ack    = 0;
 
         if (status & ISR_ROK) {
@@ -282,13 +282,13 @@ class RTL8139 : public Dev::NetDevice {
             kpanic("rtl8139: RX buffer overflow");
         }
 
-        CPU::outw(m_io_base + ISR, ack);
+        outw(ISR, ack);
 
         lock.release();
     }
 
     void packetReceived() {
-        while (m_rx_buffer_pos != CPU::inw(m_io_base + CBR)) {
+        while (m_rx_buffer_pos != inw(CBR)) {
             auto frame = (rx_frame*) (&m_rx_buffer[m_rx_buffer_pos]);
             if (!(frame->flags & 0x01))
                 break;
@@ -299,8 +299,32 @@ class RTL8139 : public Dev::NetDevice {
 
             m_rx_buffer_pos = (m_rx_buffer_pos + (frame_len + 4 + 3)) & BUFFER_MASK;
 
-            CPU::outw(m_io_base + CAPR, m_rx_buffer_pos - 0x10);
+            outw(CAPR, m_rx_buffer_pos - 0x10);
         }
+    }
+
+    inline uint8_t inb(uint16_t addr) {
+        return CPU::inb(m_io_base + addr);
+    }
+
+    inline uint16_t inw(uint16_t addr) {
+        return CPU::inw(m_io_base + addr);
+    }
+
+    inline uint32_t ind(uint16_t addr) {
+        return CPU::ind(m_io_base + addr);
+    }
+
+    inline void outb(uint16_t addr, uint8_t val) {
+        CPU::outb(m_io_base + addr, val);
+    }
+
+    inline void outw(uint16_t addr, uint16_t val) {
+        CPU::outw(m_io_base + addr, val);
+    }
+
+    inline void outd(uint16_t addr, uint32_t val) {
+        CPU::outd(m_io_base + addr, val);
     }
 };
 

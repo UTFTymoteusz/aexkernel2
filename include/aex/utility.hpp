@@ -35,7 +35,7 @@ typedef int32_t ssize_t;
 
 namespace AEX {
     template <typename T>
-    void swap(T& a, T& b) {
+    inline void swap(T& a, T& b) {
         auto tmp = a;
 
         a = b;
@@ -43,20 +43,20 @@ namespace AEX {
     }
 
     template <typename T>
-    void swap(T& a, T& b, T& c, T& d) {
+    inline void swap(T& a, T& b, T& c, T& d) {
         swap(a, c);
         swap(b, d);
     }
 
     template <typename T>
-    void swap(T& a, T& b, T& c, T& d, T& e, T& f) {
+    inline void swap(T& a, T& b, T& c, T& d, T& e, T& f) {
         swap(a, d);
         swap(b, e);
         swap(c, f);
     }
 
     template <typename T>
-    void swap(T& a, T& b, T& c, T& d, T& e, T& f, T& g, T& h) {
+    inline void swap(T& a, T& b, T& c, T& d, T& e, T& f, T& g, T& h) {
         swap(a, e);
         swap(b, f);
         swap(c, g);
