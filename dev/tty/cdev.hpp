@@ -22,6 +22,8 @@ namespace AEX::Dev {
         optional<uint32_t> read(CharHandle* handle, void* ptr, uint32_t len);
         optional<uint32_t> write(CharHandle* handle, const void* ptr, uint32_t len);
 
+        bool isatty();
+
         private:
         int        m_index;
         TTY::VTTY* m_vtty;

@@ -61,6 +61,8 @@ namespace AEX::FS {
 
         virtual error_t close();
 
+        virtual bool isatty();
+
         private:
     };
 }

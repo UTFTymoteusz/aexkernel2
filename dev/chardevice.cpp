@@ -30,6 +30,10 @@ namespace AEX::Dev {
         return ENOSYS;
     }
 
+    bool CharDevice::isatty() {
+        return false;
+    }
+
     optional<CharHandle_SP> open_char_handle(int id, int mode) {
         auto device = devices.get(id);
         if (!device || device->type != DEV_CHAR)

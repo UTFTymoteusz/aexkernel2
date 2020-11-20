@@ -48,4 +48,8 @@ namespace AEX::Dev {
 
         return len;
     }
+
+    bool TTYChar::isatty() {
+        return true;
+    }
 }

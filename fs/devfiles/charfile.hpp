@@ -17,6 +17,8 @@ namespace AEX::FS {
 
         optional<File_SP> dup();
 
+        bool isatty();
+
         private:
         Dev::CharHandle_SP m_handle;
     };

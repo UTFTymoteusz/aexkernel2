@@ -24,4 +24,8 @@ namespace AEX::FS {
 
         return File_SP(dfile);
     }
+
+    bool CharFile::isatty() {
+        return m_handle->isatty();
+    }
 }

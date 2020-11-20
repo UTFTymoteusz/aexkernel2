@@ -106,4 +106,8 @@ namespace AEX::FS {
     error_t File::close() {
         return ENOSYS;
     }
+
+    bool File::isatty() {
+        return false;
+    }
 }

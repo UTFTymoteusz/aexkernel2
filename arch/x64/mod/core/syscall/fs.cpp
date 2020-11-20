@@ -42,10 +42,24 @@ uint32_t write(int fd, void* usr_buf, uint32_t count) {
     return write_try.value;
 }
 
+
+bool isatty(int fd) {
+    auto current = Proc::Process::current();
+
+    if (!current->files.present(fd)) {
+        PRINTK_DEBUG_WARN1("ebadf (%i)\n", fd);
+        return EBADF;
+    }
+
+    auto file = current->files[fd];
+    return file->isatty();
+}
+
 void register_fs() {
     auto table = Sys::default_table();
 
-    table[SYS_OPEN]  = (void*) open;
-    table[SYS_READ]  = (void*) read;
-    table[SYS_WRITE] = (void*) write;
+    table[SYS_OPEN]   = (void*) open;
+    table[SYS_READ]   = (void*) read;
+    table[SYS_WRITE]  = (void*) write;
+    table[SYS_ISATTY] = (void*) isatty;
 }

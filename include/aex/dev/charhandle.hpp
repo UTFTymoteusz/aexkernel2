@@ -21,6 +21,8 @@ namespace AEX::Dev {
         optional<uint32_t> read(void* ptr, uint32_t len);
         optional<uint32_t> write(const void* ptr, uint32_t len);
 
+        bool isatty();
+
         private:
         Mem::SmartPointer<CharDevice> m_dev;
     };
