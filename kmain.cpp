@@ -36,7 +36,7 @@ using namespace AEX::Mem;
 using namespace AEX::Sys;
 
 namespace AEX::Init {
-    void init_print_header();
+    void print_header();
 }
 
 namespace AEX::Dev::Tree {
@@ -53,7 +53,7 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     CPU::current()->in_interrupt++;
 
     Dev::TTY::init(mbinfo);
-    Init::init_print_header();
+    Init::print_header();
     printk(PRINTK_INIT "Booting AEX/2 on " ARCH ", build " VERSION "\n\n");
 
     if (mbinfo->flags & MULTIBOOT_INFO_MODS) {

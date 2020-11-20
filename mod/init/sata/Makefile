@@ -17,7 +17,7 @@ OBJS := $(OBJS)
 
 MODULE_OBJ = $(BIN)$(MODULE_NAME).km
 
-GFLAGS = -O0 -Wall -Wextra -nostdlib -pipe
+GFLAGS = -O3 -Wall -Wextra -nostdlib -pipe
 
 INCLUDES := -I. -I$(ARCH) -Iinclude/ -I"$(KERNEL_SRC)include" \
 		    -I"$(KERNEL_SRC)arch/x64/include"

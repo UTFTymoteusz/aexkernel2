@@ -185,7 +185,7 @@ namespace AEX::Sys {
 
         void getName();
 
-        void sendInternal(ipp_type type, void* data = nullptr);
+        void _send(ipp_type type, void* data = nullptr);
         void handleIPP();
 
         friend void ipi_handle();

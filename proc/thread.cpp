@@ -69,33 +69,14 @@ namespace AEX::Proc {
         if (!pagemap)
             pagemap = parent->pagemap;
 
-        if (usermode) {
-            thread->user_stack      = (size_t) pagemap->alloc(stack_size, PAGE_WRITE | PAGE_USER);
-            thread->user_stack_size = stack_size;
-
-            thread->kernel_stack =
-                (size_t) Mem::kernel_pagemap->alloc(KERNEL_STACK_SIZE, PAGE_WRITE);
-            thread->kernel_stack_size = KERNEL_STACK_SIZE;
-
-            thread->context =
-                new Context(entry, (void*) thread->user_stack, stack_size, pagemap, true);
-        }
-        else {
-            thread->user_stack      = 0x2137;
-            thread->user_stack_size = 0x2137;
-
-            thread->kernel_stack      = (size_t) Mem::kernel_pagemap->alloc(stack_size, PAGE_WRITE);
-            thread->kernel_stack_size = stack_size;
-
-            thread->context = new Context(entry, (void*) thread->kernel_stack, stack_size, pagemap,
-                                          false, Thread::exit);
-        }
-
-        thread->fault_stack = (size_t) Mem::kernel_pagemap->alloc(FAULT_STACK_SIZE, PAGE_WRITE);
-        thread->fault_stack_size = FAULT_STACK_SIZE;
-
         thread->status = TS_FRESH;
         thread->parent = parent;
+
+        thread->alloc_stacks(pagemap, stack_size, usermode);
+        thread->setup_context(pagemap, stack_size, entry, usermode);
+
+        if (parent->tls_size != 0)
+            thread->alloc_tls(parent->tls_size);
 
         thread->original_entry = entry;
 
@@ -138,7 +119,7 @@ namespace AEX::Proc {
         AEX_ASSERT(CPU::checkInterrupts());
 
         if (thread->isBusy()) {
-            thread->abortInternal();
+            thread->_abort();
             return;
         }
 
@@ -239,12 +220,12 @@ namespace AEX::Proc {
     error_t Thread::abort() {
         auto scope = this->lock.scope();
 
-        abortInternal();
+        _abort();
 
         return ENONE;
     }
 
-    void Thread::abortInternal() {
+    void Thread::_abort() {
         m_aborting = true;
 
         if (isBusy())
@@ -333,5 +314,45 @@ namespace AEX::Proc {
         m_busy     = m_state.busy;
         m_critical = m_state.critical;
         status     = m_state.status;
+    }
+
+    void Thread::alloc_tls(uint16_t size) {
+        auto actual_size = size + sizeof(void*);
+
+        auto tls = parent->pagemap->alloc(actual_size, PAGE_WRITE | PAGE_USER);
+        auto tlsk =
+            Mem::kernel_pagemap->map(actual_size, parent->pagemap->paddrof(tls), PAGE_WRITE);
+
+        auto tls_self = (size_t) tls + size;
+
+        *((size_t*) ((size_t) tlsk + size)) = tls_self;
+        this->tls                           = (void*) tls_self;
+    }
+
+    void Thread::alloc_stacks(Mem::Pagemap* pagemap, size_t size, bool usermode) {
+        if (usermode) {
+            user_stack      = (size_t) pagemap->alloc(size, PAGE_WRITE | PAGE_USER);
+            user_stack_size = size;
+
+            kernel_stack      = (size_t) Mem::kernel_pagemap->alloc(KERNEL_STACK_SIZE, PAGE_WRITE);
+            kernel_stack_size = KERNEL_STACK_SIZE;
+        }
+        else {
+            user_stack      = 0x2137;
+            user_stack_size = 0x2137;
+
+            kernel_stack      = (size_t) Mem::kernel_pagemap->alloc(size, PAGE_WRITE);
+            kernel_stack_size = size;
+        }
+
+        fault_stack      = (size_t) Mem::kernel_pagemap->alloc(FAULT_STACK_SIZE, PAGE_WRITE);
+        fault_stack_size = FAULT_STACK_SIZE;
+    }
+
+    void Thread::setup_context(Mem::Pagemap* pagemap, size_t size, void* entry, bool usermode) {
+        if (usermode)
+            context = new Context(entry, (void*) user_stack, size, pagemap, true);
+        else
+            context = new Context(entry, (void*) kernel_stack, size, pagemap, false, Thread::exit);
     }
 }

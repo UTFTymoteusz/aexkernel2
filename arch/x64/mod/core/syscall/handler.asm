@@ -33,6 +33,9 @@ handler:
 
     call syscall_done
 
+    mov rax, qword [gs:0x10]
+    mov r12d, dword [rax + 0x18]
+
     pop rdx
     pop rax
 

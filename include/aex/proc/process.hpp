@@ -45,6 +45,8 @@ namespace AEX::Proc {
         int        status;
         int        ret_code;
 
+        uint16_t tls_size;
+
         Process() = default;
 
         /**

@@ -39,10 +39,14 @@ namespace AEX::Proc {
             thread_status_t status;
         };
 
-        Thread* self = this;
-        tid_t   tid;
+        // Don't change the order of these or the kernel will go boom boom
+        Thread* self = this; // 0x00
+        tid_t   tid;         // 0x08
 
-        Context* context;
+        Context* context; // 0x10
+        error_t  errno;   // 0x18
+
+        // Safe to change again
         Spinlock lock;
 
         thread_status_t status;
@@ -66,6 +70,8 @@ namespace AEX::Proc {
 
         bool faulting;
 
+        void* tls;
+
         Thread();
         Thread(Process* parent);
 
@@ -87,7 +93,7 @@ namespace AEX::Proc {
         error_t abort();
         bool    aborting();
 
-        void abortInternal();
+        void _abort();
         void finish();
 
         Process* getProcess();
@@ -192,5 +198,9 @@ namespace AEX::Proc {
         bool m_aborting = false;
 
         Thread* m_joiner = nullptr;
+
+        void alloc_stacks(Mem::Pagemap* pagemap, size_t size, bool usermode);
+        void alloc_tls(uint16_t size);
+        void setup_context(Mem::Pagemap* pagemap, size_t size, void* entry, bool usermode);
     };
 }

@@ -30,6 +30,16 @@ error_t Elf64Executor::exec(const char* path, Proc::Process* process) {
     if (!elf.isValid(ELF::BIT_64, ELF::EN_LITTLE, ELF::ISA_AMD64))
         return ENOEXEC;
 
+    for (int i = 0; i < elf.program_headers.count(); i++) {
+        auto program_header = elf.program_headers[i];
+
+        if (program_header.type != ELF::PH_TLS)
+            continue;
+
+        process->tls_size = program_header.memory_size;
+        printk("tls size: %i\n", process->tls_size);
+    }
+
     for (int i = 0; i < elf.section_headers.count(); i++) {
         auto section_header = elf.section_headers[i];
 
