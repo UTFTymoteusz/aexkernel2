@@ -4,6 +4,7 @@
 #include "aex/dev/input.hpp"
 #include "aex/dev/tty.hpp"
 #include "aex/fs.hpp"
+#include "aex/ipc/pipe.hpp"
 #include "aex/mem.hpp"
 #include "aex/module.hpp"
 #include "aex/net.hpp"
@@ -308,13 +309,17 @@ void exec_init() {
     auto tty_wr = FS::File::open("/dev/tty0", FS::O_WR);
     AEX_ASSERT(tty_wr);
 
-    auto tty_wre = tty_wr.value->dup();
-    AEX_ASSERT(tty_wre);
+    // auto tty_wre = tty_wr.value->dup();
+    // AEX_ASSERT(tty_wre);
+
+    FS::File_SP rp, wp;
+    IPC::Pipe::create(rp, wp);
 
     auto info = Proc::exec_opt{
         .stdin  = tty_rd.value,
         .stdout = tty_wr.value,
-        .stderr = tty_wre.value,
+        //.stderr = tty_wre.value,
+        .stderr = wp,
     };
 
     int status;
@@ -323,6 +328,12 @@ void exec_init() {
     Proc::Process::wait(status);
 
     printk("init exited with a code %i\n", status);
+
+    char buffer[33];
+    rp->read(buffer, sizeof(buffer));
+
+    for (size_t i = 0; i < sizeof(buffer); i++)
+        Dev::TTY::VTTYs[0]->write(buffer[i]);
 }
 
 void kmain_threaded() {

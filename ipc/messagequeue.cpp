@@ -31,7 +31,8 @@ namespace AEX::IPC {
         int left = header.len - len;
         while (left > 0) {
             uint8_t buffer[32];
-            m_circ_buffer.read(buffer, min(left, 32));
+            if (m_circ_buffer.read(buffer, min(left, 32)) == 0)
+                break;
 
             left -= min(left, 32);
         }
