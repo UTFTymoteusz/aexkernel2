@@ -102,11 +102,10 @@ namespace AEX {
         // No need for a fancy algorithm atm
         for (int i = 0; i < list.count() - 1; i++) {
             for (int j = 0; j < list.count() - 1; j++) {
-                if (list[j].order > list[j + 1].order) {
-                    auto tmp    = list[j];
-                    list[j]     = list[j + 1];
-                    list[j + 1] = tmp;
-                }
+                if (list[j].order <= list[j + 1].order)
+                    continue;
+
+                swap(list[j], list[j + 1]);
             }
         }
 
