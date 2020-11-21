@@ -17,8 +17,12 @@ error_t pipe(usr_int* rp, usr_int* wp) {
     if (err != ENONE)
         return err;
 
+    current->files_lock.acquire();
+
     *rp = current->files.push(rsp);
     *wp = current->files.push(wsp);
+
+    current->files_lock.release();
 
     return ENONE;
 }

@@ -27,10 +27,12 @@ namespace AEX::Proc {
         resource_usage usage;
 
         Spinlock lock;
-        Mutex    thread_lock;
 
-        int                          thread_counter;
-        Mem::LazyVector<Thread*>     threads;
+        int                      thread_counter;
+        Mutex                    threads_lock;
+        Mem::LazyVector<Thread*> threads;
+
+        Spinlock                     files_lock;
         Mem::LazyVector<FS::File_SP> files;
 
         Mem::Pagemap*                     pagemap;

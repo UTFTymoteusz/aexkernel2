@@ -37,7 +37,6 @@ error_t Elf64Executor::exec(const char* path, Proc::Process* process) {
             continue;
 
         process->tls_size = program_header.memory_size;
-        printk("tls size: %i\n", process->tls_size);
     }
 
     for (int i = 0; i < elf.section_headers.count(); i++) {
