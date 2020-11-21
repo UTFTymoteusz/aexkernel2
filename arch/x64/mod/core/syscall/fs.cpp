@@ -4,17 +4,18 @@
 #include "aex/sys/syscall.hpp"
 
 #include "syscallids.h"
+#include "uptr.hpp"
 
 using namespace AEX;
 
-int open(const char* usr_path, int mode) {
+int open(const usr_char* usr_path, int mode) {
     auto current = Proc::Process::current();
     auto file    = FS::File::open(usr_path, mode);
 
     return current->files.push(file);
 }
 
-uint32_t read(int fd, void* usr_buf, uint32_t count) {
+uint32_t read(int fd, usr_void* usr_buf, uint32_t count) {
     auto current = Proc::Process::current();
 
     if (!current->files.present(fd)) {
@@ -28,7 +29,7 @@ uint32_t read(int fd, void* usr_buf, uint32_t count) {
     return read_try.value;
 }
 
-uint32_t write(int fd, void* usr_buf, uint32_t count) {
+uint32_t write(int fd, const usr_void* usr_buf, uint32_t count) {
     auto current = Proc::Process::current();
 
     if (!current->files.present(fd)) {
@@ -37,7 +38,7 @@ uint32_t write(int fd, void* usr_buf, uint32_t count) {
     }
 
     auto file      = current->files[fd];
-    auto write_try = file->write(usr_buf, count);
+    auto write_try = file->write((void*) usr_buf, count);
 
     return write_try.value;
 }
