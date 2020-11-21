@@ -17,7 +17,9 @@ namespace AEX::FS {
         this->pos      = pos;
     }
 
-    File::~File() {}
+    File::~File() {
+        close();
+    }
 
     optional<File_SP> File::open(const char* path, int mode) {
         auto mount_info = find_mount(path);

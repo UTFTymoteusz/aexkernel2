@@ -1,9 +1,7 @@
 #include "cdev.hpp"
 
 #include "aex/dev/tty.hpp"
-
-#include <stddef.h>
-#include <stdint.h>
+#include "aex/types.hpp"
 
 namespace AEX::Dev {
     TTYChar::TTYChar(int index, const char* name) : CharDevice(name) {
@@ -22,6 +20,11 @@ namespace AEX::Dev {
 
     error_t TTYChar::close(CharHandle* handle) {
         auto scope = m_mutex.scope();
+
+        if (m_closed)
+            return EINVAL;
+
+        m_closed = true;
 
         for (int i = 0; i < m_stack.count(); i++) {
             if (m_stack[i] != handle)

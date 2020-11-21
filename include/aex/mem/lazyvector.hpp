@@ -15,6 +15,19 @@ namespace AEX::Mem {
             pushRecursive(rest...);
         }
 
+        ~LazyVector() {
+            for (int i = 0; i < m_count; i++) {
+                if (!m_array[i].has_value)
+                    continue;
+
+                m_array[i].value     = {};
+                m_array[i].has_value = false;
+            }
+
+            m_count = 0;
+            resize();
+        }
+
         const T& operator[](int index) {
             if (index < 0 || index >= m_count)
                 return m_array[0].value;

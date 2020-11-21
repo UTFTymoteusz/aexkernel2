@@ -2,9 +2,7 @@
 
 #include "aex/dev/charhandle.hpp"
 #include "aex/fs/file.hpp"
-
-#include <stddef.h>
-#include <stdint.h>
+#include "aex/types.hpp"
 
 namespace AEX::FS {
     class CharFile : public File {

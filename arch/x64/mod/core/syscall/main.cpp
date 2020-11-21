@@ -2,8 +2,7 @@
 #include "aex/assert.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc/thread.hpp"
-
-#include <stdint.h>
+#include "aex/types.hpp"
 
 using namespace AEX;
 

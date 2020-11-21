@@ -3,9 +3,7 @@
 #include "aex/dev/chardevice.hpp"
 #include "aex/mem/vector.hpp"
 #include "aex/mutex.hpp"
-
-#include <stddef.h>
-#include <stdint.h>
+#include "aex/types.hpp"
 
 namespace AEX::Dev {
     namespace TTY {
@@ -32,5 +30,6 @@ namespace AEX::Dev {
         CharHandle*              m_current;
 
         Mutex m_mutex;
+        bool  m_closed;
     };
 }

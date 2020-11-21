@@ -1,9 +1,7 @@
 #include "aex/dev/chardevice.hpp"
 
 #include "aex/dev.hpp"
-
-#include <stddef.h>
-#include <stdint.h>
+#include "aex/types.hpp"
 
 namespace AEX::Dev {
     CharDevice::CharDevice(const char* name) : Device(name, DEV_CHAR) {

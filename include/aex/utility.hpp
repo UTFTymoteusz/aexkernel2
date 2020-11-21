@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdint.h>
-
 #define PACKED __attribute((packed))
 #define WEAK __attribute((weak))
 #define UNUSED __attribute((unused))
@@ -25,12 +23,6 @@
 
 #ifndef VERSION
 #define VERSION "inv"
-#endif
-
-#if BIT64
-typedef int64_t ssize_t;
-#else
-typedef int32_t ssize_t;
 #endif
 
 namespace AEX {

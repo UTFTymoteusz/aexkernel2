@@ -9,6 +9,7 @@
 using namespace AEX;
 
 optional<FS::File_SP> get_file(int fd);
+optional<FS::File_SP> pop_file(int fd);
 
 int open(const usr_char* usr_path, int mode) {
     auto current = Proc::Process::current();
@@ -45,6 +46,14 @@ uint32_t write(int fd, const usr_void* usr_buf, uint32_t count) {
     return write_try.value;
 }
 
+int close(int fd) {
+    auto fd_try = pop_file(fd);
+    if (!fd_try)
+        return fd_try.error_code;
+
+    return fd_try.value->close();
+}
+
 bool isatty(int fd) {
     auto fd_try = get_file(fd);
     if (!fd_try)
@@ -59,6 +68,7 @@ void register_fs() {
     table[SYS_OPEN]   = (void*) open;
     table[SYS_READ]   = (void*) read;
     table[SYS_WRITE]  = (void*) write;
+    table[SYS_CLOSE]  = (void*) close;
     table[SYS_ISATTY] = (void*) isatty;
 }
 
@@ -72,4 +82,19 @@ optional<FS::File_SP> get_file(int fd) {
     }
 
     return current->files[fd];
+}
+
+optional<FS::File_SP> pop_file(int fd) {
+    auto current = Proc::Process::current();
+    auto scope   = current->files_lock.scope();
+
+    if (!current->files.present(fd)) {
+        PRINTK_DEBUG_WARN1("ebadf (%i)\n", fd);
+        return EBADF;
+    }
+
+    auto file = current->files[fd];
+    current->files.erase(fd);
+
+    return file;
 }
