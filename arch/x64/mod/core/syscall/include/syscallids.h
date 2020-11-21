@@ -14,7 +14,8 @@ enum syscall_id_t {
     SYS_SEEK   = 9,
     SYS_IOCTL  = 10,
     SYS_ISATTY = 11,
-    SYS_PIPE   = 12,
+    SYS_DUP    = 12,
+    SYS_PIPE   = 13,
 
     SYS_TEST1 = 251,
     SYS_TEST2 = 252,

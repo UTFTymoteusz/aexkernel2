@@ -54,6 +54,23 @@ int close(int fd) {
     return fd_try.value->close();
 }
 
+int dup(int fd) {
+    auto current = Proc::Process::current();
+    auto fd_try  = get_file(fd);
+    if (!fd_try)
+        return fd_try.error_code;
+
+    auto dup_try = fd_try.value->dup();
+    if (!dup_try)
+        return dup_try.error_code;
+
+    current->files_lock.acquire();
+    int fd2 = current->files.push(dup_try.value);
+    current->files_lock.release();
+
+    return fd2;
+}
+
 bool isatty(int fd) {
     auto fd_try = get_file(fd);
     if (!fd_try)
@@ -69,6 +86,7 @@ void register_fs() {
     table[SYS_READ]   = (void*) read;
     table[SYS_WRITE]  = (void*) write;
     table[SYS_CLOSE]  = (void*) close;
+    table[SYS_DUP]    = (void*) dup;
     table[SYS_ISATTY] = (void*) isatty;
 }
 
