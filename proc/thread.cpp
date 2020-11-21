@@ -103,9 +103,13 @@ namespace AEX::Proc {
     }
 
     void Thread::sleep(int ms) {
+        usleep(ms * 1000000);
+    }
+
+    void Thread::usleep(int ns) {
         auto currentThread = Thread::current();
 
-        currentThread->wakeup_at = Sys::Time::uptime() + ((Sys::Time::time_t) ms) * 1000000;
+        currentThread->wakeup_at = Sys::Time::uptime() + (Sys::Time::time_t) ns;
         currentThread->status    = TS_SLEEPING;
 
         Thread::yield();

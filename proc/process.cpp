@@ -82,13 +82,20 @@ namespace AEX::Proc {
             return;
 
         m_exiting = true;
+        ret_code  = status;
 
         PRINTK_DEBUG2("pid%i: exit(%i)", pid, status);
 
         broker(exit_threaded_broker, this);
 
-        // if (Process::current() == this)
-        //    Thread::current()->abort();
+        if (Process::current() == this) {
+            processes_lock.release();
+
+            while (!Thread::current()->aborting())
+                Thread::yield();
+
+            processes_lock.acquire();
+        }
     }
 
     error_t Process::kill(pid_t pid) {

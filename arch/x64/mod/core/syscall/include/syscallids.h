@@ -3,7 +3,7 @@
 enum syscall_id_t {
     SYS_EXIT   = 0,
     SYS_THEXIT = 1,
-    SYS_SLEEP  = 2,
+    SYS_USLEEP = 2,
     SYS_YIELD  = 3,
 
     SYS_OPEN   = 4,

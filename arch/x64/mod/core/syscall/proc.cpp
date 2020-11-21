@@ -17,8 +17,8 @@ error_t thexit() {
     return ENONE;
 }
 
-error_t sleep(int ms) {
-    Proc::Thread::sleep(ms);
+error_t usleep(int ns) {
+    Proc::Thread::usleep(ns);
     return ENONE;
 }
 
@@ -32,6 +32,6 @@ void register_proc() {
 
     table[SYS_EXIT]   = (void*) exit;
     table[SYS_THEXIT] = (void*) thexit;
-    table[SYS_SLEEP]  = (void*) sleep;
+    table[SYS_USLEEP] = (void*) usleep;
     table[SYS_YIELD]  = (void*) yield;
 }

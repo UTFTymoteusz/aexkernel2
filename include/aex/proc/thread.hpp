@@ -83,6 +83,7 @@ namespace AEX::Proc {
 
         static void yield();
         static void sleep(int ms);
+        static void usleep(int ns);
         static void exit();
 
         static Thread* current();
