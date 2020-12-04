@@ -193,7 +193,7 @@ namespace AEX::Sys {
                     cpu->id, cpu->unused, thread->m_busy, thread->m_critical,
            cpu->in_interrupt, cr2, cr3, info->rip, name);  */
 
-        auto process = thread->getProcess();
+        auto process = (info->err & 0x04) ? thread->getProcess() : Proc::Process::kernel();
         auto region  = Mem::find_mmap_region(process, addr);
         if (!region) {
             AEX::printk("cpu%i: Unrecoverable page fault @ 0x%lx (0x%lx)\n"

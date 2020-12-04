@@ -66,6 +66,12 @@ namespace AEX::Proc {
         static optional<pid_t> wait(int& status);
 
         /**
+         * Gets the kernel process.
+         * @returns The pointer to the kernel process.
+         */
+        static Process* kernel();
+
+        /**
          * Gets the current process.
          * @returns The pointer to the process.
          */

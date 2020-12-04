@@ -48,6 +48,10 @@ namespace AEX::Proc {
         return Thread::current()->parent;
     }
 
+    Process* Process::kernel() {
+        return process_list_head->next;
+    }
+
     void exit_threaded(Process* process) {
         for (int i = 0; i < process->threads.count(); i++) {
             if (!process->threads.present(i))
