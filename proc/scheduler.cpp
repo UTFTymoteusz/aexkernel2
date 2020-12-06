@@ -52,7 +52,7 @@ namespace AEX::Proc {
                 continue;
             }
 
-            if (thread->parent->cpu_affinity.isMasked(cpu->id))
+            if (thread->parent->cpu_affinity.masked(cpu->id))
                 continue;
 
             if (!thread->lock.tryAcquireRaw())

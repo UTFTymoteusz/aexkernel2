@@ -13,7 +13,5 @@ namespace AEX::FS {
         ~DevFS();
 
         optional<ControlBlock*> mount(const char* source);
-
-        private:
     };
 }

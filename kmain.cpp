@@ -25,6 +25,7 @@
 #include "mem/sections.hpp"
 #include "net/net.hpp"
 #include "proc/proc.hpp"
+#include "sys/acpi.hpp"
 #include "sys/cpu/idt.hpp"
 #include "sys/irq.hpp"
 #include "sys/irq_i.hpp"
@@ -57,10 +58,10 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     Init::print_header();
     printk(PRINTK_INIT "Booting AEX/2 on " ARCH ", build " VERSION "\n\n");
 
-    if (mbinfo->flags & MULTIBOOT_INFO_MODS) {
-        init_mem(mbinfo);
-        load_symbols(mbinfo);
-    }
+    AEX_ASSERT(mbinfo->flags & MULTIBOOT_INFO_MODS);
+
+    init_mem(mbinfo);
+    load_symbols(mbinfo);
 
     AEX_ASSERT(Debug::symbols_loaded);
 
@@ -334,6 +335,8 @@ void exec_init() {
 
     for (size_t i = 0; i < sizeof(buffer); i++)
         Dev::TTY::VTTYs[0]->write(buffer[i]);
+
+    printk("\n");
 }
 
 void kmain_threaded() {
@@ -341,7 +344,7 @@ void kmain_threaded() {
 
     exec_init();
 
-    // AEX_ASSERT(Power::poweroff());
+    AEX_ASSERT(Power::poweroff());
 
     printk(PRINTK_OK "mm it works\n");
     Proc::Thread::sleep(100);

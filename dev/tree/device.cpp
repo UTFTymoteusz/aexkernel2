@@ -25,7 +25,7 @@ namespace AEX::Dev::Tree {
         // children.~RCPArray();
     }
 
-    void Device::addResource(resource resource) {
+    void Device::add(resource resource) {
         ScopeSpinlock scopeLock(m_lock);
 
         m_resources.push(resource);

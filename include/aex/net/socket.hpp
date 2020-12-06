@@ -2,6 +2,7 @@
 
 #include "aex/fs/file.hpp"
 #include "aex/net/ipv4.hpp"
+#include "aex/net/types.hpp"
 
 namespace AEX::Net {
     enum socket_domain_t : uint16_t {
@@ -53,10 +54,6 @@ namespace AEX::Net {
     static_assert(sizeof(sockaddr) == sizeof(sockaddr_inet));
     static_assert(sizeof(sockaddr) == 16);
 
-    class Socket;
-
-    typedef Mem::SmartPointer<Socket> Socket_SP;
-
     class Socket : public FS::File {
         public:
         virtual ~Socket();
@@ -86,7 +83,5 @@ namespace AEX::Net {
 
         virtual error_t shutdown(int how);
         virtual error_t close();
-
-        private:
     };
 }

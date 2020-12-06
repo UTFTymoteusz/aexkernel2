@@ -19,7 +19,7 @@ namespace AEX::Dev::Tree {
      * @param bus_name The bus name.
      * @param device   The device.
      * @returns True if succeeded.
-     */
+     **/
     bool register_device(const char* bus_name, Device* device);
 
     /**
@@ -27,20 +27,20 @@ namespace AEX::Dev::Tree {
      * @param bus_name The bus name.
      * @param driver   The driver.
      * @returns True if succeeded.
-     */
+     **/
     bool register_driver(const char* bus_name, Driver* driver);
 
     /**
      * Gets a bus by it's name.
      * @param bus_name The bus name.
      * @returns A smart pointer that points to the bus. Will be null on failure.
-     */
+     **/
     Mem::SmartPointer<Bus> get_bus(const char* bus_name);
 
     /**
      * Checks if a bus exists.
      * @param bus_name The bus name.
      * @returns True if the bus exists.
-     */
+     **/
     bool bus_exists(const char* bus_name);
 }

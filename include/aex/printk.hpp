@@ -25,11 +25,11 @@ namespace AEX {
 
     /**
      * Makes printk() not care about spinlocks and ignore prints from other processors.
-     */
+     **/
     void printk_fault();
 
     /**
      * Makes printk() care about spinlocks and not ignore prints from other processors.
-     */
+     **/
     void printk_nofault();
 }

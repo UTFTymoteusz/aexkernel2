@@ -4,7 +4,6 @@
 #include <stdint.h>
 
 namespace AEX::Dev::Tree {
-
     struct resource {
         enum type_t : uint8_t {
             MEMORY = 0,

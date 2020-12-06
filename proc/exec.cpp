@@ -6,7 +6,7 @@ namespace AEX::Proc {
     Mutex                  executor_mutex;
     Mem::Vector<Executor*> executors;
 
-    void registerExecutor(Executor* executor) {
+    void register_executor(Executor* executor) {
         auto scope = executor_mutex.scope();
 
         executors.push(executor);

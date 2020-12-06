@@ -56,25 +56,31 @@ namespace AEX::Proc {
          * @param image_path Image path.
          * @param name       Process name. Will get generated from the image path if not specified.
          * @param parent_pid PID of the parent process.
-         */
+         **///
         Process(const char* image_path, pid_t parent_pid, Mem::Pagemap* pagemap,
                 const char* name = nullptr);
 
         ~Process();
 
-        static error_t         kill(pid_t pid);
+        static error_t kill(pid_t pid);
+
+        /**
+         * Waits for any child process to exit.
+         * @param status Reference to an int where the exit code will be returned.
+         * @returns PID of the process which exited or an error code.
+         **///
         static optional<pid_t> wait(int& status);
 
         /**
          * Gets the kernel process.
          * @returns The pointer to the kernel process.
-         */
+         **///
         static Process* kernel();
 
         /**
          * Gets the current process.
          * @returns The pointer to the process.
-         */
+         **///
         static Process* current();
 
         void ready();

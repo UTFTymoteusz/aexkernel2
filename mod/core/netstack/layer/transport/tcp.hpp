@@ -37,7 +37,5 @@ namespace NetStack {
 
         static void parse(const uint8_t* buffer, uint16_t len, AEX::Net::ipv4_addr src_addr,
                           AEX::Net::ipv4_addr dst_addr);
-
-        private:
     };
 }

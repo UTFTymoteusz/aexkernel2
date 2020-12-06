@@ -70,7 +70,7 @@ namespace AEX::Sys {
 
     /**
      * This is a cute little function that's gonna get called by the IPI IRQ handler.
-     */
+     **/
     extern "C" void ipi_handle() {
         auto us = CPU::current();
 

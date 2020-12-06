@@ -25,8 +25,9 @@ namespace AEX::IPC {
         }
 
         message_header header;
-        m_circ_buffer.read((uint8_t*) &header, sizeof(header));
-        m_circ_buffer.read((uint8_t*) ptr, len);
+
+        m_circ_buffer.read(&header, sizeof(header));
+        m_circ_buffer.read(ptr, len);
 
         int left = header.len - len;
         while (left > 0) {
@@ -67,8 +68,8 @@ namespace AEX::IPC {
         header.pid = Thread::current()->getProcess()->pid;
         header.len = len;
 
-        m_circ_buffer.write((uint8_t*) &header, sizeof(header));
-        m_circ_buffer.write((uint8_t*) ptr, len);
+        m_circ_buffer.write(&header, sizeof(header));
+        m_circ_buffer.write(ptr, len);
 
         m_event.raise();
         m_lock.release();

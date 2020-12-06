@@ -164,7 +164,7 @@ namespace AEX::Proc {
         if (m_detached || m_joiner)
             return EINVAL;
 
-        if (this == Thread::current())
+        if (this == Thread::current() || Thread::current()->m_joiner == this)
             return EDEADLK;
 
         Thread::current()->addBusy();

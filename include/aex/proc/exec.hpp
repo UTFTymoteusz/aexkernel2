@@ -16,6 +16,6 @@ namespace AEX::Proc {
         FS::File_SP stdin, stdout, stderr;
     };
 
-    void    registerExecutor(Executor* executor);
+    void    register_executor(Executor* executor);
     error_t exec(const char* path, exec_opt* options);
 }

@@ -2,6 +2,7 @@
 
 #include "aex/byte.hpp"
 #include "aex/string.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -42,7 +43,7 @@ namespace AEX::Net {
         operator uint32_t() {
             return from_big_endian<uint32_t>(*((uint32_t*) bytes));
         }
-    } __attribute__((packed));
+    } PACKED;
 
     // Make these more efficient pls
 

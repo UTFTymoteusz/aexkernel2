@@ -94,7 +94,7 @@ namespace AEX::FS {
     }
 
     optional<int64_t> File::seek(int64_t, seek_mode) {
-        return ENOSYS;
+        return ESPIPE;
     }
 
     optional<dir_entry> File::readdir() {

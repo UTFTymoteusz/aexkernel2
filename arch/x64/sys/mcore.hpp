@@ -10,6 +10,6 @@ namespace AEX::Sys::MCore {
 
     /**
      * Starts all CPUs in the system.
-     */
+     **/
     void init();
 }

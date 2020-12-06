@@ -22,13 +22,13 @@ namespace AEX::Dev::Tree {
         /**
          * Registers a device in the bus.
          * @param device The device.
-         */
+         **/
         void registerDevice(Device* device);
 
         /**
          * Registers a driver in the bus.
          * @param driver The driver.
-         */
+         **/
         void registerDriver(Driver* driver);
 
         private:

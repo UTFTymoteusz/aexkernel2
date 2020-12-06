@@ -2,13 +2,12 @@
 
 #include "aex/fs/directory.hpp"
 #include "aex/fs/type.hpp"
+#include "aex/fs/types.hpp"
 #include "aex/mem/smartptr.hpp"
 #include "aex/optional.hpp"
 #include "aex/types.hpp"
 
 namespace AEX::FS {
-    class ControlBlock;
-
     class INode {
         public:
         int id;
@@ -42,9 +41,5 @@ namespace AEX::FS {
         bool is_block() {
             return (type & FT_BLOCK) == FT_BLOCK;
         }
-
-        private:
     };
-
-    typedef Mem::SmartPointer<INode> INode_SP;
 }

@@ -14,7 +14,7 @@ namespace AEX::Proc {
     Process::Process(const char* image_path, pid_t parent_pid, Mem::Pagemap* pagemap,
                      const char* name) {
         if (name == nullptr)
-            FS::Path::get_filename(this->name, image_path, sizeof(this->name));
+            FS::get_filename(this->name, image_path, sizeof(this->name));
         else
             strncpy(this->name, name, sizeof(this->name));
 

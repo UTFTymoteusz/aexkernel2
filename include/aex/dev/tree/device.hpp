@@ -23,7 +23,7 @@ namespace AEX::Dev::Tree {
         Device(const char* name, Device* parent);
         virtual ~Device();
 
-        void               addResource(resource resource);
+        void               add(resource resource);
         optional<resource> getResource(int index);
 
         virtual void registerDevice(Device* device);

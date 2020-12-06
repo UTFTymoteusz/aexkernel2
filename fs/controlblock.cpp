@@ -22,7 +22,7 @@ namespace AEX::FS {
         inode->id            = root_inode_id;
         inode->control_block = this;
 
-        for (auto walker = Path::Walker(lpath); auto piece = walker.next();) {
+        for (auto walker = Walker(lpath); auto piece = walker.next();) {
             auto context = dir_context();
             bool found   = false;
 

@@ -25,8 +25,8 @@ namespace AEX::Dev {
 
         auto pci = new Device("pci", nullptr);
 
-        pci->addResource(resource(resource::IO, 0xCF8));
-        pci->addResource(resource(resource::IO, 0xCFC));
+        pci->add(resource(resource::IO, 0xCF8));
+        pci->add(resource(resource::IO, 0xCFC));
 
         mainbus->registerDevice(pci);
     }
@@ -44,10 +44,10 @@ namespace AEX::Dev {
 
             auto ps2 = new Device("ps2", nullptr);
 
-            ps2->addResource(resource(resource::IO, 0x60));
-            ps2->addResource(resource(resource::IO, 0x64));
-            ps2->addResource(resource(resource::IRQ, 1));
-            ps2->addResource(resource(resource::IRQ, 12));
+            ps2->add(resource(resource::IO, 0x60));
+            ps2->add(resource(resource::IO, 0x64));
+            ps2->add(resource(resource::IRQ, 1));
+            ps2->add(resource(resource::IRQ, 12));
 
             mainbus->registerDevice(ps2);
 
@@ -60,8 +60,8 @@ namespace AEX::Dev {
 
         auto rtc = new Device("rtc", nullptr);
 
-        rtc->addResource(resource(resource::IO, 0x70, 2));
-        rtc->addResource(resource(resource::IRQ, 8));
+        rtc->add(resource(resource::IO, 0x70, 2));
+        rtc->add(resource(resource::IRQ, 8));
 
         mainbus->registerDevice(rtc);
     }

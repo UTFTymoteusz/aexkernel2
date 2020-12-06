@@ -17,7 +17,7 @@ namespace AEX::Proc {
      * @param func Function to call.
      * @param args Function arguments.
      * @returns The created thread.
-     */
+     **/
     template <typename Func, typename... Args>
     [[nodiscard]] Thread* threaded_call(Func func, Args... args) {
         auto thread_try = Thread::create(1, (void*) func, Thread::KERNEL_STACK_SIZE, nullptr);

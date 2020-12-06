@@ -17,6 +17,9 @@ enum syscall_id_t {
     SYS_DUP    = 12,
     SYS_PIPE   = 13,
 
+    SYS_TCREATE = 14,
+    SYS_TABORT  = 15,
+
     SYS_TEST1 = 251,
     SYS_TEST2 = 252,
     SYS_TEST3 = 253,

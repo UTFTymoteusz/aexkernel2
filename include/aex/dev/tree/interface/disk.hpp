@@ -11,7 +11,5 @@ namespace AEX::Dev::Tree {
     class Disk : public Interface {
         public:
         bool bind(Device* device);
-
-        private:
     };
 };

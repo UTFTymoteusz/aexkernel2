@@ -24,7 +24,7 @@ namespace AEX::Dev {
         /**
          * Registers the device.
          * @returns True if registration has succeded.
-         */
+         **/
         bool registerDevice();
     };
 }

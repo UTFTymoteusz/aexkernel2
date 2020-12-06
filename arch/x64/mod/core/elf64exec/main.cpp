@@ -11,7 +11,7 @@ Proc::Executor* executor;
 
 void module_enter() {
     executor = new Elf64Executor();
-    Proc::registerExecutor(executor);
+    Proc::register_executor(executor);
 }
 
 void module_exit() {

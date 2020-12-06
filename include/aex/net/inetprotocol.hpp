@@ -6,7 +6,5 @@ namespace AEX::Net {
     class INetProtocol {
         public:
         virtual optional<Socket_SP> createSocket(socket_type_t type);
-
-        private:
     };
 }

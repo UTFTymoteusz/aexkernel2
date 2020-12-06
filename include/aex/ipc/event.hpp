@@ -12,20 +12,20 @@ namespace AEX::IPC {
          * Blocks the currently executing thread on this event.
          * @param ms_timeout If this is more than 0, the thread will automatically wake up after the
          * specified amount of milliseconds.
-         */
+         **/
         void wait(int ms_timeout = 0);
 
         /**
          * Unblocks all threads on waiting on this event.
          * @returns The amount of threads that had been unblocked.
-         */
+         **/
         int raise();
 
         /**
          * Unblocks all threads on waiting on this event and marks it as defunct, disallowing any
          * future blocks.
          * @returns The amount of threads that had been unblocked.
-         */
+         **/
         int defunct();
 
         private:
@@ -42,18 +42,18 @@ namespace AEX::IPC {
          * Blocks the currently executing thread on this event.
          * @param ms_timeout If this is more than 0, the thread will automatically wake up after the
          * specified amount of milliseconds.
-         */
+         **/
         void wait(int ms_timeout = 0);
 
         /**
          * Unblocks the thread waiting on this event
-         */
+         **/
         void raise();
 
         /**
          * Unblocks the thread waiting on this event and marks it as defunct, disallowing any
          * future blocks.
-         */
+         **/
         void defunct();
 
         private:

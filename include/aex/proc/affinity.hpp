@@ -12,11 +12,11 @@ namespace AEX::Proc {
             m_mask = 0x00000000;
         }
 
-        bool isCurrentCPUMasked() {
-            return isMasked(Sys::CPU::currentID());
+        bool currentMasked() {
+            return masked(Sys::CPU::currentID());
         }
 
-        bool isMasked(int id) {
+        bool masked(int id) {
             return m_mask & (1 << id);
         }
 

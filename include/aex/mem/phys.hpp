@@ -16,7 +16,7 @@ namespace AEX::Mem::Phys {
 
     /**
      * Ceils the amount of bytes to the required amount of frames.
-     */
+     **//////
     template <typename T>
     T ceiltopg(T a) {
         return (a + (Sys::CPU::PAGE_SIZE - 1)) / Sys::CPU::PAGE_SIZE;
@@ -26,7 +26,7 @@ namespace AEX::Mem::Phys {
      * Allocates enough frames to fit the specified size.
      * @param amount Requested size in bytes.
      * @returns The physical address of the allocated frame region.
-     */
+     **//////
     phys_addr alloc(int32_t amount);
 
     /**
@@ -34,6 +34,6 @@ namespace AEX::Mem::Phys {
      * address.
      * @param addr   The physical address.
      * @param amount Size in bytes.
-     */
+     **//////
     void free(phys_addr addr, int32_t amount);
 }

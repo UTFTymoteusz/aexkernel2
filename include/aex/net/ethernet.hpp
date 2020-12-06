@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aex/string.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -33,5 +34,5 @@ namespace AEX::Net {
         bool operator!=(const mac_addr& b) {
             return memcmp(bytes, b.bytes, 6) != 0;
         }
-    } __attribute__((packed));
+    } PACKED;
 }
