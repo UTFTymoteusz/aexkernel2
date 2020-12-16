@@ -2,54 +2,70 @@
 #include "aex/fs/file.hpp"
 #include "aex/proc/process.hpp"
 #include "aex/sys/syscall.hpp"
+#include "aex/types.hpp"
 
 #include "syscallids.h"
 #include "uptr.hpp"
 
 using namespace AEX;
+using namespace AEX::Proc;
 
 optional<FS::File_SP> get_file(int fd);
 optional<FS::File_SP> pop_file(int fd);
 
 int open(const usr_char* usr_path, int mode) {
-    auto current = Proc::Process::current();
-    auto file    = FS::File::open(usr_path, mode);
+    auto current  = Proc::Process::current();
+    auto file_try = FS::File::open(usr_path, mode);
+    if (!file_try) {
+        Thread::current()->errno = file_try.error_code;
+        return -1;
+    }
 
     current->files_lock.acquire();
-    int fd = current->files.push(file);
+    int fd = current->files.push(file_try.value);
     current->files_lock.release();
 
     return fd;
 }
 
-uint32_t read(int fd, usr_void* usr_buf, uint32_t count) {
+ssize_t read(int fd, usr_void* usr_buf, uint32_t count) {
     auto fd_try = get_file(fd);
-    if (!fd_try)
-        return fd_try.error_code;
+    if (!fd_try) {
+        Thread::current()->errno = fd_try.error_code;
+        return -1;
+    }
 
     auto read_try = fd_try.value->read((void*) usr_buf, count);
-    if (!read_try)
-        return read_try.error_code;
+    if (!read_try) {
+        Thread::current()->errno = read_try.error_code;
+        return -1;
+    }
 
     return read_try.value;
 }
 
-uint32_t write(int fd, const usr_void* usr_buf, uint32_t count) {
+ssize_t write(int fd, const usr_void* usr_buf, uint32_t count) {
     auto fd_try = get_file(fd);
-    if (!fd_try)
-        return fd_try.error_code;
+    if (!fd_try) {
+        Thread::current()->errno = fd_try.error_code;
+        return -1;
+    }
 
     auto write_try = fd_try.value->write((void*) usr_buf, count);
-    if (!write_try)
-        return write_try.error_code;
+    if (!write_try) {
+        Thread::current()->errno = write_try.error_code;
+        return -1;
+    }
 
     return write_try.value;
 }
 
 int close(int fd) {
     auto fd_try = pop_file(fd);
-    if (!fd_try)
-        return fd_try.error_code;
+    if (!fd_try) {
+        Thread::current()->errno = fd_try.error_code;
+        return -1;
+    }
 
     return fd_try.value->close();
 }
@@ -57,12 +73,16 @@ int close(int fd) {
 int dup(int fd) {
     auto current = Proc::Process::current();
     auto fd_try  = get_file(fd);
-    if (!fd_try)
-        return fd_try.error_code;
+    if (!fd_try) {
+        Thread::current()->errno = fd_try.error_code;
+        return -1;
+    }
 
     auto dup_try = fd_try.value->dup();
-    if (!dup_try)
-        return dup_try.error_code;
+    if (!dup_try) {
+        Thread::current()->errno = dup_try.error_code;
+        return -1;
+    }
 
     current->files_lock.acquire();
     int fd2 = current->files.push(dup_try.value);
@@ -73,10 +93,15 @@ int dup(int fd) {
 
 bool isatty(int fd) {
     auto fd_try = get_file(fd);
-    if (!fd_try)
-        return fd_try.error_code;
+    if (!fd_try) {
+        Thread::current()->errno = fd_try.error_code;
+        return false;
+    }
 
-    return fd_try.value->isatty();
+    bool tty                 = fd_try.value->isatty();
+    Thread::current()->errno = tty ? ENONE : ENOTTY;
+
+    return tty;
 }
 
 void register_fs() {

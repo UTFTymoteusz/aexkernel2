@@ -26,6 +26,10 @@ namespace AEX::Dev::TTY {
 
     VTTY& VTTY::write(char c) {
         m_lock.acquire();
+        
+        if (c == '\n')
+            Sys::CPU::outb(0xE9, '\r');
+
         Sys::CPU::outb(0xE9, c);
         _write(c);
         m_lock.release();
@@ -37,6 +41,9 @@ namespace AEX::Dev::TTY {
         m_lock.acquire();
 
         while (*str != '\0') {
+            if (*str == '\n')
+                Sys::CPU::outb(0xE9, '\r');
+
             Sys::CPU::outb(0xE9, *str);
             _write(*str++);
         }

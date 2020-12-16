@@ -35,7 +35,7 @@ namespace AEX::Mem {
                 m_event.wait();
                 m_lock.release();
 
-                if (Thread::current()->aborting())
+                if (Thread::current()->interrupted())
                     return offset;
 
                 Thread::yield();
@@ -74,7 +74,7 @@ namespace AEX::Mem {
                 m_event.wait();
                 m_lock.release();
 
-                if (Thread::current()->aborting())
+                if (Thread::current()->interrupted())
                     return offset;
 
                 Thread::yield();

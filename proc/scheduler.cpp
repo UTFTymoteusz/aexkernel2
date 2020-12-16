@@ -38,7 +38,7 @@ namespace AEX::Proc {
             case TS_RUNNABLE:
                 break;
             case TS_BLOCKED:
-                if (!thread->aborting())
+                if (!thread->interrupted())
                     continue;
 
                 break;

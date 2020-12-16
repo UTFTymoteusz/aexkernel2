@@ -515,6 +515,54 @@ namespace AEX::Mem {
         return boi;
     }
 
+    Pagemap* Pagemap::fork() {
+        int pptrtsrc = alloc_pptr();
+        int pptrtdst = alloc_pptr();
+        int pptrsrc  = alloc_pptr();
+        int pptrdst  = alloc_pptr();
+
+        size_t vaddr = 0x0000;
+
+        auto child = new Pagemap((size_t) this->vstart, (size_t) this->vend);
+
+        while (vaddr < (size_t) this->vend) {
+            size_t* srctbl = find_table(this->pageRoot, pptrtsrc, vaddr, &vaddr);
+            if (!srctbl)
+                continue;
+
+            size_t* dsttbl = child->findTableEnsure(pptrtdst, vaddr);
+
+            memset64(dsttbl, 512, 0x0000);
+
+            for (size_t i = 0; i < 512; i++) {
+                if (!srctbl[i]) {
+                    vaddr += Sys::CPU::PAGE_SIZE;
+                    continue;
+                }
+
+                size_t srcaddr  = srctbl[i] & MEM_PAGE_MASK;
+                size_t srcflags = srctbl[i] & ~MEM_PAGE_MASK;
+
+                size_t dstaddr = Mem::Phys::alloc(Sys::CPU::PAGE_SIZE);
+
+                memcpy(aim_pptr(pptrdst, dstaddr), aim_pptr(pptrsrc, srcaddr), Sys::CPU::PAGE_SIZE);
+
+                dsttbl[i] = dstaddr | srcflags;
+
+                // printk("0x%p >> 0x%p [0x%p]\n", vaddr, dstaddr, srcaddr);
+
+                vaddr += Sys::CPU::PAGE_SIZE;
+            }
+        }
+
+        free_pptr(pptrdst);
+        free_pptr(pptrsrc);
+        free_pptr(pptrtdst);
+        free_pptr(pptrtsrc);
+
+        return child;
+    }
+
     void create_first_levels();
 
     void init() {

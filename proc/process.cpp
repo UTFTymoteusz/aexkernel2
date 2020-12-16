@@ -19,7 +19,6 @@ namespace AEX::Proc {
             strncpy(this->name, name, sizeof(this->name));
 
         this->image_path = new char[strlen(image_path) + 1];
-
         strncpy(this->image_path, image_path, strlen(image_path) + 1);
 
         processes_lock.acquire();
@@ -66,6 +65,14 @@ namespace AEX::Proc {
         processes_lock.acquire();
         process->status = TS_DEAD;
 
+        auto iter_process = process_list_head;
+        for (int i = 0; i < process_list_size; i++) {
+            if (iter_process->parent_pid == process->pid)
+                iter_process->parent_pid = process->parent_pid;
+
+            iter_process = iter_process->next;
+        }
+
         get_process(process->parent_pid)->child_event.raise();
         PRINTK_DEBUG1("pid%i: full exit", process->pid);
 
@@ -95,7 +102,7 @@ namespace AEX::Proc {
         if (Process::current() == this) {
             processes_lock.release();
 
-            while (!Thread::current()->aborting())
+            while (!Thread::current()->interrupted())
                 Thread::yield();
 
             processes_lock.acquire();
@@ -176,7 +183,7 @@ namespace AEX::Proc {
             Thread::yield();
 
             Process::current()->lock.acquire();
-            if (Thread::current()->aborting())
+            if (Thread::current()->interrupted())
                 return EINTR;
         }
     }

@@ -330,21 +330,19 @@ void exec_init() {
 
     printk("init exited with a code %i\n", status);
 
-    char buffer[33];
+    /*char buffer[33];
     rp->read(buffer, sizeof(buffer));
 
     for (size_t i = 0; i < sizeof(buffer); i++)
         Dev::TTY::VTTYs[0]->write(buffer[i]);
 
-    printk("\n");
+    printk("\n");*/
 }
 
 void kmain_threaded() {
     using namespace AEX::Sys::Time;
 
     exec_init();
-
-    AEX_ASSERT(Power::poweroff());
 
     printk(PRINTK_OK "mm it works\n");
     Proc::Thread::sleep(100);
@@ -386,6 +384,9 @@ void kmain_threaded() {
             break;
         case 'p':
             Proc::debug_print_processes();
+            break;
+        case 's':
+            AEX_ASSERT(Power::poweroff());
             break;
         default:
             break;

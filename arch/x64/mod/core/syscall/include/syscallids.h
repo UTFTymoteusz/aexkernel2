@@ -16,9 +16,12 @@ enum syscall_id_t {
     SYS_ISATTY = 11,
     SYS_DUP    = 12,
     SYS_PIPE   = 13,
+    SYS_FORK   = 14,
 
-    SYS_TCREATE = 14,
-    SYS_TABORT  = 15,
+    SYS_THCREATE = 15,
+    SYS_THJOIN   = 16,
+    SYS_THABORT  = 17,
+    SYS_THDETACH = 18,
 
     SYS_TEST1 = 251,
     SYS_TEST2 = 252,

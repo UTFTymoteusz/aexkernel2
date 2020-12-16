@@ -186,7 +186,7 @@ namespace AEX::Proc {
         Thread::yield();
         this->lock.acquire();
 
-        if (Thread::current()->aborting()) {
+        if (Thread::current()->interrupted()) {
             printk("we hath been interrupted\n");
 
             m_detached = true;
@@ -254,12 +254,16 @@ namespace AEX::Proc {
         return m_aborting;
     }
 
+    bool Thread::interrupted() {
+        return m_aborting;
+    }
+
     void broker_cleanup(Thread* thread) {
         delete thread;
     }
 
     void Thread::finish() {
-        parent->lock.acquire();
+        parent->threads_lock.acquire();
 
         for (int i = 0; i < parent->threads.count(); i++) {
             if (!parent->threads.present(i) || parent->threads[i] != this)
@@ -269,7 +273,7 @@ namespace AEX::Proc {
             break;
         }
 
-        parent->lock.release();
+        parent->threads_lock.release();
 
         if (Mem::atomic_read(&parent->thread_counter) == 1)
             parent->exit(0);

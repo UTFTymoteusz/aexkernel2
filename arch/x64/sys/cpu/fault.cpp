@@ -115,7 +115,7 @@ namespace AEX::Sys {
             break;
         }
 
-        printk("TID: %8i (b%i, c%i, i%i)\n", cpu->unused, 2137, 2137, cpu->in_interrupt);
+        printk("THPTR: 0x%p (b%i, c%i, i%i)\n", thread, 2137, 2137, cpu->in_interrupt);
 
         if (info->int_no == EXC_PAGE_FAULT) {
             size_t cr2;

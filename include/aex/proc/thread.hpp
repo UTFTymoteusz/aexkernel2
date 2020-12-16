@@ -93,6 +93,7 @@ namespace AEX::Proc {
         error_t detach();
         error_t abort();
         bool    aborting();
+        bool    interrupted();
 
         void _abort();
         void finish();
@@ -102,7 +103,7 @@ namespace AEX::Proc {
         /**
          * Sets the arguments of the thread.
          * @param args Arguments.
-         **////
+         **/
         template <typename... U>
         void setArguments(U... args) {
             context->setArguments(args...);
@@ -111,14 +112,14 @@ namespace AEX::Proc {
         /**
          * Sets the status of the thread.
          * @param status Status to set to.
-         **////
+         **/
         void setStatus(thread_status_t status);
 
         // pls atomic<T> later
         /**
          * Adds 1 to the thread's busy counter. If m_busy is greater than 0, the thread cannot be
          * killed.
-         **////
+         **/
         inline void addBusy() {
             Mem::atomic_add(&m_busy, (uint16_t) 1);
         }
@@ -126,11 +127,13 @@ namespace AEX::Proc {
         /**
          * Subtracts 1 from the thread's busy counter. If m_busy is greater than 0, the thread
          * cannot be killed.
-         **////
+         **/
         inline void subBusy() {
             uint16_t busy = Mem::atomic_sub_fetch(&m_busy, (uint16_t) 1);
+            if (busy)
+                return;
 
-            if (!busy && aborting() && this == Thread::current())
+            if (this == Thread::current() && aborting())
                 Thread::exit();
         }
 
@@ -138,7 +141,7 @@ namespace AEX::Proc {
          * Checks the thread's busy counter. If m_busy is greater than 0, the thread cannot
          * be killed.
          * @returns Whenever the thread is "busy".
-         **////
+         **/
         inline bool isBusy() {
             return Mem::atomic_read(&m_busy) > 0;
         }
@@ -154,20 +157,20 @@ namespace AEX::Proc {
         /**
          * Adds 1 to the thread's critical counter. If m_critical is greater than 0, the thread
          * cannot be interrupted or killed.
-         **////
+         **/
         void addCritical();
 
         /**
          * Subtracts 1 from the thread's critical counter. If m_critical is greater than 0, the
          * thread cannot be interrupted or killed.
-         **////
+         **/
         void subCritical();
 
         /**
          * Checks the thread's critical counter. If m_critical is greater than 0, the thread cannot
          * be interrupted or killed.
          * @returns Whenever the thread is "critical".
-         **////
+         **/
         inline bool isCritical() {
             return Mem::atomic_read(&m_critical) > 0;
         }
