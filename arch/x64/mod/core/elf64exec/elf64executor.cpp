@@ -18,7 +18,8 @@ error_t Elf64Executor::exec(const char* path, Proc::Process* process) {
     auto    file = file_try.value;
     int64_t size = file->seek(0, FS::File::SEEK_END).value;
 
-    auto mmap_try = Mem::mmap(nullptr, size, Mem::PROT_READ, Mem::MAP_NONE, file, 0);
+    auto mmap_try =
+        Mem::mmap(Proc::Process::kernel(), nullptr, size, Mem::PROT_READ, Mem::MAP_NONE, file, 0);
     file->close();
 
     if (!mmap_try)
@@ -29,6 +30,42 @@ error_t Elf64Executor::exec(const char* path, Proc::Process* process) {
 
     if (!elf.isValid(ELF::BIT_64, ELF::EN_LITTLE, ELF::ISA_AMD64))
         return ENOEXEC;
+
+    process->threads_lock.acquire();
+
+    // Temporary workaround to make the process not die when the last thread exits.
+    Mem::atomic_add(&process->thread_counter, 1);
+
+    for (int i = 0; i < process->threads.count(); i++) {
+        if (!process->threads.present(i))
+            continue;
+
+        process->threads[i]->detach();
+        process->threads[i]->abort();
+    }
+
+    process->threads_lock.release();
+
+    while (true) {
+        bool breakout = true;
+
+        process->threads_lock.acquire();
+
+        for (int i = 0; i < process->threads.count(); i++) {
+            if (!process->threads.present(i))
+                continue;
+
+            breakout = false;
+            break;
+        }
+
+        process->threads_lock.release();
+
+        if (breakout)
+            break;
+
+        Proc::Thread::sleep(25);
+    }
 
     for (int i = 0; i < elf.program_headers.count(); i++) {
         auto program_header = elf.program_headers[i];
@@ -77,6 +114,9 @@ error_t Elf64Executor::exec(const char* path, Proc::Process* process) {
                                            process->pagemap, true);
     if (!thread_try)
         return EBOTHER;
+
+    // Temporary workaround to make the process not die when the last thread exits.
+    Mem::atomic_sub(&process->thread_counter, 1);
 
     return ENONE;
 }

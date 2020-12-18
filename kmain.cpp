@@ -236,7 +236,7 @@ void test_server() {
 
     auto sock = sock_try.value;
 
-    auto error = sock->bind(Net::ipv4_addr(127, 0, 0, 1), 7654);
+    auto error = sock->bind(Net::ipv4_addr(192, 168, 0, 23), 7654);
     if (error) {
         printk("failed to bind() the socket: %s\n", strerror(error));
         return;
@@ -325,24 +325,18 @@ void exec_init() {
 
     int status;
 
-    AEX_ASSERT(Proc::exec("/sys/aexinit.elf", &info) == ENONE);
+    AEX_ASSERT(Proc::exec(nullptr, "/sys/aexinit.elf", &info) == ENONE);
     Proc::Process::wait(status);
 
     printk("init exited with a code %i\n", status);
-
-    /*char buffer[33];
-    rp->read(buffer, sizeof(buffer));
-
-    for (size_t i = 0; i < sizeof(buffer); i++)
-        Dev::TTY::VTTYs[0]->write(buffer[i]);
-
-    printk("\n");*/
 }
 
 void kmain_threaded() {
     using namespace AEX::Sys::Time;
 
     exec_init();
+
+    AEX_ASSERT(Sys::Power::poweroff());
 
     printk(PRINTK_OK "mm it works\n");
     Proc::Thread::sleep(100);

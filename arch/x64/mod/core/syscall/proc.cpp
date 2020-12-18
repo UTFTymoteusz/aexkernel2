@@ -1,9 +1,11 @@
 #include "aex/errno.hpp"
+#include "aex/proc/exec.hpp"
 #include "aex/proc/process.hpp"
 #include "aex/proc/thread.hpp"
 #include "aex/sys/syscall.hpp"
 
 #include "syscallids.h"
+#include "uptr.hpp"
 
 using namespace AEX;
 using namespace AEX::Proc;
@@ -46,7 +48,7 @@ pid_t fork() {
     }
 
     if (parent->mmap_regions.count() > 0)
-        kpanic("implement proper mmap forking\n");
+        kpanic("implement proper mmap forking");
 
     auto calling_thread = Thread::current();
     auto thread         = new Thread();
@@ -55,10 +57,7 @@ pid_t fork() {
     thread->parent = child;
 
     thread->context = new Context();
-
-    Sys::CPU::nointerrupts();
     memcpy(thread->context, calling_thread->context, sizeof(Context));
-    Sys::CPU::interrupts();
 
     thread->user_stack      = calling_thread->user_stack;
     thread->user_stack_size = calling_thread->user_stack_size;
@@ -98,6 +97,28 @@ pid_t fork() {
     return child->pid;
 }
 
+int execve(const usr_char* path, usr_char* const argv[], usr_char* const envp[]) {
+    char path_buffer[min(strlen(path) + 1, FS::MAX_PATH_LEN)];
+    strncpy(path_buffer, path, sizeof(path_buffer));
+
+    Thread::current()->errno = exec(Process::current(), path_buffer, nullptr);
+    return Thread::current()->errno != ENONE ? -1 : 0;
+}
+
+pid_t wait(usr_int* wstatus) {
+    auto result = Process::current()->wait(*wstatus);
+    if (!result.has_value) {
+        Thread::current()->errno = result.error_code;
+        return -1;
+    }
+
+    return result.value;
+}
+
+pid_t getpid() {
+    return Process::current()->pid;
+}
+
 void register_proc() {
     auto table = Sys::default_table();
 
@@ -106,4 +127,7 @@ void register_proc() {
     table[SYS_USLEEP] = (void*) usleep;
     table[SYS_YIELD]  = (void*) yield;
     table[SYS_FORK]   = (void*) fork;
+    table[SYS_EXECVE] = (void*) execve;
+    table[SYS_WAIT]   = (void*) wait;
+    table[SYS_GETPID] = (void*) getpid;
 }

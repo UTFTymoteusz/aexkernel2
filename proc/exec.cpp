@@ -12,20 +12,38 @@ namespace AEX::Proc {
         executors.push(executor);
     }
 
-    error_t exec(const char* path, exec_opt* options) {
-        auto scope   = executor_mutex.scope();
-        auto process = new Process(path, Process::current()->pid,
-                                   new Mem::Pagemap(0x00000000, 0x7FFFFFFFFFFF));
+    error_t exec(Process* process, const char* path, exec_opt* options) {
+        if (process == Process::current()) {
+            auto thread = threaded_call(exec, process, path, options);
+
+            thread->start();
+            thread->detach();
+
+            while (!Thread::current()->aborting())
+                Thread::sleep(250);
+
+            return EINTR;
+        }
+
+        auto scope = executor_mutex.scope();
+
+        if (!process)
+            process = new Process(path, Process::current()->pid,
+                                  new Mem::Pagemap(0x00000000, 0x7FFFFFFFFFFF));
 
         for (int i = 0; i < executors.count(); i++) {
             if (executors[i]->exec(path, process))
                 continue;
 
+            process->rename(path, nullptr);
+
             process->files_lock.acquire();
 
-            process->files.set(0, options->stdin);
-            process->files.set(1, options->stdout);
-            process->files.set(2, options->stderr);
+            if (options) {
+                process->files.set(0, options->stdin);
+                process->files.set(1, options->stdout);
+                process->files.set(2, options->stderr);
+            }
 
             process->files_lock.release();
             process->ready();

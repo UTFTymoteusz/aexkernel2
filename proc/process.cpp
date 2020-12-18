@@ -13,13 +13,7 @@
 namespace AEX::Proc {
     Process::Process(const char* image_path, pid_t parent_pid, Mem::Pagemap* pagemap,
                      const char* name) {
-        if (name == nullptr)
-            FS::get_filename(this->name, image_path, sizeof(this->name));
-        else
-            strncpy(this->name, name, sizeof(this->name));
-
-        this->image_path = new char[strlen(image_path) + 1];
-        strncpy(this->image_path, image_path, strlen(image_path) + 1);
+        rename(image_path, name);
 
         processes_lock.acquire();
 
@@ -41,6 +35,19 @@ namespace AEX::Proc {
 
     void Process::ready() {
         status = TS_RUNNABLE;
+    }
+
+    void Process::rename(const char* image_path, const char* name) {
+        if (this->image_path)
+            delete this->image_path;
+
+        if (name == nullptr)
+            FS::get_filename(this->name, image_path, sizeof(this->name));
+        else
+            strncpy(this->name, name, sizeof(this->name));
+
+        this->image_path = new char[strlen(image_path) + 1];
+        strncpy(this->image_path, image_path, strlen(image_path) + 1);
     }
 
     Process* Process::current() {

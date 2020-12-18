@@ -7,6 +7,7 @@
 #include "aex/mem.hpp"
 #include "aex/mem/mmap.hpp"
 #include "aex/printk.hpp"
+#include "aex/proc/process.hpp"
 #include "aex/string.hpp"
 #include "aex/sys/pci.hpp"
 
@@ -34,7 +35,8 @@ namespace AEX::Debug {
         auto    file = file_try.value;
         int64_t size = file->seek(0, FS::File::SEEK_END).value;
 
-        auto mmap_try = Mem::mmap(nullptr, size, Mem::PROT_READ, Mem::MAP_NONE, file, 0);
+        auto mmap_try = Mem::mmap(Proc::Process::kernel(), nullptr, size, Mem::PROT_READ,
+                                  Mem::MAP_NONE, file, 0);
         AEX_ASSERT(mmap_try);
 
         file->close();

@@ -84,6 +84,7 @@ namespace AEX::Proc {
         static Process* current();
 
         void ready();
+        void rename(const char* image_path, const char* name);
 
         void exit(int status);
 
