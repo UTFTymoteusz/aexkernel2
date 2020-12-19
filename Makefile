@@ -62,10 +62,10 @@ all: $(OBJS)
 	cd arch/$(ARCH)/mod/core && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../../../..
 	cd arch/$(ARCH)/mod/init && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../../../..
 
-	@$(CXX) $(OBJS) $(LDFLAGS) -T linker.ld -o $(SYS)aexkrnl.elf
+	@$(CXX) $(OBJS) $(LDFLAGS) -T linker.ld -o $(SYS)aexkrnl
 
 copy:
-	@cp $(SYS)aexkrnl.elf "$(ROOT_DIR)sys/"
+	@cp $(SYS)aexkrnl "$(ROOT_DIR)sys/"
 
 include $(shell find $(DEP_DEST) -type f -name *.d)
 

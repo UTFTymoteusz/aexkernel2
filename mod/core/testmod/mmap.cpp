@@ -14,7 +14,7 @@ void test_mmap() {
     uint64_t heap;
 
     for (int i = 0; i < 4; i++) {
-        auto  file = FS::File::open("/sys/aexkrnl.elf", FS::O_RDWR).value;
+        auto  file = FS::File::open("/sys/aexkrnl", FS::O_RDWR).value;
         void* mmap = Mem::mmap(Proc::Process::kernel(), nullptr, 65536, Mem::PROT_READ,
                                Mem::MAP_NONE, file, 0)
                          .value;

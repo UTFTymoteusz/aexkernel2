@@ -45,8 +45,8 @@ namespace AEX::Proc {
 
         auto& bsp = MCore::CPUs[0];
 
-        auto idle_process   = new Process("/sys/aexkrnl.elf", 0, Mem::kernel_pagemap, "idle");
-        auto kernel_process = new Process("/sys/aexkrnl.elf", 0, Mem::kernel_pagemap);
+        auto idle_process   = new Process("/sys/aexkrnl", 0, Mem::kernel_pagemap, "idle");
+        auto kernel_process = new Process("/sys/aexkrnl", 0, Mem::kernel_pagemap);
 
         idle_process->ready();
         kernel_process->ready();

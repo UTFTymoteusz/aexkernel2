@@ -325,12 +325,12 @@ void exec_init() {
 
     char* argv[2];
 
-    argv[0] = (char*) "aexinit.elf";
+    argv[0] = (char*) "aexinit";
     argv[1] = nullptr;
 
     int status;
 
-    AEX_ASSERT(Proc::exec(nullptr, nullptr, "/sys/aexinit.elf", argv, nullptr, &info) == ENONE);
+    AEX_ASSERT(Proc::exec(nullptr, nullptr, "/sys/aexinit", argv, nullptr, &info) == ENONE);
     Proc::Process::wait(status);
 
     printk("init exited with a code %i\n", status);
