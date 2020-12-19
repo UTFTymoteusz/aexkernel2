@@ -484,7 +484,7 @@ namespace NetStack {
             verdict = false;
 
         m_block.closing = true;
-        closeInternal();
+        _close();
 
         return verdict;
     }
@@ -703,7 +703,7 @@ namespace NetStack {
                         m_rx_event.raise();
                     }
                     else if (m_block.state == TCP_LAST_ACK || m_block.state == TCP_CLOSING) {
-                        closeInternal();
+                        _close();
                         m_block.state = TCP_CLOSED; // Cleaner this way
                         m_lock.release();
 
@@ -878,7 +878,7 @@ namespace NetStack {
         m_lock.release();
     }
 
-    void TCPSocket::closeInternal() {
+    void TCPSocket::_close() {
         m_block.state = TCP_CLOSED;
 
         m_block.send_shut    = true;

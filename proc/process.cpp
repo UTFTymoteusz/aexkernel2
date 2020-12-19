@@ -13,14 +13,7 @@
 namespace AEX::Proc {
     Process::Process(const char* image_path, pid_t parent_pid, Mem::Pagemap* pagemap,
                      const char* name) {
-        if (name == nullptr)
-            FS::Path::get_filename(this->name, image_path, sizeof(this->name));
-        else
-            strncpy(this->name, name, sizeof(this->name));
-
-        this->image_path = new char[strlen(image_path) + 1];
-
-        strncpy(this->image_path, image_path, strlen(image_path) + 1);
+        rename(image_path, name);
 
         processes_lock.acquire();
 
@@ -44,8 +37,25 @@ namespace AEX::Proc {
         status = TS_RUNNABLE;
     }
 
+    void Process::rename(const char* image_path, const char* name) {
+        if (this->image_path)
+            delete this->image_path;
+
+        if (name == nullptr)
+            FS::get_filename(this->name, image_path, sizeof(this->name));
+        else
+            strncpy(this->name, name, sizeof(this->name));
+
+        this->image_path = new char[strlen(image_path) + 1];
+        strncpy(this->image_path, image_path, strlen(image_path) + 1);
+    }
+
     Process* Process::current() {
         return Thread::current()->parent;
+    }
+
+    Process* Process::kernel() {
+        return process_list_head->next;
     }
 
     void exit_threaded(Process* process) {
@@ -61,6 +71,14 @@ namespace AEX::Proc {
 
         processes_lock.acquire();
         process->status = TS_DEAD;
+
+        auto iter_process = process_list_head;
+        for (int i = 0; i < process_list_size; i++) {
+            if (iter_process->parent_pid == process->pid)
+                iter_process->parent_pid = process->parent_pid;
+
+            iter_process = iter_process->next;
+        }
 
         get_process(process->parent_pid)->child_event.raise();
         PRINTK_DEBUG1("pid%i: full exit", process->pid);
@@ -82,13 +100,20 @@ namespace AEX::Proc {
             return;
 
         m_exiting = true;
+        ret_code  = status;
 
         PRINTK_DEBUG2("pid%i: exit(%i)", pid, status);
 
         broker(exit_threaded_broker, this);
 
-        // if (Process::current() == this)
-        //    Thread::current()->abort();
+        if (Process::current() == this) {
+            processes_lock.release();
+
+            while (!Thread::current()->interrupted())
+                Thread::yield();
+
+            processes_lock.acquire();
+        }
     }
 
     error_t Process::kill(pid_t pid) {
@@ -165,7 +190,7 @@ namespace AEX::Proc {
             Thread::yield();
 
             Process::current()->lock.acquire();
-            if (Thread::current()->aborting())
+            if (Thread::current()->interrupted())
                 return EINTR;
         }
     }

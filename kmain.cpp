@@ -4,6 +4,7 @@
 #include "aex/dev/input.hpp"
 #include "aex/dev/tty.hpp"
 #include "aex/fs.hpp"
+#include "aex/ipc/pipe.hpp"
 #include "aex/mem.hpp"
 #include "aex/module.hpp"
 #include "aex/net.hpp"
@@ -24,6 +25,7 @@
 #include "mem/sections.hpp"
 #include "net/net.hpp"
 #include "proc/proc.hpp"
+#include "sys/acpi.hpp"
 #include "sys/cpu/idt.hpp"
 #include "sys/irq.hpp"
 #include "sys/irq_i.hpp"
@@ -36,7 +38,7 @@ using namespace AEX::Mem;
 using namespace AEX::Sys;
 
 namespace AEX::Init {
-    void init_print_header();
+    void print_header();
 }
 
 namespace AEX::Dev::Tree {
@@ -53,13 +55,13 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     CPU::current()->in_interrupt++;
 
     Dev::TTY::init(mbinfo);
-    Init::init_print_header();
+    Init::print_header();
     printk(PRINTK_INIT "Booting AEX/2 on " ARCH ", build " VERSION "\n\n");
 
-    if (mbinfo->flags & MULTIBOOT_INFO_MODS) {
-        init_mem(mbinfo);
-        load_symbols(mbinfo);
-    }
+    AEX_ASSERT(mbinfo->flags & MULTIBOOT_INFO_MODS);
+
+    init_mem(mbinfo);
+    load_symbols(mbinfo);
 
     AEX_ASSERT(Debug::symbols_loaded);
 
@@ -234,7 +236,7 @@ void test_server() {
 
     auto sock = sock_try.value;
 
-    auto error = sock->bind(Net::ipv4_addr(127, 0, 0, 1), 7654);
+    auto error = sock->bind(Net::ipv4_addr(192, 168, 0, 23), 7654);
     if (error) {
         printk("failed to bind() the socket: %s\n", strerror(error));
         return;
@@ -308,18 +310,22 @@ void exec_init() {
     auto tty_wr = FS::File::open("/dev/tty0", FS::O_WR);
     AEX_ASSERT(tty_wr);
 
-    auto tty_wre = tty_wr.value->dup();
-    AEX_ASSERT(tty_wre);
+    // auto tty_wre = tty_wr.value->dup();
+    // AEX_ASSERT(tty_wre);
+
+    FS::File_SP rp, wp;
+    IPC::Pipe::create(rp, wp);
 
     auto info = Proc::exec_opt{
         .stdin  = tty_rd.value,
         .stdout = tty_wr.value,
-        .stderr = tty_wre.value,
+        //.stderr = tty_wre.value,
+        .stderr = wp,
     };
 
     int status;
 
-    AEX_ASSERT(Proc::exec("/sys/aexinit.elf", &info) == ENONE);
+    AEX_ASSERT(Proc::exec(nullptr, "/sys/aexinit.elf", &info) == ENONE);
     Proc::Process::wait(status);
 
     printk("init exited with a code %i\n", status);
@@ -328,21 +334,21 @@ void exec_init() {
 void kmain_threaded() {
     using namespace AEX::Sys::Time;
 
-    // Proc::processes_lock.acquire();
-
-    // auto idle    = Proc::get_process(0);
-    // auto process = Proc::Process::current();
-
-    // Proc::processes_lock.release();
-
-    // time_t start_epoch = clocktime();
-
     exec_init();
 
-    AEX_ASSERT(Power::poweroff());
+    AEX_ASSERT(Sys::Power::poweroff());
 
-    /*printk(PRINTK_OK "mm it works\n");
+    printk(PRINTK_OK "mm it works\n");
     Proc::Thread::sleep(100);
+
+    Proc::processes_lock.acquire();
+
+    auto idle    = Proc::get_process(0);
+    auto process = Proc::Process::current();
+
+    Proc::processes_lock.release();
+
+    time_t start_epoch = clocktime();
 
     while (true) {
         switch (Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY]->read()) {
@@ -373,10 +379,13 @@ void kmain_threaded() {
         case 'p':
             Proc::debug_print_processes();
             break;
+        case 's':
+            AEX_ASSERT(Power::poweroff());
+            break;
         default:
             break;
         }
     }
 
-    Proc::Thread::exit();*/
+    Proc::Thread::exit();
 }

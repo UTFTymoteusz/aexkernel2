@@ -51,8 +51,13 @@ namespace AEX::Proc {
             char buffer[32];
             debug_serialize_flags(buffer, thread->status);
 
-            printk("0x%p (p: 0x%p, n: 0x%p) <%s> <%s> %s 0x%p\n", thread, thread->prev,
+            /*printk("0x%p (p: 0x%p, n: 0x%p) <%s> <%s> %s 0x%p\n", thread, thread->prev,
                    thread->next, buffer, Debug::addr2name(thread->original_entry),
+                   thread->detached() ? "detached" : (thread->joiner() ? "joined by" : ""),
+                   thread->joiner());*/
+
+            printk("0x%p %6i <%s> <%s> %s 0x%p\n", thread, thread->parent->pid, buffer,
+                   Debug::addr2name(thread->original_entry),
                    thread->detached() ? "detached" : (thread->joiner() ? "joined by" : ""),
                    thread->joiner());
 
@@ -90,15 +95,15 @@ namespace AEX::Proc {
             char buffer[32];
             debug_serialize_flags(buffer, process->status);
 
-            printk("%i. %s, %i <%s>\n", process->pid, process->name, process->threads.realCount(),
-                   buffer);
+            printk("%i. %s, [%i, %i] <%s>\n", process->pid, process->name,
+                   process->threads.realCount(), process->thread_counter, buffer);
 
-            process->lock.acquire();
+            process->threads_lock.acquire();
 
             for (int i = 0; i < process->threads.count(); i++)
                 printk("0x%x ", (size_t) process->threads[i] & 0xFFFFFF);
 
-            process->lock.release();
+            process->threads_lock.release();
 
             printk("\n");
 

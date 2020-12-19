@@ -21,4 +21,8 @@ namespace AEX::Dev {
     optional<uint32_t> CharHandle::write(const void* ptr, uint32_t len) {
         return m_dev->write(this, ptr, len);
     }
+
+    bool CharHandle::isatty() {
+        return m_dev->isatty();
+    }
 }

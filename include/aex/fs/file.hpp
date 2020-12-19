@@ -3,6 +3,7 @@
 #include "aex/dev/device.hpp"
 #include "aex/fs/directory.hpp"
 #include "aex/fs/type.hpp"
+#include "aex/fs/types.hpp"
 #include "aex/mem/smartptr.hpp"
 #include "aex/optional.hpp"
 
@@ -32,9 +33,6 @@ namespace AEX::FS {
         }
     };
 
-    class File;
-    typedef Mem::SmartPointer<File> File_SP;
-
     class File {
         public:
         enum seek_mode {
@@ -61,6 +59,6 @@ namespace AEX::FS {
 
         virtual error_t close();
 
-        private:
+        virtual bool isatty();
     };
 }

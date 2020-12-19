@@ -9,6 +9,8 @@
 #include "aex/sys/acpi/sdt.hpp"
 #include "aex/sys/acpi/xsdt.hpp"
 
+#include "sys/acpi.hpp"
+
 namespace AEX::Sys::ACPI {
     Mem::Vector<acpi_table*> tables;
     uint8_t                  revision;

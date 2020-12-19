@@ -22,7 +22,7 @@ namespace AEX::Dev::TTY {
 
     /**
      * A basic virtual terminal class.
-     */
+     **/
     class VTTY {
         public:
         int width, height;
@@ -33,48 +33,48 @@ namespace AEX::Dev::TTY {
         /**
          * Reads a character from the virtual terminal.
          * @returns A character.
-         */
+         **/
         char read();
 
         /**
          * Reads a line into the specified buffer. Stops on \r or when the buffer is full (counting
          * the null byte at the end).
-         */
+         **/
         char* readLine(char* buffer, size_t len);
 
         /**
          * Writes a character to the virtual terminal.
          * @param str The character to write out.
-         */
+         **/
         VTTY& write(char c);
 
         /**
          * Writes a string to the virtual terminal.
          * @param str The string to write out.
-         */
+         **/
         VTTY& write(const char* str);
 
         /**
          * Sets the foreground or background color.
          * @param ansi An ANSI color code.
-         */
+         **/
         virtual VTTY& color(ansi_color_t ansi);
 
         /**
          * Scrolls down the virtual terminal.
          * @param amnt Amount of lines to scroll down by.
-         */
+         **/
         virtual VTTY& scroll(int amnt);
 
         /**
          * Clears the virtual terminal with the current background clor;
-         */
+         **/
         virtual VTTY& clear();
 
         /**
          * Sets the keymap of the virtual terminal.
          * @param m_keymap Pointer to the new keymap. Will be copied over.
-         */
+         **/
         void set_keymap(Dev::Input::keymap* m_keymap);
 
         int getCursorX() {
@@ -141,16 +141,16 @@ namespace AEX::Dev::TTY {
 
     /**
      * An array of all virtual terminals.
-     */
+     **/
     extern VTTY* VTTYs[TTY_AMOUNT];
 
     /**
-     * Initializes the bare neccesities required for a terminal.
-     */
+     * Initializes the bare neccesities required for a single terminal.
+     **/
     void init(multiboot_info_t* mbinfo);
 
     /**
-     * Initializes all terminals and makes them actually appear if in framebuffer mode.
-     */
+     * Initializes all terminals properly.
+     **/
     void init_mem(multiboot_info_t* mbinfo);
 }

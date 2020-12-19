@@ -23,7 +23,7 @@ namespace AEX::Sys {
     /**
      * The base CPU class that represents a processor in the system and contains some CPU-dependant
      * functionality.
-     */
+     **/
     class CPU {
         public:
         enum ipp_type : uint8_t {
@@ -53,37 +53,37 @@ namespace AEX::Sys {
 
         /**
          * Inits the local CPU using the class.
-         */
+         **/
         void initLocal();
 
         /**
          * Halts the local CPU.
-         */
+         **/
         [[noreturn]] static void halt();
 
         /**
          * Enables interrupts on the local CPU.
-         */
+         **/
         static void interrupts();
 
         /**
          * Disables interrupts on the local CPU.
-         */
+         **/
         static void nointerrupts();
 
         /**
          * Checks if interrupts are enabled on the local CPU.
-         */
+         **/
         static bool checkInterrupts();
 
         /**
          * Waits for an interrupt on the local CPU.
-         */
+         **/
         static void wait();
 
         /**
          * Corresponds to the x86 CPUID instruction.
-         */
+         **/
         static void cpuid(uint32_t code, uint32_t* eax, uint32_t* ebx, uint32_t* ecx,
                           uint32_t* edx);
 
@@ -100,29 +100,29 @@ namespace AEX::Sys {
          * Writes to a model specific register.
          * @param reg  The register in question.
          * @param data Value to write.
-         */
+         **/
         static void wrmsr(uint32_t reg, uint64_t data);
 
         /**
          * Reads a model specific register.
          * @param reg  The register in question.
          * @returns Value read.
-         */
+         **/
         static uint64_t rdmsr(uint32_t reg);
 
         /**
          * Gets the ID of the executing CPU.
-         */
+         **/
         static int currentID();
 
         /**
          * Gets a pointer to the class of the executing CPU.
-         */
+         **/
         static CPU* current();
 
         /**
          * Gets a pointer to the current thread.
-         */
+         **/
         static Proc::Thread* currentThread();
 
         /**
@@ -131,12 +131,12 @@ namespace AEX::Sys {
          * @param type Type of the packet.
          * @param data Optional data pointer.
          * @param ignore_self If true, the executing CPU will not receive this packet.
-         */
+         **/
         static void broadcast(ipp_type type, void* data = nullptr, bool ignore_self = true);
 
         /**
          * Triple faults the executing processor.
-         */
+         **/
         static void tripleFault();
 
         static void breakpoint(int index, size_t addr, uint8_t mode, uint8_t size, bool enabled);
@@ -147,7 +147,7 @@ namespace AEX::Sys {
          * Sends a packet to a processor and IPIs it.
          * @param type Type of the packet.
          * @param data Optional data pointer.
-         */
+         **/
         void send(ipp_type type, void* data = nullptr);
 
         void update(Proc::Thread* thread);
@@ -185,7 +185,7 @@ namespace AEX::Sys {
 
         void getName();
 
-        void sendInternal(ipp_type type, void* data = nullptr);
+        void _send(ipp_type type, void* data = nullptr);
         void handleIPP();
 
         friend void ipi_handle();

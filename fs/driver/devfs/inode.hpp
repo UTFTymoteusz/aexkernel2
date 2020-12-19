@@ -24,7 +24,5 @@ namespace AEX::FS {
 
             return {};
         }
-
-        private:
     };
 }

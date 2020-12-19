@@ -4,6 +4,7 @@
 #include "aex/mem/heap.hpp"
 #include "aex/mem/paging.hpp"
 #include "aex/mem/phys.hpp"
+#include "aex/proc/process.hpp"
 #include "aex/proc/thread.hpp"
 
 using namespace AEX;
@@ -14,7 +15,9 @@ void test_mmap() {
 
     for (int i = 0; i < 4; i++) {
         auto  file = FS::File::open("/sys/aexkrnl.elf", FS::O_RDWR).value;
-        void* mmap = Mem::mmap(nullptr, 65536, Mem::PROT_READ, Mem::MAP_NONE, file, 0).value;
+        void* mmap = Mem::mmap(Proc::Process::kernel(), nullptr, 65536, Mem::PROT_READ,
+                               Mem::MAP_NONE, file, 0)
+                         .value;
 
         char* volatile bong = (char* volatile) mmap;
 

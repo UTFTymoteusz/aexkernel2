@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aex/fs/types.hpp"
 #include "aex/optional.hpp"
 
 namespace AEX::Dev {
@@ -7,8 +8,6 @@ namespace AEX::Dev {
 }
 
 namespace AEX::FS {
-    class ControlBlock;
-
     class Filesystem {
         public:
         char name[32];
@@ -17,7 +16,5 @@ namespace AEX::FS {
         virtual ~Filesystem();
 
         virtual optional<ControlBlock*> mount(const char* source) = 0;
-
-        private:
     };
 }

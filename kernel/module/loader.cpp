@@ -26,7 +26,8 @@ namespace AEX {
         auto    file = file_try.value;
         int64_t size = file->seek(0, FS::File::SEEK_END).value;
 
-        auto mmap_try = Mem::mmap(nullptr, size, Mem::PROT_READ, Mem::MAP_NONE, file, 0);
+        auto mmap_try = Mem::mmap(Proc::Process::kernel(), nullptr, size, Mem::PROT_READ,
+                                  Mem::MAP_NONE, file, 0);
         file->close();
 
         if (!mmap_try)

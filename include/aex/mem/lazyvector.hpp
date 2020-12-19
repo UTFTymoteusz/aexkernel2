@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aex/assert.hpp"
 #include "aex/mem/heap.hpp"
 #include "aex/optional.hpp"
 #include "aex/string.hpp"
@@ -13,6 +14,21 @@ namespace AEX::Mem {
         template <typename... T2>
         LazyVector(T2... rest) {
             pushRecursive(rest...);
+        }
+
+        ~LazyVector() {
+            for (int i = 0; i < m_count; i++) {
+                if (!m_array[i].has_value)
+                    continue;
+
+                m_array[i].value     = {};
+                m_array[i].has_value = false;
+            }
+
+            m_count  = 0;
+            m_rcount = 0;
+
+            resize();
         }
 
         const T& operator[](int index) {
@@ -40,6 +56,8 @@ namespace AEX::Mem {
 
             m_array[index].value     = value;
             m_array[index].has_value = true;
+
+            AEX_ASSERT(m_rcount <= m_count);
         }
 
         bool present(int index) {
@@ -68,6 +86,8 @@ namespace AEX::Mem {
             m_array[m_count - 1].value     = val;
             m_array[m_count - 1].has_value = true;
 
+            AEX_ASSERT(m_rcount <= m_count);
+
             return m_count - 1;
         }
 
@@ -82,11 +102,13 @@ namespace AEX::Mem {
 
             int prev = m_count;
 
-            while (m_count > 0 && m_array[m_count - 1].has_value)
+            while (m_count > 0 && !m_array[m_count - 1].has_value)
                 m_count--;
 
             if (m_count != prev)
                 resize();
+
+            AEX_ASSERT(m_rcount <= m_count);
         }
 
         int count() {

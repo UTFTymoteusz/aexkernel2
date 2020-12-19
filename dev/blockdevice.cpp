@@ -9,9 +9,7 @@
 #include "aex/mem.hpp"
 #include "aex/optional.hpp"
 #include "aex/string.hpp"
-
-#include <stddef.h>
-#include <stdint.h>
+#include "aex/types.hpp"
 
 namespace AEX::Dev {
     BlockDevice::BlockDevice(const char* name, uint16_t sector_size, uint64_t sector_count,

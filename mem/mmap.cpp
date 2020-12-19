@@ -1,5 +1,6 @@
 #include "aex/mem/mmap.hpp"
 
+#include "aex/assert.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/proc/process.hpp"
 
@@ -97,14 +98,14 @@ namespace AEX::Mem {
         return -1;
     }
 
-    optional<void*> mmap(void*, size_t len, prot_flags_t, mmap_flags_t flags, FS::File_SP file,
-                         int64_t offset) {
+    optional<void*> mmap(Proc::Process* process, void*, size_t len, prot_flags_t,
+                         mmap_flags_t flags, FS::File_SP file, int64_t offset) {
         // make addr be actually used
 
         if (!(flags & MAP_ANONYMOUS) && !file)
             return EBADF;
 
-        auto process = Proc::Process::current();
+        AEX_ASSERT(process != nullptr);
 
         MMapRegion* region;
 

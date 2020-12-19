@@ -29,6 +29,6 @@ namespace AEX::Net {
      * @param id Protocol ID.
      * @param protocol Pointer to the protocol class.
      * @returns Preferably ENONE, an error otherwise.
-     */
+     **/
     error_t register_inet_protocol(socket_protocol_t id, INetProtocol* protocol);
 }

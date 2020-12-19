@@ -5,6 +5,7 @@
 #include "aex/fs/file.hpp"
 #include "aex/fs/path.hpp"
 #include "aex/fs/type.hpp"
+#include "aex/fs/types.hpp"
 #include "aex/mem/smartarray.hpp"
 
 namespace AEX::Dev {
@@ -13,12 +14,6 @@ namespace AEX::Dev {
 
 namespace AEX::FS {
     enum fs_type_t;
-
-    class Filesystem;
-    class Mount;
-
-    class File;
-    class Directory;
 
     extern Mem::SmartArray<Filesystem> filesystems;
     extern Mem::SmartArray<Mount>      mounts;

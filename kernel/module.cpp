@@ -46,7 +46,7 @@ namespace AEX {
     // Or I'll just need to make the /sys/mod/core/ directory not modifyable by users
     void load_core_modules() {
         struct module_entry {
-            char name[FS::Path::MAX_FILENAME_LEN];
+            char name[FS::MAX_FILENAME_LEN];
             int  order = 99999;
         };
 
@@ -102,18 +102,17 @@ namespace AEX {
         // No need for a fancy algorithm atm
         for (int i = 0; i < list.count() - 1; i++) {
             for (int j = 0; j < list.count() - 1; j++) {
-                if (list[j].order > list[j + 1].order) {
-                    auto tmp    = list[j];
-                    list[j]     = list[j + 1];
-                    list[j + 1] = tmp;
-                }
+                if (list[j].order <= list[j + 1].order)
+                    continue;
+
+                swap(list[j], list[j + 1]);
             }
         }
 
         for (int i = 0; i < list.count(); i++) {
-            char name[FS::Path::MAX_PATH_LEN];
+            char name[FS::MAX_PATH_LEN];
 
-            FS::Path::canonize_path(list[i].name, "/sys/mod/core/", name, sizeof(name));
+            FS::canonize_path(list[i].name, "/sys/mod/core/", name, sizeof(name));
             load_module(name, true);
         }
 

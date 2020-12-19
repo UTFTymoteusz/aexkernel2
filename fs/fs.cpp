@@ -23,10 +23,10 @@ namespace AEX::FS {
     }
 
     error_t mount(const char* source, const char* path, const char* type) {
-        if (!path || !Path::is_valid(path))
+        if (!path || !is_valid(path))
             return EINVAL;
 
-        if (source && !Path::is_valid(source))
+        if (source && !is_valid(source))
             return EINVAL;
 
         for (auto iterator = filesystems.getIterator(); auto fs = iterator.next();) {
@@ -51,7 +51,7 @@ namespace AEX::FS {
     }
 
     mount_info find_mount(const char* path) {
-        if (!path || !Path::is_valid(path))
+        if (!path || !is_valid(path))
             return mount_info(optional<Mem::SmartPointer<Mount>>::error(EINVAL), nullptr);
 
         Mem::SmartPointer<Mount> ret;
@@ -63,7 +63,7 @@ namespace AEX::FS {
             auto mount = iterator.get_ptr();
 
             int mnt_len  = strlen(mount->path) - 1;
-            int path_len = max(strlen(path) - (Path::ends_with_slash(path) ? 1 : 0), 1);
+            int path_len = max(strlen(path) - (ends_with_slash(path) ? 1 : 0), 1);
 
             if (path_len < mnt_len)
                 continue;

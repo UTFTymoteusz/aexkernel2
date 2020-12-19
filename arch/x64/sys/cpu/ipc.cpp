@@ -27,16 +27,16 @@ namespace AEX::Sys {
             if (cpu == nullptr)
                 continue;
 
-            cpu->sendInternal(type, data);
+            cpu->_send(type, data);
         }
     }
 
     void CPU::send(ipp_type type, void* data) {
         ScopeSpinlock scopeLock(ipp_lock);
-        sendInternal(type, data);
+        _send(type, data);
     }
 
-    void CPU::sendInternal(ipp_type type, void* data) {
+    void CPU::_send(ipp_type type, void* data) {
         m_ipi_lock.acquire();
         m_ipi_ack = false;
 
@@ -70,7 +70,7 @@ namespace AEX::Sys {
 
     /**
      * This is a cute little function that's gonna get called by the IPI IRQ handler.
-     */
+     **/
     extern "C" void ipi_handle() {
         auto us = CPU::current();
 

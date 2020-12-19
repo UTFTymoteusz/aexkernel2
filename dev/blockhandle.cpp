@@ -3,9 +3,7 @@
 #include "aex/assert.hpp"
 #include "aex/dev/blockdevice.hpp"
 #include "aex/proc.hpp"
-
-#include <stddef.h>
-#include <stdint.h>
+#include "aex/types.hpp"
 
 namespace AEX::Dev {
     BlockHandle::BlockHandle() {

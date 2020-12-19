@@ -13,7 +13,5 @@ namespace AEX::FS {
         ~ISO9660();
 
         optional<ControlBlock*> mount(const char* source);
-
-        private:
     };
 }

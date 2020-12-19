@@ -2,9 +2,7 @@
 
 #include "aex/dev/charhandle.hpp"
 #include "aex/fs/file.hpp"
-
-#include <stddef.h>
-#include <stdint.h>
+#include "aex/types.hpp"
 
 namespace AEX::FS {
     class CharFile : public File {
@@ -16,6 +14,8 @@ namespace AEX::FS {
         optional<uint32_t> write(void* buf, uint32_t count);
 
         optional<File_SP> dup();
+
+        bool isatty();
 
         private:
         Dev::CharHandle_SP m_handle;

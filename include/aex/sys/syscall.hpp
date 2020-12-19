@@ -6,6 +6,6 @@ namespace AEX::Sys {
     /**
      * Gets the pointer to the default syscall table.
      * @returns The pointer to the default syscall table.
-     */
+     **/
     syscall_t* default_table();
 }

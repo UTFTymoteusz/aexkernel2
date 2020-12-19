@@ -17,7 +17,9 @@ namespace AEX::FS {
         this->pos      = pos;
     }
 
-    File::~File() {}
+    File::~File() {
+        close();
+    }
 
     optional<File_SP> File::open(const char* path, int mode) {
         auto mount_info = find_mount(path);
@@ -92,7 +94,7 @@ namespace AEX::FS {
     }
 
     optional<int64_t> File::seek(int64_t, seek_mode) {
-        return ENOSYS;
+        return ESPIPE;
     }
 
     optional<dir_entry> File::readdir() {
@@ -105,5 +107,9 @@ namespace AEX::FS {
 
     error_t File::close() {
         return ENOSYS;
+    }
+
+    bool File::isatty() {
+        return false;
     }
 }

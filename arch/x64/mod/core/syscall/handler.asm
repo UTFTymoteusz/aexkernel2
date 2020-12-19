@@ -5,12 +5,12 @@ handler:
     mov r15, rsp
     mov rsp, [gs:0x20]
 
+    push r15
+    push rbp
+    mov rbp, rsp
+
     push rcx
     push r11
-
-    push rbp
-    push 0
-    mov rbp, rsp
 
     and r12, 0xFF
 
@@ -33,14 +33,17 @@ handler:
 
     call syscall_done
 
+    mov rax, qword [gs:0x10]
+    mov r12d, dword [rax + 0x18]
+
     pop rdx
     pop rax
 
-    pop rbp
-    pop rbp
-
     pop r11
     pop rcx
+
+    pop rbp
+    pop r15
 
     mov rsp, r15
 

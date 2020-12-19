@@ -217,7 +217,7 @@ namespace NetStack {
         void packetReceivedListen(AEX::Net::ipv4_addr src, uint16_t src_port, const uint8_t* buffer,
                                   uint16_t len);
 
-        void closeInternal();
+        void _close();
 
         void refresh();
         void package();

@@ -2,14 +2,12 @@
 
 #include "aex/fs/directory.hpp"
 #include "aex/fs/type.hpp"
+#include "aex/fs/types.hpp"
 #include "aex/mem/smartptr.hpp"
 #include "aex/optional.hpp"
-
-#include <stdint.h>
+#include "aex/types.hpp"
 
 namespace AEX::FS {
-    class ControlBlock;
-
     class INode {
         public:
         int id;
@@ -25,8 +23,8 @@ namespace AEX::FS {
 
         virtual ~INode();
 
-        virtual error_t readBlocks(void* buffer, uint64_t block, uint16_t count);
-        virtual error_t writeBlocks(const void* buffer, uint64_t block, uint16_t count);
+        virtual error_t readBlocks(void* buffer, uint64_t start, uint16_t count);
+        virtual error_t writeBlocks(const void* buffer, uint64_t start, uint16_t count);
 
         virtual error_t update();
 
@@ -43,9 +41,5 @@ namespace AEX::FS {
         bool is_block() {
             return (type & FT_BLOCK) == FT_BLOCK;
         }
-
-        private:
     };
-
-    typedef Mem::SmartPointer<INode> INode_SP;
 }

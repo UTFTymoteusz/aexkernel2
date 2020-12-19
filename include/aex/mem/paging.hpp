@@ -32,7 +32,7 @@ namespace AEX::Mem {
 
     /**
      * The pagemap class. Contains the methods required to allocate virtual memory.
-     */
+     **/
     class Pagemap {
         public:
         void* vstart;
@@ -48,7 +48,7 @@ namespace AEX::Mem {
          * Allocates enough pages to fit the specified size and zeroes them out.
          * @param bytes Requested size in bytes.
          * @returns Virtual address or nullptr on failure.
-         */
+         **/
         void* alloc(size_t bytes) {
             return alloc(bytes, 0);
         }
@@ -59,7 +59,7 @@ namespace AEX::Mem {
          * @param flags Optional flags.
          * @param source Optional source address.
          * @returns Virtual address or nullptr on failure.
-         */
+         **/
         void* alloc(size_t bytes, uint32_t flags, void* source = nullptr);
 
         /**
@@ -67,7 +67,7 @@ namespace AEX::Mem {
          * zeroes them out.
          * @param bytes Requested size in bytes.
          * @returns Virtual address or nullptr on failure.
-         */
+         **/
         void* allocContinuous(size_t bytes) {
             return allocContinuous(bytes, 0);
         }
@@ -79,7 +79,7 @@ namespace AEX::Mem {
          * @param flags Optional flags.
          * @param source Optional source address.
          * @returns Virtual address or nullptr on failure.
-         */
+         **/
         void* allocContinuous(size_t bytes, uint32_t flags, void* source = nullptr);
 
         /**
@@ -89,24 +89,26 @@ namespace AEX::Mem {
          * @param flags  Flags.
          * @param source If PAGE_FIXED is used, source will be the virtual address.
          * @returns Virtual address or nullptr on failure.
-         */
+         **/
         void* map(size_t bytes, phys_addr paddr, uint16_t flags, void* source = nullptr);
 
         /**
          * Frees the specified size from the address space. Automatically frees physical memory.
          * @param virt  Virtual address.
          * @param bytes Size.
-         */
+         **/
         void free(void* addr, size_t bytes);
 
         /**
          * Gets the physical address of a virtual address. Respects non-page-aligned addresses.
          * @param vaddr The virtual address.
          * @returns The physical address or 0 on failure.
-         */
+         **/
         phys_addr paddrof(void* vaddr);
 
         size_t rawof(void* vaddr);
+
+        Pagemap* fork();
 
         private:
         Spinlock m_lock;
@@ -129,7 +131,7 @@ namespace AEX::Mem {
 
     /**
      * The pagemap that is used by the kernel exclusively.
-     */
+     **/
     extern Pagemap* kernel_pagemap;
 
     void init();

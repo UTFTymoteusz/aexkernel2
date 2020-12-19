@@ -8,17 +8,9 @@
 #include <stdint.h>
 
 namespace AEX::Sys::ACPI {
-    struct rsdp;
-    struct xsdp;
-
     struct acpi_table {};
 
     extern uint8_t revision;
-
-    rsdp* find_rsdp();
-    xsdp* find_xsdp();
-
-    void init();
 
     bool validate_table(const void* tbl, size_t len);
 

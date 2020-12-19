@@ -1,9 +1,7 @@
 #include "aex/dev/chardevice.hpp"
 
 #include "aex/dev.hpp"
-
-#include <stddef.h>
-#include <stdint.h>
+#include "aex/types.hpp"
 
 namespace AEX::Dev {
     CharDevice::CharDevice(const char* name) : Device(name, DEV_CHAR) {
@@ -28,6 +26,10 @@ namespace AEX::Dev {
 
     optional<uint32_t> CharDevice::write(CharHandle*, const void*, uint32_t) {
         return ENOSYS;
+    }
+
+    bool CharDevice::isatty() {
+        return false;
     }
 
     optional<CharHandle_SP> open_char_handle(int id, int mode) {

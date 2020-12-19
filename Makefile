@@ -17,7 +17,7 @@ PSFFILES  := $(shell find . -type f -name '*.psf'  -not -path './arch/*' -not -p
 ASMRFILES := $(shell find . -type f -name '*.asmr' -not -path './arch/*' -not -path './mod/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.asmr' -not -path './arch/$(ARCH)/./mod/*')
 
 OBJS    := $(patsubst %.o, $(OBJ_DEST)%.o, $(CXXFILES:.cpp=.cpp.o) $(ASMFILES:.asm=.asm.o) $(PSFFILES:.psf=.psf.o) $(ASMRFILES:.asmr=.asmr.o))
-VERSION := $(shell date '+%d.%m.%Y').$(shell date '+%s' | tail -c 6)
+VERSION := $(shell date -u '+%d.%m.%Y').$(shell printf "%05d" $(shell date -d "1970-01-01 UTC $$(date -u +%T)" +%s))
 
 ISO  = $(BIN)grubiso/
 SYS  = $(ISO)sys/
@@ -39,7 +39,6 @@ CXXFLAGS := $(GFLAGS)		   \
 	-fno-stack-protector       \
 	-fno-omit-frame-pointer    \
 	-mno-red-zone		       \
-	-DBSOD_PARODY              \
 	-DARCH="\"$(ARCH)\""       \
 	-DVERSION="\"$(VERSION)\"" \
 	$(INCLUDES)

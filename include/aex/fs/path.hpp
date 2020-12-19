@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace AEX::FS::Path {
+namespace AEX::FS {
     constexpr auto MAX_PATH_LEN     = 2048;
     constexpr auto MAX_FILENAME_LEN = 256;
     constexpr auto MAX_DEPTH        = 256;
@@ -35,13 +35,13 @@ namespace AEX::FS::Path {
      * @param path   Path.
      * @param num    Size of destination buffer.
      * @returns Pointer to destination buffer.
-     */
+     **/
     char* get_filename(char* buffer, const char* path, size_t num);
 
     /**
      * Checks if a path fits in MAX_PATH_LEN.
      * @returns True if the specified path fits, false otherwies.
-     */
+     **/
     bool check_length(const char* path);
 
     bool ends_with_slash(const char* path);

@@ -20,7 +20,7 @@ namespace AEX::Sys::PCI {
         /**
          * Gets the IRQ number of the device.
          * @returns IRQ number or 255 on failure.
-         */
+         **/
         int getIRQ();
     };
 

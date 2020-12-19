@@ -69,33 +69,14 @@ namespace AEX::Proc {
         if (!pagemap)
             pagemap = parent->pagemap;
 
-        if (usermode) {
-            thread->user_stack      = (size_t) pagemap->alloc(stack_size, PAGE_WRITE | PAGE_USER);
-            thread->user_stack_size = stack_size;
-
-            thread->kernel_stack =
-                (size_t) Mem::kernel_pagemap->alloc(KERNEL_STACK_SIZE, PAGE_WRITE);
-            thread->kernel_stack_size = KERNEL_STACK_SIZE;
-
-            thread->context =
-                new Context(entry, (void*) thread->user_stack, stack_size, pagemap, true);
-        }
-        else {
-            thread->user_stack      = 0x2137;
-            thread->user_stack_size = 0x2137;
-
-            thread->kernel_stack      = (size_t) Mem::kernel_pagemap->alloc(stack_size, PAGE_WRITE);
-            thread->kernel_stack_size = stack_size;
-
-            thread->context = new Context(entry, (void*) thread->kernel_stack, stack_size, pagemap,
-                                          false, Thread::exit);
-        }
-
-        thread->fault_stack = (size_t) Mem::kernel_pagemap->alloc(FAULT_STACK_SIZE, PAGE_WRITE);
-        thread->fault_stack_size = FAULT_STACK_SIZE;
-
         thread->status = TS_FRESH;
         thread->parent = parent;
+
+        thread->alloc_stacks(pagemap, stack_size, usermode);
+        thread->setup_context(pagemap, stack_size, entry, usermode);
+
+        if (parent->tls_size != 0)
+            thread->alloc_tls(parent->tls_size);
 
         thread->original_entry = entry;
 
@@ -122,9 +103,13 @@ namespace AEX::Proc {
     }
 
     void Thread::sleep(int ms) {
+        usleep(ms * 1000000);
+    }
+
+    void Thread::usleep(int ns) {
         auto currentThread = Thread::current();
 
-        currentThread->wakeup_at = Sys::Time::uptime() + ((Sys::Time::time_t) ms) * 1000000;
+        currentThread->wakeup_at = Sys::Time::uptime() + (Sys::Time::time_t) ns;
         currentThread->status    = TS_SLEEPING;
 
         Thread::yield();
@@ -138,7 +123,7 @@ namespace AEX::Proc {
         AEX_ASSERT(CPU::checkInterrupts());
 
         if (thread->isBusy()) {
-            thread->abortInternal();
+            thread->_abort();
             return;
         }
 
@@ -179,7 +164,7 @@ namespace AEX::Proc {
         if (m_detached || m_joiner)
             return EINVAL;
 
-        if (this == Thread::current())
+        if (this == Thread::current() || Thread::current()->m_joiner == this)
             return EDEADLK;
 
         Thread::current()->addBusy();
@@ -201,7 +186,7 @@ namespace AEX::Proc {
         Thread::yield();
         this->lock.acquire();
 
-        if (Thread::current()->aborting()) {
+        if (Thread::current()->interrupted()) {
             printk("we hath been interrupted\n");
 
             m_detached = true;
@@ -239,12 +224,12 @@ namespace AEX::Proc {
     error_t Thread::abort() {
         auto scope = this->lock.scope();
 
-        abortInternal();
+        _abort();
 
         return ENONE;
     }
 
-    void Thread::abortInternal() {
+    void Thread::_abort() {
         m_aborting = true;
 
         if (isBusy())
@@ -269,12 +254,16 @@ namespace AEX::Proc {
         return m_aborting;
     }
 
+    bool Thread::interrupted() {
+        return m_aborting;
+    }
+
     void broker_cleanup(Thread* thread) {
         delete thread;
     }
 
     void Thread::finish() {
-        parent->lock.acquire();
+        parent->threads_lock.acquire();
 
         for (int i = 0; i < parent->threads.count(); i++) {
             if (!parent->threads.present(i) || parent->threads[i] != this)
@@ -284,7 +273,7 @@ namespace AEX::Proc {
             break;
         }
 
-        parent->lock.release();
+        parent->threads_lock.release();
 
         if (Mem::atomic_read(&parent->thread_counter) == 1)
             parent->exit(0);
@@ -333,5 +322,45 @@ namespace AEX::Proc {
         m_busy     = m_state.busy;
         m_critical = m_state.critical;
         status     = m_state.status;
+    }
+
+    void Thread::alloc_tls(uint16_t size) {
+        auto actual_size = size + sizeof(void*);
+
+        auto tls = parent->pagemap->alloc(actual_size, PAGE_WRITE | PAGE_USER);
+        auto tlsk =
+            Mem::kernel_pagemap->map(actual_size, parent->pagemap->paddrof(tls), PAGE_WRITE);
+
+        auto tls_self = (size_t) tls + size;
+
+        *((size_t*) ((size_t) tlsk + size)) = tls_self;
+        this->tls                           = (void*) tls_self;
+    }
+
+    void Thread::alloc_stacks(Mem::Pagemap* pagemap, size_t size, bool usermode) {
+        if (usermode) {
+            user_stack      = (size_t) pagemap->alloc(size, PAGE_WRITE | PAGE_USER);
+            user_stack_size = size;
+
+            kernel_stack      = (size_t) Mem::kernel_pagemap->alloc(KERNEL_STACK_SIZE, PAGE_WRITE);
+            kernel_stack_size = KERNEL_STACK_SIZE;
+        }
+        else {
+            user_stack      = 0x2137;
+            user_stack_size = 0x2137;
+
+            kernel_stack      = (size_t) Mem::kernel_pagemap->alloc(size, PAGE_WRITE);
+            kernel_stack_size = size;
+        }
+
+        fault_stack      = (size_t) Mem::kernel_pagemap->alloc(FAULT_STACK_SIZE, PAGE_WRITE);
+        fault_stack_size = FAULT_STACK_SIZE;
+    }
+
+    void Thread::setup_context(Mem::Pagemap* pagemap, size_t size, void* entry, bool usermode) {
+        if (usermode)
+            context = new Context(entry, (void*) user_stack, size, pagemap, true);
+        else
+            context = new Context(entry, (void*) kernel_stack, size, pagemap, false, Thread::exit);
     }
 }

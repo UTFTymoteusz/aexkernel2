@@ -6,26 +6,46 @@ namespace AEX::Proc {
     Mutex                  executor_mutex;
     Mem::Vector<Executor*> executors;
 
-    void registerExecutor(Executor* executor) {
+    void register_executor(Executor* executor) {
         auto scope = executor_mutex.scope();
 
         executors.push(executor);
     }
 
-    error_t exec(const char* path, exec_opt* options) {
+    error_t exec(Process* process, const char* path, exec_opt* options) {
+        if (process == Process::current()) {
+            auto thread = threaded_call(exec, process, path, options);
+
+            thread->start();
+            thread->detach();
+
+            while (!Thread::current()->aborting())
+                Thread::sleep(250);
+
+            return EINTR;
+        }
+
         auto scope = executor_mutex.scope();
 
-        auto process = new Process(path, Process::current()->pid,
-                                   new Mem::Pagemap(0x00000000, 0x7FFFFFFFFFFF));
+        if (!process)
+            process = new Process(path, Process::current()->pid,
+                                  new Mem::Pagemap(0x00000000, 0x7FFFFFFFFFFF));
 
         for (int i = 0; i < executors.count(); i++) {
             if (executors[i]->exec(path, process))
                 continue;
 
-            process->files.set(0, options->stdin);
-            process->files.set(1, options->stdout);
-            process->files.set(2, options->stderr);
+            process->rename(path, nullptr);
 
+            process->files_lock.acquire();
+
+            if (options) {
+                process->files.set(0, options->stdin);
+                process->files.set(1, options->stdout);
+                process->files.set(2, options->stderr);
+            }
+
+            process->files_lock.release();
             process->ready();
 
             for (int i = 0; i < process->threads.count(); i++) {

@@ -39,10 +39,14 @@ namespace AEX::Proc {
             thread_status_t status;
         };
 
-        Thread* self = this;
-        tid_t   tid;
+        // Don't change the order of these or the kernel will go boom boom
+        Thread* self = this; // 0x00
+        tid_t   tid;         // 0x08
 
-        Context* context;
+        Context* context; // 0x10
+        error_t  errno;   // 0x18
+
+        // Safe to change again
         Spinlock lock;
 
         thread_status_t status;
@@ -66,6 +70,8 @@ namespace AEX::Proc {
 
         bool faulting;
 
+        void* tls;
+
         Thread();
         Thread(Process* parent);
 
@@ -77,6 +83,7 @@ namespace AEX::Proc {
 
         static void yield();
         static void sleep(int ms);
+        static void usleep(int ns);
         static void exit();
 
         static Thread* current();
@@ -86,8 +93,9 @@ namespace AEX::Proc {
         error_t detach();
         error_t abort();
         bool    aborting();
+        bool    interrupted();
 
-        void abortInternal();
+        void _abort();
         void finish();
 
         Process* getProcess();
@@ -95,7 +103,7 @@ namespace AEX::Proc {
         /**
          * Sets the arguments of the thread.
          * @param args Arguments.
-         */
+         **/
         template <typename... U>
         void setArguments(U... args) {
             context->setArguments(args...);
@@ -104,14 +112,14 @@ namespace AEX::Proc {
         /**
          * Sets the status of the thread.
          * @param status Status to set to.
-         */
+         **/
         void setStatus(thread_status_t status);
 
         // pls atomic<T> later
         /**
          * Adds 1 to the thread's busy counter. If m_busy is greater than 0, the thread cannot be
          * killed.
-         */
+         **/
         inline void addBusy() {
             Mem::atomic_add(&m_busy, (uint16_t) 1);
         }
@@ -119,11 +127,13 @@ namespace AEX::Proc {
         /**
          * Subtracts 1 from the thread's busy counter. If m_busy is greater than 0, the thread
          * cannot be killed.
-         */
+         **/
         inline void subBusy() {
             uint16_t busy = Mem::atomic_sub_fetch(&m_busy, (uint16_t) 1);
+            if (busy)
+                return;
 
-            if (!busy && aborting() && this == Thread::current())
+            if (this == Thread::current() && aborting())
                 Thread::exit();
         }
 
@@ -131,7 +141,7 @@ namespace AEX::Proc {
          * Checks the thread's busy counter. If m_busy is greater than 0, the thread cannot
          * be killed.
          * @returns Whenever the thread is "busy".
-         */
+         **/
         inline bool isBusy() {
             return Mem::atomic_read(&m_busy) > 0;
         }
@@ -147,20 +157,20 @@ namespace AEX::Proc {
         /**
          * Adds 1 to the thread's critical counter. If m_critical is greater than 0, the thread
          * cannot be interrupted or killed.
-         */
+         **/
         void addCritical();
 
         /**
          * Subtracts 1 from the thread's critical counter. If m_critical is greater than 0, the
          * thread cannot be interrupted or killed.
-         */
+         **/
         void subCritical();
 
         /**
          * Checks the thread's critical counter. If m_critical is greater than 0, the thread cannot
          * be interrupted or killed.
          * @returns Whenever the thread is "critical".
-         */
+         **/
         inline bool isCritical() {
             return Mem::atomic_read(&m_critical) > 0;
         }
@@ -192,5 +202,9 @@ namespace AEX::Proc {
         bool m_aborting = false;
 
         Thread* m_joiner = nullptr;
+
+        void alloc_stacks(Mem::Pagemap* pagemap, size_t size, bool usermode);
+        void alloc_tls(uint16_t size);
+        void setup_context(Mem::Pagemap* pagemap, size_t size, void* entry, bool usermode);
     };
 }

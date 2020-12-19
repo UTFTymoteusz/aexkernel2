@@ -3,10 +3,11 @@
 #include "aex/mem/vector.hpp"
 #include "aex/mutex.hpp"
 #include "aex/printk.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Sys::Power {
     struct handler {
-        int priority;
+        int order;
         error_t (*func)();
     };
 
@@ -26,21 +27,20 @@ namespace AEX::Sys::Power {
         return ENONE;
     }
 
-    void register_poweroff_handler(int priority, error_t (*func)()) {
+    void register_poweroff_handler(int order, error_t (*func)()) {
         auto scope = action_mutex.scope();
 
-        poweroff_handlers.push(handler{.priority = priority, .func = func});
+        poweroff_handlers.push(handler{.order = order, .func = func});
         sort(poweroff_handlers);
     }
 
     void sort(Mem::Vector<handler>& handlers) {
         for (int i = 0; i < handlers.count() - 1; i++) {
             for (int j = 0; j < handlers.count() - 1; j++) {
-                if (handlers[j].priority > handlers[j + 1].priority) {
-                    auto tmp        = handlers[j];
-                    handlers[j]     = handlers[j + 1];
-                    handlers[j + 1] = tmp;
-                }
+                if (handlers[j].order <= handlers[j + 1].order)
+                    continue;
+
+                swap(handlers[i], handlers[i + 1]);
             }
         }
     }

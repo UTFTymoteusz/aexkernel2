@@ -47,7 +47,8 @@ namespace AEX {
             PH_LOAD    = 1,
             PH_DYNAMIC = 2,
             PH_INTERP  = 3,
-            PH_NOTE    = 4
+            PH_NOTE    = 4,
+            PH_TLS     = 7,
         };
 
         enum ph_flags_t : uint32_t {

@@ -21,7 +21,10 @@ namespace AEX::Mem {
         m_buffer = nullptr;
     }
 
-    void CircularBuffer::read(void* buffer, int len) {
+    int CircularBuffer::read(void* buffer, int len) {
+        if (len <= 0)
+            return 0;
+
         m_lock.acquire();
 
         int offset = 0;
@@ -31,6 +34,9 @@ namespace AEX::Mem {
             if (clen == 0) {
                 m_event.wait();
                 m_lock.release();
+
+                if (Thread::current()->interrupted())
+                    return offset;
 
                 Thread::yield();
 
@@ -51,9 +57,13 @@ namespace AEX::Mem {
         }
 
         m_lock.release();
+        return offset;
     }
 
-    void CircularBuffer::write(const void* buffer, int len) {
+    int CircularBuffer::write(const void* buffer, int len) {
+        if (len <= 0)
+            return 0;
+
         m_lock.acquire();
 
         int offset = 0;
@@ -63,6 +73,9 @@ namespace AEX::Mem {
             if (clen == 0) {
                 m_event.wait();
                 m_lock.release();
+
+                if (Thread::current()->interrupted())
+                    return offset;
 
                 Thread::yield();
 
@@ -83,6 +96,7 @@ namespace AEX::Mem {
         }
 
         m_lock.release();
+        return offset;
     }
 
     int CircularBuffer::readAvailable() {

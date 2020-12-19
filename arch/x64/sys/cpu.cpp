@@ -23,7 +23,9 @@
         ret;                                                          \
     }))
 
-constexpr auto GSBase = 0xC0000101;
+constexpr auto MSR_FSBase       = 0xC0000100;
+constexpr auto MSR_GSBase       = 0xC0000101;
+constexpr auto MSR_KernelGSBase = 0xC0000102;
 
 constexpr auto CPUID_NAME_STRING_1 = 0x80000002;
 constexpr auto CPUID_NAME_STRING_2 = 0x80000003;
@@ -54,7 +56,7 @@ namespace AEX::Sys {
             mov fs , rax; \
         ");
 
-        wrmsr(GSBase, (size_t) & (this->self));
+        wrmsr(MSR_GSBase, (size_t) & (this->self));
 
         uint32_t idc, edx;
 
@@ -237,6 +239,8 @@ namespace AEX::Sys {
     void CPU::update(Proc::Thread* thread) {
         // 3 weeks of rest because of the goddamned + thread->fault_stack_size
         m_tss->ist1 = thread->fault_stack + thread->fault_stack_size;
+
+        wrmsr(MSR_FSBase, (size_t) thread->tls);
     }
 
     void CPU::getName() {

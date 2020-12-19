@@ -42,30 +42,28 @@ namespace AEX::Dev {
          * @param buffer Source buffer, the device should copy this over.
          * @param buffer Buffer length.
          * @returns Error code.
-         */
+         **/
         virtual error_t send(const void* buffer, size_t len, Net::net_type_t type);
 
         /**
          * Sets the IPv4 address of the network interface and updates the broadcast address.
          * @param addr IPv4 address.
-         */
+         **/
         void setIPv4Address(Net::ipv4_addr addr);
 
         /**
          * Sets the IPv4 mask of the network interface and updates the broadcast address.
          * @param addr IPv4 mask.
-         */
+         **/
         void setIPv4Mask(Net::ipv4_addr addr);
 
         /**
          * Sets the IPv4 gateway of the network interface.
          * @param addr IPv4 gateway.
-         */
+         **/
         void setIPv4Gateway(Net::ipv4_addr addr);
 
         void setMetric(int metric);
-
-        private:
     };
 
     typedef Mem::SmartPointer<NetDevice> NetDevice_SP;

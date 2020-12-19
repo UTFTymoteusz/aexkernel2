@@ -7,7 +7,7 @@
 #include "aex/printk.hpp"
 // clang-format on
 
-namespace AEX::FS::Path {
+namespace AEX::FS {
     Walker::Walker(const char* path) {
         m_path   = path;
         m_levels = count_levels(path);
@@ -142,7 +142,7 @@ namespace AEX::FS::Path {
                 index--;
         }
 
-        for (auto walker = FS::Path::Walker(path); auto piece = walker.next();) {
+        for (auto walker = FS::Walker(path); auto piece = walker.next();) {
             if (strcmp(piece, ".") == 0)
                 continue;
             else if (strcmp(piece, "..") == 0) {

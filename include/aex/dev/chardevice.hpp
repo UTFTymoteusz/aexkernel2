@@ -21,6 +21,8 @@ namespace AEX::Dev {
 
         virtual optional<uint32_t> read(CharHandle* handle, void* ptr, uint32_t len);
         virtual optional<uint32_t> write(CharHandle* handle, const void* ptr, uint32_t len);
+
+        virtual bool isatty();
     };
 
     typedef Mem::SmartPointer<CharDevice> CharDevice_SP;

@@ -217,7 +217,7 @@ namespace AEX::Sys::PCI {
                 resource.value = addr;
                 resource.end   = addr + len;
 
-                dev_device->addResource(resource);
+                dev_device->add(resource);
             }
             else {
                 auto resource = Tree::resource();
@@ -226,7 +226,7 @@ namespace AEX::Sys::PCI {
                 resource.value = addr;
                 resource.end   = addr + len;
 
-                dev_device->addResource(resource);
+                dev_device->add(resource);
             }
 
             write_dword(bus, device, function, offset, bar0);
@@ -249,7 +249,7 @@ namespace AEX::Sys::PCI {
                 continue;
 
             /*printk("pci: Found %93$%3i %3i %3i%$ - 0x%02x, 0x%02x\n", bus, device, function,
-                   get_class(bus, device, function), get_subclass(bus, device, function));*/
+                   get_class(bus, device, function), get_subclass(bus, device, function));**/
 
             char buffer[32];
             snprintf(buffer, sizeof(buffer), "%02x.%02x.%02x", bus, device, function);
