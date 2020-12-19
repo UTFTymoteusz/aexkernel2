@@ -31,4 +31,7 @@ namespace AEX::Net {
      * @returns Preferably ENONE, an error otherwise.
      **/
     error_t register_inet_protocol(socket_protocol_t id, INetProtocol* protocol);
+
+    const char* get_hostname();
+    void        set_hostname(const char* hostname);
 }

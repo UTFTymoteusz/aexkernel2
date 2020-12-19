@@ -55,7 +55,7 @@ namespace AEX::FS {
 
             m_cached_block = last_block;
 
-            return requested_count;
+            return count;
         }
 
         optional<int64_t> seek(int64_t offset, seek_mode mode) {
