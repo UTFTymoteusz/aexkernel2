@@ -85,7 +85,7 @@ error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator
 
     // I need to make it cleanup the old argv after an exec
     setup_argv(process, argv, argc_usr, argv_usr);
-    abortall(process);
+    // abortall(process);
 
     auto thread_try = Proc::Thread::create(process->pid, elf.entry, Proc::Thread::USER_STACK_SIZE,
                                            process->pagemap, true);

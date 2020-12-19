@@ -39,8 +39,13 @@ namespace AEX::Dev {
         return ENONE;
     }
 
-    optional<uint32_t> TTYChar::read(CharHandle*, void*, uint32_t) {
-        return EBOTHER;
+    optional<uint32_t> TTYChar::read(CharHandle*, void* ptr, uint32_t len) {
+        auto cptr = (char*) ptr;
+
+        for (uint32_t i = 0; i < len; i++)
+            cptr[i] = m_vtty->read();
+
+        return len;
     }
 
     optional<uint32_t> TTYChar::write(CharHandle*, const void* ptr, uint32_t len) {

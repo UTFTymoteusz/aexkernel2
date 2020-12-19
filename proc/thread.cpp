@@ -107,10 +107,10 @@ namespace AEX::Proc {
     }
 
     void Thread::usleep(uint64_t ns) {
-        auto currentThread = Thread::current();
+        auto current = Thread::current();
 
-        currentThread->wakeup_at = Sys::Time::uptime() + (Sys::Time::time_t) ns;
-        currentThread->status    = TS_SLEEPING;
+        current->wakeup_at = Sys::Time::uptime() + (Sys::Time::time_t) ns;
+        current->status    = TS_SLEEPING;
 
         Thread::yield();
     }
@@ -187,8 +187,6 @@ namespace AEX::Proc {
         this->lock.acquire();
 
         if (Thread::current()->interrupted()) {
-            printk("we hath been interrupted\n");
-
             m_detached = true;
             m_joiner   = nullptr;
 

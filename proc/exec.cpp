@@ -18,10 +18,7 @@ namespace AEX::Proc {
             auto thread = threaded_call(exec, process, initiator, path, argv, envp, options);
 
             thread->start();
-            thread->detach();
-
-            while (!Thread::current()->aborting())
-                Thread::sleep(5);
+            thread->join();
 
             return EINTR;
         }
@@ -50,6 +47,9 @@ namespace AEX::Proc {
 
             process->files_lock.release();
             process->ready();
+
+            if (initiator)
+                initiator->abort();
 
             for (int i = 0; i < process->threads.count(); i++) {
                 if (!process->threads.present(i))

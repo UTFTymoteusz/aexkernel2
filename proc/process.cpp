@@ -37,17 +37,14 @@ namespace AEX::Proc {
         status = TS_RUNNABLE;
     }
 
-    void Process::rename(const char* image_path_n, const char* name) {
-        if (this->image_path)
-            delete this->image_path;
-
-        if (name == nullptr)
-            FS::get_filename(this->name, image_path_n, sizeof(this->name));
+    void Process::rename(const char* image_path_n, const char* name_n) {
+        if (name_n == nullptr)
+            FS::get_filename(name, image_path_n, sizeof(name));
         else
-            strncpy(this->name, name, sizeof(this->name));
+            strncpy(name, name_n, sizeof(name));
 
-        this->image_path = new char[strlen(image_path_n) + 1];
-        strncpy(this->image_path, image_path_n, strlen(image_path_n) + 1);
+        image_path = Mem::Heap::realloc(image_path, strlen(image_path_n) + 1);
+        strncpy(image_path, image_path_n, strlen(image_path_n) + 1);
     }
 
     void Process::set_cwd(const char* cwd) {
@@ -188,10 +185,10 @@ namespace AEX::Proc {
 
         while (true) {
             auto val = try_get(Process::current()->pid);
-            if (!val.has_value && val.error_code == ECHILD)
+            if (!val && val.error_code == ECHILD)
                 return val.error_code;
 
-            if (val.has_value) {
+            if (val) {
                 PRINTK_DEBUG2("pid%i: cleaned up pid%i", Process::current()->pid, val.value.pid);
 
                 status = val.value.code;

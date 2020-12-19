@@ -48,13 +48,13 @@ namespace AEX::Net {
 
     void read_hostname() {
         auto hostname_try = FS::File::open("/etc/hostname", FS::O_RD);
-        if (!hostname_try.has_value)
+        if (!hostname_try)
             set_hostname("default");
         else {
             char buffer[256];
 
             auto read_try = hostname_try.value->read(buffer, sizeof(buffer) - 1);
-            AEX_ASSERT(read_try.has_value);
+            AEX_ASSERT(read_try);
 
             int len     = min<int>(read_try.value, sizeof(buffer) - 1);
             buffer[len] = '\0';

@@ -18,7 +18,7 @@ namespace AEX::Dev::Input {
 
 namespace AEX::Dev::TTY {
     constexpr auto ROOT_TTY   = 0;
-    constexpr auto TTY_AMOUNT = 2;
+    constexpr auto TTY_AMOUNT = 1;
 
     /**
      * A basic virtual terminal class.

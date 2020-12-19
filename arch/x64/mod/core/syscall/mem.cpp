@@ -17,7 +17,7 @@ AEX::optional<int> usr_strlen(const usr_char* str) {
 
     while (true) {
         auto read_try = usr_read<char>(str++);
-        if (!read_try.has_value)
+        if (!read_try)
             return {};
 
         if (read_try.value == '\0')

@@ -107,7 +107,7 @@ optional<int> usr_get_argc(usr_char* const argv[]) {
 
     for (int i = 0; i < 32; i++) {
         auto read_try = usr_read<usr_char*>(&argv[i]);
-        if (!read_try.has_value) {
+        if (!read_try) {
             Thread::current()->errno = EINVAL;
             return -1;
         }
@@ -123,14 +123,14 @@ optional<int> usr_get_argc(usr_char* const argv[]) {
 
 int execve(const usr_char* path, usr_char* const argv[], usr_char* const envp[]) {
     auto strlen_try = usr_strlen(path);
-    if (!strlen_try.has_value) {
+    if (!strlen_try) {
         Thread::current()->errno = EINVAL;
         return -1;
     }
 
     char path_buffer[min(strlen_try.value + 1, FS::MAX_PATH_LEN)];
     auto memcpy_try = u2k_memcpy(path_buffer, path, sizeof(path_buffer));
-    if (!memcpy_try.has_value) {
+    if (!memcpy_try) {
         Thread::current()->errno = EINVAL;
         return -1;
     }
@@ -148,7 +148,7 @@ int execve(const usr_char* path, usr_char* const argv[], usr_char* const envp[])
 
     for (size_t i = 0; i < argc; i++) {
         auto strlen_try = usr_strlen(argv[i]);
-        if (!strlen_try.has_value)
+        if (!strlen_try)
             return EINVAL;
 
         tmp_buffers[i].resize(strlen_try.value + 1);
@@ -170,7 +170,7 @@ int execve(const usr_char* path, usr_char* const argv[], usr_char* const envp[])
 
 pid_t wait(usr_int* wstatus) {
     auto result = Process::current()->wait(*wstatus);
-    if (!result.has_value) {
+    if (!result) {
         Thread::current()->errno = result.error_code;
         return -1;
     }

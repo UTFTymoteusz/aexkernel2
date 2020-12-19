@@ -5,6 +5,7 @@
 #include "aex/types.hpp"
 
 #include "syscallids.h"
+#include "types.hpp"
 #include "usr.hpp"
 
 using namespace AEX;
@@ -13,9 +14,18 @@ using namespace AEX::Proc;
 optional<FS::File_SP> get_file(int fd);
 optional<FS::File_SP> pop_file(int fd);
 
+bool copy_and_canonize(char* buffer, const usr_char* usr_path);
+
 int open(const usr_char* usr_path, int mode) {
-    auto current  = Proc::Process::current();
-    auto file_try = FS::File::open(usr_path, mode);
+    auto current = Proc::Process::current();
+    char path_buffer[FS::MAX_PATH_LEN];
+
+    if (!copy_and_canonize(path_buffer, usr_path)) {
+        Thread::current()->errno = EINVAL;
+        return -1;
+    }
+
+    auto file_try = FS::File::open(path_buffer, mode);
     if (!file_try) {
         Thread::current()->errno = file_try.error_code;
         return -1;
@@ -119,7 +129,7 @@ int chdir(const usr_char* path) {
     char path_buffer[FS::MAX_PATH_LEN];
 
     auto strlen_try = usr_strlen(path);
-    if (!strlen_try.has_value) {
+    if (!strlen_try) {
         Thread::current()->errno = EINVAL;
         return -1;
     }
@@ -127,7 +137,7 @@ int chdir(const usr_char* path) {
     int len = min<int>(strlen_try.value, sizeof(path_buffer) - 1);
 
     auto memcpy_try = u2k_memcpy(path_buffer, path, len);
-    if (!memcpy_try.has_value) {
+    if (!memcpy_try) {
         Thread::current()->errno = EINVAL;
         return -1;
     }
@@ -153,6 +163,53 @@ char* getcwd(char* buffer, size_t buffer_len) {
     return buffer;
 }
 
+int stat(const usr_char* usr_path, struct stat* usr_statbuf) {
+    auto current = Proc::Process::current();
+    char path_buffer[FS::MAX_PATH_LEN];
+
+    if (!copy_and_canonize(path_buffer, usr_path)) {
+        Thread::current()->errno = EINVAL;
+        return -1;
+    }
+
+    struct stat ker_statbuf;
+
+    auto info = FS::File::info(path_buffer);
+    if (!info) {
+        Thread::current()->errno = info.error_code;
+        return -1;
+    }
+
+    ker_statbuf.st_dev = info.value.containing_dev_id;
+    ker_statbuf.st_dev = 1;
+
+    if (!u2k_memcpy(usr_statbuf, &ker_statbuf, sizeof(ker_statbuf))) {
+        Thread::current()->errno = info.error_code;
+        return -1;
+    }
+
+    return 0;
+}
+
+int access(const usr_char* usr_path, int mode) {
+    char path_buffer[FS::MAX_PATH_LEN];
+
+    if (!copy_and_canonize(path_buffer, usr_path)) {
+        Thread::current()->errno = EINVAL;
+        return -1;
+    }
+
+    auto info = FS::File::info(path_buffer);
+    if (!info) {
+        Thread::current()->errno = info.error_code;
+        return -1;
+    }
+
+    // add permission checks
+
+    return 0;
+}
+
 bool isatty(int fd) {
     auto fd_try = get_file(fd);
     if (!fd_try) {
@@ -173,11 +230,13 @@ void register_fs() {
     table[SYS_READ]   = (void*) read;
     table[SYS_WRITE]  = (void*) write;
     table[SYS_CLOSE]  = (void*) close;
+    table[SYS_ISATTY] = (void*) isatty;
     table[SYS_DUP]    = (void*) dup;
     table[SYS_DUP2]   = (void*) dup2;
     table[SYS_CHDIR]  = (void*) chdir;
     table[SYS_GETCWD] = (void*) getcwd;
-    table[SYS_ISATTY] = (void*) isatty;
+    table[SYS_STAT]   = (void*) stat;
+    table[SYS_ACCESS] = (void*) access;
 }
 
 optional<FS::File_SP> get_file(int fd) {
@@ -205,4 +264,26 @@ optional<FS::File_SP> pop_file(int fd) {
     current->files.erase(fd);
 
     return file;
+}
+
+bool copy_and_canonize(char buffer[FS::MAX_PATH_LEN], const usr_char* usr_path) {
+    auto current    = Proc::Process::current();
+    auto strlen_try = usr_strlen(usr_path);
+    if (!strlen_try)
+        return false;
+
+    int len = min<int>(strlen_try.value + 1, FS::MAX_PATH_LEN);
+    if (!u2k_memcpy(buffer, usr_path, len + 1))
+        return false;
+
+    buffer[len] = '\0';
+
+    if (buffer[0] != '/') {
+        char buffer_b[FS::MAX_PATH_LEN];
+        FS::canonize_path(buffer, current->get_cwd(), buffer_b, FS::MAX_PATH_LEN);
+
+        memcpy(buffer, buffer_b, FS::MAX_PATH_LEN);
+    }
+
+    return true;
 }

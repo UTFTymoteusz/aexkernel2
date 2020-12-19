@@ -17,8 +17,10 @@ enum syscall_id_t {
     SYS_DUP    = 12,
     SYS_DUP2   = 13,
     SYS_PIPE   = 14,
-    SYS_GETCWD = 15,
-    SYS_CHDIR  = 16,
+    SYS_CHDIR  = 15,
+    SYS_GETCWD = 16,
+    SYS_ACCESS = 17,
+    SYS_STAT   = 18,
 
     SYS_FORK   = 44,
     SYS_EXECVE = 45,
