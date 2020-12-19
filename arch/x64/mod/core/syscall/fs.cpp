@@ -91,6 +91,29 @@ int dup(int fd) {
     return fd2;
 }
 
+int dup2(int srcfd, int dstfd) {
+    auto current = Proc::Process::current();
+    auto fd_try  = get_file(srcfd);
+    if (!fd_try) {
+        Thread::current()->errno = fd_try.error_code;
+        return -1;
+    }
+
+    auto dup_try = fd_try.value->dup();
+    if (!dup_try) {
+        Thread::current()->errno = dup_try.error_code;
+        return -1;
+    }
+
+    current->files_lock.acquire();
+    current->files.set(dstfd, dup_try.value);
+    current->files_lock.release();
+
+    fd_try.value->close();
+
+    return dstfd;
+}
+
 bool isatty(int fd) {
     auto fd_try = get_file(fd);
     if (!fd_try) {
@@ -112,6 +135,7 @@ void register_fs() {
     table[SYS_WRITE]  = (void*) write;
     table[SYS_CLOSE]  = (void*) close;
     table[SYS_DUP]    = (void*) dup;
+    table[SYS_DUP2]   = (void*) dup2;
     table[SYS_ISATTY] = (void*) isatty;
 }
 

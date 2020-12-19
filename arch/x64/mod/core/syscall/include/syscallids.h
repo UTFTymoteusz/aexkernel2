@@ -15,12 +15,13 @@ enum syscall_id_t {
     SYS_IOCTL  = 10,
     SYS_ISATTY = 11,
     SYS_DUP    = 12,
-    SYS_PIPE   = 13,
+    SYS_DUP2   = 13,
+    SYS_PIPE   = 14,
 
-    SYS_FORK   = 14,
-    SYS_EXECVE = 15,
-    SYS_WAIT   = 16,
-    SYS_GETPID = 17,
+    SYS_FORK   = 44,
+    SYS_EXECVE = 45,
+    SYS_WAIT   = 46,
+    SYS_GETPID = 47,
 
     SYS_THCREATE = 72,
     SYS_THJOIN   = 73,
