@@ -2,7 +2,12 @@
 
 #include "usr.hpp"
 
-AEX::optional<size_t> usr_memcpy(void* dst, const usr_void* src, size_t len) {
+AEX::optional<size_t> u2k_memcpy(void* dst, const usr_void* src, size_t len) {
+    AEX::memcpy(dst, src, len);
+    return len;
+}
+
+AEX::optional<size_t> k2u_memcpy(usr_void* dst, const void* src, size_t len) {
     AEX::memcpy(dst, src, len);
     return len;
 }

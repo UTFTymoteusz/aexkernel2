@@ -87,6 +87,8 @@ pid_t fork() {
 
     Mem::atomic_add(&child->thread_counter, 1);
 
+    child->set_cwd(parent->get_cwd());
+
     child->lock.acquire();
     child->threads.push(thread);
     child->lock.release();
@@ -120,16 +122,24 @@ optional<int> usr_get_argc(usr_char* const argv[]) {
 }
 
 int execve(const usr_char* path, usr_char* const argv[], usr_char* const envp[]) {
-    char path_buffer[min(strlen(path) + 1, FS::MAX_PATH_LEN)];
-    auto memcpy_try = usr_memcpy(path_buffer, path, sizeof(path_buffer));
+    auto strlen_try = usr_strlen(path);
+    if (!strlen_try.has_value) {
+        Thread::current()->errno = EINVAL;
+        return -1;
+    }
+
+    char path_buffer[min(strlen_try.value + 1, FS::MAX_PATH_LEN)];
+    auto memcpy_try = u2k_memcpy(path_buffer, path, sizeof(path_buffer));
     if (!memcpy_try.has_value) {
         Thread::current()->errno = EINVAL;
         return -1;
     }
 
     auto argc_try = usr_get_argc(argv);
-    if (!argc_try.value)
-        return EINVAL;
+    if (!argc_try.value) {
+        Thread::current()->errno = EINVAL;
+        return -1;
+    }
 
     int argc = argc_try.value;
 
@@ -144,7 +154,7 @@ int execve(const usr_char* path, usr_char* const argv[], usr_char* const envp[])
         tmp_buffers[i].resize(strlen_try.value + 1);
         argv_buffer[i] = tmp_buffers[i].get();
 
-        if (!usr_memcpy(argv_buffer[i], argv[i], strlen_try.value + 1))
+        if (!u2k_memcpy(argv_buffer[i], argv[i], strlen_try.value + 1))
             return EINVAL;
     }
 

@@ -22,7 +22,6 @@ namespace AEX::Proc {
 
         char  name[64];
         char* image_path;
-        char* cwd;
 
         affinity       cpu_affinity;
         resource_usage usage;
@@ -86,11 +85,14 @@ namespace AEX::Proc {
 
         void ready();
         void rename(const char* image_path, const char* name);
-        void setcwd(const char* cwd);
+
+        void        set_cwd(const char* cwd);
+        const char* get_cwd();
 
         void exit(int status);
 
         private:
-        bool m_exiting = false;
+        bool  m_exiting = false;
+        char* m_cwd;
     };
 }

@@ -50,6 +50,20 @@ namespace AEX::Proc {
         strncpy(this->image_path, image_path_n, strlen(image_path_n) + 1);
     }
 
+    void Process::set_cwd(const char* cwd) {
+        auto scope = lock.scope();
+
+        int len = min(strlen(cwd), FS::MAX_PATH_LEN - 1);
+
+        m_cwd = Mem::Heap::realloc(m_cwd, len + 1);
+        strncpy(m_cwd, cwd, len + 1);
+    }
+
+    const char* Process::get_cwd() {
+        auto scope = lock.scope();
+        return m_cwd;
+    }
+
     Process* Process::current() {
         return Thread::current()->parent;
     }

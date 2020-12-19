@@ -43,9 +43,7 @@ namespace AEX::Net {
         int len = min<int>(strlen(hostname_new), 255);
 
         hostname = Mem::Heap::realloc(hostname, len + 1);
-        memcpy(hostname, hostname_new, len);
-
-        hostname[len] = '\0';
+        strncpy(hostname, hostname_new, len + 1);
     }
 
     void read_hostname() {

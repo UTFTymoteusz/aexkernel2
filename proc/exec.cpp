@@ -37,6 +37,8 @@ namespace AEX::Proc {
                 continue;
 
             process->rename(path, nullptr);
+            if (process->get_cwd() == nullptr)
+                process->set_cwd("/");
 
             process->files_lock.acquire();
 

@@ -48,6 +48,9 @@ namespace AEX::Proc {
         auto idle_process   = new Process("/sys/aexkrnl", 0, Mem::kernel_pagemap, "idle");
         auto kernel_process = new Process("/sys/aexkrnl", 0, Mem::kernel_pagemap);
 
+        idle_process->set_cwd("/");
+        kernel_process->set_cwd("/");
+
         idle_process->ready();
         kernel_process->ready();
 

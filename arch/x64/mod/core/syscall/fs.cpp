@@ -114,6 +114,45 @@ int dup2(int srcfd, int dstfd) {
     return dstfd;
 }
 
+// this needs path verification
+int chdir(const usr_char* path) {
+    char path_buffer[FS::MAX_PATH_LEN];
+
+    auto strlen_try = usr_strlen(path);
+    if (!strlen_try.has_value) {
+        Thread::current()->errno = EINVAL;
+        return -1;
+    }
+
+    int len = min<int>(strlen_try.value, sizeof(path_buffer) - 1);
+
+    auto memcpy_try = u2k_memcpy(path_buffer, path, len);
+    if (!memcpy_try.has_value) {
+        Thread::current()->errno = EINVAL;
+        return -1;
+    }
+
+    path_buffer[len] = '\0';
+
+    Proc::Process::current()->set_cwd(path_buffer);
+
+    return 0;
+}
+
+char* getcwd(char* buffer, size_t buffer_len) {
+    const char* cwd = Proc::Process::current()->get_cwd();
+    int         len = strlen(cwd);
+
+    if (len + 1 > buffer_len) {
+        Thread::current()->errno = ERANGE;
+        return nullptr;
+    }
+
+    k2u_memcpy(buffer, cwd, len + 1);
+
+    return buffer;
+}
+
 bool isatty(int fd) {
     auto fd_try = get_file(fd);
     if (!fd_try) {
@@ -136,6 +175,8 @@ void register_fs() {
     table[SYS_CLOSE]  = (void*) close;
     table[SYS_DUP]    = (void*) dup;
     table[SYS_DUP2]   = (void*) dup2;
+    table[SYS_CHDIR]  = (void*) chdir;
+    table[SYS_GETCWD] = (void*) getcwd;
     table[SYS_ISATTY] = (void*) isatty;
 }
 

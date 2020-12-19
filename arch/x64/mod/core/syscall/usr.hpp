@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aex/errno.hpp"
 #include "aex/mem.hpp"
 #include "aex/optional.hpp"
 
@@ -25,12 +26,20 @@ typedef int64_t usr_int64_t;
 
 typedef size_t usr_size_t;
 
-AEX::optional<size_t> usr_memcpy(void* dst, const usr_void* src, size_t len);
-AEX::optional<int>    usr_strlen(const usr_char* str);
+AEX::optional<size_t> u2k_memcpy(void* dst, const usr_void* src, size_t len);
+AEX::optional<size_t> k2u_memcpy(usr_void* dst, const void* src, size_t len);
+
+AEX::optional<int> usr_strlen(const usr_char* str);
 
 template <typename T>
 AEX::optional<T> usr_read(const usr_void* src) {
     return *((T*) src);
+}
+
+template <typename T>
+AEX::optional<T> usr_write(const usr_void* dst, T val) {
+    *((T*) dst) = val;
+    return AEX::ENONE;
 }
 
 template <typename T>
