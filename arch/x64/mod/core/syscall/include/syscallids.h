@@ -28,6 +28,7 @@ enum syscall_id_t {
     SYS_THABORT  = 74,
     SYS_THDETACH = 75,
 
+    SYS_PANIC = 250,
     SYS_TEST1 = 251,
     SYS_TEST2 = 252,
     SYS_TEST3 = 253,

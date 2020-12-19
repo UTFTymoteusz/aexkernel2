@@ -12,15 +12,16 @@ namespace AEX::Proc {
         executors.push(executor);
     }
 
-    error_t exec(Process* process, const char* path, exec_opt* options) {
+    error_t exec(Process* process, Thread* initiator, const char* path, char* const argv[],
+                 char* const envp[], exec_opt* options) {
         if (process == Process::current()) {
-            auto thread = threaded_call(exec, process, path, options);
+            auto thread = threaded_call(exec, process, initiator, path, argv, envp, options);
 
             thread->start();
             thread->detach();
 
             while (!Thread::current()->aborting())
-                Thread::sleep(250);
+                Thread::sleep(5);
 
             return EINTR;
         }
@@ -32,7 +33,7 @@ namespace AEX::Proc {
                                   new Mem::Pagemap(0x00000000, 0x7FFFFFFFFFFF));
 
         for (int i = 0; i < executors.count(); i++) {
-            if (executors[i]->exec(path, process))
+            if (executors[i]->exec(process, initiator, path, argv, envp))
                 continue;
 
             process->rename(path, nullptr);

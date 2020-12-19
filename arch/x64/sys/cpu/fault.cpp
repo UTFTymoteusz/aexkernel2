@@ -115,7 +115,8 @@ namespace AEX::Sys {
             break;
         }
 
-        printk("THPTR: 0x%p (b%i, c%i, i%i)\n", thread, 2137, 2137, cpu->in_interrupt);
+        printk("PID: %i THPTR: 0x%p (b%i, c%i, i%i)\n", thread->parent->pid, thread, 2137, 2137,
+               cpu->in_interrupt);
 
         if (info->int_no == EXC_PAGE_FAULT) {
             size_t cr2;

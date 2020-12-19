@@ -475,11 +475,11 @@ namespace AEX::Mem {
 
         int       pptr  = alloc_pptr();
         uint64_t* table = findTable(pptr, vaddr);
-        if (!table) {
+        if (!table || (table[index] & MEM_PAGE_MASK) == 0) {
             free_pptr(pptr);
             m_lock.release();
 
-            return 0;
+            return 0x0000;
         }
 
         uint64_t paddr = (table[index] & MEM_PAGE_MASK) + offset;

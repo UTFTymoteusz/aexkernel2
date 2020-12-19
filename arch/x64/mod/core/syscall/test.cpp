@@ -1,4 +1,5 @@
 #include "aex/errno.hpp"
+#include "aex/kpanic.hpp"
 #include "aex/printk.hpp"
 #include "aex/sys/syscall.hpp"
 
@@ -7,6 +8,10 @@
 #include <stdint.h>
 
 using namespace AEX;
+
+void panic() {
+    kpanic("Userspace-triggered kernel panic");
+}
 
 error_t test1(uint64_t a) {
     printk("syscall: test1(0x%x)\n", a);
@@ -36,6 +41,7 @@ error_t test5(uint64_t a, uint64_t b, uint64_t c, uint64_t d, uint64_t e) {
 void register_test() {
     auto table = Sys::default_table();
 
+    table[SYS_PANIC] = (void*) panic;
     table[SYS_TEST1] = (void*) test1;
     table[SYS_TEST2] = (void*) test2;
     table[SYS_TEST3] = (void*) test3;

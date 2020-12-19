@@ -37,17 +37,17 @@ namespace AEX::Proc {
         status = TS_RUNNABLE;
     }
 
-    void Process::rename(const char* image_path, const char* name) {
+    void Process::rename(const char* image_path_n, const char* name) {
         if (this->image_path)
             delete this->image_path;
 
         if (name == nullptr)
-            FS::get_filename(this->name, image_path, sizeof(this->name));
+            FS::get_filename(this->name, image_path_n, sizeof(this->name));
         else
             strncpy(this->name, name, sizeof(this->name));
 
-        this->image_path = new char[strlen(image_path) + 1];
-        strncpy(this->image_path, image_path, strlen(image_path) + 1);
+        this->image_path = new char[strlen(image_path_n) + 1];
+        strncpy(this->image_path, image_path_n, strlen(image_path_n) + 1);
     }
 
     Process* Process::current() {

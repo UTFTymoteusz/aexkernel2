@@ -5,7 +5,7 @@
 #include "aex/sys/syscall.hpp"
 
 #include "syscallids.h"
-#include "uptr.hpp"
+#include "usr.hpp"
 
 using namespace AEX;
 using namespace AEX::Proc;
@@ -25,7 +25,7 @@ void thexit() {
     Thread::current()->errno = ENONE;
 }
 
-void usleep(int ns) {
+void usleep(uint64_t ns) {
     Thread::usleep(ns);
     Thread::current()->errno = ENONE;
 }
@@ -82,6 +82,7 @@ pid_t fork() {
     thread->context->ss     = 0x1B;
     thread->context->rax    = 0;
     thread->context->rdx    = 0;
+    thread->context->r12    = 0;
     thread->context->cr3    = child->pagemap->pageRoot;
 
     Mem::atomic_add(&child->thread_counter, 1);
@@ -92,16 +93,68 @@ pid_t fork() {
 
     child->ready();
 
+    PRINTK_DEBUG2("pid%i: forked as pid%i", parent->pid, child->pid);
+
     add_thread(thread);
 
     return child->pid;
 }
 
+optional<int> usr_get_argc(usr_char* const argv[]) {
+    int argc = 0;
+
+    for (int i = 0; i < 32; i++) {
+        auto read_try = usr_read<usr_char*>(&argv[i]);
+        if (!read_try.has_value) {
+            Thread::current()->errno = EINVAL;
+            return -1;
+        }
+
+        if (read_try.value == nullptr)
+            break;
+
+        argc++;
+    }
+
+    return argc;
+}
+
 int execve(const usr_char* path, usr_char* const argv[], usr_char* const envp[]) {
     char path_buffer[min(strlen(path) + 1, FS::MAX_PATH_LEN)];
-    strncpy(path_buffer, path, sizeof(path_buffer));
+    auto memcpy_try = usr_memcpy(path_buffer, path, sizeof(path_buffer));
+    if (!memcpy_try.has_value) {
+        Thread::current()->errno = EINVAL;
+        return -1;
+    }
 
-    Thread::current()->errno = exec(Process::current(), path_buffer, nullptr);
+    auto argc_try = usr_get_argc(argv);
+    if (!argc_try.value)
+        return EINVAL;
+
+    int argc = argc_try.value;
+
+    tmp_array<char> tmp_buffers[argc];
+    char*           argv_buffer[argc + 1];
+
+    for (size_t i = 0; i < argc; i++) {
+        auto strlen_try = usr_strlen(argv[i]);
+        if (!strlen_try.has_value)
+            return EINVAL;
+
+        tmp_buffers[i].resize(strlen_try.value + 1);
+        argv_buffer[i] = tmp_buffers[i].get();
+
+        if (!usr_memcpy(argv_buffer[i], argv[i], strlen_try.value + 1))
+            return EINVAL;
+    }
+
+    argv_buffer[argc] = nullptr;
+
+    PRINTK_DEBUG2("pid%i: exec '%s'", Process::current()->pid, path_buffer);
+
+    Thread::current()->errno =
+        exec(Process::current(), Thread::current(), path_buffer, argv_buffer, envp, nullptr);
+
     return Thread::current()->errno != ENONE ? -1 : 0;
 }
 

@@ -102,11 +102,11 @@ namespace AEX::Proc {
             CPU::interrupts();
     }
 
-    void Thread::sleep(int ms) {
+    void Thread::sleep(uint64_t ms) {
         usleep(ms * 1000000);
     }
 
-    void Thread::usleep(int ns) {
+    void Thread::usleep(uint64_t ns) {
         auto currentThread = Thread::current();
 
         currentThread->wakeup_at = Sys::Time::uptime() + (Sys::Time::time_t) ns;
