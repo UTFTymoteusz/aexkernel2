@@ -45,13 +45,29 @@ ssize_t read(int fd, usr_void* usr_buf, uint32_t count) {
         return -1;
     }
 
-    auto read_try = fd_try.value->read((void*) usr_buf, count);
-    if (!read_try) {
-        Thread::current()->errno = read_try.error_code;
-        return -1;
+    auto usr_buf_c = (usr_uint8_t*) usr_buf;
+
+    uint8_t  buffer[1024];
+    uint32_t read = 0;
+
+    for (uint32_t i = 0; i < count; i += sizeof(buffer)) {
+        int len = min<uint32_t>(count - i, sizeof(buffer));
+
+        auto read_try = fd_try.value->read(buffer, len);
+        if (!read_try) {
+            Thread::current()->errno = read_try.error_code;
+            return -1;
+        }
+
+        if (!k2u_memcpy(&usr_buf_c[i], buffer, len)) {
+            Thread::current()->errno = EINVAL;
+            return -1;
+        }
+
+        read += len;
     }
 
-    return read_try.value;
+    return read;
 }
 
 ssize_t write(int fd, const usr_void* usr_buf, uint32_t count) {
@@ -61,13 +77,29 @@ ssize_t write(int fd, const usr_void* usr_buf, uint32_t count) {
         return -1;
     }
 
-    auto write_try = fd_try.value->write((void*) usr_buf, count);
-    if (!write_try) {
-        Thread::current()->errno = write_try.error_code;
-        return -1;
+    auto usr_buf_c = (const usr_uint8_t*) usr_buf;
+
+    uint8_t  buffer[1024];
+    uint32_t written = 0;
+
+    for (uint32_t i = 0; i < count; i += sizeof(buffer)) {
+        int len = min<uint32_t>(count - i, sizeof(buffer));
+
+        if (!u2k_memcpy(buffer, &usr_buf_c[i], len)) {
+            Thread::current()->errno = EINVAL;
+            return -1;
+        }
+
+        auto write_try = fd_try.value->write(buffer, len);
+        if (!write_try) {
+            Thread::current()->errno = write_try.error_code;
+            return -1;
+        }
+
+        written += len;
     }
 
-    return write_try.value;
+    return written;
 }
 
 int close(int fd) {
@@ -164,7 +196,6 @@ char* getcwd(char* buffer, size_t buffer_len) {
 }
 
 int stat(const usr_char* usr_path, struct stat* usr_statbuf) {
-    auto current = Proc::Process::current();
     char path_buffer[FS::MAX_PATH_LEN];
 
     if (!copy_and_canonize(path_buffer, usr_path)) {
