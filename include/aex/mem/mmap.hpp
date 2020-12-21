@@ -68,11 +68,9 @@ namespace AEX::Mem {
         int findSlot(int32_t id);
     };
 
-    optional<void*> mmap(Proc::Process* process, void* addr, size_t len, prot_flags_t prot,
-                         mmap_flags_t flags, FS::File_SP file = FS::File_SP::getNull(),
-                         int64_t offset = 0);
-
-    error_t munmap(void* addr, size_t len);
+    optional<void*> mmap(Proc::Process* process, void* addr, size_t len, int prot, int flags,
+                         FS::File_SP file = FS::File_SP::getNull(), int64_t offset = 0);
+    error_t         munmap(void* addr, size_t len);
 
     Mem::MMapRegion* find_mmap_region(Proc::Process* process, void* addr);
 }

@@ -68,7 +68,6 @@ namespace AEX::Sys {
         AEX_ASSERT_PEDANTIC(!CPU::checkInterrupts());
 
         if (thread->faulting) {
-            // kpanic("recursive fault (%i)", info->int_no);
             printk("recursive fault @ 0x%p\n", info->rip);
             Debug::stack_trace();
 

@@ -67,11 +67,14 @@ error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator
                 paddr = process->pagemap->paddrof(vaddr);
             }
 
-            if (section_header.type != ELF::sc_type_t::SC_NO_DATA) {
-                void* kaddr = Mem::kernel_pagemap->map(chk_size, paddr, PAGE_WRITE);
+            void* kaddr = Mem::kernel_pagemap->map(chk_size, paddr, PAGE_WRITE);
+
+            if (section_header.type != ELF::sc_type_t::SC_NO_DATA)
                 memcpy(kaddr, (uint8_t*) addr + fptr, chk_size);
-                Mem::kernel_pagemap->free(kaddr, chk_size);
-            }
+            else
+                memset64(kaddr, 0, 4096 / 8);
+
+            Mem::kernel_pagemap->free(kaddr, chk_size);
 
             ptr += chk_size;
             fptr += chk_size;

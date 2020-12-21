@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 typedef int dev_t;
 typedef int ino_t;
 
@@ -14,3 +16,5 @@ struct stat {
     dev_t st_dev;
     dev_t st_ino;
 };
+
+typedef int64_t off_t;

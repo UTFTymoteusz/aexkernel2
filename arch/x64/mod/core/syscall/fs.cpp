@@ -254,6 +254,23 @@ bool isatty(int fd) {
     return tty;
 }
 
+void* mmap(void* addr, size_t length, int prot, int flags, int fd, off_t offset) {
+    auto fd_try = get_file(fd);
+    if (!fd_try && !(flags & Mem::MAP_ANONYMOUS)) {
+        Thread::current()->errno = fd_try.error_code;
+        return nullptr;
+    }
+
+    auto mmap_try =
+        Mem::mmap(Proc::Process::current(), addr, length, prot, flags, fd_try.value, offset);
+    if (!mmap_try) {
+        Thread::current()->errno = mmap_try.error_code;
+        return nullptr;
+    }
+
+    return mmap_try.value;
+}
+
 void register_fs() {
     auto table = Sys::default_table();
 
@@ -268,6 +285,7 @@ void register_fs() {
     table[SYS_GETCWD] = (void*) getcwd;
     table[SYS_STAT]   = (void*) stat;
     table[SYS_ACCESS] = (void*) access;
+    table[SYS_MMAP]   = (void*) mmap;
 }
 
 optional<FS::File_SP> get_file(int fd) {

@@ -21,6 +21,8 @@ enum syscall_id_t {
     SYS_GETCWD = 16,
     SYS_ACCESS = 17,
     SYS_STAT   = 18,
+    SYS_MMAP   = 19,
+    SYS_MUNMAP = 20,
 
     SYS_FORK   = 44,
     SYS_EXECVE = 45,
@@ -32,6 +34,8 @@ enum syscall_id_t {
     SYS_TJOIN   = 73,
     SYS_TABORT  = 74,
     SYS_TDETACH = 75,
+
+    SYS_SIGRET = 94,
 
     SYS_PANIC = 250,
     SYS_TEST1 = 251,

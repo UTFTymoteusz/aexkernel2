@@ -56,8 +56,10 @@ namespace AEX::Mem {
             return ENONE;
         }
 
+        int aflags = (m_pagemap != kernel_pagemap) ? PAGE_USER : 0;
+
         if (cache[slot].id != -1)
-            m_pagemap->map(Sys::CPU::PAGE_SIZE, 0, PAGE_FIXED | PAGE_ARBITRARY,
+            m_pagemap->map(Sys::CPU::PAGE_SIZE, 0, PAGE_FIXED | PAGE_ARBITRARY | aflags,
                            cache[slot].referenced);
 
         cache[slot].id         = id;
@@ -66,8 +68,8 @@ namespace AEX::Mem {
         m_file.value->seek(m_offset + offset);
         m_file.value->read(cache[slot].buffer, count);
 
-        m_pagemap->map(Sys::CPU::PAGE_SIZE, m_pagemap->paddrof(cache[slot].buffer), PAGE_FIXED,
-                       dst);
+        m_pagemap->map(Sys::CPU::PAGE_SIZE, m_pagemap->paddrof(cache[slot].buffer),
+                       PAGE_FIXED | aflags, dst);
 
         // printk("slot: %i for %i\n", slot, id);
 
@@ -98,8 +100,8 @@ namespace AEX::Mem {
         return -1;
     }
 
-    optional<void*> mmap(Proc::Process* process, void*, size_t len, prot_flags_t,
-                         mmap_flags_t flags, FS::File_SP file, int64_t offset) {
+    optional<void*> mmap(Proc::Process* process, void*, size_t len, int prot, int flags,
+                         FS::File_SP file, int64_t offset) {
         // make addr be actually used
 
         if (!(flags & MAP_ANONYMOUS) && !file)
@@ -107,10 +109,15 @@ namespace AEX::Mem {
 
         AEX_ASSERT(process != nullptr);
 
+        int aflags = (process != Proc::Process::kernel()) ? PAGE_USER : 0;
+
+        if (prot & PROT_WRITE)
+            aflags |= PAGE_WRITE;
+
         MMapRegion* region;
 
         if (flags & MAP_ANONYMOUS) {
-            void* alloc_addr = process->pagemap->alloc(len);
+            void* alloc_addr = process->pagemap->alloc(len, aflags);
 
             region = new MMapRegion(process->pagemap, alloc_addr, len);
 
@@ -126,7 +133,7 @@ namespace AEX::Mem {
             return dupd_try.error_code;
 
         auto  dupd       = dupd_try.value;
-        void* alloc_addr = process->pagemap->map(len, 0, PAGE_ARBITRARY);
+        void* alloc_addr = process->pagemap->map(len, 0, PAGE_ARBITRARY | aflags);
 
         region = new FileBackedMMapRegion(process->pagemap, alloc_addr, len, dupd, offset);
 
