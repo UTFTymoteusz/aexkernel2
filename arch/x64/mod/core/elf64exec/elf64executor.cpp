@@ -46,6 +46,8 @@ error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator
         process->tls_size = program_header.memory_size;
     }
 
+    process->pagemap->map(Sys::CPU::PAGE_SIZE, 0x0000, PAGE_ARBITRARY);
+
     for (int i = 0; i < elf.section_headers.count(); i++) {
         auto section_header = elf.section_headers[i];
 

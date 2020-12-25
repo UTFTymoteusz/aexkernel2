@@ -547,6 +547,13 @@ namespace AEX::Mem {
                 size_t srcaddr  = srctbl[i] & MEM_PAGE_MASK;
                 size_t srcflags = srctbl[i] & ~MEM_PAGE_MASK;
 
+                if (srcflags & PAGE_NOPHYS) {
+                    dsttbl[i] = srctbl[i];
+                    vaddr += Sys::CPU::PAGE_SIZE;
+
+                    continue;
+                }
+
                 size_t dstaddr = Mem::Phys::alloc(Sys::CPU::PAGE_SIZE);
 
                 memcpy(aim_pptr(pptrdst, dstaddr), aim_pptr(pptrsrc, srcaddr), Sys::CPU::PAGE_SIZE);
