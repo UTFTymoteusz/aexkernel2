@@ -98,6 +98,7 @@ bootstrap64:
     mov rax, cr0
 
     mov rax, cr4
+    or  rax, (0b01 << 7)
     or  rax, (0b11 << 9)
     mov cr4, rax
 

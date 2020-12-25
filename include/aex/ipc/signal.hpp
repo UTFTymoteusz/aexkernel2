@@ -34,4 +34,13 @@ namespace AEX::IPC {
         SIGPWR    = 30,
         SIGSYS    = 31,
     };
+
+    enum sig_action_t {
+        SIG_TERM = 0,
+        SIG_IGN,
+        SIG_CORE,
+        SIG_STOP,
+        SIG_CONT,
+        SIG_USER,
+    };
 }

@@ -27,6 +27,7 @@ const int m_page_through   = 0x08;
 const int m_page_nocache   = 0x10;
 const int m_page_pat       = 0x80;
 const int m_page_combine   = m_page_pat;
+const int m_page_global    = 0x100;
 const int m_page_nophys    = 0x200;
 const int m_page_exec      = 0x1000;
 const int m_page_fixed     = 0x2000;
@@ -144,8 +145,9 @@ namespace AEX::Mem {
             (flags & PAGE_FIXED) ? source : findContiguous(pptr, amount, flags & PAGE_EXEC));
         size_t start = vaddr;
 
-        flags &= 0xFFF;
         flags |= PAGE_PRESENT;
+        flags |= gflags;
+        flags &= 0xFFF;
 
         for (size_t i = 0; i < amount; i++) {
             phys_addr phys = AEX::Mem::Phys::alloc(Sys::CPU::PAGE_SIZE);
@@ -179,8 +181,9 @@ namespace AEX::Mem {
         size_t paddr = AEX::Mem::Phys::alloc(bytes);
         size_t start = vaddr;
 
-        flags &= 0xFFF;
         flags |= PAGE_PRESENT;
+        flags |= gflags;
+        flags &= 0xFFF;
 
         for (size_t i = 0; i < amount; i++) {
             memset64(aim_pptr(pptr, paddr), 0, 4096 / sizeof(uint64_t));
@@ -220,6 +223,7 @@ namespace AEX::Mem {
         if (arbitrary)
             flags &= ~PAGE_PRESENT;
 
+        flags |= gflags;
         flags &= 0x0FFF;
 
         if (arbitrary)
@@ -549,8 +553,6 @@ namespace AEX::Mem {
 
                 dsttbl[i] = dstaddr | srcflags;
 
-                // printk("0x%p >> 0x%p [0x%p]\n", vaddr, dstaddr, srcaddr);
-
                 vaddr += Sys::CPU::PAGE_SIZE;
             }
         }
@@ -570,6 +572,8 @@ namespace AEX::Mem {
 
         m_kernel_pagemap.vstart = (void*) 0xFFFF800000000000;
         m_kernel_pagemap.vend   = (void*) 0xFFFFFFFFFFFFFFFF;
+
+        m_kernel_pagemap.gflags = PAGE_GLOBAL;
 
         kernel_pagemap = &m_kernel_pagemap;
 
