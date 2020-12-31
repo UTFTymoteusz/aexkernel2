@@ -44,7 +44,7 @@ namespace AEX::Debug {
         void* addr = mmap_try.value;
 
         load_symbols(addr);
-        Mem::munmap(addr, size);
+        Mem::munmap(Proc::Process::kernel(), addr, size);
     }
 
     void load_symbols(void* addr) {

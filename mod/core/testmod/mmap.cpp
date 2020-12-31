@@ -39,7 +39,7 @@ void test_mmap() {
         g *= 2;
         h *= 2;
 
-        Mem::munmap(mmap, 65536);
+        Mem::munmap(Proc::Process::kernel(), mmap, 65536);
 
         if (i == 0) {
             frames = Mem::Phys::frames_available;

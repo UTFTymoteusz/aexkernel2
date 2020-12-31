@@ -69,8 +69,6 @@ namespace AEX {
                 printk(PRINTK_WARN "module: %s: Unresolved symbol: %s\n", label, symbol.name);
                 success = false;
 
-                Debug::symbol_debug();
-
                 continue;
             }
 

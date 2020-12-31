@@ -144,10 +144,8 @@ namespace AEX::Mem {
         return region->start;
     }
 
-    // Make len work properly
-    error_t munmap(void* addr, size_t) {
-        auto process = Proc::Process::current();
-
+    // TODO: Make len work properly
+    error_t munmap(Proc::Process* process, void* addr, size_t) {
         remove_region(process, addr);
 
         return ENONE;
