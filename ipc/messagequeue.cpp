@@ -1,6 +1,7 @@
 #include "aex/ipc/messagequeue.hpp"
 
 #include "aex/math.hpp"
+#include "aex/printk.hpp"
 #include "aex/proc.hpp"
 
 using namespace AEX::Proc;
@@ -26,6 +27,7 @@ namespace AEX::IPC {
 
         message_header header;
 
+        // TODO: Make it work properly when the read gets interrupted
         m_circ_buffer.read(&header, sizeof(header));
         m_circ_buffer.read(ptr, len);
 
@@ -37,6 +39,7 @@ namespace AEX::IPC {
 
             left -= min(left, 32);
         }
+        // TODO END
 
         m_free += total_len;
 
@@ -68,6 +71,7 @@ namespace AEX::IPC {
         header.pid = Thread::current()->getProcess()->pid;
         header.len = len;
 
+        // TODO: Make it work properly when the write gets interrupted
         m_circ_buffer.write(&header, sizeof(header));
         m_circ_buffer.write(ptr, len);
 

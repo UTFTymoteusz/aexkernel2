@@ -32,11 +32,13 @@ namespace AEX::Mem {
         while (len > 0) {
             int clen = min(len, readAvailableCut());
             if (clen == 0) {
+                if (writeAvailable() < len && Thread::current()->interrupted()) {
+                    m_lock.release();
+                    return offset;
+                }
+
                 m_event.wait();
                 m_lock.release();
-
-                if (Thread::current()->interrupted())
-                    return offset;
 
                 Thread::yield();
 
@@ -71,11 +73,13 @@ namespace AEX::Mem {
         while (len > 0) {
             int clen = min(len, writeAvailableCut());
             if (clen == 0) {
+                if (writeAvailable() < len && Thread::current()->interrupted()) {
+                    m_lock.release();
+                    return offset;
+                }
+
                 m_event.wait();
                 m_lock.release();
-
-                if (Thread::current()->interrupted())
-                    return offset;
 
                 Thread::yield();
 

@@ -1,6 +1,7 @@
 #include "aex/assert.hpp"
 #include "aex/proc.hpp"
 #include "aex/sys/time.hpp"
+#include "aex/utility.hpp"
 
 #include "proc/proc.hpp"
 #include "sys/time.hpp"
@@ -9,7 +10,7 @@ using namespace AEX::Mem;
 using namespace AEX::Sys;
 
 namespace AEX::Proc {
-    void schedule() {
+    WEAK void schedule() {
         auto cpu    = CPU::current();
         auto thread = Thread::current();
 
@@ -43,7 +44,7 @@ namespace AEX::Proc {
 
                 break;
             case TS_SLEEPING:
-                if (uptime < thread->wakeup_at)
+                if (uptime < thread->wakeup_at && !thread->interrupted())
                     continue;
 
                 thread->status = TS_RUNNABLE;

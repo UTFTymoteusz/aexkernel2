@@ -116,6 +116,7 @@ namespace AEX::Mem {
         size_t rawof(void* vaddr);
 
         Pagemap* fork();
+        void     dump();
 
         private:
         Spinlock m_lock;

@@ -32,7 +32,7 @@ namespace AEX::Sys::IRQ {
 
     void init() {
         Sys::setup_idt();
-        Sys::load_idt(Sys::init_IDT, 256);
+        Sys::load_idt(Sys::idt, 256);
 
         printk(PRINTK_INIT "irq: Initializing\n");
 

@@ -17,22 +17,22 @@ namespace AEX::Proc {
 
 void exit(int status) {
     Process::current()->exit(status);
-    Thread::current()->errno = ENONE;
+    USR_ERRNO = ENONE;
 }
 
 void thexit() {
     Thread::exit();
-    Thread::current()->errno = ENONE;
+    USR_ERRNO = ENONE;
 }
 
 void usleep(uint64_t ns) {
     Thread::usleep(ns);
-    Thread::current()->errno = ENONE;
+    USR_ERRNO = ENONE;
 }
 
 void yield() {
     Thread::yield();
-    Thread::current()->errno = ENONE;
+    USR_ERRNO = ENONE;
 }
 
 pid_t fork() {
@@ -56,8 +56,12 @@ pid_t fork() {
     thread->status = calling_thread->status;
     thread->parent = child;
 
+    // TODO: Make all this be inside of the Thread class
+
     thread->context = new Context();
     memcpy(thread->context, calling_thread->context, sizeof(Context));
+
+    thread->context_aux = new Context();
 
     thread->user_stack      = calling_thread->user_stack;
     thread->user_stack_size = calling_thread->user_stack_size;
@@ -68,6 +72,9 @@ pid_t fork() {
 
     thread->fault_stack = (size_t) Mem::kernel_pagemap->alloc(Thread::FAULT_STACK_SIZE, PAGE_WRITE);
     thread->fault_stack_size = Thread::FAULT_STACK_SIZE;
+
+    thread->aux_stack = (size_t) Mem::kernel_pagemap->alloc(Thread::AUX_STACK_SIZE, PAGE_WRITE);
+    thread->aux_stack_size = Thread::AUX_STACK_SIZE;
 
     auto stack_end =
         (size_t*) (calling_thread->kernel_stack + calling_thread->kernel_stack_size - 32);
@@ -88,11 +95,7 @@ pid_t fork() {
     Mem::atomic_add(&child->thread_counter, 1);
 
     child->set_cwd(parent->get_cwd());
-
-    child->lock.acquire();
-    child->threads.push(thread);
-    child->lock.release();
-
+    child->assoc(thread);
     child->ready();
 
     PRINTK_DEBUG2("pid%i: forked as pid%i", parent->pid, child->pid);
@@ -108,7 +111,7 @@ optional<int> usr_get_argc(usr_char* const argv[]) {
     for (int i = 0; i < 32; i++) {
         auto read_try = usr_read<usr_char*>(&argv[i]);
         if (!read_try) {
-            Thread::current()->errno = EINVAL;
+            USR_ERRNO = EINVAL;
             return -1;
         }
 
@@ -124,20 +127,20 @@ optional<int> usr_get_argc(usr_char* const argv[]) {
 int execve(const usr_char* path, usr_char* const argv[], usr_char* const envp[]) {
     auto strlen_try = usr_strlen(path);
     if (!strlen_try) {
-        Thread::current()->errno = EINVAL;
+        USR_ERRNO = EINVAL;
         return -1;
     }
 
     char path_buffer[min(strlen_try.value + 1, FS::MAX_PATH_LEN)];
     auto memcpy_try = u2k_memcpy(path_buffer, path, sizeof(path_buffer));
     if (!memcpy_try) {
-        Thread::current()->errno = EINVAL;
+        USR_ERRNO = EINVAL;
         return -1;
     }
 
     auto argc_try = usr_get_argc(argv);
     if (!argc_try.value) {
-        Thread::current()->errno = EINVAL;
+        USR_ERRNO = EINVAL;
         return -1;
     }
 
@@ -162,16 +165,16 @@ int execve(const usr_char* path, usr_char* const argv[], usr_char* const envp[])
 
     PRINTK_DEBUG2("pid%i: exec '%s'", Process::current()->pid, path_buffer);
 
-    Thread::current()->errno =
+    USR_ERRNO =
         exec(Process::current(), Thread::current(), path_buffer, argv_buffer, envp, nullptr);
 
-    return Thread::current()->errno != ENONE ? -1 : 0;
+    return USR_ERRNO != ENONE ? -1 : 0;
 }
 
 pid_t wait(usr_int* wstatus) {
     auto result = Process::current()->wait(*wstatus);
     if (!result) {
-        Thread::current()->errno = result.error_code;
+        USR_ERRNO = result.error_code;
         return -1;
     }
 

@@ -1,7 +1,10 @@
 #include "aex/errno.hpp"
 #include "aex/ipc/pipe.hpp"
+#include "aex/ipc/signal.hpp"
 #include "aex/proc.hpp"
+#include "aex/proc/process.hpp"
 #include "aex/sys/syscall.hpp"
+#include "aex/utility.hpp"
 
 #include "syscallids.h"
 #include "usr.hpp"
@@ -27,8 +30,62 @@ error_t pipe(usr_int* rp, usr_int* wp) {
     return ENONE;
 }
 
+int kill(Proc::pid_t pid, int sig) {
+    if (inrange(pid, 1, Proc::Process::kernel()->pid))
+        return EPERM;
+
+    if (pid == 0)
+        NOT_IMPLEMENTED;
+
+    USR_ERRNO = Proc::Process::kill(pid, sig);
+    return USR_ERRNO ? -1 : 0;
+}
+
+int sigact(int signum, const IPC::sigaction_usr* act, IPC::sigaction_usr* oldact) {
+    auto current = Proc::Process::current();
+
+    if (oldact) {
+        auto action_try = current->sigaction(signum);
+        if (!action_try) {
+            USR_ERRNO = action_try.error_code;
+            return -1;
+        }
+
+        auto act_ker = usr_write(oldact, act);
+        if (!act_ker) {
+            USR_ERRNO = EINVAL;
+            return -1;
+        }
+    }
+
+    if (act) {
+        auto act_ker = usr_read(act);
+        if (!act_ker) {
+            USR_ERRNO = EINVAL;
+            return -1;
+        }
+
+        IPC::sigaction action = act_ker.value;
+
+        auto result = current->sigaction(signum, action);
+        if (result != ENONE) {
+            USR_ERRNO = result;
+            return -1;
+        }
+
+        return result;
+    }
+}
+
+void sigret() {
+    Proc::Thread::current()->sigret();
+}
+
 void register_ipc() {
     auto table = Sys::default_table();
 
-    table[SYS_PIPE] = (void*) pipe;
+    table[SYS_PIPE]   = (void*) pipe;
+    table[SYS_KILL]   = (void*) kill;
+    table[SYS_SIGACT] = (void*) sigact;
+    table[SYS_SIGRET] = (void*) sigret;
 }

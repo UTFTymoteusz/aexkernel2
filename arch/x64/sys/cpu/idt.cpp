@@ -8,7 +8,7 @@ namespace AEX::Sys {
 
     extern "C" char irq_spurious;
 
-    idt_entry init_IDT[256];
+    idt_entry idt[256];
 
     idt_entry& idt_entry::setOffset(size_t offset) {
         offset_0 = offset & 0xFFFF;
@@ -51,11 +51,11 @@ namespace AEX::Sys {
 
         ready = true;
 
-        memset(init_IDT, 0, sizeof(init_IDT));
+        memset(idt, 0, sizeof(idt));
 
         size_t* m_exc_array = (size_t*) &exc_array;
         for (int i = 0; i < 32; i++)
-            init_IDT[i]
+            idt[i]
                 .setOffset(m_exc_array[i])
                 .setSelector(0x08)
                 .setType(0x0E)
@@ -64,7 +64,7 @@ namespace AEX::Sys {
 
         size_t* m_irq_array = (size_t*) &irq_array;
         for (int i = 0; i < 32; i++)
-            init_IDT[i + 32]
+            idt[i + 32]
                 .setOffset(m_irq_array[i])
                 .setSelector(0x08)
                 .setType(0x0E)
@@ -72,7 +72,7 @@ namespace AEX::Sys {
                 .setPresent(true);
 
         // clang-format off
-        init_IDT[255]
+        idt[255]
             .setOffset((size_t) &irq_spurious)
             .setSelector(0x08)
             .setType(0x0E)
@@ -83,12 +83,12 @@ namespace AEX::Sys {
 
     void set_idt_ists() {
         for (int i = 0; i < 32; i++)
-            init_IDT[i].setIST(1);
+            idt[i].setIST(1);
 
         for (int i = 32; i < 64; i++)
-            init_IDT[i].setIST(2);
+            idt[i].setIST(2);
 
-        init_IDT[255].setIST(2);
+        idt[255].setIST(2);
     }
 
     void load_idt(idt_entry* idt, size_t entry_count) {

@@ -19,7 +19,7 @@ OBJS      := $(patsubst %.o, $(OBJ_DEST)%.o, $(CXXFILES:.cpp=.cpp.o) $(ASMFILES:
 
 MODULE_OBJ = $(BIN)$(MODULE_NAME).$(MODULE_ORDER).km
 
-GFLAGS = -O3 -Wall -Wextra -nostdlib -pipe
+GFLAGS = -O2 -Wall -Wextra -nostdlib -pipe
 
 INCLUDES := -I. -Iinclude/ -I"$(KERNEL_SRC)include" \
 		    -I"$(KERNEL_SRC)arch/x64/include"

@@ -118,9 +118,10 @@ namespace AEX::Sys {
 
             break;
         case IPP_PG_INVM: {
-            auto     bong  = (invm_data*) m_ipi_packet.data;
+            auto bong = (invm_data*) m_ipi_packet.data;
+
             size_t   addr  = bong->addr;
-            uint32_t pages = bong->pages;
+            uint32_t pages = bong->pages + 1; // TODO: Figure out why + 1 makes it work
 
             for (uint32_t i = 0; i < pages; i++) {
                 asm volatile("invlpg [%0]" : : "r"(addr));
@@ -128,7 +129,6 @@ namespace AEX::Sys {
             }
 
             m_ipi_ack = true;
-
         } break;
         default:
             m_ipi_ack = true;

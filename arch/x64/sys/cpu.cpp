@@ -48,7 +48,7 @@ namespace AEX::Sys {
 
     void CPU::initLocal() {
         setup_idt();
-        load_idt(init_IDT, 256);
+        load_idt(idt, 256);
 
         asm volatile("    \
             xor rax, rax; \
@@ -239,6 +239,7 @@ namespace AEX::Sys {
     void CPU::update(Proc::Thread* thread) {
         // 3 weeks of rest because of the goddamned + thread->fault_stack_size
         m_tss->ist1 = thread->fault_stack + thread->fault_stack_size;
+        m_tss->ist7 = thread->kernel_stack + thread->kernel_stack_size;
 
         wrmsr(MSR_FSBase, (size_t) thread->tls);
     }

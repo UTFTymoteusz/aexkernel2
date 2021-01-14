@@ -29,13 +29,15 @@ enum syscall_id_t {
     SYS_WAIT   = 46,
     SYS_GETPID = 47,
     SYS_GETTID = 48,
+    SYS_KILL   = 49,
+    SYS_SIGACT = 50,
+    SYS_SIGRET = 51,
 
     SYS_TCREATE = 72,
     SYS_TJOIN   = 73,
     SYS_TABORT  = 74,
     SYS_TDETACH = 75,
-
-    SYS_SIGRET = 94,
+    SYS_TKILL   = 76,
 
     SYS_PANIC = 250,
     SYS_TEST1 = 251,

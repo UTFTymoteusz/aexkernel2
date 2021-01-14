@@ -85,6 +85,34 @@ namespace AEX::Mem {
         return pptr_vaddr[index];
     }
 
+    uint64_t* find_table(phys_addr root, int pptr, uint64_t virt_addr, uint64_t* skip_by) {
+        uint64_t pml4index = (virt_addr >> 39) & 0x1FF;
+        uint64_t pdpindex  = (virt_addr >> 30) & 0x1FF;
+        uint64_t pdindex   = (virt_addr >> 21) & 0x1FF;
+
+        auto pml4 = aim_pptr(pptr, root);
+        if (!pml4[pml4index]) {
+            *skip_by += 0x8000000000;
+            return nullptr;
+        }
+
+        auto pdp = aim_pptr(pptr, pml4[pml4index] & ~0xFFF);
+        if (!pdp[pdpindex]) {
+            *skip_by += 0x40000000;
+            return nullptr;
+        }
+
+        auto pd = aim_pptr(pptr, pdp[pdpindex] & ~0xFFF);
+        if (!pd[pdindex]) {
+            *skip_by += 0x200000;
+            return nullptr;
+        }
+
+        auto ptable = aim_pptr(pptr, pd[pdindex] & ~0xFFF);
+
+        return (uint64_t*) ((uint64_t) ptable & ~0xFFF);
+    }
+
     Pagemap::Pagemap() {
         m_lock.acquire();
 
@@ -96,7 +124,7 @@ namespace AEX::Mem {
         uint64_t* a = aim_pptr(pptr_a, pageRoot);
         uint64_t* b = aim_pptr(pptr_b, kernel_pagemap->pageRoot);
 
-        memset64(a, 0, 256);
+        memset64(a, 0x0000, 256);
         memcpy(&a[256], &b[256], sizeof(uint64_t) * 256);
 
         free_pptr(pptr_b);
@@ -120,7 +148,7 @@ namespace AEX::Mem {
         uint64_t* a = aim_pptr(pptr_a, pageRoot);
         uint64_t* b = aim_pptr(pptr_b, kernel_pagemap->pageRoot);
 
-        memset64(a, 0, 256);
+        memset64(a, 0x0000, 256);
         memcpy(&a[256], &b[256], sizeof(uint64_t) * 256);
 
         free_pptr(pptr_b);
@@ -151,7 +179,7 @@ namespace AEX::Mem {
 
         for (size_t i = 0; i < amount; i++) {
             phys_addr phys = AEX::Mem::Phys::alloc(Sys::CPU::PAGE_SIZE);
-            memset64(aim_pptr(pptr, phys), 0, 4096 / sizeof(uint64_t));
+            memset64(aim_pptr(pptr, phys), 0x0000, 512);
 
             assign(pptr, (void*) vaddr, phys, flags);
 
@@ -186,7 +214,7 @@ namespace AEX::Mem {
         flags &= 0xFFF;
 
         for (size_t i = 0; i < amount; i++) {
-            memset64(aim_pptr(pptr, paddr), 0, 4096 / sizeof(uint64_t));
+            memset64(aim_pptr(pptr, paddr), 0x0000, 4096 / sizeof(uint64_t));
 
             assign(pptr, (void*) vaddr, paddr, flags);
 
@@ -290,15 +318,143 @@ namespace AEX::Mem {
         m_lock.release();
     }
 
+    size_t Pagemap::rawof(void* addr) {
+        uint64_t vaddr = (uint64_t) addr;
+        uint64_t index = ((size_t) addr >> 12) & 0x1FF;
+
+        vaddr &= ~0xFFF;
+
+        m_lock.acquire();
+
+        int       pptr  = alloc_pptr();
+        uint64_t* table = findTable(pptr, vaddr);
+        if (!table) {
+            free_pptr(pptr);
+            m_lock.release();
+
+            return 0;
+        }
+
+        uint64_t boi = table[index];
+
+        free_pptr(pptr);
+        m_lock.release();
+
+        return boi;
+    }
+
+    Pagemap* Pagemap::fork() {
+        m_lock.acquire();
+
+        int pptrtsrc = alloc_pptr();
+        int pptrtdst = alloc_pptr();
+        int pptrsrc  = alloc_pptr();
+        int pptrdst  = alloc_pptr();
+
+        size_t vaddr = 0x0000;
+
+        auto child = new Pagemap((size_t) this->vstart, (size_t) this->vend);
+
+        while (vaddr < (size_t) this->vend) {
+            size_t* srctbl = find_table(this->pageRoot, pptrtsrc, vaddr, &vaddr);
+            if (!srctbl)
+                continue;
+
+            size_t* dsttbl = child->findTableEnsure(pptrtdst, vaddr);
+
+            memset64(dsttbl, 0x0000, 512);
+
+            for (size_t i = 0; i < 512; i++) {
+                if (!srctbl[i]) {
+                    vaddr += Sys::CPU::PAGE_SIZE;
+                    continue;
+                }
+
+                size_t srcaddr  = srctbl[i] & MEM_PAGE_MASK;
+                size_t srcflags = srctbl[i] & ~MEM_PAGE_MASK;
+
+                if (srcflags & PAGE_NOPHYS) {
+                    dsttbl[i] = srctbl[i];
+                    vaddr += Sys::CPU::PAGE_SIZE;
+
+                    continue;
+                }
+
+                size_t dstaddr = Mem::Phys::alloc(Sys::CPU::PAGE_SIZE);
+
+                memcpy(aim_pptr(pptrdst, dstaddr), aim_pptr(pptrsrc, srcaddr), Sys::CPU::PAGE_SIZE);
+
+                dsttbl[i] = dstaddr | srcflags;
+
+                vaddr += Sys::CPU::PAGE_SIZE;
+            }
+        }
+
+        free_pptr(pptrdst);
+        free_pptr(pptrsrc);
+        free_pptr(pptrtdst);
+        free_pptr(pptrtsrc);
+
+        m_lock.release();
+
+        return child;
+    }
+
+    void Pagemap::dump() {
+        int    pptrtsrc = alloc_pptr();
+        size_t vaddr    = 0x0000;
+
+        while (vaddr < (size_t) this->vend) {
+            size_t* srctbl = find_table(this->pageRoot, pptrtsrc, vaddr, &vaddr);
+            if (!srctbl)
+                continue;
+
+            for (size_t i = 0; i < 512; i++) {
+                if (srctbl[i])
+                    printk("0x%p >> 0x%p\n", vaddr, srctbl[i]);
+
+                vaddr += Sys::CPU::PAGE_SIZE;
+            }
+        }
+
+        free_pptr(pptrtsrc);
+    }
+
+    phys_addr Pagemap::paddrof(void* addr) {
+        uint64_t vaddr  = (uint64_t) addr;
+        uint16_t offset = vaddr & 0xFFF;
+        uint64_t index  = ((size_t) addr >> 12) & 0x1FF;
+
+        vaddr &= ~0xFFF;
+
+        m_lock.acquire();
+
+        int       pptr  = alloc_pptr();
+        uint64_t* table = findTable(pptr, vaddr);
+        if (!table || (table[index] & MEM_PAGE_MASK) == 0) {
+            free_pptr(pptr);
+            m_lock.release();
+
+            return 0x0000;
+        }
+
+        uint64_t paddr = (table[index] & MEM_PAGE_MASK) + offset;
+
+        free_pptr(pptr);
+        m_lock.release();
+
+        return paddr;
+    }
+
     // Private
     void Pagemap::assign(int pptr, void* virt, phys_addr phys, uint16_t flags) {
+        AEX_ASSERT_PEDANTIC(!m_lock.tryAcquire());
+
         uint64_t vaddr = (uint64_t) virt & MEM_PAGE_MASK;
         uint64_t paddr = (uint64_t) phys & MEM_PAGE_MASK;
 
         uint64_t* ptable = findTableEnsure(pptr, vaddr);
         uint64_t  index  = (vaddr >> 12) & 0x1FF;
-
-        // printk("assign 0x%016p 0x%x\n", vaddr, flags);
 
         ptable[index] = paddr | flags;
 
@@ -307,6 +463,8 @@ namespace AEX::Mem {
 
     // Make this unalloc page tables pls
     phys_addr Pagemap::unassign(int pptr, void* virt) {
+        AEX_ASSERT_PEDANTIC(!m_lock.tryAcquire());
+
         uint64_t  vaddr  = (uint64_t) virt & MEM_PAGE_MASK;
         uint64_t* ptable = findTableEnsure(pptr, vaddr);
         uint64_t  index  = (vaddr >> 12) & 0x1FF;
@@ -316,9 +474,9 @@ namespace AEX::Mem {
             return 0x0000;
         }
 
-        size_t addr   = ptable[index] & MEM_PAGE_MASK;
-        ptable[index] = 0x0000;
+        size_t addr = ptable[index] & MEM_PAGE_MASK;
 
+        ptable[index] = 0x0000;
         __sync_synchronize();
 
         return addr;
@@ -330,48 +488,15 @@ namespace AEX::Mem {
     };
 
     void Pagemap::recache(void* addr, size_t bytes) {
+        size_t   _addr  = (size_t) addr;
+        uint32_t _pages = ceiltopg(bytes) + 1; // TODO: Figure out why + 1 makes it work
+
         auto bong = invm_data();
 
-        bong.addr  = (size_t) addr;
-        bong.pages = ceiltopg(bytes);
+        bong.addr  = _addr;
+        bong.pages = _pages;
 
-        Sys::CPU::broadcast(Sys::CPU::IPP_PG_INVM, &bong);
-
-        size_t   _addr  = (size_t) addr;
-        uint32_t _pages = ceiltopg(bytes);
-
-        for (uint32_t i = 0; i < _pages; i++) {
-            asm volatile("invlpg [%0]" : : "r"(_addr));
-            _addr += Sys::CPU::PAGE_SIZE;
-        }
-    }
-
-    uint64_t* find_table(phys_addr root, int pptr, uint64_t virt_addr, uint64_t* skip_by) {
-        uint64_t pml4index = (virt_addr >> 39) & 0x1FF;
-        uint64_t pdpindex  = (virt_addr >> 30) & 0x1FF;
-        uint64_t pdindex   = (virt_addr >> 21) & 0x1FF;
-
-        auto pml4 = aim_pptr(pptr, root);
-        if (pml4[pml4index] == 0x0000) {
-            *skip_by += 0x8000000000;
-            return nullptr;
-        }
-
-        auto pdp = aim_pptr(pptr, pml4[pml4index] & ~0xFFF);
-        if (pdp[pdpindex] == 0x0000) {
-            *skip_by += 0x40000000;
-            return nullptr;
-        }
-
-        auto pd = aim_pptr(pptr, pdp[pdpindex] & ~0xFFF);
-        if (pd[pdindex] == 0x0000) {
-            *skip_by += 0x200000;
-            return nullptr;
-        }
-
-        auto ptable = aim_pptr(pptr, pd[pdindex] & ~0xFFF);
-
-        return (uint64_t*) ((uint64_t) ptable & ~0xFFF);
+        Sys::CPU::broadcast(Sys::CPU::IPP_PG_INVM, &bong, false);
     }
 
     uint64_t* Pagemap::findTable(int pptr, uint64_t virt_addr, uint64_t* skip_by) {
@@ -380,13 +505,13 @@ namespace AEX::Mem {
 
     uint64_t* Pagemap::findTableEnsure(int pptr, uint64_t virt_addr) {
         uint8_t index_shift = 39;
-        bool    reset       = false;
 
         uint64_t* ptable = aim_pptr(pptr, pageRoot);
 
         // Here we iterate over 3 paging levels, the PML4, the PDP and the PD
         // until we reach the PT
         for (int i = 0; i < 3; i++) {
+            bool     fresh = false;
             uint64_t index = (virt_addr >> index_shift) & 0x01FF;
             index_shift -= 9;
 
@@ -394,16 +519,16 @@ namespace AEX::Mem {
                 phys_addr phys = AEX::Mem::Phys::alloc(Sys::CPU::PAGE_SIZE);
 
                 ptable[index] = phys;
-                reset         = true;
+                fresh         = true;
             }
 
             ptable[index] |= PAGE_USER | PAGE_WRITE | PAGE_PRESENT;
-            ptable = aim_pptr(pptr, ptable[index] & MEM_PAGE_MASK);
 
-            if (reset) {
-                memset((void*) ptable, 0, 0x1000);
-                reset = false;
-            }
+            auto next_ptable = aim_pptr(pptr, ptable[index] & MEM_PAGE_MASK);
+            if (fresh)
+                memset64((void*) next_ptable, 0x0000, 512);
+
+            ptable = next_ptable;
         }
 
         return (uint64_t*) ((uint64_t) ptable & MEM_PAGE_MASK);
@@ -468,110 +593,6 @@ namespace AEX::Mem {
         return nullptr;
     }
 
-    phys_addr Pagemap::paddrof(void* addr) {
-        uint64_t vaddr  = (uint64_t) addr;
-        uint16_t offset = vaddr & 0xFFF;
-        uint64_t index  = ((size_t) addr >> 12) & 0x1FF;
-
-        vaddr &= ~0xFFF;
-
-        m_lock.acquire();
-
-        int       pptr  = alloc_pptr();
-        uint64_t* table = findTable(pptr, vaddr);
-        if (!table || (table[index] & MEM_PAGE_MASK) == 0) {
-            free_pptr(pptr);
-            m_lock.release();
-
-            return 0x0000;
-        }
-
-        uint64_t paddr = (table[index] & MEM_PAGE_MASK) + offset;
-
-        free_pptr(pptr);
-        m_lock.release();
-
-        return paddr;
-    }
-
-    size_t Pagemap::rawof(void* addr) {
-        uint64_t vaddr = (uint64_t) addr;
-        uint64_t index = ((size_t) addr >> 12) & 0x1FF;
-
-        vaddr &= ~0xFFF;
-
-        m_lock.acquire();
-
-        int       pptr  = alloc_pptr();
-        uint64_t* table = findTable(pptr, vaddr);
-        if (!table) {
-            free_pptr(pptr);
-            m_lock.release();
-
-            return 0;
-        }
-
-        uint64_t boi = table[index];
-
-        free_pptr(pptr);
-        m_lock.release();
-
-        return boi;
-    }
-
-    Pagemap* Pagemap::fork() {
-        int pptrtsrc = alloc_pptr();
-        int pptrtdst = alloc_pptr();
-        int pptrsrc  = alloc_pptr();
-        int pptrdst  = alloc_pptr();
-
-        size_t vaddr = 0x0000;
-
-        auto child = new Pagemap((size_t) this->vstart, (size_t) this->vend);
-
-        while (vaddr < (size_t) this->vend) {
-            size_t* srctbl = find_table(this->pageRoot, pptrtsrc, vaddr, &vaddr);
-            if (!srctbl)
-                continue;
-
-            size_t* dsttbl = child->findTableEnsure(pptrtdst, vaddr);
-
-            memset64(dsttbl, 512, 0x0000);
-
-            for (size_t i = 0; i < 512; i++) {
-                if (!srctbl[i]) {
-                    vaddr += Sys::CPU::PAGE_SIZE;
-                    continue;
-                }
-
-                size_t srcaddr  = srctbl[i] & MEM_PAGE_MASK;
-                size_t srcflags = srctbl[i] & ~MEM_PAGE_MASK;
-
-                if (srcflags & PAGE_NOPHYS) {
-                    dsttbl[i] = srctbl[i];
-                    vaddr += Sys::CPU::PAGE_SIZE;
-
-                    continue;
-                }
-
-                size_t dstaddr = Mem::Phys::alloc(Sys::CPU::PAGE_SIZE);
-
-                memcpy(aim_pptr(pptrdst, dstaddr), aim_pptr(pptrsrc, srcaddr), Sys::CPU::PAGE_SIZE);
-
-                dsttbl[i] = dstaddr | srcflags;
-
-                vaddr += Sys::CPU::PAGE_SIZE;
-            }
-        }
-
-        free_pptr(pptrdst);
-        free_pptr(pptrsrc);
-        free_pptr(pptrtdst);
-        free_pptr(pptrtsrc);
-
-        return child;
-    }
-
     void create_first_levels();
 
     void init() {
@@ -585,11 +606,8 @@ namespace AEX::Mem {
         kernel_pagemap = &m_kernel_pagemap;
 
         for (size_t i = 0; i < PPTR_AMOUNT; i++) {
-            void* m_virt = m_kernel_pagemap.map(Sys::CPU::PAGE_SIZE, 0x0000, PAGE_WRITE);
-
-            // printk("aa: 0x%p\n", m_virt);
-
-            uint64_t virt = (uint64_t) m_virt;
+            void*    m_virt = m_kernel_pagemap.map(Sys::CPU::PAGE_SIZE, 0x0000, PAGE_WRITE);
+            uint64_t virt   = (uint64_t) m_virt;
 
             uint64_t pml4index = (virt >> 39) & 0x1FF;
             uint64_t pdpindex  = (virt >> 30) & 0x1FF;

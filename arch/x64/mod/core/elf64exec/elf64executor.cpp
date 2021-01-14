@@ -39,14 +39,11 @@ error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator
 
     for (int i = 0; i < elf.program_headers.count(); i++) {
         auto program_header = elf.program_headers[i];
-
         if (program_header.type != ELF::PH_TLS)
             continue;
 
         process->tls_size = program_header.memory_size;
     }
-
-    process->pagemap->map(Sys::CPU::PAGE_SIZE, 0x0000, PAGE_ARBITRARY);
 
     for (int i = 0; i < elf.section_headers.count(); i++) {
         auto section_header = elf.section_headers[i];
@@ -64,9 +61,15 @@ error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator
 
             Mem::phys_addr paddr = process->pagemap->paddrof((void*) ptr);
             if (!paddr) {
-                void* vaddr = process->pagemap->alloc(
-                    chk_size, PAGE_USER | PAGE_WRITE | PAGE_EXEC | PAGE_FIXED, (void*) ptr);
-                paddr = process->pagemap->paddrof(vaddr);
+                auto flags = PAGE_USER | PAGE_FIXED;
+
+                if (section_header.flags & ELF::SC_WRITE)
+                    flags |= PAGE_WRITE;
+                if (section_header.flags & ELF::SC_EXECUTE)
+                    flags |= PAGE_EXEC;
+
+                void* vaddr = process->pagemap->alloc(chk_size, flags, (void*) ptr);
+                paddr       = process->pagemap->paddrof(vaddr);
             }
 
             void* kaddr = Mem::kernel_pagemap->map(chk_size, paddr, PAGE_WRITE);
@@ -74,16 +77,22 @@ error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator
             if (section_header.type != ELF::sc_type_t::SC_NO_DATA)
                 memcpy(kaddr, (uint8_t*) addr + fptr, chk_size);
             else
-                memset64(kaddr, 0, 4096 / 8);
+                memset64(kaddr, 0x0000, 512);
 
             Mem::kernel_pagemap->free(kaddr, chk_size);
 
             ptr += chk_size;
             fptr += chk_size;
         }
+
+        // The dissapearance of the last section seems to be a caching issue
+        // asm volatile("mov rax, cr3; mov cr3, rax");
     }
 
-    Mem::munmap(addr, size);
+    if (process->pagemap->paddrof((void*) 0x0000) == 0x0000)
+        process->pagemap->map(Sys::CPU::PAGE_SIZE, 0x0000, PAGE_ARBITRARY);
+
+    Mem::munmap(Proc::Process::kernel(), addr, size);
 
     int    argc_usr;
     char** argv_usr;
@@ -115,8 +124,7 @@ void Elf64Executor::abortall(Proc::Process* process, Proc::Thread* except) {
         if (process->threads[i] == except)
             continue;
 
-        process->threads[i]->detach();
-        process->threads[i]->abort();
+        process->threads[i]->abort(true);
     }
 
     process->threads_lock.release();

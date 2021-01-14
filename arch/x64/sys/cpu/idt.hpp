@@ -24,7 +24,7 @@ namespace AEX::Sys {
         idt_entry& setIST(uint8_t ist);
     } __attribute((packed));
 
-    extern idt_entry init_IDT[256];
+    extern idt_entry idt[256];
 
     void setup_idt();
     void load_idt(idt_entry* idt, size_t entry_count);

@@ -3,9 +3,12 @@
 #include "aex/errno.hpp"
 #include "aex/mem.hpp"
 #include "aex/optional.hpp"
+#include "aex/proc/thread.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
+
+#define USR_ERRNO (AEX::Proc::Thread::current()->errno)
 
 typedef char  usr_char;
 typedef short usr_short;
@@ -34,6 +37,11 @@ AEX::optional<int> usr_strlen(const usr_char* str);
 template <typename T>
 AEX::optional<T> usr_read(const usr_void* src) {
     return *((T*) src);
+}
+
+template <typename T>
+AEX::optional<T> usr_read(const T* src) {
+    return *src;
 }
 
 template <typename T>

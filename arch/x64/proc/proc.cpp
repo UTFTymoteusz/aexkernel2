@@ -14,11 +14,11 @@ namespace AEX::Proc {
     extern "C" void proc_timer_tick();
 
     void reload() {
-        Sys::load_idt(Sys::init_IDT, 256);
+        Sys::load_idt(Sys::idt, 256);
     }
 
     void setup_irq() {
-        Sys::init_IDT[0x20 + 0].setOffset((size_t) proc_timer_tick);
+        Sys::idt[0x20 + 0].setOffset((size_t) proc_timer_tick);
 
         CPU::broadcast(CPU::IPP_CALL, (void*) reload);
         reload();

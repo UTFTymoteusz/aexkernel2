@@ -1,9 +1,9 @@
 #pragma once
 
 #include "aex/arch/proc/context.hpp"
+#include "aex/ipc/signal.hpp"
 #include "aex/mem/atomic.hpp"
-#include "aex/mem/paging.hpp"
-#include "aex/mem/smartptr.hpp"
+#include "aex/mem/vector.hpp"
 #include "aex/optional.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc/resource_usage.hpp"
@@ -31,6 +31,7 @@ namespace AEX::Proc {
         static constexpr auto USER_STACK_SIZE   = 16384;
         static constexpr auto KERNEL_STACK_SIZE = 16384;
         static constexpr auto FAULT_STACK_SIZE  = 32768;
+        static constexpr auto AUX_STACK_SIZE    = 4096;
 
         struct state {
             uint16_t busy;
@@ -43,8 +44,12 @@ namespace AEX::Proc {
         Thread* self = this; // 0x00
         tid_t   tid;         // 0x08
 
-        Context* context; // 0x10
-        error_t  errno;   // 0x18
+        Context* context;     // 0x10
+        Context* context_aux; // 0x18
+
+        error_t errno; // 0x20
+
+        size_t saved_stack; // 0x28
 
         // Safe to change again
         Spinlock lock;
@@ -63,12 +68,15 @@ namespace AEX::Proc {
         size_t user_stack;
         size_t kernel_stack;
         size_t fault_stack;
+        size_t aux_stack;
 
         int user_stack_size;
         int kernel_stack_size;
         int fault_stack_size;
+        int aux_stack_size;
 
         bool faulting;
+        bool in_signal;
 
         void* tls;
 
@@ -91,14 +99,27 @@ namespace AEX::Proc {
         error_t start();
         error_t join();
         error_t detach();
-        error_t abort();
+        error_t abort(bool force = false);
         bool    aborting();
         bool    interrupted();
 
-        void _abort();
+        void _abort(bool force = false);
         void finish();
 
         Process* getProcess();
+
+        // Make this actually do what it says it'll do
+        /**
+         * Makes the CPU that's executing the thread back off and acquires the lock.
+         **/
+        void take_lock();
+
+        // IPC Stuff
+        /**
+         *
+         **/
+        error_t signal(IPC::siginfo_t& info);
+        error_t sigret();
 
         /**
          * Sets the arguments of the thread.
@@ -128,14 +149,7 @@ namespace AEX::Proc {
          * Subtracts 1 from the thread's busy counter. If m_busy is greater than 0, the thread
          * cannot be killed.
          **/
-        inline void subBusy() {
-            uint16_t busy = Mem::atomic_sub_fetch(&m_busy, (uint16_t) 1);
-            if (busy)
-                return;
-
-            if (this == Thread::current() && aborting())
-                Thread::exit();
-        }
+        void subBusy();
 
         /**
          * Checks the thread's busy counter. If m_busy is greater than 0, the thread cannot
@@ -202,6 +216,13 @@ namespace AEX::Proc {
         bool m_aborting = false;
 
         Thread* m_joiner = nullptr;
+
+        Mem::Vector<IPC::siginfo_t> m_pending_signals;
+
+        error_t              _signal(IPC::siginfo_t& info);
+        error_t              handleSignal(IPC::siginfo_t& info);
+        error_t              enterSignal(IPC::siginfo_t& info);
+        [[noreturn]] error_t exitSignal();
 
         void alloc_stacks(Mem::Pagemap* pagemap, size_t size, bool usermode);
         void alloc_tls(uint16_t size);

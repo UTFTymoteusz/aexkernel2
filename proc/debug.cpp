@@ -56,10 +56,14 @@ namespace AEX::Proc {
                    thread->detached() ? "detached" : (thread->joiner() ? "joined by" : ""),
                    thread->joiner());*/
 
-            printk("0x%p %6i <%s> <%s> %s 0x%p\n", thread, thread->parent->pid, buffer,
-                   Debug::addr2name(thread->original_entry),
-                   thread->detached() ? "detached" : (thread->joiner() ? "joined by" : ""),
-                   thread->joiner());
+            auto name = Debug::addr2name(thread->original_entry);
+            if (!name)
+                name = "unknown";
+
+            printk("0x%p %6i <%s> <%s> %s 0x%p %li [%i, %i]\n", thread, thread->parent->pid, buffer,
+                   name, thread->detached() ? "detached" : (thread->joiner() ? "joined by" : ""),
+                   thread->joiner(), thread->interrupted(), thread->getCritical(),
+                   thread->getBusy());
 
             // const char* name = Debug::addr2name(thread->original_entry);
             // name             = name ? name : "no idea";

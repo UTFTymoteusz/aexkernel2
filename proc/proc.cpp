@@ -61,6 +61,8 @@ namespace AEX::Proc {
         bsp_thread->fault_stack_size = Thread::FAULT_STACK_SIZE;
         bsp_thread->setStatus(TS_RUNNABLE);
 
+        bsp_thread->original_entry = nullptr;
+
         bsp->current_thread  = bsp_thread;
         bsp->current_context = bsp_thread->context;
 

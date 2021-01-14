@@ -9,6 +9,7 @@ namespace AEX {
         void release();
 
         bool tryAcquire();
+        bool isAcquired();
 
         void acquireRaw();
         void releaseRaw();

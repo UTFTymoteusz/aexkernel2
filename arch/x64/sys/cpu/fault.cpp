@@ -67,13 +67,13 @@ namespace AEX::Sys {
 
         AEX_ASSERT_PEDANTIC(!CPU::checkInterrupts());
 
-        if (thread->faulting) {
+        /*if (thread->faulting) {
             printk("recursive fault @ 0x%p\n", info->rip);
             Debug::stack_trace();
 
             CPU::broadcast(CPU::IPP_HALT);
             CPU::wait();
-        }
+        }*/
 
         thread->faulting = true;
 
@@ -101,6 +101,8 @@ namespace AEX::Sys {
                    "cpu%i: %93$%s%$ Exception (%i) (%93$%i%$)\nRIP: 0x%016lx <%s+0x%x>\n",
                    CPU::currentID(), exception_names[info->int_no], info->int_no, info->err,
                    info->rip, name, delta);
+
+            // thread->parent->pagemap->dump();
 
             Proc::debug_print_threads();
             Proc::debug_print_processes();
@@ -258,7 +260,8 @@ namespace AEX::Sys {
         asm volatile("mov rax, cr3; mov %0, rax;" : : "m"(cr3) : "memory");
         asm volatile("mov rax, cr4; mov %0, rax;" : : "m"(cr4) : "memory");
 
-        printk("CR0: 0x%016lx  CR1: ud :)  CR2: 0x%016lx  CR3: 0x%016lx  CR4: 0x%016lx\n", cr0, cr2,
-               cr3, cr4);
+        printk(
+            "CR0: 0x%016lx  CR1: 0xUDUDUDUDUDUDUDUD  CR2: 0x%016lx  CR3: 0x%016lx  CR4: 0x%016lx\n",
+            cr0, cr2, cr3, cr4);
     }
 }

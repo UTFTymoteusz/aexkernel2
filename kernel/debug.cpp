@@ -113,7 +113,7 @@ namespace AEX::Debug {
                 continue;
 
             uint64_t new_delta = m_addr - symbol.address;
-            if (new_delta >= delta)
+            if (new_delta >= delta || new_delta >= 0x2000)
                 continue;
 
             delta = new_delta;

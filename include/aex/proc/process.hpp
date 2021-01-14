@@ -1,9 +1,12 @@
 #pragma once
 
+#include "aex/fs/file.hpp"
 #include "aex/ipc/event.hpp"
+#include "aex/ipc/signal.hpp"
 #include "aex/mem.hpp"
-#include "aex/mem/lazyvector.hpp"
 #include "aex/mem/mmap.hpp"
+#include "aex/mutex.hpp"
+#include "aex/optional.hpp"
 #include "aex/proc.hpp"
 #include "aex/proc/affinity.hpp"
 #include "aex/proc/resource_usage.hpp"
@@ -62,7 +65,7 @@ namespace AEX::Proc {
 
         ~Process();
 
-        static error_t kill(pid_t pid);
+        static error_t kill(pid_t pid, int sig);
 
         /**
          * Waits for any child process to exit.
@@ -91,8 +94,25 @@ namespace AEX::Proc {
 
         void exit(int status);
 
+        void assoc(Thread* thread);
+        void unassoc(Thread* thread);
+
+        // IPC Stuff
+        /**
+         *
+         **/
+        error_t                  signal(IPC::siginfo_t& info);
+        optional<IPC::sigaction> sigaction(uint8_t id);
+        error_t                  sigaction(uint8_t id, IPC::sigaction& action);
+
         private:
         bool  m_exiting = false;
         char* m_cwd;
+
+        IPC::sigaction m_signals[32];
+
+        void ipc_init();
+
+        friend class Thread;
     };
 }

@@ -47,25 +47,25 @@ namespace AEX {
             m_mem[i] = c;
     }
 
-    void WEAK memset16(void* mem, uint16_t n, size_t count) {
+    void WEAK memset16(void* mem, uint16_t val, size_t count) {
         uint16_t* m_mem = (uint16_t*) mem;
 
         for (size_t i = 0; i < count; i++)
-            m_mem[i] = n;
+            m_mem[i] = val;
     }
 
-    void WEAK memset32(void* mem, uint32_t n, size_t count) {
+    void WEAK memset32(void* mem, uint32_t val, size_t count) {
         uint32_t* m_mem = (uint32_t*) mem;
 
         for (size_t i = 0; i < count; i++)
-            m_mem[i] = n;
+            m_mem[i] = val;
     }
 
-    void WEAK memset64(void* mem, uint64_t n, size_t count) {
+    void WEAK memset64(void* mem, uint64_t val, size_t count) {
         uint64_t* m_mem = (uint64_t*) mem;
 
         for (size_t i = 0; i < count; i++)
-            m_mem[i] = n;
+            m_mem[i] = val;
     }
 
     void WEAK memcpy(void* dst, const void* src, size_t size) {

@@ -14,6 +14,7 @@ namespace AEX::Proc {
     Process::Process(const char* image_path, pid_t parent_pid, Mem::Pagemap* pagemap,
                      const char* name) {
         rename(image_path, name);
+        ipc_init();
 
         processes_lock.acquire();
 
@@ -74,7 +75,7 @@ namespace AEX::Proc {
             if (!process->threads.present(i))
                 continue;
 
-            process->threads.at(i)->abort();
+            process->threads.at(i)->abort(true);
         }
 
         while (Mem::atomic_read(&process->thread_counter) != 0)
@@ -105,8 +106,6 @@ namespace AEX::Proc {
     }
 
     void Process::exit(int status) {
-        auto scope = processes_lock.scope();
-
         if (m_exiting)
             return;
 
@@ -117,17 +116,12 @@ namespace AEX::Proc {
 
         broker(exit_threaded_broker, this);
 
-        if (Process::current() == this) {
-            processes_lock.release();
-
-            while (!Thread::current()->interrupted())
+        if (Process::current() == this)
+            while (!Thread::current()->aborting())
                 Thread::yield();
-
-            processes_lock.acquire();
-        }
     }
 
-    error_t Process::kill(pid_t pid) {
+    error_t Process::kill(pid_t pid, int sig) {
         auto scope   = processes_lock.scope();
         auto process = get_process(pid);
         if (!process)
@@ -136,8 +130,10 @@ namespace AEX::Proc {
         if (process->status == TS_FRESH)
             return ESRCH;
 
-        process->exit(0);
-        return ENONE;
+        IPC::siginfo_t info;
+        info.si_signo = sig;
+
+        return process->signal(info);
     }
 
     struct wait_args {
@@ -204,5 +200,25 @@ namespace AEX::Proc {
             if (Thread::current()->interrupted())
                 return EINTR;
         }
+    }
+
+    void Process::assoc(Thread* thread) {
+        threads_lock.acquire();
+        threads.push(thread);
+        threads_lock.release();
+    }
+
+    void Process::unassoc(Thread* thread) {
+        threads_lock.acquire();
+
+        for (int i = 0; i < threads.count(); i++) {
+            if (!threads.present(i) || threads[i] != thread)
+                continue;
+
+            threads.erase(i);
+            break;
+        }
+
+        threads_lock.release();
     }
 }

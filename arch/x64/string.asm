@@ -59,7 +59,7 @@ _ZN3AEX8memset32EPvjm:
 
     ret
 
-_ZN3AEX8memset64EPvmm:
+_ZN3AEX8memset64EPvmm8:
     cld
 
     mov rax, rsi

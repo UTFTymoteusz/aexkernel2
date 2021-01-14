@@ -21,13 +21,13 @@ int open(const usr_char* usr_path, int mode) {
     char path_buffer[FS::MAX_PATH_LEN];
 
     if (!copy_and_canonize(path_buffer, usr_path)) {
-        Thread::current()->errno = EINVAL;
+        USR_ERRNO = EINVAL;
         return -1;
     }
 
     auto file_try = FS::File::open(path_buffer, mode);
     if (!file_try) {
-        Thread::current()->errno = file_try.error_code;
+        USR_ERRNO = file_try.error_code;
         return -1;
     }
 
@@ -41,7 +41,7 @@ int open(const usr_char* usr_path, int mode) {
 ssize_t read(int fd, usr_void* usr_buf, uint32_t count) {
     auto fd_try = get_file(fd);
     if (!fd_try) {
-        Thread::current()->errno = fd_try.error_code;
+        USR_ERRNO = fd_try.error_code;
         return -1;
     }
 
@@ -55,12 +55,12 @@ ssize_t read(int fd, usr_void* usr_buf, uint32_t count) {
 
         auto read_try = fd_try.value->read(buffer, len);
         if (!read_try) {
-            Thread::current()->errno = read_try.error_code;
+            USR_ERRNO = read_try.error_code;
             return -1;
         }
 
         if (!k2u_memcpy(&usr_buf_c[i], buffer, len)) {
-            Thread::current()->errno = EINVAL;
+            USR_ERRNO = EINVAL;
             return -1;
         }
 
@@ -73,7 +73,7 @@ ssize_t read(int fd, usr_void* usr_buf, uint32_t count) {
 ssize_t write(int fd, const usr_void* usr_buf, uint32_t count) {
     auto fd_try = get_file(fd);
     if (!fd_try) {
-        Thread::current()->errno = fd_try.error_code;
+        USR_ERRNO = fd_try.error_code;
         return -1;
     }
 
@@ -86,13 +86,13 @@ ssize_t write(int fd, const usr_void* usr_buf, uint32_t count) {
         int len = min<uint32_t>(count - i, sizeof(buffer));
 
         if (!u2k_memcpy(buffer, &usr_buf_c[i], len)) {
-            Thread::current()->errno = EINVAL;
+            USR_ERRNO = EINVAL;
             return -1;
         }
 
         auto write_try = fd_try.value->write(buffer, len);
         if (!write_try) {
-            Thread::current()->errno = write_try.error_code;
+            USR_ERRNO = write_try.error_code;
             return -1;
         }
 
@@ -105,7 +105,7 @@ ssize_t write(int fd, const usr_void* usr_buf, uint32_t count) {
 int close(int fd) {
     auto fd_try = pop_file(fd);
     if (!fd_try) {
-        Thread::current()->errno = fd_try.error_code;
+        USR_ERRNO = fd_try.error_code;
         return -1;
     }
 
@@ -116,13 +116,13 @@ int dup(int fd) {
     auto current = Proc::Process::current();
     auto fd_try  = get_file(fd);
     if (!fd_try) {
-        Thread::current()->errno = fd_try.error_code;
+        USR_ERRNO = fd_try.error_code;
         return -1;
     }
 
     auto dup_try = fd_try.value->dup();
     if (!dup_try) {
-        Thread::current()->errno = dup_try.error_code;
+        USR_ERRNO = dup_try.error_code;
         return -1;
     }
 
@@ -137,13 +137,13 @@ int dup2(int srcfd, int dstfd) {
     auto current = Proc::Process::current();
     auto fd_try  = get_file(srcfd);
     if (!fd_try) {
-        Thread::current()->errno = fd_try.error_code;
+        USR_ERRNO = fd_try.error_code;
         return -1;
     }
 
     auto dup_try = fd_try.value->dup();
     if (!dup_try) {
-        Thread::current()->errno = dup_try.error_code;
+        USR_ERRNO = dup_try.error_code;
         return -1;
     }
 
@@ -162,7 +162,7 @@ int chdir(const usr_char* path) {
 
     auto strlen_try = usr_strlen(path);
     if (!strlen_try) {
-        Thread::current()->errno = EINVAL;
+        USR_ERRNO = EINVAL;
         return -1;
     }
 
@@ -170,7 +170,7 @@ int chdir(const usr_char* path) {
 
     auto memcpy_try = u2k_memcpy(path_buffer, path, len);
     if (!memcpy_try) {
-        Thread::current()->errno = EINVAL;
+        USR_ERRNO = EINVAL;
         return -1;
     }
 
@@ -186,7 +186,7 @@ char* getcwd(char* buffer, size_t buffer_len) {
     int         len = strlen(cwd);
 
     if (len + 1 > buffer_len) {
-        Thread::current()->errno = ERANGE;
+        USR_ERRNO = ERANGE;
         return nullptr;
     }
 
@@ -199,7 +199,7 @@ int stat(const usr_char* usr_path, struct stat* usr_statbuf) {
     char path_buffer[FS::MAX_PATH_LEN];
 
     if (!copy_and_canonize(path_buffer, usr_path)) {
-        Thread::current()->errno = EINVAL;
+        USR_ERRNO = EINVAL;
         return -1;
     }
 
@@ -207,7 +207,7 @@ int stat(const usr_char* usr_path, struct stat* usr_statbuf) {
 
     auto info = FS::File::info(path_buffer);
     if (!info) {
-        Thread::current()->errno = info.error_code;
+        USR_ERRNO = info.error_code;
         return -1;
     }
 
@@ -215,7 +215,7 @@ int stat(const usr_char* usr_path, struct stat* usr_statbuf) {
     ker_statbuf.st_dev = 1;
 
     if (!u2k_memcpy(usr_statbuf, &ker_statbuf, sizeof(ker_statbuf))) {
-        Thread::current()->errno = info.error_code;
+        USR_ERRNO = info.error_code;
         return -1;
     }
 
@@ -226,13 +226,13 @@ int access(const usr_char* usr_path, int mode) {
     char path_buffer[FS::MAX_PATH_LEN];
 
     if (!copy_and_canonize(path_buffer, usr_path)) {
-        Thread::current()->errno = EINVAL;
+        USR_ERRNO = EINVAL;
         return -1;
     }
 
     auto info = FS::File::info(path_buffer);
     if (!info) {
-        Thread::current()->errno = info.error_code;
+        USR_ERRNO = info.error_code;
         return -1;
     }
 
@@ -244,12 +244,12 @@ int access(const usr_char* usr_path, int mode) {
 bool isatty(int fd) {
     auto fd_try = get_file(fd);
     if (!fd_try) {
-        Thread::current()->errno = fd_try.error_code;
+        USR_ERRNO = fd_try.error_code;
         return false;
     }
 
-    bool tty                 = fd_try.value->isatty();
-    Thread::current()->errno = tty ? ENONE : ENOTTY;
+    bool tty  = fd_try.value->isatty();
+    USR_ERRNO = tty ? ENONE : ENOTTY;
 
     return tty;
 }
@@ -257,18 +257,28 @@ bool isatty(int fd) {
 void* mmap(void* addr, size_t length, int prot, int flags, int fd, off_t offset) {
     auto fd_try = get_file(fd);
     if (!fd_try && !(flags & Mem::MAP_ANONYMOUS)) {
-        Thread::current()->errno = fd_try.error_code;
+        USR_ERRNO = fd_try.error_code;
         return nullptr;
     }
 
     auto mmap_try =
         Mem::mmap(Proc::Process::current(), addr, length, prot, flags, fd_try.value, offset);
     if (!mmap_try) {
-        Thread::current()->errno = mmap_try.error_code;
+        USR_ERRNO = mmap_try.error_code;
         return nullptr;
     }
 
     return mmap_try.value;
+}
+
+int munmap(void* addr, size_t len) {
+    auto result = Mem::munmap(Proc::Process::current(), addr, len);
+    if (result != ENONE) {
+        USR_ERRNO = result;
+        return -1;
+    }
+
+    return 0;
 }
 
 void register_fs() {
@@ -286,6 +296,7 @@ void register_fs() {
     table[SYS_STAT]   = (void*) stat;
     table[SYS_ACCESS] = (void*) access;
     table[SYS_MMAP]   = (void*) mmap;
+    table[SYS_MUNMAP] = (void*) munmap;
 }
 
 optional<FS::File_SP> get_file(int fd) {

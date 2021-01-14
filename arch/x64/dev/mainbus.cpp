@@ -3,6 +3,7 @@
 #include "aex/printk.hpp"
 
 using CPU    = AEX::Sys::CPU;
+using Bus    = AEX::Dev::Tree::Bus;
 using Device = AEX::Dev::Tree::Device;
 
 namespace AEX::Dev {
@@ -13,7 +14,9 @@ namespace AEX::Dev {
     void detect_rtc();
 
     void mainbus_init() {
-        mainbus = new Tree::Bus("main");
+        using namespace AEX::Dev::Tree;
+
+        mainbus = new Bus("main");
 
         detect_pci();
         detect_ps2();
