@@ -74,6 +74,18 @@ namespace AEX::Proc {
 
         lock.acquire();
         m_signals[id] = action;
+
+        if (action.action == SIG_DFL) {
+            const uint8_t def[32] = {
+                0,        SIG_TERM, SIG_TERM, SIG_CORE, SIG_CORE, SIG_CORE, SIG_CORE, SIG_CORE,
+                SIG_TERM, SIG_TERM, SIG_CORE, SIG_TERM, SIG_TERM, SIG_TERM, SIG_TERM, SIG_IGN,
+                SIG_CONT, SIG_STOP, SIG_STOP, SIG_STOP, SIG_STOP, SIG_IGN,  SIG_CORE, SIG_CORE,
+                SIG_TERM, SIG_TERM, SIG_IGN,  SIG_TERM, SIG_TERM, SIG_CORE,
+            };
+
+            m_signals[id].action = def[id];
+        }
+
         lock.release();
 
         return ENONE;

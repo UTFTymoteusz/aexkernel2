@@ -9,9 +9,10 @@
 
 #include "proc/proc.hpp"
 
-constexpr auto EXC_DEBUG      = 1;
-constexpr auto EXC_NMI        = 2;
-constexpr auto EXC_PAGE_FAULT = 14;
+constexpr auto EXC_DEBUG          = 1;
+constexpr auto EXC_NMI            = 2;
+constexpr auto EXC_INVALID_OPCODE = 6;
+constexpr auto EXC_PAGE_FAULT     = 14;
 
 extern "C" void common_fault_handler(void* info);
 
@@ -53,6 +54,7 @@ namespace AEX::Sys {
     };
 
     bool handle_page_fault(CPU::fault_info* info, CPU* cpu, Proc::Thread* thread);
+    bool handle_invalid_opcode(CPU::fault_info* info, CPU* cpu, Proc::Thread* thread);
     void print_info(CPU::fault_info* info);
 
     inline Proc::Thread::state out(Proc::Thread* thread, CPU*& cpu);
@@ -65,15 +67,17 @@ namespace AEX::Sys {
         auto cpu    = CPU::current();
         auto thread = cpu->current_thread;
 
+        thread->addBusy();
+
         AEX_ASSERT_PEDANTIC(!CPU::checkInterrupts());
 
-        /*if (thread->faulting) {
+        if (thread->faulting) {
             printk("recursive fault @ 0x%p\n", info->rip);
             Debug::stack_trace();
 
             CPU::broadcast(CPU::IPP_HALT);
             CPU::wait();
-        }*/
+        }
 
         thread->faulting = true;
 
@@ -83,7 +87,20 @@ namespace AEX::Sys {
                 break;
 
             CPU::current()->in_interrupt--;
+
             thread->faulting = false;
+            thread->subBusy();
+
+            return;
+        case EXC_INVALID_OPCODE:
+            if (!handle_invalid_opcode(info, cpu, thread))
+                break;
+
+            CPU::current()->in_interrupt--;
+
+            thread->faulting = false;
+            thread->subBusy();
+
             return;
         default:
             break;
@@ -101,8 +118,6 @@ namespace AEX::Sys {
                    "cpu%i: %93$%s%$ Exception (%i) (%93$%i%$)\nRIP: 0x%016lx <%s+0x%x>\n",
                    CPU::currentID(), exception_names[info->int_no], info->int_no, info->err,
                    info->rip, name, delta);
-
-            // thread->parent->pagemap->dump();
 
             Proc::debug_print_threads();
             Proc::debug_print_processes();
@@ -154,6 +169,8 @@ namespace AEX::Sys {
                 ;
 
             thread->faulting = false;
+            thread->subBusy();
+
             CPU::current()->in_interrupt--;
             return;
         }
@@ -165,6 +182,8 @@ namespace AEX::Sys {
             Proc::debug_print_threads();
 
             thread->faulting = false;
+            thread->subBusy();
+
             CPU::current()->in_interrupt--;
             return;
         }
@@ -172,6 +191,8 @@ namespace AEX::Sys {
         kpanic("Unrecoverable processor exception occured in CPU %i", CPU::currentID());
 
         thread->faulting = false;
+        thread->subBusy();
+
         CPU::current()->in_interrupt--;
     }
 
@@ -198,18 +219,56 @@ namespace AEX::Sys {
         auto process = (info->err & 0x04) ? thread->getProcess() : Proc::Process::kernel();
         auto region  = Mem::find_mmap_region(process, addr);
         if (!region) {
-            AEX::printk("cpu%i: Unrecoverable page fault @ 0x%lx (0x%lx)\n"
-                        "RIP: 0x%016lx\n",
-                        cpu->id, cr2, cr3, info->rip);
+            if (process == Proc::Process::kernel()) {
+                in(state, thread, cpu);
+                return false;
+            }
+
+            // AEX::printk("cpu%i: Page fault @ 0x%lx (0x%lx)\n"
+            //            "    RIP: 0x%016lx\n",
+            //            cpu->id, cr2, cr3, info->rip);
+
+            IPC::siginfo_t sinfo;
+
+            sinfo.si_signo = IPC::SIGSEGV;
+            sinfo.si_code  = (info->err & 0x01) ? SEGV_MAPERR : SEGV_ACCERR;
+            sinfo.si_addr  = addr;
+
+            thread->signal(sinfo);
 
             in(state, thread, cpu);
-            return false;
+            return true;
         }
 
         size_t aligned = int_floor(cr2, (size_t) CPU::PAGE_SIZE);
         size_t offset  = aligned - (size_t) region->start;
 
         region->read((void*) aligned, offset, CPU::PAGE_SIZE);
+
+        in(state, thread, cpu);
+        return true;
+    }
+
+    bool handle_invalid_opcode(CPU::fault_info* info, CPU* cpu, Proc::Thread* thread) {
+        auto state   = out(thread, cpu);
+        auto process = Proc::Process::current();
+
+        if (process == Proc::Process::kernel()) {
+            in(state, thread, cpu);
+            return false;
+        }
+
+        // AEX::printk("cpu%i: Invalid opcode @ 0x%lx (0x%lx)\n"
+        //            "    RIP: 0x%016lx\n",
+        //            cpu->id, cr2, cr3, info->rip);
+
+        IPC::siginfo_t sinfo;
+
+        sinfo.si_signo = IPC::SIGILL;
+        sinfo.si_code  = ILL_ILLOPC;
+        sinfo.si_addr  = (void*) info->rip;
+
+        thread->signal(sinfo);
 
         in(state, thread, cpu);
         return true;
@@ -249,6 +308,8 @@ namespace AEX::Sys {
 
         int   delta;
         auto* name = Debug::addr2name((void*) info->rip, delta);
+        if (!name)
+            name = "no idea";
 
         printk("RIP: 0x%p <%s+0x%x>\n", info->rip, name, delta);
         printk("RFLAGS: 0x%016lx\n", info->rflags);

@@ -279,7 +279,7 @@ namespace AEX::Proc {
     }
 
     void Thread::finish() {
-        addCritical();
+        Thread::current()->addCritical();
 
         parent->unassoc(this);
 
@@ -289,7 +289,7 @@ namespace AEX::Proc {
         remove_thread(this);
         broker(broker_cleanup, this);
 
-        subCritical();
+        Thread::current()->subCritical();
     }
 
     Process* Thread::getProcess() {
@@ -402,5 +402,7 @@ namespace AEX::Proc {
             context = new Context(entry, (void*) user_stack, size, pagemap, true);
         else
             context = new Context(entry, (void*) kernel_stack, size, pagemap, false, Thread::exit);
+
+        context_aux = new Context();
     }
 }

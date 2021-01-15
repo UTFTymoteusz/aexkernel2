@@ -13,15 +13,20 @@ namespace AEX::Proc {
     using namespace IPC;
 
     error_t Thread::signal(siginfo_t& info) {
-        AEX_ASSERT(this != Thread::current());
-
         if (!inrange(info.si_signo, SIGHUP, SIGSYS))
             return EINVAL;
 
-        take_lock();
+        if (Thread::current() == this)
+            Thread::current()->addCritical();
+        else
+            lock.acquire();
 
         auto err = _signal(info);
-        lock.release();
+
+        if (Thread::current() == this)
+            Thread::current()->subCritical();
+        else
+            lock.release();
 
         return err;
     }
@@ -54,16 +59,14 @@ namespace AEX::Proc {
 
     error_t Thread::handleSignal(IPC::siginfo_t& info) {
         auto process = getProcess();
-
-        process->lock.acquire();
-        auto handler = process->m_signals[info.si_signo];
-        process->lock.release();
+        auto handler = process->sigaction(info.si_signo).value;
 
         switch (handler.action) {
         case SIG_CORE:
-            NOT_IMPLEMENTED;
-            // id |= 0x80;
-            // fall;
+            PRINTK_DEBUG1("pid%i: Core dump", process->pid);
+
+            info.si_signo |= 0x80;
+            fall;
         case SIG_TERM:
             process->exit(info.si_signo);
             break;
@@ -85,7 +88,7 @@ namespace AEX::Proc {
 
             break;
         default:
-            NOT_IMPLEMENTED;
+            break;
         }
 
         return ENONE;

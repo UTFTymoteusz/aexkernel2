@@ -131,7 +131,9 @@ namespace AEX::Proc {
             return ESRCH;
 
         IPC::siginfo_t info;
+
         info.si_signo = sig;
+        info.si_code  = SI_USER;
 
         return process->signal(info);
     }

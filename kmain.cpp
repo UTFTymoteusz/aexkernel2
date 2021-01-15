@@ -330,15 +330,12 @@ void exec_init() {
     argv[0] = (char*) "aexinit";
     argv[1] = nullptr;
 
-    // int status;
+    int status;
 
     AEX_ASSERT(Proc::exec(nullptr, nullptr, "/sys/aexinit", argv, nullptr, &info) == ENONE);
-    // Proc::Process::wait(status);
+    Proc::Process::wait(status);
 
-    Proc::Thread::sleep(3000);
-    Sys::CPU::tripleFault();
-
-    // printk("init exited with a code %i\n", status);
+    printk("init exited with a code %i\n", status);
 }
 
 void kmain_threaded() {
