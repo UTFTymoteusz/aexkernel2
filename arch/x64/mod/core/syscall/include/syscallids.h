@@ -39,6 +39,17 @@ enum syscall_id_t {
     SYS_TDETACH = 75,
     SYS_TKILL   = 76,
 
+    SYS_GETEGID  = 90,
+    SYS_GETEUID  = 91,
+    SYS_GETGID   = 92,
+    SYS_GETUID   = 93,
+    SYS_SETEGID  = 94,
+    SYS_SETEUID  = 95,
+    SYS_SETGID   = 96,
+    SYS_SETUID   = 97,
+    SYS_SETREGID = 98,
+    SYS_SETREUID = 99,
+
     SYS_PANIC = 250,
     SYS_TEST1 = 251,
     SYS_TEST2 = 252,

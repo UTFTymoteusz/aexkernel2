@@ -99,8 +99,10 @@ namespace AEX::Proc {
             char buffer[32];
             debug_serialize_flags(buffer, process->status);
 
-            printk("%i. %s, [%i, %i] <%s>\n", process->pid, process->name,
-                   process->threads.realCount(), process->thread_counter, buffer);
+            printk("%i. %s, [%i, %i] <%s>, uid: %i-%i-%i  gid: %i-%i-%i\n", process->pid,
+                   process->name, process->threads.realCount(), process->thread_counter, buffer,
+                   process->real_uid, process->eff_uid, process->saved_uid, process->real_gid,
+                   process->eff_gid, process->saved_gid);
 
             process->threads_lock.acquire();
 

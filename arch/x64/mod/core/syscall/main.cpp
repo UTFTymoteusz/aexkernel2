@@ -47,8 +47,9 @@ void            register_syscalls();
 void            install_handler();
 
 void register_fs();
-void register_proc();
 void register_ipc();
+void register_proc();
+void register_sec();
 void register_test();
 
 int sigact(int signum, const IPC::sigaction_usr* act, IPC::sigaction_usr* oldact);
@@ -81,8 +82,9 @@ void install_handler() {
 
 void register_syscalls() {
     register_fs();
-    register_proc();
     register_ipc();
+    register_proc();
+    register_sec();
     register_test();
 }
 

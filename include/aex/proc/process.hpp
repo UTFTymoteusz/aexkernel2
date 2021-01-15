@@ -11,6 +11,7 @@
 #include "aex/proc/affinity.hpp"
 #include "aex/proc/resource_usage.hpp"
 #include "aex/proc/types.hpp"
+#include "aex/sec/types.hpp"
 #include "aex/sys/syscall.hpp"
 
 namespace AEX::Mem {
@@ -51,6 +52,14 @@ namespace AEX::Proc {
         int        ret_code;
 
         uint16_t tls_size;
+
+        Sec::uid_t real_uid;
+        Sec::uid_t eff_uid;
+        Sec::uid_t saved_uid;
+
+        Sec::gid_t real_gid;
+        Sec::gid_t eff_gid;
+        Sec::gid_t saved_gid;
 
         Process() = default;
 
