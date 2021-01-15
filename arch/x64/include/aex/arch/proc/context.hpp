@@ -69,5 +69,9 @@ namespace AEX::Proc {
             r8  = (uint64_t) e;
             r9  = (uint64_t) f;
         }
+
+        bool usermode() {
+            return cs == 0x23 && ss == 0x1B;
+        }
     } __attribute__((packed));
 }
