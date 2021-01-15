@@ -73,8 +73,10 @@ int sigact(int signum, const IPC::sigaction_usr* act, IPC::sigaction_usr* oldact
             return -1;
         }
 
-        return result;
+        return 0;
     }
+
+    return 0;
 }
 
 void sigret() {
