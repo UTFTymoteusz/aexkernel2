@@ -81,7 +81,7 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     MCore::init();
 
     CPU::interrupts();
-    IRQ::setup_timers_mcore(500);
+    IRQ::setup_timers_mcore(200);
 
     Proc::init();
 

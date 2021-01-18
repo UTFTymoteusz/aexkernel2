@@ -185,6 +185,24 @@ pid_t getpid() {
     return Process::current()->pid;
 }
 
+int nice(int nice) {
+    auto current = Process::current();
+
+    if (nice < 0 && current->eff_uid != 0) {
+        USR_ERRNO = EPERM;
+        return -1;
+    }
+
+    if (!inrange(nice, -19, 20)) {
+        USR_ERRNO = EPERM;
+        return -1;
+    }
+
+    current->nice = nice;
+
+    return nice;
+}
+
 void register_proc() {
     auto table = Sys::default_table();
 
@@ -196,4 +214,5 @@ void register_proc() {
     table[SYS_EXECVE] = (void*) execve;
     table[SYS_WAIT]   = (void*) wait;
     table[SYS_GETPID] = (void*) getpid;
+    table[SYS_NICE]   = (void*) nice;
 }

@@ -53,6 +53,8 @@ namespace AEX::Proc {
 
         uint16_t tls_size;
 
+        int nice;
+
         Sec::uid_t real_uid;
         Sec::uid_t eff_uid;
         Sec::uid_t saved_uid;

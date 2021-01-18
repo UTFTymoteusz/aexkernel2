@@ -80,6 +80,8 @@ namespace AEX::Proc {
 
         void* tls;
 
+        int sched_counter;
+
         Thread();
         Thread(Process* parent);
 
