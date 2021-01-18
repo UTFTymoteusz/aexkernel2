@@ -33,13 +33,11 @@ int setruid(Sec::uid_t uid) {
 
     if (current->eff_uid == 0) {
         current->real_uid = uid;
-
         return 0;
     }
 
     if (uid == current->real_uid || uid == current->saved_uid) {
         current->real_uid = uid;
-
         return 0;
     }
 
@@ -57,14 +55,12 @@ int seteuid(Sec::uid_t uid) {
     // or if the process has appropriate privileges,
     if (current->eff_uid == 0) {
         current->eff_uid = uid;
-
         return 0;
     }
 
     // If uid is equal to the real user ID or the saved set-user-ID,
     if (uid == current->real_uid || uid == current->saved_uid) {
         current->eff_uid = uid;
-
         return 0;
     }
 
@@ -92,7 +88,6 @@ int setuid(Sec::uid_t uid) {
     // but uid is equal to the real user ID or the saved set-user-ID,
     if (uid == current->real_uid || uid == current->saved_uid) {
         current->eff_uid = uid;
-
         return 0;
     }
 

@@ -1,5 +1,6 @@
 #include "aex/math.hpp"
 #include "aex/string.hpp"
+#include "aex/utility.hpp"
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -138,9 +139,9 @@ namespace AEX {
                     snprintf_common(padchar, padlen, tmp_buffer);
                     break;
                 case 'p':
-#if INTPTR_MAX == INT64_MAX
+#if BIT64
                     itos((uint64_t) va_arg(args, unsigned long), 16, tmp_buffer);
-#elif INTPTR_MAX == INT32_MAX
+#elif BIT32
                     itos((uint32_t) va_arg(args, unsigned int), 16, tmp_buffer);
 #else
 #error "Environment is not 32 bit or 64 bit"

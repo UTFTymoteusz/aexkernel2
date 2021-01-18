@@ -206,16 +206,6 @@ namespace AEX::Sys {
 
         void* addr = (void*) cr2;
 
-        // AEX::printk("cpu%i: Page fault @ 0x%lx (0x%lx)\n", cpu->id, cr2, cr3);
-
-        // AEX::printk("RIP: 0x%p <%s+0x%x>\n", info->rip, name, delta);
-        // Debug::stack_trace();
-
-        /*AEX::printk("cpu%i, tid %i (b%i, c%i, i%i): Page fault @ 0x%lx (0x%lx)\n"
-                    "RIP: 0x%016lx <%s+0x%x>\n",
-                    cpu->id, cpu->unused, thread->m_busy, thread->m_critical,
-           cpu->in_interrupt, cr2, cr3, info->rip, name);  **/
-
         auto process = (info->err & 0x04) ? thread->getProcess() : Proc::Process::kernel();
         auto region  = Mem::find_mmap_region(process, addr);
         if (!region) {
@@ -250,10 +240,9 @@ namespace AEX::Sys {
     }
 
     bool handle_invalid_opcode(CPU::fault_info* info, CPU* cpu, Proc::Thread* thread) {
-        auto state   = out(thread, cpu);
-        auto process = Proc::Process::current();
+        auto state = out(thread, cpu);
 
-        if (process == Proc::Process::kernel()) {
+        if (info->cs == 0x08) {
             in(state, thread, cpu);
             return false;
         }
