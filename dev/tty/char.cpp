@@ -16,6 +16,6 @@ namespace AEX::Dev::TTY {
 
         auto device = new TTYChar(index, name);
         if (!device->registerDevice())
-            kpanic("Failed to create device for %s", name);
+            kpanic("Failed to create device for /dev/%s", name);
     }
 }

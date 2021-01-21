@@ -1,12 +1,12 @@
 #include "cdev.hpp"
 
-#include "aex/dev/tty.hpp"
+#include "aex/dev/tty/tty.hpp"
 #include "aex/types.hpp"
 
 namespace AEX::Dev {
     TTYChar::TTYChar(int index, const char* name) : CharDevice(name) {
         m_index = index;
-        m_vtty  = TTY::VTTYs[index];
+        m_tty   = TTY::TTYs[index];
     }
 
     error_t TTYChar::open(CharHandle* handle, int) {
@@ -43,7 +43,7 @@ namespace AEX::Dev {
         auto cptr = (char*) ptr;
 
         for (uint32_t i = 0; i < len; i++)
-            cptr[i] = m_vtty->read();
+            cptr[i] = m_tty->read();
 
         return len;
     }
@@ -52,7 +52,7 @@ namespace AEX::Dev {
         auto cptr = (char*) ptr;
 
         for (uint32_t i = 0; i < len; i++)
-            m_vtty->write(cptr[i]);
+            m_tty->write(cptr[i]);
 
         return len;
     }

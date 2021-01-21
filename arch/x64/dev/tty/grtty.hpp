@@ -1,6 +1,6 @@
 #pragma once
 
-#include "aex/dev/tty.hpp"
+#include "aex/dev/tty/vtty.hpp"
 
 #include "boot/mboot.h"
 

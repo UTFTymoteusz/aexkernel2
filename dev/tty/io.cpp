@@ -1,4 +1,5 @@
 #include "aex/dev/tty.hpp"
+#include "aex/dev/tty/vtty.hpp"
 
 namespace AEX::Dev::TTY {
     void VTTY::_write(char) {
@@ -26,11 +27,6 @@ namespace AEX::Dev::TTY {
 
     VTTY& VTTY::write(char c) {
         m_lock.acquire();
-        
-        if (c == '\n')
-            Sys::CPU::outb(0xE9, '\r');
-
-        Sys::CPU::outb(0xE9, c);
         _write(c);
         m_lock.release();
 

@@ -2,6 +2,7 @@
 
 #include "aex/dev/inputdevice.hpp"
 #include "aex/dev/tty.hpp"
+#include "aex/dev/tty/vtty.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"

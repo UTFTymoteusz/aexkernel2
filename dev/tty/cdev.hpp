@@ -7,7 +7,7 @@
 
 namespace AEX::Dev {
     namespace TTY {
-        class VTTY;
+        class TTY;
     }
 
     class TTYChar : public CharDevice {
@@ -23,8 +23,8 @@ namespace AEX::Dev {
         bool isatty();
 
         private:
-        int        m_index;
-        TTY::VTTY* m_vtty;
+        int       m_index;
+        TTY::TTY* m_tty;
 
         Mem::Vector<CharHandle*> m_stack;
         CharHandle*              m_current;

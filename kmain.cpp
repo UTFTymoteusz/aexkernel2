@@ -3,6 +3,7 @@
 #include "aex/debug.hpp"
 #include "aex/dev/input.hpp"
 #include "aex/dev/tty.hpp"
+#include "aex/dev/tty/tty.hpp"
 #include "aex/fs.hpp"
 #include "aex/ipc/pipe.hpp"
 #include "aex/mem.hpp"
@@ -358,7 +359,7 @@ void kmain_threaded() {
     time_t start_epoch = clocktime();
 
     while (true) {
-        switch (Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY]->read()) {
+        switch (Dev::TTY::TTYs[Dev::TTY::ROOT_TTY]->read()) {
         case 't': {
             auto ns    = uptime();
             auto clock = clocktime();

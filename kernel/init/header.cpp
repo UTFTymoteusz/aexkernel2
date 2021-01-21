@@ -15,7 +15,7 @@ namespace AEX::Init {
     // clang-format on
 
     void print_header() {
-        auto rootTTY = Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY];
+        auto rootTTY = Dev::TTY::TTYs[Dev::TTY::ROOT_TTY];
 
         char color = COLOR0;
         rootTTY->color(COLOR0);
