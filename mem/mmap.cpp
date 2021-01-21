@@ -3,6 +3,7 @@
 #include "aex/assert.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/proc/process.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Mem {
     void remove_region(Proc::Process* process, void* addr);
@@ -103,6 +104,8 @@ namespace AEX::Mem {
     optional<void*> mmap(Proc::Process* process, void*, size_t len, int prot, int flags,
                          FS::File_SP file, int64_t offset) {
         // make addr be actually used
+        if (flags & MAP_FIXED)
+            NOT_IMPLEMENTED;
 
         if (!(flags & MAP_ANONYMOUS) && !file)
             return EBADF;
