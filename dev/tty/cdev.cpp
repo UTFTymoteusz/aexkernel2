@@ -39,19 +39,19 @@ namespace AEX::Dev {
         return ENONE;
     }
 
-    optional<uint32_t> TTYChar::read(CharHandle*, void* ptr, uint32_t len) {
+    optional<ssize_t> TTYChar::read(CharHandle*, void* ptr, size_t len) {
         auto cptr = (char*) ptr;
 
-        for (uint32_t i = 0; i < len; i++)
+        for (size_t i = 0; i < len; i++)
             cptr[i] = m_tty->read();
 
         return len;
     }
 
-    optional<uint32_t> TTYChar::write(CharHandle*, const void* ptr, uint32_t len) {
+    optional<ssize_t> TTYChar::write(CharHandle*, const void* ptr, size_t len) {
         auto cptr = (char*) ptr;
 
-        for (uint32_t i = 0; i < len; i++)
+        for (size_t i = 0; i < len; i++)
             m_tty->write(cptr[i]);
 
         return len;

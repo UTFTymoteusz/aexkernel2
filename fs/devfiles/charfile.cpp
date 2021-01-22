@@ -9,11 +9,11 @@ namespace AEX::FS {
         //
     }
 
-    optional<uint32_t> CharFile::read(void* buf, uint32_t count) {
+    optional<ssize_t> CharFile::read(void* buf, size_t count) {
         return m_handle->read(buf, count);
     }
 
-    optional<uint32_t> CharFile::write(void* buf, uint32_t count) {
+    optional<ssize_t> CharFile::write(void* buf, size_t count) {
         return m_handle->write(buf, count);
     }
 

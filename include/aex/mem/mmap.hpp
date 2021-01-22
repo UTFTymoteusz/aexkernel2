@@ -5,6 +5,7 @@
 #include "aex/mem/paging.hpp"
 #include "aex/mutex.hpp"
 #include "aex/optional.hpp"
+#include "aex/types.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -37,7 +38,7 @@ namespace AEX::Mem {
         MMapRegion(Pagemap* pagemap, void* addr, size_t len);
         virtual ~MMapRegion();
 
-        virtual error_t read(void* dst, int64_t offset, uint32_t count);
+        virtual error_t read(void* dst, FS::off_t offset, size_t count);
 
         protected:
         optional<FS::File_SP> m_file;
@@ -47,10 +48,10 @@ namespace AEX::Mem {
     class FileBackedMMapRegion : public MMapRegion {
         public:
         FileBackedMMapRegion(Pagemap* pagemap, void* addr, size_t len, FS::File_SP file,
-                             int64_t offset);
+                             FS::off_t offset);
         ~FileBackedMMapRegion();
 
-        error_t read(void* dst, int64_t offset, uint32_t count);
+        error_t read(void* dst, FS::off_t offset, size_t count);
 
         private:
         struct cache_slot {
@@ -72,7 +73,7 @@ namespace AEX::Mem {
     };
 
     optional<void*> mmap(Proc::Process* process, void* addr, size_t len, int prot, int flags,
-                         FS::File_SP file = FS::File_SP::getNull(), int64_t offset = 0);
+                         FS::File_SP file = FS::File_SP::getNull(), FS::off_t offset = 0);
     error_t         munmap(Proc::Process* process, void* addr, size_t len);
 
     Mem::MMapRegion* find_mmap_region(Proc::Process* process, void* addr);

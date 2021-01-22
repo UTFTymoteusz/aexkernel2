@@ -14,11 +14,11 @@ namespace AEX::Dev {
             m_dev->close(this);
     }
 
-    optional<uint32_t> CharHandle::read(void* ptr, uint32_t len) {
+    optional<ssize_t> CharHandle::read(void* ptr, size_t len) {
         return m_dev->read(this, ptr, len);
     }
 
-    optional<uint32_t> CharHandle::write(const void* ptr, uint32_t len) {
+    optional<ssize_t> CharHandle::write(const void* ptr, size_t len) {
         return m_dev->write(this, ptr, len);
     }
 

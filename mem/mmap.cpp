@@ -3,6 +3,7 @@
 #include "aex/assert.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/proc/process.hpp"
+#include "aex/types.hpp"
 #include "aex/utility.hpp"
 
 namespace AEX::Mem {
@@ -18,7 +19,7 @@ namespace AEX::Mem {
 
     MMapRegion::~MMapRegion() {}
 
-    error_t MMapRegion::read(void* addr, int64_t offset, uint32_t count) {
+    error_t MMapRegion::read(void* addr, FS::off_t offset, size_t count) {
         kpanic("Default MMapRegion::read(0x%p, %li, %i) called", addr, offset, count);
     }
 
@@ -46,10 +47,10 @@ namespace AEX::Mem {
         m_lock.release();
     }
 
-    error_t FileBackedMMapRegion::read(void* dst, int64_t offset, uint32_t count) {
+    error_t FileBackedMMapRegion::read(void* dst, FS::off_t offset, size_t count) {
         ScopeMutex scopeLock(m_lock);
 
-        int32_t id = offset / Sys::CPU::PAGE_SIZE;
+        size_t id = offset / Sys::CPU::PAGE_SIZE;
 
         int slot = findSlot(id);
         if (slot == -1) {
@@ -102,7 +103,7 @@ namespace AEX::Mem {
     }
 
     optional<void*> mmap(Proc::Process* process, void*, size_t len, int prot, int flags,
-                         FS::File_SP file, int64_t offset) {
+                         FS::File_SP file, FS::off_t offset) {
         // make addr be actually used
         if (flags & MAP_FIXED)
             NOT_IMPLEMENTED;

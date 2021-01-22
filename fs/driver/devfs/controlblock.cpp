@@ -13,7 +13,7 @@ namespace AEX::FS {
 
         auto inode = new INode();
 
-        inode->device_id = id - 2;
+        inode->dev = id - 2;
 
         switch (device->type) {
         case Dev::DEV_BLOCK:

@@ -18,6 +18,8 @@ namespace AEX::FS {
 
             size = dentry.data_len.le;
             type = FT_DIRECTORY;
+
+            hard_links = 1;
         }
 
         optional<dir_entry> readDir(dir_context* ctx) {
@@ -109,6 +111,8 @@ namespace AEX::FS {
 
             size = dentry.data_len.le;
             type = FT_REGULAR;
+
+            hard_links = 1;
         }
 
         error_t readBlocks(void* buffer, uint64_t block, uint16_t count) {

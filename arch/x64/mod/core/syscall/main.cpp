@@ -51,6 +51,7 @@ void register_ipc();
 void register_proc();
 void register_sec();
 void register_test();
+void print_all();
 
 int sigact(int signum, const IPC::sigaction_usr* act, IPC::sigaction_usr* oldact);
 
@@ -62,6 +63,8 @@ void module_enter() {
 
     // -O2 makes this assert pass
     AEX_ASSERT(table[SYS_SIGACT] == (void*) sigact);
+
+    // print_all();
 }
 
 void module_exit() {
@@ -95,4 +98,11 @@ extern "C" void syscall_prepare() {
 extern "C" void syscall_done() {
     Proc::Thread::current()->subBusy();
     AEX_ASSERT(!Proc::Thread::current()->isBusy());
+}
+
+void print_all() {
+    for (size_t i = 0; i < 256; i++) {
+        auto aaa = Debug::addr2name(Sys::default_table()[i]);
+        printk("%4i. %s\n", i, aaa ? aaa : "unknown");
+    }
 }

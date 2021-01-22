@@ -10,8 +10,8 @@ namespace AEX::FS {
         CharFile(Dev::CharHandle_SP handle);
         ~CharFile();
 
-        optional<uint32_t> read(void* buf, uint32_t count);
-        optional<uint32_t> write(void* buf, uint32_t count);
+        optional<ssize_t> read(void* buf, size_t count);
+        optional<ssize_t> write(void* buf, size_t count);
 
         optional<File_SP> dup();
 

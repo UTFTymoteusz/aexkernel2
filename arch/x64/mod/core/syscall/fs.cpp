@@ -38,7 +38,7 @@ int open(const usr_char* usr_path, int mode) {
     return fd;
 }
 
-ssize_t read(int fd, usr_void* usr_buf, uint32_t count) {
+ssize_t read(int fd, usr_void* usr_buf, size_t count) {
     auto fd_try = get_file(fd);
     if (!fd_try) {
         USR_ERRNO = fd_try.error_code;
@@ -47,11 +47,11 @@ ssize_t read(int fd, usr_void* usr_buf, uint32_t count) {
 
     auto usr_buf_c = (usr_uint8_t*) usr_buf;
 
-    uint8_t  buffer[1024];
-    uint32_t read = 0;
+    uint8_t buffer[1024];
+    size_t  read = 0;
 
-    for (uint32_t i = 0; i < count; i += sizeof(buffer)) {
-        int len = min<uint32_t>(count - i, sizeof(buffer));
+    for (size_t i = 0; i < count; i += sizeof(buffer)) {
+        int len = min<size_t>(count - i, sizeof(buffer));
 
         auto read_try = fd_try.value->read(buffer, len);
         if (!read_try) {
@@ -70,7 +70,7 @@ ssize_t read(int fd, usr_void* usr_buf, uint32_t count) {
     return read;
 }
 
-ssize_t write(int fd, const usr_void* usr_buf, uint32_t count) {
+ssize_t write(int fd, const usr_void* usr_buf, size_t count) {
     auto fd_try = get_file(fd);
     if (!fd_try) {
         USR_ERRNO = fd_try.error_code;
@@ -79,11 +79,11 @@ ssize_t write(int fd, const usr_void* usr_buf, uint32_t count) {
 
     auto usr_buf_c = (const usr_uint8_t*) usr_buf;
 
-    uint8_t  buffer[1024];
-    uint32_t written = 0;
+    uint8_t buffer[1024];
+    size_t  written = 0;
 
-    for (uint32_t i = 0; i < count; i += sizeof(buffer)) {
-        int len = min<uint32_t>(count - i, sizeof(buffer));
+    for (size_t i = 0; i < count; i += sizeof(buffer)) {
+        int len = min<size_t>(count - i, sizeof(buffer));
 
         if (!u2k_memcpy(buffer, &usr_buf_c[i], len)) {
             USR_ERRNO = EINVAL;
@@ -195,7 +195,7 @@ char* getcwd(char* buffer, size_t buffer_len) {
     return buffer;
 }
 
-int stat(const usr_char* usr_path, struct stat* usr_statbuf) {
+int statat(const usr_char* usr_path, stat* usr_statbuf, int flags) {
     char path_buffer[FS::MAX_PATH_LEN];
 
     if (!copy_and_canonize(path_buffer, usr_path)) {
@@ -203,7 +203,7 @@ int stat(const usr_char* usr_path, struct stat* usr_statbuf) {
         return -1;
     }
 
-    struct stat ker_statbuf;
+    stat ker_statbuf;
 
     auto info = FS::File::info(path_buffer);
     if (!info) {
@@ -211,8 +211,56 @@ int stat(const usr_char* usr_path, struct stat* usr_statbuf) {
         return -1;
     }
 
-    ker_statbuf.st_dev = info.value.containing_dev_id;
-    ker_statbuf.st_dev = 1;
+    ker_statbuf.st_rdev    = info.value.containing_dev_id;
+    ker_statbuf.st_ino     = info.value.inode;
+    ker_statbuf.st_mode    = info.value.mode | info.value.type;
+    ker_statbuf.st_nlink   = info.value.hard_links;
+    ker_statbuf.st_uid     = info.value.uid;
+    ker_statbuf.st_gid     = info.value.gid;
+    ker_statbuf.st_dev     = info.value.dev;
+    ker_statbuf.st_size    = info.value.total_size;
+    ker_statbuf.st_atime   = info.value.access_time;
+    ker_statbuf.st_mtime   = info.value.modify_time;
+    ker_statbuf.st_ctime   = info.value.change_time;
+    ker_statbuf.st_blksize = info.value.block_size;
+    ker_statbuf.st_blocks  = info.value.blocks;
+
+    if (!u2k_memcpy(usr_statbuf, &ker_statbuf, sizeof(ker_statbuf))) {
+        USR_ERRNO = info.error_code;
+        return -1;
+    }
+
+    return 0;
+}
+
+int fstat(int fd, stat* usr_statbuf) {
+    auto fd_try = get_file(fd);
+    if (!fd_try) {
+        USR_ERRNO = fd_try.error_code;
+        return false;
+    }
+
+    stat ker_statbuf;
+
+    auto info = fd_try.value->finfo();
+    if (!info) {
+        USR_ERRNO = info.error_code;
+        return -1;
+    }
+
+    ker_statbuf.st_rdev    = info.value.containing_dev_id;
+    ker_statbuf.st_ino     = info.value.inode;
+    ker_statbuf.st_mode    = info.value.mode | info.value.type;
+    ker_statbuf.st_nlink   = info.value.hard_links;
+    ker_statbuf.st_uid     = info.value.uid;
+    ker_statbuf.st_gid     = info.value.gid;
+    ker_statbuf.st_dev     = info.value.dev;
+    ker_statbuf.st_size    = info.value.total_size;
+    ker_statbuf.st_atime   = info.value.access_time;
+    ker_statbuf.st_mtime   = info.value.modify_time;
+    ker_statbuf.st_ctime   = info.value.change_time;
+    ker_statbuf.st_blksize = info.value.block_size;
+    ker_statbuf.st_blocks  = info.value.blocks;
 
     if (!u2k_memcpy(usr_statbuf, &ker_statbuf, sizeof(ker_statbuf))) {
         USR_ERRNO = info.error_code;
@@ -288,13 +336,14 @@ void register_fs() {
     table[SYS_READ]   = (void*) read;
     table[SYS_WRITE]  = (void*) write;
     table[SYS_CLOSE]  = (void*) close;
+    table[SYS_FSTAT]  = (void*) fstat;
     table[SYS_ISATTY] = (void*) isatty;
     table[SYS_DUP]    = (void*) dup;
     table[SYS_DUP2]   = (void*) dup2;
     table[SYS_CHDIR]  = (void*) chdir;
     table[SYS_GETCWD] = (void*) getcwd;
-    table[SYS_STAT]   = (void*) stat;
     table[SYS_ACCESS] = (void*) access;
+    table[SYS_STATAT] = (void*) statat;
     table[SYS_MMAP]   = (void*) mmap;
     table[SYS_MUNMAP] = (void*) munmap;
 }

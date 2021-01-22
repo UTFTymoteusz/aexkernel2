@@ -20,11 +20,11 @@ namespace AEX::Dev {
         return ENONE;
     }
 
-    optional<uint32_t> CharDevice::read(CharHandle*, void*, uint32_t) {
+    optional<ssize_t> CharDevice::read(CharHandle*, void*, size_t) {
         return ENOSYS;
     }
 
-    optional<uint32_t> CharDevice::write(CharHandle*, const void*, uint32_t) {
+    optional<ssize_t> CharDevice::write(CharHandle*, const void*, size_t) {
         return ENOSYS;
     }
 

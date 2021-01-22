@@ -16,4 +16,7 @@ namespace AEX::Sys::Time {
 
     typedef int64_t time_t;
     typedef int64_t timediff_t;
+
+    typedef int64_t suseconds_t;
+    typedef int64_t clock_t;
 }

@@ -17,8 +17,8 @@ namespace AEX::Dev {
         error_t open(CharHandle* handle, int mode);
         error_t close(CharHandle* handle);
 
-        optional<uint32_t> read(CharHandle* handle, void* ptr, uint32_t len);
-        optional<uint32_t> write(CharHandle* handle, const void* ptr, uint32_t len);
+        optional<ssize_t> read(CharHandle* handle, void* ptr, size_t len);
+        optional<ssize_t> write(CharHandle* handle, const void* ptr, size_t len);
 
         bool isatty();
 
