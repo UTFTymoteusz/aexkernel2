@@ -32,7 +32,7 @@ namespace AEX::FS {
 
         auto inode = inode_try.value;
         if (inode->is_directory())
-            return EISDIR;
+            return File_SP(new INodeDirectory(inode));
 
         if (inode->dev != -1) {
             auto device = Dev::devices.get(inode->dev);
@@ -47,22 +47,6 @@ namespace AEX::FS {
         }
 
         return File_SP(new INodeFile(inode));
-    }
-
-    optional<File_SP> File::opendir(const char* path) {
-        auto mount_info = find_mount(path);
-        if (!mount_info.mount)
-            return mount_info.mount.error_code;
-
-        auto inode_try = mount_info.mount.value->control_block->findINode(mount_info.new_path);
-        if (!inode_try)
-            return inode_try.error_code;
-
-        auto inode = inode_try.value;
-        if (!inode->is_directory())
-            return ENOTDIR;
-
-        return File_SP(new INodeDirectory(inode));
     }
 
     optional<file_info> File::info(const char* path, int) {
@@ -120,6 +104,14 @@ namespace AEX::FS {
 
     optional<dir_entry> File::readdir() {
         return ENOTDIR;
+    }
+
+    error_t File::seekdir(long) {
+        return ENOTDIR;
+    }
+
+    long File::telldir() {
+        return -1;
     }
 
     optional<File_SP> File::dup() {

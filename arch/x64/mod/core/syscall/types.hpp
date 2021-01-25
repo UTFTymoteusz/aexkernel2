@@ -4,9 +4,6 @@
 
 #include <stdint.h>
 
-typedef int dev_t;
-typedef int ino_t;
-
 enum perm_test_t {
     R_OK = 0x01,
     W_OK = 0x02,
@@ -30,4 +27,7 @@ struct stat {
     AEX::FS::blkcnt_t      st_blocks;
 };
 
-typedef int64_t off_t;
+struct dirent {
+    AEX::FS::ino_t d_ino;
+    char           d_name[256];
+};

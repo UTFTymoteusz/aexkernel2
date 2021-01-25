@@ -302,7 +302,7 @@ bool isatty(int fd) {
     return tty;
 }
 
-void* mmap(void* addr, size_t length, int prot, int flags, int fd, off_t offset) {
+void* mmap(void* addr, size_t length, int prot, int flags, int fd, FS::off_t offset) {
     auto fd_try = get_file(fd);
     if (!fd_try && !(flags & Mem::MAP_ANONYMOUS)) {
         USR_ERRNO = fd_try.error_code;
@@ -329,23 +329,71 @@ int munmap(void* addr, size_t len) {
     return 0;
 }
 
+long readdir(int fd, dirent* uent) {
+    auto fd_try = get_file(fd);
+    if (!fd_try) {
+        USR_ERRNO = fd_try.error_code;
+        return false;
+    }
+
+    auto rd_try = fd_try.value->readdir();
+    if (!rd_try.has_value) {
+        USR_ERRNO = rd_try.error_code;
+        return -1;
+    }
+
+    dirent kent;
+
+    kent.d_ino = rd_try.value.inode_id;
+    strncpy(kent.d_name, rd_try.value.name, sizeof(kent.d_name));
+
+    if (!u2k_memcpy(uent, &kent, sizeof(kent))) {
+        USR_ERRNO = EINVAL;
+        return -1;
+    }
+
+    return 0;
+}
+
+void seekdir(int fd, long pos) {
+    auto fd_try = get_file(fd);
+    if (!fd_try) {
+        USR_ERRNO = fd_try.error_code;
+        return;
+    }
+
+    USR_ERRNO = fd_try.value->seekdir(pos);
+}
+
+long telldir(int fd) {
+    auto fd_try = get_file(fd);
+    if (!fd_try) {
+        USR_ERRNO = fd_try.error_code;
+        return -1;
+    }
+
+    return fd_try.value->telldir();
+}
+
 void register_fs() {
     auto table = Sys::default_table();
 
-    table[SYS_OPEN]   = (void*) open;
-    table[SYS_READ]   = (void*) read;
-    table[SYS_WRITE]  = (void*) write;
-    table[SYS_CLOSE]  = (void*) close;
-    table[SYS_FSTAT]  = (void*) fstat;
-    table[SYS_ISATTY] = (void*) isatty;
-    table[SYS_DUP]    = (void*) dup;
-    table[SYS_DUP2]   = (void*) dup2;
-    table[SYS_CHDIR]  = (void*) chdir;
-    table[SYS_GETCWD] = (void*) getcwd;
-    table[SYS_ACCESS] = (void*) access;
-    table[SYS_STATAT] = (void*) statat;
-    table[SYS_MMAP]   = (void*) mmap;
-    table[SYS_MUNMAP] = (void*) munmap;
+    table[SYS_OPEN]    = (void*) open;
+    table[SYS_READ]    = (void*) read;
+    table[SYS_WRITE]   = (void*) write;
+    table[SYS_CLOSE]   = (void*) close;
+    table[SYS_FSTAT]   = (void*) fstat;
+    table[SYS_ISATTY]  = (void*) isatty;
+    table[SYS_DUP]     = (void*) dup;
+    table[SYS_DUP2]    = (void*) dup2;
+    table[SYS_CHDIR]   = (void*) chdir;
+    table[SYS_GETCWD]  = (void*) getcwd;
+    table[SYS_ACCESS]  = (void*) access;
+    table[SYS_STATAT]  = (void*) statat;
+    table[SYS_MMAP]    = (void*) mmap;
+    table[SYS_MUNMAP]  = (void*) munmap;
+    table[SYS_READDIR] = (void*) readdir;
+    table[SYS_SEEKDIR] = (void*) seekdir;
 }
 
 optional<FS::File_SP> get_file(int fd) {

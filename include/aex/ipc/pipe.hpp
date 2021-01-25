@@ -21,8 +21,7 @@ namespace AEX::IPC {
         public:
         PipeReader(Mem::SmartPointer<Pipe> pipe);
 
-        optional<Mem::SmartPointer<FS::File>> open(const char* path)    = delete;
-        optional<Mem::SmartPointer<FS::File>> opendir(const char* path) = delete;
+        optional<Mem::SmartPointer<FS::File>> open(const char* path) = delete;
 
         optional<uint32_t>    read(void* buf, uint32_t count);
         optional<FS::File_SP> dup();
@@ -35,8 +34,7 @@ namespace AEX::IPC {
         public:
         PipeWriter(Mem::SmartPointer<Pipe> pipe);
 
-        optional<Mem::SmartPointer<FS::File>> open(const char* path)    = delete;
-        optional<Mem::SmartPointer<FS::File>> opendir(const char* path) = delete;
+        optional<Mem::SmartPointer<FS::File>> open(const char* path) = delete;
 
         optional<uint32_t>    write(void* buf, uint32_t count);
         optional<FS::File_SP> dup();

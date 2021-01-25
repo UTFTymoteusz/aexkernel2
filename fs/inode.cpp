@@ -18,4 +18,12 @@ namespace AEX::FS {
     optional<dir_entry> INode::readDir(dir_context*) {
         return ENOSYS;
     }
+
+    error_t INode::seekDir(dir_context*, long) {
+        return ENOSYS;
+    }
+
+    long INode::tellDir(dir_context*) {
+        return -1;
+    }
 }

@@ -58,8 +58,7 @@ namespace AEX::Net {
         public:
         virtual ~Socket();
 
-        optional<Mem::SmartPointer<FS::File>> open(const char* path)    = delete;
-        optional<Mem::SmartPointer<FS::File>> opendir(const char* path) = delete;
+        optional<Mem::SmartPointer<FS::File>> open(const char* path) = delete;
 
         static optional<Socket_SP> create(socket_domain_t domain, socket_type_t type,
                                           socket_protocol_t protocol);

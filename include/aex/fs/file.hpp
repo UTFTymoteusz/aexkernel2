@@ -31,7 +31,6 @@ namespace AEX::FS {
         virtual ~File();
 
         static optional<File_SP> open(const char* path, int mode);
-        static optional<File_SP> opendir(const char* path);
 
         static optional<file_info> info(const char* path, int flags = 0);
 
@@ -44,6 +43,8 @@ namespace AEX::FS {
         virtual optional<off_t> seek(off_t offset, seek_mode mode = seek_mode::SEEK_SET);
 
         virtual optional<dir_entry> readdir();
+        virtual error_t             seekdir(long pos);
+        virtual long                telldir();
 
         virtual optional<File_SP> dup();
 

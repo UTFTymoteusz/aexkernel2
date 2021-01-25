@@ -91,6 +91,19 @@ namespace AEX::FS {
             return {};
         }
 
+        // TODO: checks
+        error_t seekDir(dir_context* ctx, long pos) {
+            if (ctx->pos >= size)
+                return ERANGE;
+
+            ctx->pos = pos;
+            return ENONE;
+        }
+
+        long tellDir(dir_context* ctx) {
+            return ctx->pos;
+        }
+
         private:
         iso9660_dentry m_dentry;
 
