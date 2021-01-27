@@ -6,14 +6,17 @@
 
 namespace AEX::Net {
     enum socket_domain_t : uint16_t {
-        AF_INET = 1,
-        AF_UNIX = 3,
+        AF_UNSPEC = 0,
+        AF_INET   = 1,
+        AF_INET6  = 2,
+        AF_UNIX   = 3,
     };
 
     enum socket_type_t {
-        SOCK_STREAM = 0,
-        SOCK_DGRAM  = 1,
-        SOCK_RAW    = 3,
+        SOCK_STREAM    = 0,
+        SOCK_DGRAM     = 1,
+        SOCK_SEQPACKET = 2,
+        SOCK_RAW       = 3,
     };
 
     enum socket_protocol_t {
