@@ -1,9 +1,7 @@
-MODULE_NAME  = syscall
-MODULE_ORDER = 98
+MODULE_NAME  = elf64exec
+MODULE_ORDER = 99
 
 CXX ?= g++
-AS   = nasm
-
 LD = ld
 
 MKDIR = mkdir -p
@@ -14,15 +12,16 @@ OBJ_DEST := $(BIN)obj/
 
 CXXFILES  := $(shell find . -type f -name '*.cpp')
 HXXFILES  := $(shell find . -type f -name '*.hpp')
-ASMFILES  := $(shell find . -type f -name '*.asm')
-OBJS      := $(patsubst %.o, $(OBJ_DEST)%.o, $(CXXFILES:.cpp=.cpp.o) $(ASMFILES:.asm=.asm.o))
+OBJS      := $(patsubst %.o, $(OBJ_DEST)%.o, $(CXXFILES:.cpp=.cpp.o))
+
+OBJS := $(OBJS)
 
 MODULE_OBJ = $(BIN)$(MODULE_NAME).$(MODULE_ORDER).km
 
-GFLAGS = -O0 -Wall -Wextra -nostdlib -pipe
+GFLAGS = -O3 -Wall -Wextra -nostdlib -pipe 
 
 INCLUDES := -I. -Iinclude/ -I"$(KERNEL_SRC)include" \
-		    -I"$(KERNEL_SRC)arch/x64/include"
+		    -I"$(KERNEL_SRC)arch/x86_64/include"
 
 CXXFLAGS := $(GFLAGS)     \
 	-std=c++17           \
@@ -63,7 +62,3 @@ $(OBJ_DEST)%.cpp.o : %.cpp
 	@$(MKDIR) ${@D}
 	@$(MKDIR) $(dir $(DEP_DEST)$*)
 	$(CXX) $(CXXFLAGS) -c $< -o $@ -MMD -MT $@ -MF $(DEP_DEST)$*.cpp.d
-
-$(OBJ_DEST)%.asm.o : %.asm
-	@$(MKDIR) ${@D}
-	$(AS) $(ASFLAGS) $< -o $@

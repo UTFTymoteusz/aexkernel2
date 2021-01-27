@@ -27,8 +27,10 @@ namespace AEX::FS {
             return mount_info.mount.error_code;
 
         auto inode_try = mount_info.mount.value->control_block->findINode(mount_info.new_path);
-        if (!inode_try)
+        if (!inode_try) {
+            PRINTK_DEBUG3("%s, %i: no inode (%s)", path, mode, strerror(inode_try.error_code));
             return inode_try.error_code;
+        }
 
         auto inode = inode_try.value;
         if (inode->is_directory())

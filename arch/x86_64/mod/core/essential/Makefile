@@ -1,5 +1,5 @@
-MODULE_NAME  = ps2
-MODULE_ORDER = 50
+MODULE_NAME  = essential
+MODULE_ORDER = 99
 
 CXX ?= g++
 LD = ld
@@ -21,7 +21,7 @@ MODULE_OBJ = $(BIN)$(MODULE_NAME).$(MODULE_ORDER).km
 GFLAGS = -O3 -Wall -Wextra -nostdlib -pipe 
 
 INCLUDES := -I. -Iinclude/ -I"$(KERNEL_SRC)include" \
-		    -I"$(KERNEL_SRC)arch/x64/include"
+		    -I"$(KERNEL_SRC)arch/x86_64/include"
 
 CXXFLAGS := $(GFLAGS)     \
 	-std=c++17           \

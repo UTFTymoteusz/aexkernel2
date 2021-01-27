@@ -1,7 +1,7 @@
 CXX ?= g++
 AS   = nasm
 
-ARCH ?= x64
+ARCH ?= x86_64
 
 MKDIR = mkdir -p
 
