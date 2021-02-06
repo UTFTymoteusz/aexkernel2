@@ -109,7 +109,8 @@ int close(int fd) {
         return -1;
     }
 
-    return fd_try.value->close();
+    USR_ERRNO = fd_try.value->close();
+    return USR_ERRNO ? -1 : 0;
 }
 
 int dup(int fd) {

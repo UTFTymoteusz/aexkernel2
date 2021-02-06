@@ -10,10 +10,12 @@ namespace AEX::Debug {
         ENTRY_KERNEL = 2,
     };
 
+    struct stack_frame;
+
     extern bool symbols_loaded;
     extern bool flag;
 
-    void stack_trace(int skip = 0);
+    void stack_trace(int skip = 0, stack_frame* frame = nullptr);
 
     void load_symbols(const char* elf_path);
     void load_symbols(void* addr);

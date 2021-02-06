@@ -37,6 +37,9 @@ namespace AEX::Sys::Time {
     }
 
     time_t uptime() {
+        if (Sys::CPU::current()->in_interrupt)
+            return uptime_raw();
+
         ScopeSpinlock scopeLock(uptime_lock);
 
         uint64_t delta;

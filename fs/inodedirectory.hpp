@@ -35,6 +35,10 @@ namespace AEX::FS {
             return File_SP(dupd);
         }
 
+        error_t close() {
+            return ENONE;
+        }
+
         private:
         dir_context m_dir_ctx = dir_context();
 

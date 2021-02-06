@@ -83,6 +83,10 @@ namespace AEX::Dev::TTY {
             case 'm':
                 m_vtty->color((ansi_color_t) m_args[0]);
                 break;
+            case 'H':
+                m_vtty->setCursorX(m_args[0]);
+                m_vtty->setCursorY(m_args[1]);
+                break;
             default:
                 break;
             }

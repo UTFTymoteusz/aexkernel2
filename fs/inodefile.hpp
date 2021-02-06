@@ -82,6 +82,10 @@ namespace AEX::FS {
             return new_pos;
         }
 
+        error_t close() {
+            return ENONE;
+        }
+
         optional<File_SP> dup() {
             auto dupd = new INodeFile(m_inode);
 

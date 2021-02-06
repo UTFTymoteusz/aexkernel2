@@ -47,7 +47,7 @@ AEX::optional<T> usr_read(const T* src) {
 template <typename T>
 AEX::optional<T> usr_write(const usr_void* dst, T val) {
     *((T*) dst) = val;
-    return AEX::ENONE;
+    return val;
 }
 
 template <typename T>

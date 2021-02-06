@@ -306,6 +306,26 @@ void test_udp_client() {
     }
 }
 
+void apple() {
+    auto sock_try = Net::Socket::create(Net::AF_INET, Net::SOCK_STREAM, Net::IPROTO_TCP);
+    auto sock     = sock_try.value;
+
+    auto error = sock->connect(Net::ipv4_addr(192, 168, 0, 20), 17267);
+    if (error) {
+        kpanic("aaa");
+    }
+
+    auto tty_wr = FS::File::open("/dev/tty0", FS::O_WR);
+    AEX_ASSERT(tty_wr);
+
+    char buffer[2048];
+
+    while (true) {
+        auto aaa = sock->receive(buffer, 2048, 0);
+        tty_wr.value->write(buffer, aaa.value);
+    }
+}
+
 void exec_init() {
     auto tty_rd = FS::File::open("/dev/tty0", FS::O_RD);
     AEX_ASSERT(tty_rd);
@@ -313,8 +333,8 @@ void exec_init() {
     auto tty_wr = FS::File::open("/dev/tty0", FS::O_WR);
     AEX_ASSERT(tty_wr);
 
-    // auto tty_wre = tty_wr.value->dup();
-    // AEX_ASSERT(tty_wre);
+    auto tty_wre = tty_wr.value->dup();
+    AEX_ASSERT(tty_wre);
 
     FS::File_SP rp, wp;
     IPC::Pipe::create(rp, wp);
@@ -322,8 +342,7 @@ void exec_init() {
     auto info = Proc::exec_opt{
         .stdin  = tty_rd.value,
         .stdout = tty_wr.value,
-        //.stderr = tty_wre.value,
-        .stderr = wp,
+        .stderr = tty_wre.value,
     };
 
     char* argv[2];

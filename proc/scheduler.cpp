@@ -33,6 +33,8 @@ namespace AEX::Proc {
                 return;
         }
 
+        cpu->in_interrupt++;
+
         auto uptime = Time::uptime_raw();
         auto delta  = uptime - cpu->measurement_start_ns;
 
@@ -90,6 +92,7 @@ namespace AEX::Proc {
             cpu->update(thread);
             sched_lock.releaseRaw();
 
+            cpu->in_interrupt--;
             return;
         }
 
@@ -107,5 +110,7 @@ namespace AEX::Proc {
 
         cpu->update(idle);
         sched_lock.releaseRaw();
+
+        cpu->in_interrupt--;
     }
 }

@@ -33,8 +33,12 @@ namespace AEX::FS {
         }
 
         auto inode = inode_try.value;
-        if (inode->is_directory())
+        if (inode->is_directory()) {
+            if (mode != O_RD)
+                return EISDIR;
+
             return File_SP(new INodeDirectory(inode));
+        }
 
         if (inode->dev != -1) {
             auto device = Dev::devices.get(inode->dev);

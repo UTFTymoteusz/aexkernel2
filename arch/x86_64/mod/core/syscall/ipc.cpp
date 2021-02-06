@@ -11,7 +11,7 @@
 
 using namespace AEX;
 
-error_t pipe(usr_int* rp, usr_int* wp) {
+int pipe(usr_int* rp, usr_int* wp) {
     auto current = Proc::Process::current();
 
     FS::File_SP rsp, wsp;
@@ -22,12 +22,17 @@ error_t pipe(usr_int* rp, usr_int* wp) {
 
     current->files_lock.acquire();
 
-    *rp = current->files.push(rsp);
-    *wp = current->files.push(wsp);
+    int rfd = current->files.push(rsp);
+    int wfd = current->files.push(wsp);
 
     current->files_lock.release();
 
-    return ENONE;
+    if (!usr_write(rp, rfd) || !usr_write(wp, wfd)) {
+        USR_ERRNO = EINVAL;
+        return -1;
+    }
+
+    return 0;
 }
 
 int kill(Proc::pid_t pid, int sig) {

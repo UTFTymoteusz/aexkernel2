@@ -12,13 +12,12 @@ namespace AEX::Debug {
         uint64_t     rip;
     };
 
-    void stack_trace(int skip) {
-        stack_frame* frame;
-
+    void stack_trace(int skip, stack_frame* frame) {
         const int max   = 12;
         int       level = 0;
 
-        asm volatile("mov %0, rbp;" : "=r"(frame));
+        if (!frame)
+            asm volatile("mov %0, rbp;" : "=r"(frame));
 
         while (frame > (stack_frame*) 8) {
             if (skip != 0) {
