@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aex/errno.hpp"
+#include "aex/fs.hpp"
 #include "aex/mem.hpp"
 #include "aex/optional.hpp"
 #include "aex/proc/thread.hpp"
@@ -80,3 +81,5 @@ class tmp_array {
     private:
     T* array = nullptr;
 };
+
+bool copy_and_canonize(char buffer[AEX::FS::MAX_PATH_LEN], const usr_char* usr_path);

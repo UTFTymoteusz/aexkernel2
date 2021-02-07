@@ -30,7 +30,7 @@ namespace AEX::Net {
      * @param protocol Pointer to the protocol class.
      * @returns Preferably ENONE, an error otherwise.
      **/
-    error_t register_inet_protocol(socket_protocol_t id, INetProtocol* protocol);
+    error_t register_inet_protocol(iproto_t id, INetProtocol* protocol);
 
     const char* get_hostname();
     void        set_hostname(const char* hostname);

@@ -23,6 +23,10 @@ namespace AEX::Mem {
         kpanic("Default MMapRegion::read(0x%p, %li, %i) called", addr, offset, count);
     }
 
+    optional<MMapRegion*> MMapRegion::fork(Pagemap* dst) {
+        return new MMapRegion(dst, start, len);
+    }
+
     FileBackedMMapRegion::FileBackedMMapRegion(Pagemap* pagemap, void* addr, size_t len,
                                                FS::File_SP file, int64_t offset)
         : MMapRegion(pagemap, addr, len) {
@@ -76,6 +80,10 @@ namespace AEX::Mem {
         // printk("slot: %i for %i\n", slot, id);
 
         return ENONE;
+    }
+
+    optional<MMapRegion*> FileBackedMMapRegion::fork(Pagemap* dst) {
+        kpanic("FileBackedMMapRegion::fork(0x%p) called", dst);
     }
 
     int FileBackedMMapRegion::findSlot(int32_t id) {

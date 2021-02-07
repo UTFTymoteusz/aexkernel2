@@ -20,6 +20,10 @@ namespace AEX::FS {
         AT_SYMLINK_NOFOLLOW = 0x02,
     };
 
+    enum fd_t {
+        FD_CLOEXEC = 0x0001,
+    };
+
     class File {
         public:
         enum seek_mode {
@@ -51,5 +55,11 @@ namespace AEX::FS {
         virtual error_t close();
 
         virtual bool isatty();
+
+        int  get_flags();
+        void set_flags(int);
+
+        protected:
+        int m_flags;
     };
 }

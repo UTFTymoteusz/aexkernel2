@@ -38,7 +38,8 @@ namespace AEX::Mem {
         MMapRegion(Pagemap* pagemap, void* addr, size_t len);
         virtual ~MMapRegion();
 
-        virtual error_t read(void* dst, FS::off_t offset, size_t count);
+        virtual error_t               read(void* dst, FS::off_t offset, size_t count);
+        virtual optional<MMapRegion*> fork(Pagemap* dst_pagemap);
 
         protected:
         optional<FS::File_SP> m_file;
@@ -51,7 +52,8 @@ namespace AEX::Mem {
                              FS::off_t offset);
         ~FileBackedMMapRegion();
 
-        error_t read(void* dst, FS::off_t offset, size_t count);
+        error_t               read(void* dst, FS::off_t offset, size_t count);
+        optional<MMapRegion*> fork(Pagemap* dst_pagemap);
 
         private:
         struct cache_slot {

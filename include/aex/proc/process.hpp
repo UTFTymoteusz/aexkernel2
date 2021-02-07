@@ -36,7 +36,7 @@ namespace AEX::Proc {
         Mutex                    threads_lock;
         Mem::LazyVector<Thread*> threads;
 
-        Spinlock                     files_lock;
+        Mutex                        files_lock;
         Mem::LazyVector<FS::File_SP> files;
 
         Mem::Pagemap*                     pagemap;

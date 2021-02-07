@@ -131,4 +131,12 @@ namespace AEX::FS {
     bool File::isatty() {
         return false;
     }
+
+    int File::get_flags() {
+        return m_flags;
+    }
+
+    void File::set_flags(int flags) {
+        m_flags = flags;
+    }
 }

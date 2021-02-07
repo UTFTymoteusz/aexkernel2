@@ -29,7 +29,7 @@ namespace AEX::Net {
         printk(PRINTK_OK "net: Initialized\n");
     }
 
-    error_t register_inet_protocol(socket_protocol_t id, INetProtocol* protocol) {
+    error_t register_inet_protocol(iproto_t id, INetProtocol* protocol) {
         inet_protocols[(uint8_t) id] = protocol;
 
         return ENONE;

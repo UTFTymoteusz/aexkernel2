@@ -19,10 +19,14 @@ namespace AEX::Net {
         SOCK_RAW       = 3,
     };
 
-    enum socket_protocol_t {
+    enum iproto_t {
         IPROTO_NONE = 0,
-        IPROTO_TCP  = 1,
-        IPROTO_UDP  = 2,
+        IPROTO_IP   = 1,
+        IPROTO_IPV6 = 2,
+        IPROTO_ICMP = 3,
+        IPROTO_RAW  = 4,
+        IPROTO_TCP  = 5,
+        IPROTO_UDP  = 6,
     };
 
     enum socket_flag_t {
@@ -64,7 +68,7 @@ namespace AEX::Net {
         optional<Mem::SmartPointer<FS::File>> open(const char* path) = delete;
 
         static optional<Socket_SP> create(socket_domain_t domain, socket_type_t type,
-                                          socket_protocol_t protocol);
+                                          iproto_t protocol);
 
         virtual error_t connect(const sockaddr* addr);
         error_t         connect(ipv4_addr addr, uint16_t port);

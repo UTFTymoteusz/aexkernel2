@@ -45,7 +45,32 @@ namespace AEX::Proc {
             if (process->get_cwd() == nullptr)
                 process->set_cwd("/");
 
+            process->lock.acquire();
+
+            for (int i = 0; i < process->mmap_regions.count(); i++) {
+                if (!process->mmap_regions.present(i))
+                    continue;
+
+                auto region = process->mmap_regions.at(i);
+                process->mmap_regions.erase(i);
+
+                delete region;
+            }
+
+            process->lock.release();
+
             process->files_lock.acquire();
+
+            for (int i = 0; i < process->files.count(); i++) {
+                if (!process->files.present(i))
+                    continue;
+
+                auto file = process->files.at(i);
+                if (file->get_flags() & FS::FD_CLOEXEC) {
+                    file->close();
+                    process->files.erase(i);
+                }
+            }
 
             if (options) {
                 process->files.set(0, options->stdin);

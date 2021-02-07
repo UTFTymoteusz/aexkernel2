@@ -4,6 +4,7 @@
 #include "aex/sys/syscall.hpp"
 #include "aex/types.hpp"
 
+#include "fcntl.h"
 #include "syscallids.h"
 #include "types.hpp"
 #include "usr.hpp"
@@ -304,6 +305,8 @@ bool isatty(int fd) {
 }
 
 void* mmap(void* addr, size_t length, int prot, int flags, int fd, FS::off_t offset) {
+    printk("pid%i: mmap\n", Proc::Process::current()->pid);
+
     auto fd_try = get_file(fd);
     if (!fd_try && !(flags & Mem::MAP_ANONYMOUS)) {
         USR_ERRNO = fd_try.error_code;
@@ -376,6 +379,28 @@ long telldir(int fd) {
     return fd_try.value->telldir();
 }
 
+int fcntl(int fd, int cmd, int val) {
+    auto fd_try = get_file(fd);
+    if (!fd_try) {
+        USR_ERRNO = fd_try.error_code;
+        return -1;
+    }
+
+    auto file = fd_try.value;
+
+    switch (cmd) {
+    case F_DUPFD:
+        return dup(fd);
+    case F_GETFD:
+        return file->get_flags() & 0xFFFF;
+    case F_SETFD:
+        file->set_flags(file->get_flags() | (val & 0xFFFF));
+        return 0;
+    default:
+        break;
+    }
+}
+
 void register_fs() {
     auto table = Sys::default_table();
 
@@ -395,6 +420,7 @@ void register_fs() {
     table[SYS_MUNMAP]  = (void*) munmap;
     table[SYS_READDIR] = (void*) readdir;
     table[SYS_SEEKDIR] = (void*) seekdir;
+    table[SYS_FCNTL]   = (void*) fcntl;
 }
 
 optional<FS::File_SP> get_file(int fd) {
@@ -402,7 +428,7 @@ optional<FS::File_SP> get_file(int fd) {
     auto scope   = current->files_lock.scope();
 
     if (!current->files.present(fd)) {
-        PRINTK_DEBUG_WARN1("ebadf (%i)\n", fd);
+        PRINTK_DEBUG_WARN1("ebadf (%i)", fd);
         return EBADF;
     }
 
@@ -414,7 +440,7 @@ optional<FS::File_SP> pop_file(int fd) {
     auto scope   = current->files_lock.scope();
 
     if (!current->files.present(fd)) {
-        PRINTK_DEBUG_WARN1("ebadf (%i)\n", fd);
+        PRINTK_DEBUG_WARN1("ebadf (%i)", fd);
         return EBADF;
     }
 
@@ -422,26 +448,4 @@ optional<FS::File_SP> pop_file(int fd) {
     current->files.erase(fd);
 
     return file;
-}
-
-bool copy_and_canonize(char buffer[FS::MAX_PATH_LEN], const usr_char* usr_path) {
-    auto current    = Proc::Process::current();
-    auto strlen_try = usr_strlen(usr_path);
-    if (!strlen_try)
-        return false;
-
-    int len = min<int>(strlen_try.value + 1, FS::MAX_PATH_LEN);
-    if (!u2k_memcpy(buffer, usr_path, len + 1))
-        return false;
-
-    buffer[len] = '\0';
-
-    if (buffer[0] != '/') {
-        char buffer_b[FS::MAX_PATH_LEN];
-        FS::canonize_path(buffer, current->get_cwd(), buffer_b, FS::MAX_PATH_LEN);
-
-        memcpy(buffer, buffer_b, FS::MAX_PATH_LEN);
-    }
-
-    return true;
 }

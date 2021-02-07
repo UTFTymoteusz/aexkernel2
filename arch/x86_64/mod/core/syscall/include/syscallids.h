@@ -32,6 +32,8 @@ enum syscall_id_t {
     SYS_READDIR = 27,
     SYS_SEEKDIR = 28,
     SYS_TELLDIR = 29,
+    SYS_FCNTL   = 30,
+    SYS_CREAT   = 31,
 
     SYS_FORK   = 44,
     SYS_EXECVE = 45,

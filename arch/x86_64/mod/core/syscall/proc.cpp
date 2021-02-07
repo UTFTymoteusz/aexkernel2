@@ -47,8 +47,16 @@ pid_t fork() {
         child->files.set(i, parent->files.at(i)->dup().value);
     }
 
-    if (parent->mmap_regions.count() > 0)
-        kpanic("implement proper mmap forking");
+    for (int i = 0; i < parent->mmap_regions.count(); i++) {
+        if (!parent->mmap_regions.present(i))
+            continue;
+
+        auto fork_try = parent->mmap_regions.at(i)->fork(child->pagemap);
+        if (!fork_try.has_value)
+            kpanic("it's broken");
+
+        child->mmap_regions.push(fork_try.value);
+    }
 
     auto calling_thread = Thread::current();
     auto thread         = new Thread();
@@ -131,9 +139,8 @@ int execve(const usr_char* path, usr_char* const argv[], usr_char* const envp[])
         return -1;
     }
 
-    char path_buffer[min(strlen_try.value + 1, FS::MAX_PATH_LEN)];
-    auto memcpy_try = u2k_memcpy(path_buffer, path, sizeof(path_buffer));
-    if (!memcpy_try) {
+    char path_buffer[FS::MAX_PATH_LEN];
+    if (!copy_and_canonize(path_buffer, path)) {
         USR_ERRNO = EINVAL;
         return -1;
     }
