@@ -7,6 +7,10 @@
 #include "aex/optional.hpp"
 #include "aex/types.hpp"
 
+namespace AEX::Mem {
+    class MMapRegion;
+}
+
 namespace AEX::FS {
     enum file_mode_t {
         O_RD   = 0x01,
@@ -40,6 +44,10 @@ namespace AEX::FS {
 
         virtual optional<ssize_t> read(void* buf, size_t count);
         virtual optional<ssize_t> write(void* buf, size_t count);
+        virtual optional<int>     ioctl(int rq, uint64_t val);
+
+        virtual optional<Mem::MMapRegion*> mmap(Proc::Process* process, void*, size_t len,
+                                                int flags, FS::File_SP file, FS::off_t offset);
 
         virtual optional<file_info> finfo();
         virtual error_t             fchmod(mode_t mode);

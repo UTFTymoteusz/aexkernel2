@@ -61,7 +61,7 @@ namespace AEX::Dev::TTY {
 
         new (&gr_init_vtty) GrTTY(mbinfo);
 
-        gr_init_vtty.fromVGA((GrTTY::vga_char*) tx_init_vtty.output());
+        gr_init_vtty.fromVGA((GrTTY::vga_char*) tx_init_vtty.vga_output());
         VTTYs[0] = &gr_init_vtty;
 
         gr_init_vtty.setCursorX(tx_init_vtty.getCursorX());

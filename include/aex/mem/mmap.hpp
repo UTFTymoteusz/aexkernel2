@@ -36,6 +36,7 @@ namespace AEX::Mem {
         size_t len;
 
         MMapRegion(Pagemap* pagemap, void* addr, size_t len);
+        MMapRegion(Pagemap* pagemap, void* addr, size_t len, FS::File_SP file, int64_t offset);
         virtual ~MMapRegion();
 
         virtual error_t               read(void* dst, FS::off_t offset, size_t count);
@@ -43,6 +44,7 @@ namespace AEX::Mem {
 
         protected:
         optional<FS::File_SP> m_file;
+        int64_t               m_offset;
         Pagemap*              m_pagemap;
     };
 
@@ -65,8 +67,6 @@ namespace AEX::Mem {
         static constexpr auto CACHE_SLOTS = 8;
 
         Mutex m_lock;
-
-        int64_t m_offset;
 
         int        cache_ptr = 0;
         cache_slot cache[CACHE_SLOTS];

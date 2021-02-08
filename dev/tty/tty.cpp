@@ -32,6 +32,22 @@ namespace AEX::Dev::TTY {
         kpanic("Default TTY::write() called");
     }
 
+    bool TTY::text() {
+        kpanic("Default TTY::text() called");
+    }
+
+    bool TTY::graphics() {
+        kpanic("Default TTY::graphics() called");
+    }
+
+    tty_info TTY::info() {
+        kpanic("Default TTY::info() called");
+    }
+
+    void* TTY::output() {
+        kpanic("Default TTY::output() called");
+    }
+
     TTY& TTY::color(ansi_color_t _color) {
         char buffer[8];
         snprintf(buffer, sizeof(buffer), "\x1B[%im", _color);

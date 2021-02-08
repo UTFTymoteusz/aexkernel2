@@ -14,7 +14,13 @@ namespace AEX::Dev::TTY {
         TxTTY& scroll(int amnt);
         TxTTY& clear();
 
-        vga_char* output();
+        bool text();
+        bool graphics();
+
+        tty_info info();
+        void*    output();
+
+        vga_char* vga_output();
         void      remap(void* addr);
 
         private:

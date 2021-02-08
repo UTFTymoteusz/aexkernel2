@@ -17,6 +17,17 @@ namespace AEX::Mem {
         this->m_pagemap = pagemap;
     }
 
+    MMapRegion::MMapRegion(Pagemap* pagemap, void* addr, size_t len, FS::File_SP file,
+                           int64_t offset) {
+        this->start = addr;
+        this->len   = len;
+
+        this->m_file    = file;
+        this->m_offset  = offset;
+        this->m_pagemap = pagemap;
+    }
+
+
     MMapRegion::~MMapRegion() {}
 
     error_t MMapRegion::read(void* addr, FS::off_t offset, size_t count) {
@@ -110,7 +121,7 @@ namespace AEX::Mem {
         return -1;
     }
 
-    optional<void*> mmap(Proc::Process* process, void*, size_t len, int prot, int flags,
+    optional<void*> mmap(Proc::Process* process, void* addr, size_t len, int prot, int flags,
                          FS::File_SP file, FS::off_t offset) {
         // make addr be actually used
         if (flags & MAP_FIXED)
@@ -144,16 +155,16 @@ namespace AEX::Mem {
         if (!dupd_try)
             return dupd_try.error_code;
 
-        auto  dupd       = dupd_try.value;
-        void* alloc_addr = process->pagemap->map(len, 0, PAGE_ARBITRARY | aflags);
-
-        region = new FileBackedMMapRegion(process->pagemap, alloc_addr, len, dupd, offset);
+        auto dupd     = dupd_try.value;
+        auto mmap_try = dupd->mmap(process, addr, len, aflags, dupd, offset);
+        if (!mmap_try.has_value)
+            return mmap_try.error_code;
 
         process->lock.acquire();
-        process->mmap_regions.push(region);
+        process->mmap_regions.push(mmap_try.value);
         process->lock.release();
 
-        return region->start;
+        return mmap_try.value->start;
     }
 
     // TODO: Make len work properly

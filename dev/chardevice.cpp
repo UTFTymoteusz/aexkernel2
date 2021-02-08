@@ -28,6 +28,15 @@ namespace AEX::Dev {
         return ENOSYS;
     }
 
+    optional<int> CharDevice::ioctl(CharHandle*, int, uint64_t) {
+        return ENOSYS;
+    }
+
+    optional<Mem::MMapRegion*> CharDevice::mmap(Proc::Process*, void*, size_t, int, FS::File_SP,
+                                                FS::off_t) {
+        return ENOSYS;
+    }
+
     bool CharDevice::isatty() {
         return false;
     }

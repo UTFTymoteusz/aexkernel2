@@ -17,6 +17,15 @@ namespace AEX::FS {
         return m_handle->write(buf, count);
     }
 
+    optional<int> CharFile::ioctl(int rq, uint64_t val) {
+        return m_handle->ioctl(rq, val);
+    }
+
+    optional<Mem::MMapRegion*> CharFile::mmap(Proc::Process* process, void* addr, size_t len,
+                                              int flags, FS::File_SP file, FS::off_t offset) {
+        return m_handle->mmap(process, addr, len, flags, file, offset);
+    }
+
     optional<File_SP> CharFile::dup() {
         auto dfile = new CharFile(m_handle);
 

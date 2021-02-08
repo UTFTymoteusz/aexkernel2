@@ -47,4 +47,20 @@ namespace AEX::Dev::TTY {
         m_lock.release();
         return *this;
     }
+
+    bool VTTY::text() {
+        kpanic("VTTY::text() not implemented");
+    }
+
+    bool VTTY::graphics() {
+        kpanic("VTTY::graphics() not implemented");
+    }
+
+    tty_info VTTY::info() {
+        kpanic("VTTY::info() not implemented");
+    }
+
+    void* VTTY::output() {
+        kpanic("VTTY::output() not implemented");
+    }
 }

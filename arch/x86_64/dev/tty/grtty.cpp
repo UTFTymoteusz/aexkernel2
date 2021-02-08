@@ -98,13 +98,15 @@ namespace AEX::Dev::TTY {
     }
 
     GrTTY& GrTTY::scroll(int amnt) {
-        memcpy(m_double_buffer, &m_double_buffer[m_px_width * psf_font->size * amnt],
-               m_px_width * (m_px_height - psf_font->size * amnt) * sizeof(uint32_t));
+        if (m_text) {
+            memcpy(m_double_buffer, &m_double_buffer[m_px_width * psf_font->size * amnt],
+                   m_px_width * (m_px_height - psf_font->size * amnt) * sizeof(uint32_t));
 
-        memset32(&m_double_buffer[m_px_width * (m_px_height - psf_font->size)], m_bg,
-                 m_px_width * psf_font->size);
+            memset32(&m_double_buffer[m_px_width * (m_px_height - psf_font->size)], m_bg,
+                     m_px_width * psf_font->size);
 
-        memcpy(m_output, m_double_buffer, m_px_width * m_px_height * sizeof(uint32_t));
+            memcpy(m_output, m_double_buffer, m_px_width * m_px_height * sizeof(uint32_t));
+        }
 
         return *this;
     }
@@ -126,7 +128,8 @@ namespace AEX::Dev::TTY {
             m_cursorx = 0;
             break;
         default:
-            put(c, m_cursorx, m_cursory, m_fg, m_bg);
+            if (m_text)
+                put(c, m_cursorx, m_cursory, m_fg, m_bg);
 
             m_cursorx++;
 
@@ -142,5 +145,34 @@ namespace AEX::Dev::TTY {
             m_cursory--;
             scroll(1);
         }
+    }
+
+    bool GrTTY::text() {
+        m_text = true;
+        return true;
+    }
+
+    bool GrTTY::graphics() {
+        m_text = false;
+
+        memset32(m_output, 0, m_px_width * m_px_height);
+        memset32(m_double_buffer, 0, m_px_width * m_px_height);
+
+        return true;
+    }
+
+    tty_info GrTTY::info() {
+        return {
+            .width     = width,
+            .height    = height,
+            .gr_width  = (int) m_px_width,
+            .gr_height = (int) m_px_height,
+            .gr_depth  = 32,
+            .gr_bytes  = (int) (m_px_width * m_px_height * 4),
+        };
+    }
+
+    void* GrTTY::output() {
+        return m_output;
     }
 }

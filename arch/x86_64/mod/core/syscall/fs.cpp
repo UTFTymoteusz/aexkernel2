@@ -114,6 +114,19 @@ int close(int fd) {
     return USR_ERRNO ? -1 : 0;
 }
 
+int ioctl(int fd, int rq, uint64_t val) {
+    auto fd_try = get_file(fd);
+    if (!fd_try) {
+        USR_ERRNO = fd_try.error_code;
+        return -1;
+    }
+
+    auto ioctl = fd_try.value->ioctl(rq, val);
+
+    USR_ERRNO = ioctl.error_code;
+    return USR_ERRNO ? -1 : ioctl.value;
+}
+
 int dup(int fd) {
     auto current = Proc::Process::current();
     auto fd_try  = get_file(fd);
@@ -305,7 +318,8 @@ bool isatty(int fd) {
 }
 
 void* mmap(void* addr, size_t length, int prot, int flags, int fd, FS::off_t offset) {
-    printk("pid%i: mmap\n", Proc::Process::current()->pid);
+    printk("pid%i: mmap(0x%p, %i, %i, %i, %i, %i)\n", Proc::Process::current()->pid, addr, length,
+           prot, flags, fd, offset);
 
     auto fd_try = get_file(fd);
     if (!fd_try && !(flags & Mem::MAP_ANONYMOUS)) {
@@ -408,6 +422,7 @@ void register_fs() {
     table[SYS_READ]    = (void*) read;
     table[SYS_WRITE]   = (void*) write;
     table[SYS_CLOSE]   = (void*) close;
+    table[SYS_IOCTL]   = (void*) ioctl;
     table[SYS_FSTAT]   = (void*) fstat;
     table[SYS_ISATTY]  = (void*) isatty;
     table[SYS_DUP]     = (void*) dup;

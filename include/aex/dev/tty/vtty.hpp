@@ -62,6 +62,12 @@ namespace AEX::Dev::TTY {
          **/
         void set_keymap(Dev::Input::keymap* m_keymap);
 
+        virtual bool text();
+        virtual bool graphics();
+
+        virtual tty_info info();
+        virtual void*    output();
+
         int getCursorX() {
             return m_cursorx;
         }

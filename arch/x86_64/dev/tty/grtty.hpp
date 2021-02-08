@@ -19,6 +19,12 @@ namespace AEX::Dev::TTY {
         GrTTY& scroll(int amnt);
         GrTTY& clear();
 
+        bool text();
+        bool graphics();
+
+        tty_info info();
+        void*    output();
+
         void fromVGA(vga_char* ega_buffer);
 
         private:
@@ -52,6 +58,8 @@ namespace AEX::Dev::TTY {
 
         rgb_t m_bg = RGB_BLACK;
         rgb_t m_fg = RGB_WHITE;
+
+        bool m_text = true;
 
         uint32_t m_px_width, m_px_height;
 

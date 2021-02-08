@@ -17,10 +17,11 @@ namespace AEX::Dev {
         error_t open(CharHandle* handle, int mode);
         error_t close(CharHandle* handle);
 
-        optional<ssize_t> read(CharHandle* handle, void* ptr, size_t len);
-        optional<ssize_t> write(CharHandle* handle, const void* ptr, size_t len);
-
-        bool isatty();
+        optional<ssize_t>          read(CharHandle* handle, void* ptr, size_t len);
+        optional<ssize_t>          write(CharHandle* handle, const void* ptr, size_t len);
+        optional<int>              ioctl(CharHandle* handle, int rq, uint64_t val);
+        optional<Mem::MMapRegion*> mmap(Proc::Process*, void*, size_t, int, FS::File_SP, FS::off_t);
+        bool                       isatty();
 
         private:
         int       m_index;

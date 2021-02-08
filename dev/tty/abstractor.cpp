@@ -23,6 +23,22 @@ namespace AEX::Dev::TTY {
         return *this;
     }
 
+    bool Abstractor::text() {
+        return m_vtty->text();
+    }
+
+    bool Abstractor::graphics() {
+        return m_vtty->graphics();
+    }
+
+    tty_info Abstractor::info() {
+        return m_vtty->info();
+    }
+
+    void* Abstractor::output() {
+        return m_vtty->output();
+    }
+
     void Abstractor::_write(char c) {
         if (c == '\n')
             Sys::CPU::outb(0xE9, '\r');

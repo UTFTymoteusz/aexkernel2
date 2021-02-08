@@ -14,6 +14,12 @@ namespace AEX::Dev::TTY {
         TTY& write(char c);
         TTY& write(const char* str);
 
+        bool text();
+        bool graphics();
+
+        tty_info info();
+        void*    output();
+
         private:
         enum state {
             OUT       = 0,

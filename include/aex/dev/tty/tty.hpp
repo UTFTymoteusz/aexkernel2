@@ -11,6 +11,16 @@ extern "C" struct multiboot_info;
 typedef struct multiboot_info multiboot_info_t;
 
 namespace AEX::Dev::TTY {
+    struct tty_info {
+        int width;
+        int height;
+
+        int gr_width;
+        int gr_height;
+        int gr_depth;
+        int gr_bytes;
+    };
+
     /**
      * A basic terminal class.
      **/
@@ -39,6 +49,12 @@ namespace AEX::Dev::TTY {
          * @param str The string to write out.
          **/
         virtual TTY& write(const char* str);
+
+        virtual bool text();
+        virtual bool graphics();
+
+        virtual tty_info info();
+        virtual void*    output();
 
         /**
          * Sets the foreground or background color.

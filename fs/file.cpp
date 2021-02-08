@@ -96,6 +96,15 @@ namespace AEX::FS {
         return ENOSYS;
     }
 
+    optional<int> File::ioctl(int, uint64_t) {
+        return ENOSYS;
+    }
+
+    optional<Mem::MMapRegion*> File::mmap(Proc::Process*, void*, size_t, int, FS::File_SP,
+                                          FS::off_t) {
+        return ENOSYS;
+    }
+
     optional<file_info> File::finfo() {
         kpanic("Attempt to call the default finfo()");
     }

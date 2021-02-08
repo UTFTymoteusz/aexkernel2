@@ -5,6 +5,7 @@
 #include "aex/fs/inode.hpp"
 #include "aex/math.hpp"
 #include "aex/mem.hpp"
+#include "aex/proc.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -119,6 +120,12 @@ namespace AEX::FS {
             finfo.total_size = m_inode->size;
 
             return finfo;
+        }
+
+        optional<Mem::MMapRegion*> mmap(Proc::Process* process, void*, size_t len, int flags,
+                                        FS::File_SP file, FS::off_t offset) {
+            void* alloc_addr = process->pagemap->map(len, 0, PAGE_ARBITRARY | flags);
+            return new Mem::FileBackedMMapRegion(process->pagemap, alloc_addr, len, file, offset);
         }
 
         private:

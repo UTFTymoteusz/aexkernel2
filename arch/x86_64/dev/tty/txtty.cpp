@@ -19,7 +19,7 @@ namespace AEX::Dev::TTY {
         m_output = (vga_char*) output;
     }
 
-    TxTTY::vga_char* TxTTY::output() {
+    TxTTY::vga_char* TxTTY::vga_output() {
         return m_output;
     }
 
@@ -104,5 +104,28 @@ namespace AEX::Dev::TTY {
             m_cursory--;
             scroll(1);
         }
+    }
+
+    bool TxTTY::text() {
+        return true;
+    }
+
+    bool TxTTY::graphics() {
+        return false;
+    }
+
+    tty_info TxTTY::info() {
+        return {
+            .width     = width,
+            .height    = height,
+            .gr_width  = 0,
+            .gr_height = 0,
+            .gr_depth  = 0,
+            .gr_bytes  = 0,
+        };
+    }
+
+    void* TxTTY::output() {
+        return nullptr;
     }
 }
