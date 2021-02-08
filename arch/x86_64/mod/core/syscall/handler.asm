@@ -21,12 +21,13 @@ handler:
     mov cx, 8
     mul cx
 
-    mov r10, [gs:0x28]
-    add r10, rax
+    mov r11, [gs:0x28]
+    add r11, rax
 
     mov rdx, r14
     mov rcx, r8
     mov r8 , r9
+    mov r9 , r10
 
     push rdi
     push rsi
@@ -40,7 +41,7 @@ handler:
     pop rsi
     pop rdi
 
-    call [r10]
+    call [r11]
 
     push rax
     push rdx
