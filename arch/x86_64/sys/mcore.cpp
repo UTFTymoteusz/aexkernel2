@@ -18,8 +18,8 @@ constexpr auto TRAMPOLINE_ADDR = 0x1000; // Must be page aligned!
 namespace AEX::Sys::MCore {
     using madt = ACPI::madt;
 
-    extern "C" char _binary_bin_obj___arch_x86_64___boot_mcore_asmr_o_start;
-    void*           trampoline = (void*) &_binary_bin_obj___arch_x86_64___boot_mcore_asmr_o_start;
+    extern "C" char _binary__tmp_aexkrnl2_obj___arch_x86_64___boot_mcore_asmr_o_start;
+    void* trampoline = (void*) &_binary__tmp_aexkrnl2_obj___arch_x86_64___boot_mcore_asmr_o_start;
 
     int   cpu_count = 0;
     CPU** CPUs;

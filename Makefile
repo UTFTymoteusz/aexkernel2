@@ -7,8 +7,8 @@ MKDIR = mkdir -p
 
 BIN  := bin/
 BOOT := boot/
-DEP_DEST := $(BIN)dep/
-OBJ_DEST := $(BIN)obj/
+DEP_DEST := /tmp/aexkrnl2/dep/
+OBJ_DEST := /tmp/aexkrnl2/obj/
 
 CXXFILES  := $(shell find . -type f -name '*.cpp'  -not -path './arch/*' -not -path './mod/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.cpp'  -not -path './arch/$(ARCH)/./mod/*')
 HXXFILES  := $(shell find . -type f -name '*.hpp'  -not -path './arch/*' -not -path './mod/*') $(shell find './arch/$(ARCH)/.' -type f -name '*.hpp'  -not -path './arch/$(ARCH)/./mod/*')
