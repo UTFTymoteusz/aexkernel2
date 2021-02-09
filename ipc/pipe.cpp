@@ -11,23 +11,23 @@ namespace AEX::IPC {
         return ENONE;
     }
 
-    PipeReader::PipeReader(Mem::SmartPointer<Pipe> pipe) : _pipe(pipe) {}
-
-    optional<uint32_t> PipeReader::read(void* buf, uint32_t count) {
-        return _pipe->buffer.read(buf, count);
-    }
-
-    optional<FS::File_SP> PipeReader::dup() {
-        return FS::File_SP(new PipeReader(_pipe));
-    }
-
     PipeWriter::PipeWriter(Mem::SmartPointer<Pipe> pipe) : _pipe(pipe) {}
 
-    optional<uint32_t> PipeWriter::write(void* buf, uint32_t count) {
+    optional<ssize_t> PipeWriter::write(void* buf, size_t count) {
         return _pipe->buffer.write(buf, count);
     }
 
     optional<FS::File_SP> PipeWriter::dup() {
         return FS::File_SP(new PipeWriter(_pipe));
+    }
+
+    PipeReader::PipeReader(Mem::SmartPointer<Pipe> pipe) : _pipe(pipe) {}
+
+    optional<ssize_t> PipeReader::read(void* buf, size_t count) {
+        return _pipe->buffer.read(buf, count);
+    }
+
+    optional<FS::File_SP> PipeReader::dup() {
+        return FS::File_SP(new PipeReader(_pipe));
     }
 }

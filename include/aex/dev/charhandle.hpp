@@ -1,8 +1,10 @@
 #pragma once
 
+#include "aex/fs.hpp"
 #include "aex/mem/smartptr.hpp"
 #include "aex/mutex.hpp"
 #include "aex/optional.hpp"
+#include "aex/types.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -18,8 +20,11 @@ namespace AEX::Dev {
         CharHandle(Mem::SmartPointer<CharDevice> chrhndl);
         ~CharHandle();
 
-        optional<uint32_t> read(void* ptr, uint32_t len);
-        optional<uint32_t> write(const void* ptr, uint32_t len);
+        optional<ssize_t>          read(void* ptr, size_t len);
+        optional<ssize_t>          write(const void* ptr, size_t len);
+        optional<int>              ioctl(int rq, uint64_t val);
+        optional<Mem::MMapRegion*> mmap(Proc::Process* process, void*, size_t len, int flags,
+                                        FS::File_SP file, FS::off_t offset);
 
         bool isatty();
 

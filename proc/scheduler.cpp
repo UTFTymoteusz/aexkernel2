@@ -1,6 +1,7 @@
 #include "aex/assert.hpp"
 #include "aex/proc.hpp"
 #include "aex/sys/time.hpp"
+#include "aex/utility.hpp"
 
 #include "proc/proc.hpp"
 #include "sys/time.hpp"
@@ -9,12 +10,21 @@ using namespace AEX::Mem;
 using namespace AEX::Sys;
 
 namespace AEX::Proc {
-    void schedule() {
+    WEAK void schedule() {
         auto cpu    = CPU::current();
         auto thread = Thread::current();
 
         if (thread->isCritical())
             return;
+
+        if (thread->sched_counter >= 1000000) {
+            thread->sched_counter -= 1000000;
+
+            if (thread->status == TS_RUNNABLE) {
+                Time::uptime_raw();
+                return;
+            }
+        }
 
         if (!sched_lock.tryAcquireRaw()) {
             if (thread->status != TS_RUNNABLE)
@@ -22,6 +32,8 @@ namespace AEX::Proc {
             else
                 return;
         }
+
+        cpu->in_interrupt++;
 
         auto uptime = Time::uptime_raw();
         auto delta  = uptime - cpu->measurement_start_ns;
@@ -43,7 +55,7 @@ namespace AEX::Proc {
 
                 break;
             case TS_SLEEPING:
-                if (uptime < thread->wakeup_at)
+                if (uptime < thread->wakeup_at && !thread->interrupted())
                     continue;
 
                 thread->status = TS_RUNNABLE;
@@ -52,20 +64,35 @@ namespace AEX::Proc {
                 continue;
             }
 
-            if (thread->parent->cpu_affinity.masked(cpu->id))
+            auto process = thread->getProcess();
+            if (process->cpu_affinity.masked(cpu->id))
+                continue;
+
+            auto counter = thread->sched_counter;
+
+            if (process->nice < 0)
+                counter += 1000000 + 50000 * -process->nice;
+            else
+                counter += 1000000 - 25000 * process->nice;
+
+            if (counter < 1000000)
                 continue;
 
             if (!thread->lock.tryAcquireRaw())
                 continue;
 
+            thread->sched_counter = counter - 1000000;
+            AEX_ASSERT(thread->sched_counter < 25000000);
+
             cpu->current_thread  = thread;
             cpu->current_context = thread->context;
             cpu->kernel_stack    = thread->kernel_stack + thread->kernel_stack_size;
-            cpu->syscall_table   = thread->getProcess()->syscall_table;
+            cpu->syscall_table   = process->syscall_table;
 
             cpu->update(thread);
             sched_lock.releaseRaw();
 
+            cpu->in_interrupt--;
             return;
         }
 
@@ -83,5 +110,7 @@ namespace AEX::Proc {
 
         cpu->update(idle);
         sched_lock.releaseRaw();
+
+        cpu->in_interrupt--;
     }
 }

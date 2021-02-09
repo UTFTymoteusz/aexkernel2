@@ -14,6 +14,7 @@ namespace AEX::Proc {
     Process::Process(const char* image_path, pid_t parent_pid, Mem::Pagemap* pagemap,
                      const char* name) {
         rename(image_path, name);
+        ipc_init();
 
         processes_lock.acquire();
 
@@ -37,17 +38,28 @@ namespace AEX::Proc {
         status = TS_RUNNABLE;
     }
 
-    void Process::rename(const char* image_path, const char* name) {
-        if (this->image_path)
-            delete this->image_path;
-
-        if (name == nullptr)
-            FS::get_filename(this->name, image_path, sizeof(this->name));
+    void Process::rename(const char* image_path_n, const char* name_n) {
+        if (name_n == nullptr)
+            FS::get_filename(name, image_path_n, sizeof(name));
         else
-            strncpy(this->name, name, sizeof(this->name));
+            strncpy(name, name_n, sizeof(name));
 
-        this->image_path = new char[strlen(image_path) + 1];
-        strncpy(this->image_path, image_path, strlen(image_path) + 1);
+        image_path = Mem::Heap::realloc(image_path, strlen(image_path_n) + 1);
+        strncpy(image_path, image_path_n, strlen(image_path_n) + 1);
+    }
+
+    void Process::set_cwd(const char* cwd) {
+        auto scope = lock.scope();
+
+        int len = min(strlen(cwd), FS::MAX_PATH_LEN - 1);
+
+        m_cwd = Mem::Heap::realloc(m_cwd, len + 1);
+        strncpy(m_cwd, cwd, len + 1);
+    }
+
+    const char* Process::get_cwd() {
+        auto scope = lock.scope();
+        return m_cwd;
     }
 
     Process* Process::current() {
@@ -63,7 +75,7 @@ namespace AEX::Proc {
             if (!process->threads.present(i))
                 continue;
 
-            process->threads.at(i)->abort();
+            process->threads.at(i)->abort(true);
         }
 
         while (Mem::atomic_read(&process->thread_counter) != 0)
@@ -94,8 +106,6 @@ namespace AEX::Proc {
     }
 
     void Process::exit(int status) {
-        auto scope = processes_lock.scope();
-
         if (m_exiting)
             return;
 
@@ -106,17 +116,12 @@ namespace AEX::Proc {
 
         broker(exit_threaded_broker, this);
 
-        if (Process::current() == this) {
-            processes_lock.release();
-
-            while (!Thread::current()->interrupted())
+        if (Process::current() == this)
+            while (!Thread::current()->aborting())
                 Thread::yield();
-
-            processes_lock.acquire();
-        }
     }
 
-    error_t Process::kill(pid_t pid) {
+    error_t Process::kill(pid_t pid, int sig) {
         auto scope   = processes_lock.scope();
         auto process = get_process(pid);
         if (!process)
@@ -125,8 +130,12 @@ namespace AEX::Proc {
         if (process->status == TS_FRESH)
             return ESRCH;
 
-        process->exit(0);
-        return ENONE;
+        IPC::siginfo_t info;
+
+        info.si_signo = sig;
+        info.si_code  = SI_USER;
+
+        return process->signal(info);
     }
 
     struct wait_args {
@@ -174,10 +183,10 @@ namespace AEX::Proc {
 
         while (true) {
             auto val = try_get(Process::current()->pid);
-            if (!val.has_value && val.error_code == ECHILD)
+            if (!val && val.error_code == ECHILD)
                 return val.error_code;
 
-            if (val.has_value) {
+            if (val) {
                 PRINTK_DEBUG2("pid%i: cleaned up pid%i", Process::current()->pid, val.value.pid);
 
                 status = val.value.code;
@@ -193,5 +202,25 @@ namespace AEX::Proc {
             if (Thread::current()->interrupted())
                 return EINTR;
         }
+    }
+
+    void Process::assoc(Thread* thread) {
+        threads_lock.acquire();
+        threads.push(thread);
+        threads_lock.release();
+    }
+
+    void Process::unassoc(Thread* thread) {
+        threads_lock.acquire();
+
+        for (int i = 0; i < threads.count(); i++) {
+            if (!threads.present(i) || threads[i] != thread)
+                continue;
+
+            threads.erase(i);
+            break;
+        }
+
+        threads_lock.release();
     }
 }

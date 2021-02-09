@@ -10,8 +10,6 @@
 #include "aex/proc/types.hpp"
 
 namespace AEX::Proc {
-    extern Mem::SmartArray<Process> processes;
-
     /**
      * Creates a new thread that's gonna run the specified function with the specified arguments.
      * @param func Function to call.

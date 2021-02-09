@@ -5,6 +5,7 @@
 #include "aex/mem/paging.hpp"
 #include "aex/mutex.hpp"
 #include "aex/optional.hpp"
+#include "aex/types.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -23,6 +24,9 @@ namespace AEX::Mem {
 
     enum mmap_flags_t {
         MAP_NONE      = 0x00,
+        MAP_PRIVATE   = 0x01,
+        MAP_SHARED    = 0x02,
+        MAP_FIXED     = 0x04,
         MAP_ANONYMOUS = 0x10,
     };
 
@@ -32,22 +36,26 @@ namespace AEX::Mem {
         size_t len;
 
         MMapRegion(Pagemap* pagemap, void* addr, size_t len);
+        MMapRegion(Pagemap* pagemap, void* addr, size_t len, FS::File_SP file, int64_t offset);
         virtual ~MMapRegion();
 
-        virtual error_t read(void* dst, int64_t offset, uint32_t count);
+        virtual error_t               read(void* dst, FS::off_t offset, size_t count);
+        virtual optional<MMapRegion*> fork(Pagemap* dst_pagemap);
 
         protected:
         optional<FS::File_SP> m_file;
+        int64_t               m_offset;
         Pagemap*              m_pagemap;
     };
 
     class FileBackedMMapRegion : public MMapRegion {
         public:
         FileBackedMMapRegion(Pagemap* pagemap, void* addr, size_t len, FS::File_SP file,
-                             int64_t offset);
+                             FS::off_t offset);
         ~FileBackedMMapRegion();
 
-        error_t read(void* dst, int64_t offset, uint32_t count);
+        error_t               read(void* dst, FS::off_t offset, size_t count);
+        optional<MMapRegion*> fork(Pagemap* dst_pagemap);
 
         private:
         struct cache_slot {
@@ -60,19 +68,15 @@ namespace AEX::Mem {
 
         Mutex m_lock;
 
-        int64_t m_offset;
-
         int        cache_ptr = 0;
         cache_slot cache[CACHE_SLOTS];
 
         int findSlot(int32_t id);
     };
 
-    optional<void*> mmap(Proc::Process* process, void* addr, size_t len, prot_flags_t prot,
-                         mmap_flags_t flags, FS::File_SP file = FS::File_SP::getNull(),
-                         int64_t offset = 0);
-
-    error_t munmap(void* addr, size_t len);
+    optional<void*> mmap(Proc::Process* process, void* addr, size_t len, int prot, int flags,
+                         FS::File_SP file = FS::File_SP::getNull(), FS::off_t offset = 0);
+    error_t         munmap(Proc::Process* process, void* addr, size_t len);
 
     Mem::MMapRegion* find_mmap_region(Proc::Process* process, void* addr);
 }

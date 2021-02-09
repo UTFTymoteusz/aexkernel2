@@ -14,12 +14,21 @@ namespace AEX::Dev {
             m_dev->close(this);
     }
 
-    optional<uint32_t> CharHandle::read(void* ptr, uint32_t len) {
+    optional<ssize_t> CharHandle::read(void* ptr, size_t len) {
         return m_dev->read(this, ptr, len);
     }
 
-    optional<uint32_t> CharHandle::write(const void* ptr, uint32_t len) {
+    optional<ssize_t> CharHandle::write(const void* ptr, size_t len) {
         return m_dev->write(this, ptr, len);
+    }
+
+    optional<int> CharHandle::ioctl(int rq, uint64_t val) {
+        return m_dev->ioctl(this, rq, val);
+    }
+
+    optional<Mem::MMapRegion*> CharHandle::mmap(Proc::Process* process, void* addr, size_t len,
+                                                int flags, FS::File_SP file, FS::off_t offset) {
+        return m_dev->mmap(process, addr, len, flags, file, offset);
     }
 
     bool CharHandle::isatty() {

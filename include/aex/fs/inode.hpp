@@ -1,7 +1,6 @@
 #pragma once
 
 #include "aex/fs/directory.hpp"
-#include "aex/fs/type.hpp"
 #include "aex/fs/types.hpp"
 #include "aex/mem/smartptr.hpp"
 #include "aex/optional.hpp"
@@ -10,14 +9,25 @@
 namespace AEX::FS {
     class INode {
         public:
-        int id;
-
-        int device_id = -1;
+        ino_t id;
 
         fs_type_t type = FT_UNKNOWN;
+        mode_t    mode;
 
-        uint64_t block_count;
-        uint64_t size;
+        nlink_t hard_links;
+
+        Sec::uid_t uid;
+        Sec::gid_t gid;
+        Dev::dev_t dev = -1;
+
+        Sys::Time::time_t access_time;
+        Sys::Time::time_t modify_time;
+        Sys::Time::time_t change_time;
+
+        blkcnt_t  block_count;
+        blksize_t block_size;
+
+        off_t size;
 
         ControlBlock* control_block;
 
@@ -29,6 +39,8 @@ namespace AEX::FS {
         virtual error_t update();
 
         virtual optional<dir_entry> readDir(dir_context* ctx);
+        virtual error_t             seekDir(dir_context* ctx, long pos);
+        virtual long                tellDir(dir_context* ctx);
 
         bool is_regular() {
             return (type & FT_REGULAR) == FT_REGULAR;

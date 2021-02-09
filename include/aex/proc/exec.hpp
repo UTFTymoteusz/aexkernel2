@@ -9,7 +9,8 @@
 namespace AEX::Proc {
     class Executor {
         public:
-        virtual error_t exec(const char* path, Process* process);
+        virtual error_t exec(Process* process, Thread* initiator, const char* path,
+                             char* const argv[], char* const envp[]);
     };
 
     struct exec_opt {
@@ -17,5 +18,6 @@ namespace AEX::Proc {
     };
 
     void    register_executor(Executor* executor);
-    error_t exec(Process* process, const char* path, exec_opt* options);
+    error_t exec(Process* process, Thread* initiator, const char* path, char* const argv[],
+                 char* const envp[], exec_opt* options);
 }

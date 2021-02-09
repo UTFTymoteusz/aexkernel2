@@ -50,9 +50,9 @@ namespace AEX {
             int  order = 99999;
         };
 
-        auto dir_try = FS::File::opendir("/sys/mod/core/");
+        auto dir_try = FS::File::open("/sys/mod/core/", FS::O_RD);
         if (!dir_try) {
-            printk(PRINTK_WARN "module: Failed to opendir /sys/mod/core/: %s\n", strerror(dir_try));
+            printk(PRINTK_WARN "module: Failed to open /sys/mod/core/: %s\n", strerror(dir_try));
             return;
         }
 
@@ -139,7 +139,7 @@ namespace AEX {
                     continue;
 
                 uint64_t new_delta = m_addr - (size_t) symbol.addr;
-                if (new_delta >= delta)
+                if (new_delta >= delta || new_delta >= 0x2000)
                     continue;
 
                 delta = new_delta;

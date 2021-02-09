@@ -3,6 +3,7 @@
 #include "aex/debug.hpp"
 #include "aex/dev/input.hpp"
 #include "aex/dev/tty.hpp"
+#include "aex/dev/tty/tty.hpp"
 #include "aex/fs.hpp"
 #include "aex/ipc/pipe.hpp"
 #include "aex/mem.hpp"
@@ -19,6 +20,7 @@
 #include "boot/mboot.h"
 #include "dev/dev.hpp"
 #include "fs/fs.hpp"
+#include "ipc/ipc.hpp"
 #include "kernel/module.hpp"
 #include "mem/heap.hpp"
 #include "mem/phys.hpp"
@@ -80,7 +82,7 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     MCore::init();
 
     CPU::interrupts();
-    IRQ::setup_timers_mcore(500);
+    IRQ::setup_timers_mcore(200);
 
     Proc::init();
 
@@ -98,6 +100,7 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
 
     mount_fs();
 
+    IPC::init();
     Net::init();
     printk("\n");
 
@@ -303,6 +306,26 @@ void test_udp_client() {
     }
 }
 
+void apple() {
+    auto sock_try = Net::Socket::create(Net::AF_INET, Net::SOCK_STREAM, Net::IPROTO_TCP);
+    auto sock     = sock_try.value;
+
+    auto error = sock->connect(Net::ipv4_addr(192, 168, 0, 20), 17267);
+    if (error) {
+        kpanic("aaa");
+    }
+
+    auto tty_wr = FS::File::open("/dev/tty0", FS::O_WR);
+    AEX_ASSERT(tty_wr);
+
+    char buffer[2048];
+
+    while (true) {
+        auto aaa = sock->receive(buffer, 2048, 0);
+        tty_wr.value->write(buffer, aaa.value);
+    }
+}
+
 void exec_init() {
     auto tty_rd = FS::File::open("/dev/tty0", FS::O_RD);
     AEX_ASSERT(tty_rd);
@@ -310,8 +333,8 @@ void exec_init() {
     auto tty_wr = FS::File::open("/dev/tty0", FS::O_WR);
     AEX_ASSERT(tty_wr);
 
-    // auto tty_wre = tty_wr.value->dup();
-    // AEX_ASSERT(tty_wre);
+    auto tty_wre = tty_wr.value->dup();
+    AEX_ASSERT(tty_wre);
 
     FS::File_SP rp, wp;
     IPC::Pipe::create(rp, wp);
@@ -319,13 +342,17 @@ void exec_init() {
     auto info = Proc::exec_opt{
         .stdin  = tty_rd.value,
         .stdout = tty_wr.value,
-        //.stderr = tty_wre.value,
-        .stderr = wp,
+        .stderr = tty_wre.value,
     };
+
+    char* argv[2];
+
+    argv[0] = (char*) "aexinit";
+    argv[1] = nullptr;
 
     int status;
 
-    AEX_ASSERT(Proc::exec(nullptr, "/sys/aexinit.elf", &info) == ENONE);
+    AEX_ASSERT(Proc::exec(nullptr, nullptr, "/sys/aexinit", argv, nullptr, &info) == ENONE);
     Proc::Process::wait(status);
 
     printk("init exited with a code %i\n", status);
@@ -351,7 +378,7 @@ void kmain_threaded() {
     time_t start_epoch = clocktime();
 
     while (true) {
-        switch (Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY]->read()) {
+        switch (Dev::TTY::TTYs[Dev::TTY::ROOT_TTY]->read()) {
         case 't': {
             auto ns    = uptime();
             auto clock = clocktime();

@@ -2,10 +2,14 @@
 
 #include "aex/dev/device.hpp"
 #include "aex/fs/directory.hpp"
-#include "aex/fs/type.hpp"
 #include "aex/fs/types.hpp"
 #include "aex/mem/smartptr.hpp"
 #include "aex/optional.hpp"
+#include "aex/types.hpp"
+
+namespace AEX::Mem {
+    class MMapRegion;
+}
 
 namespace AEX::FS {
     enum file_mode_t {
@@ -14,23 +18,14 @@ namespace AEX::FS {
         O_RDWR = O_RD | O_WR,
     };
 
-    struct file_info {
-        Dev::devid_t  containing_dev_id = -1;
-        FS::fs_type_t type              = FT_UNKNOWN;
-        Dev::devid_t  dev_id            = -1;
-        uint64_t      total_size        = 0;
+    enum at_t {
+        AT_NONE             = 0x00,
+        AT_EMPTY_PATH       = 0x01,
+        AT_SYMLINK_NOFOLLOW = 0x02,
+    };
 
-        bool is_regular() {
-            return (type & FS::FT_REGULAR) == FS::FT_REGULAR;
-        }
-
-        bool is_directory() {
-            return (type & FS::FT_DIRECTORY) == FS::FT_DIRECTORY;
-        }
-
-        bool is_block() {
-            return (type & FS::FT_BLOCK) == FS::FT_BLOCK;
-        }
+    enum fd_t {
+        FD_CLOEXEC = 0x0001,
     };
 
     class File {
@@ -44,21 +39,35 @@ namespace AEX::FS {
         virtual ~File();
 
         static optional<File_SP> open(const char* path, int mode);
-        static optional<File_SP> opendir(const char* path);
 
-        static optional<file_info> info(const char* path);
+        static optional<file_info> info(const char* path, int flags = 0);
 
-        virtual optional<uint32_t> read(void* buf, uint32_t count);
-        virtual optional<uint32_t> write(void* buf, uint32_t count);
+        virtual optional<ssize_t> read(void* buf, size_t count);
+        virtual optional<ssize_t> write(void* buf, size_t count);
+        virtual optional<int>     ioctl(int rq, uint64_t val);
 
-        virtual optional<int64_t> seek(int64_t offset, seek_mode mode = seek_mode::SEEK_SET);
+        virtual optional<Mem::MMapRegion*> mmap(Proc::Process* process, void*, size_t len,
+                                                int flags, FS::File_SP file, FS::off_t offset);
+
+        virtual optional<file_info> finfo();
+        virtual error_t             fchmod(mode_t mode);
+
+        virtual optional<off_t> seek(off_t offset, seek_mode mode = seek_mode::SEEK_SET);
 
         virtual optional<dir_entry> readdir();
+        virtual error_t             seekdir(long pos);
+        virtual long                telldir();
 
         virtual optional<File_SP> dup();
 
         virtual error_t close();
 
         virtual bool isatty();
+
+        int  get_flags();
+        void set_flags(int);
+
+        protected:
+        int m_flags;
     };
 }

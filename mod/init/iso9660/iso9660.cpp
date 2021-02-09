@@ -41,7 +41,7 @@ namespace AEX::FS {
             return ENOTBLK;
         }
 
-        auto handle_try = Dev::open_block_handle(info.value.dev_id);
+        auto handle_try = Dev::open_block_handle(info.value.dev);
         if (!handle_try) {
             printk(PRINTK_WARN "iso9660: mount: Failed to open the block device\n");
             return ENOENT;

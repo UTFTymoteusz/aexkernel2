@@ -12,15 +12,15 @@ namespace AEX::Proc {
     };
 
     IPC::MessageQueue broker_queue;
-    Thread*           broker_loop_th;
+    Thread*           broker_thread;
 
     void broker_loop();
 
     void broker_init() {
-        broker_loop_th =
+        broker_thread =
             Thread::create(1, (void*) broker_loop, Thread::KERNEL_STACK_SIZE, nullptr).value;
-        broker_loop_th->start();
-        broker_loop_th->detach();
+        broker_thread->start();
+        broker_thread->detach();
 
         new (&broker_queue) IPC::MessageQueue();
     }

@@ -36,7 +36,7 @@ namespace AEX {
         void* addr = mmap_try.value;
 
         auto error = load_module(path, addr, size, block);
-        Mem::munmap(addr, size);
+        Mem::munmap(Proc::Process::kernel(), addr, size);
 
         return error;
     }
@@ -116,8 +116,9 @@ namespace AEX {
 
             if (symbol.section_index == ELF::sym_special::SHN_ABS)
                 m_symbol.addr = (void*) symbol.address;
-            else if (symbol.section_index & 0xFF00)
-                printk("module: Unknown section index encountered (0x%x)\n", symbol.section_index);
+            // else if (symbol.section_index & 0xFF00)
+            //    printk("module: Unknown section index encountered (0x%x)\n",
+            //    symbol.section_index);
             else
                 m_symbol.addr =
                     (void*) ((size_t) sections[symbol.section_index].addr + symbol.address);

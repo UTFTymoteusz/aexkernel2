@@ -6,7 +6,7 @@ LD = ld
 
 MKDIR = mkdir -p
 
-BIN  := bin/
+BIN      := /tmp/aex2/mod/$(MODULE_NAME)/
 DEP_DEST := $(BIN)dep/
 OBJ_DEST := $(BIN)obj/
 
@@ -21,7 +21,7 @@ MODULE_OBJ = $(BIN)$(MODULE_NAME).$(MODULE_ORDER).km
 GFLAGS = -O3 -Wall -Wextra -nostdlib -pipe
 
 INCLUDES := -I. -I$(ARCH) -Iinclude/ -I"$(KERNEL_SRC)include" \
-		    -I"$(KERNEL_SRC)arch/x64/include"
+		    -I"$(KERNEL_SRC)arch/x86_64/include"
 
 CXXFLAGS := $(GFLAGS)     \
 	-std=c++17           \

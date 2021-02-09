@@ -205,6 +205,8 @@ namespace NetStack {
         if (m_block.state != TCP_CLOSED)
             return EISCONN;
 
+        backlog = clamp(backlog, 0, 128);
+
         m_block.state = TCP_LISTEN;
 
         m_listen_queue   = new Mem::Vector<tcp_listen_entry, 16, 16>;

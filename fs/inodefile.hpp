@@ -5,6 +5,7 @@
 #include "aex/fs/inode.hpp"
 #include "aex/math.hpp"
 #include "aex/mem.hpp"
+#include "aex/proc.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -23,16 +24,16 @@ namespace AEX::FS {
             delete m_cache_buffer;
         }
 
-        optional<uint32_t> read(void* buffer, uint32_t count) {
+        optional<ssize_t> read(void* buffer, size_t count) {
             uint32_t requested_count = count;
 
-            count = min<uint32_t>(m_inode->size - m_pos, count);
+            count = min<size_t>(m_inode->size - m_pos, count);
             if (count == 0)
                 return 0;
 
-            if ((uint64_t) m_pos / m_block_size == m_cached_block) {
+            if ((size_t) m_pos / m_block_size == m_cached_block) {
                 uint16_t offset = m_pos & (m_block_size - 1);
-                uint16_t len    = min<uint32_t>((uint32_t) m_block_size - offset, count);
+                uint16_t len    = min<size_t>((size_t) m_block_size - offset, count);
 
                 memcpy(buffer, m_cache_buffer + offset, len);
 
@@ -49,17 +50,17 @@ namespace AEX::FS {
 
             m_pos += count;
 
-            uint64_t last_block = (uint64_t) m_pos / m_block_size;
+            size_t last_block = (size_t) m_pos / m_block_size;
             if (last_block != m_cached_block)
                 readBlocks(m_cache_buffer, last_block * m_block_size, m_block_size);
 
             m_cached_block = last_block;
 
-            return requested_count;
+            return count;
         }
 
-        optional<int64_t> seek(int64_t offset, seek_mode mode) {
-            int64_t new_pos = 0;
+        optional<off_t> seek(off_t offset, seek_mode mode) {
+            off_t new_pos = 0;
 
             switch (mode) {
             case seek_mode::SEEK_SET:
@@ -75,11 +76,15 @@ namespace AEX::FS {
                 break;
             }
 
-            if (new_pos < 0 || (uint64_t) new_pos > m_inode->size)
+            if (new_pos < 0 || (off_t) new_pos > m_inode->size)
                 return EINVAL;
 
             m_pos = new_pos;
             return new_pos;
+        }
+
+        error_t close() {
+            return ENONE;
         }
 
         optional<File_SP> dup() {
@@ -91,6 +96,36 @@ namespace AEX::FS {
             memcpy(dupd->m_cache_buffer, m_cache_buffer, m_block_size);
 
             return File_SP(dupd);
+        }
+
+        optional<file_info> finfo() {
+            file_info finfo;
+
+            finfo.containing_dev_id = 0;
+            finfo.inode             = m_inode->id;
+            finfo.type              = m_inode->type;
+            finfo.mode              = m_inode->mode;
+            finfo.hard_links        = m_inode->hard_links;
+
+            finfo.uid = m_inode->uid;
+            finfo.gid = m_inode->gid;
+            finfo.dev = m_inode->dev;
+
+            finfo.access_time = m_inode->access_time;
+            finfo.modify_time = m_inode->modify_time;
+            finfo.change_time = m_inode->change_time;
+
+            finfo.blocks     = m_inode->block_count;
+            finfo.block_size = m_inode->block_size;
+            finfo.total_size = m_inode->size;
+
+            return finfo;
+        }
+
+        optional<Mem::MMapRegion*> mmap(Proc::Process* process, void*, size_t len, int flags,
+                                        FS::File_SP file, FS::off_t offset) {
+            void* alloc_addr = process->pagemap->map(len, 0, PAGE_ARBITRARY | flags);
+            return new Mem::FileBackedMMapRegion(process->pagemap, alloc_addr, len, file, offset);
         }
 
         private:

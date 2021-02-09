@@ -14,7 +14,7 @@ void test_mmap() {
     uint64_t heap;
 
     for (int i = 0; i < 4; i++) {
-        auto  file = FS::File::open("/sys/aexkrnl.elf", FS::O_RDWR).value;
+        auto  file = FS::File::open("/sys/aexkrnl", FS::O_RDWR).value;
         void* mmap = Mem::mmap(Proc::Process::kernel(), nullptr, 65536, Mem::PROT_READ,
                                Mem::MAP_NONE, file, 0)
                          .value;
@@ -39,7 +39,7 @@ void test_mmap() {
         g *= 2;
         h *= 2;
 
-        Mem::munmap(mmap, 65536);
+        Mem::munmap(Proc::Process::kernel(), mmap, 65536);
 
         if (i == 0) {
             frames = Mem::Phys::frames_available;

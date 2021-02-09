@@ -18,6 +18,8 @@ namespace AEX::FS {
 
             size = dentry.data_len.le;
             type = FT_DIRECTORY;
+
+            hard_links = 1;
         }
 
         optional<dir_entry> readDir(dir_context* ctx) {
@@ -89,6 +91,19 @@ namespace AEX::FS {
             return {};
         }
 
+        // TODO: checks
+        error_t seekDir(dir_context* ctx, long pos) {
+            if (ctx->pos >= size)
+                return ERANGE;
+
+            ctx->pos = pos;
+            return ENONE;
+        }
+
+        long tellDir(dir_context* ctx) {
+            return ctx->pos;
+        }
+
         private:
         iso9660_dentry m_dentry;
 
@@ -109,6 +124,8 @@ namespace AEX::FS {
 
             size = dentry.data_len.le;
             type = FT_REGULAR;
+
+            hard_links = 1;
         }
 
         error_t readBlocks(void* buffer, uint64_t block, uint16_t count) {

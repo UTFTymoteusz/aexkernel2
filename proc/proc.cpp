@@ -45,8 +45,11 @@ namespace AEX::Proc {
 
         auto& bsp = MCore::CPUs[0];
 
-        auto idle_process   = new Process("/sys/aexkrnl.elf", 0, Mem::kernel_pagemap, "idle");
-        auto kernel_process = new Process("/sys/aexkrnl.elf", 0, Mem::kernel_pagemap);
+        auto idle_process   = new Process("/sys/aexkrnl", 0, Mem::kernel_pagemap, "idle");
+        auto kernel_process = new Process("/sys/aexkrnl", 0, Mem::kernel_pagemap);
+
+        idle_process->set_cwd("/");
+        kernel_process->set_cwd("/");
 
         idle_process->ready();
         kernel_process->ready();
@@ -57,6 +60,8 @@ namespace AEX::Proc {
             Thread::FAULT_STACK_SIZE;
         bsp_thread->fault_stack_size = Thread::FAULT_STACK_SIZE;
         bsp_thread->setStatus(TS_RUNNABLE);
+
+        bsp_thread->original_entry = nullptr;
 
         bsp->current_thread  = bsp_thread;
         bsp->current_context = bsp_thread->context;

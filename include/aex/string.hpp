@@ -66,9 +66,9 @@ namespace AEX {
     char* strncpy(char* dst, const char* src, size_t num);
 
     void memset(void* mem, char c, size_t len);
-    void memset16(void* mem, uint16_t n, size_t count);
-    void memset32(void* mem, uint32_t n, size_t count);
-    void memset64(void* mem, uint64_t n, size_t count);
+    void memset16(void* mem, uint16_t val, size_t count);
+    void memset32(void* mem, uint32_t val, size_t count);
+    void memset64(void* mem, uint64_t val, size_t count);
     void memcpy(void* dst, const void* src, size_t size);
     int  memcmp(const void* a, const void* b, size_t num);
 

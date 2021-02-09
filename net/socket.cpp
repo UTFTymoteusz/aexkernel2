@@ -8,7 +8,7 @@ namespace AEX::Net {
     }
 
     optional<Socket_SP> Socket::create(socket_domain_t domain, socket_type_t type,
-                                       socket_protocol_t protocol) {
+                                       iproto_t protocol) {
         switch (domain) {
         case socket_domain_t::AF_INET: {
             auto sock_try = inet_protocols[(uint8_t) protocol]->createSocket(type);

@@ -1,11 +1,11 @@
 CXX ?= g++
 AS   = nasm
 
-ARCH ?= x64
+ARCH ?= x86_64
 
 MKDIR = mkdir -p
 
-BIN  := bin/
+BIN  := /tmp/aex2/kernel/
 BOOT := boot/
 DEP_DEST := $(BIN)dep/
 OBJ_DEST := $(BIN)obj/
@@ -22,7 +22,7 @@ VERSION := $(shell date -u '+%d.%m.%Y').$(shell printf "%05d" $(shell date -d "1
 ISO  = $(BIN)grubiso/
 SYS  = $(ISO)sys/
 
-GFLAGS = -O3 -Wall -Wextra -Werror -nostdlib -pipe -lgcc
+GFLAGS = -O0 -Wall -Wextra -Werror -nostdlib -pipe -lgcc
 
 INCLUDES := -I. -Iinclude/ -Iarch/$(ARCH)/ -Iarch/$(ARCH)/include/
 
@@ -62,10 +62,10 @@ all: $(OBJS)
 	cd arch/$(ARCH)/mod/core && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../../../..
 	cd arch/$(ARCH)/mod/init && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../../../..
 
-	@$(CXX) $(OBJS) $(LDFLAGS) -T linker.ld -o $(SYS)aexkrnl.elf
+	@$(CXX) $(OBJS) $(LDFLAGS) -T linker.ld -o $(SYS)aexkrnl
 
 copy:
-	@cp $(SYS)aexkrnl.elf "$(ROOT_DIR)sys/"
+	@cp $(SYS)aexkrnl "$(ROOT_DIR)sys/"
 
 include $(shell find $(DEP_DEST) -type f -name *.d)
 

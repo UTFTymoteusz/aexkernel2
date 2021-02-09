@@ -4,7 +4,6 @@
 #include "aex/fs/directory.hpp"
 #include "aex/fs/file.hpp"
 #include "aex/fs/path.hpp"
-#include "aex/fs/type.hpp"
 #include "aex/fs/types.hpp"
 #include "aex/mem/smartarray.hpp"
 

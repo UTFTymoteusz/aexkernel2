@@ -6,20 +6,27 @@
 
 namespace AEX::Net {
     enum socket_domain_t : uint16_t {
-        AF_INET = 1,
-        AF_UNIX = 3,
+        AF_UNSPEC = 0,
+        AF_INET   = 1,
+        AF_INET6  = 2,
+        AF_UNIX   = 3,
     };
 
     enum socket_type_t {
-        SOCK_STREAM = 0,
-        SOCK_DGRAM  = 1,
-        SOCK_RAW    = 3,
+        SOCK_STREAM    = 0,
+        SOCK_DGRAM     = 1,
+        SOCK_SEQPACKET = 2,
+        SOCK_RAW       = 3,
     };
 
-    enum socket_protocol_t {
+    enum iproto_t {
         IPROTO_NONE = 0,
-        IPROTO_TCP  = 1,
-        IPROTO_UDP  = 2,
+        IPROTO_IP   = 1,
+        IPROTO_IPV6 = 2,
+        IPROTO_ICMP = 3,
+        IPROTO_RAW  = 4,
+        IPROTO_TCP  = 5,
+        IPROTO_UDP  = 6,
     };
 
     enum socket_flag_t {
@@ -58,11 +65,10 @@ namespace AEX::Net {
         public:
         virtual ~Socket();
 
-        optional<Mem::SmartPointer<FS::File>> open(const char* path)    = delete;
-        optional<Mem::SmartPointer<FS::File>> opendir(const char* path) = delete;
+        optional<Mem::SmartPointer<FS::File>> open(const char* path) = delete;
 
         static optional<Socket_SP> create(socket_domain_t domain, socket_type_t type,
-                                          socket_protocol_t protocol);
+                                          iproto_t protocol);
 
         virtual error_t connect(const sockaddr* addr);
         error_t         connect(ipv4_addr addr, uint16_t port);

@@ -3,6 +3,8 @@
 #include "aex/assert.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/proc/process.hpp"
+#include "aex/types.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Mem {
     void remove_region(Proc::Process* process, void* addr);
@@ -15,10 +17,25 @@ namespace AEX::Mem {
         this->m_pagemap = pagemap;
     }
 
+    MMapRegion::MMapRegion(Pagemap* pagemap, void* addr, size_t len, FS::File_SP file,
+                           int64_t offset) {
+        this->start = addr;
+        this->len   = len;
+
+        this->m_file    = file;
+        this->m_offset  = offset;
+        this->m_pagemap = pagemap;
+    }
+
+
     MMapRegion::~MMapRegion() {}
 
-    error_t MMapRegion::read(void* addr, int64_t offset, uint32_t count) {
+    error_t MMapRegion::read(void* addr, FS::off_t offset, size_t count) {
         kpanic("Default MMapRegion::read(0x%p, %li, %i) called", addr, offset, count);
+    }
+
+    optional<MMapRegion*> MMapRegion::fork(Pagemap* dst) {
+        return new MMapRegion(dst, start, len);
     }
 
     FileBackedMMapRegion::FileBackedMMapRegion(Pagemap* pagemap, void* addr, size_t len,
@@ -45,10 +62,10 @@ namespace AEX::Mem {
         m_lock.release();
     }
 
-    error_t FileBackedMMapRegion::read(void* dst, int64_t offset, uint32_t count) {
+    error_t FileBackedMMapRegion::read(void* dst, FS::off_t offset, size_t count) {
         ScopeMutex scopeLock(m_lock);
 
-        int32_t id = offset / Sys::CPU::PAGE_SIZE;
+        size_t id = offset / Sys::CPU::PAGE_SIZE;
 
         int slot = findSlot(id);
         if (slot == -1) {
@@ -56,8 +73,10 @@ namespace AEX::Mem {
             return ENONE;
         }
 
+        int aflags = (m_pagemap != kernel_pagemap) ? PAGE_USER : 0;
+
         if (cache[slot].id != -1)
-            m_pagemap->map(Sys::CPU::PAGE_SIZE, 0, PAGE_FIXED | PAGE_ARBITRARY,
+            m_pagemap->map(Sys::CPU::PAGE_SIZE, 0, PAGE_FIXED | PAGE_ARBITRARY | aflags,
                            cache[slot].referenced);
 
         cache[slot].id         = id;
@@ -66,12 +85,16 @@ namespace AEX::Mem {
         m_file.value->seek(m_offset + offset);
         m_file.value->read(cache[slot].buffer, count);
 
-        m_pagemap->map(Sys::CPU::PAGE_SIZE, m_pagemap->paddrof(cache[slot].buffer), PAGE_FIXED,
-                       dst);
+        m_pagemap->map(Sys::CPU::PAGE_SIZE, m_pagemap->paddrof(cache[slot].buffer),
+                       PAGE_FIXED | aflags, dst);
 
         // printk("slot: %i for %i\n", slot, id);
 
         return ENONE;
+    }
+
+    optional<MMapRegion*> FileBackedMMapRegion::fork(Pagemap* dst) {
+        kpanic("FileBackedMMapRegion::fork(0x%p) called", dst);
     }
 
     int FileBackedMMapRegion::findSlot(int32_t id) {
@@ -98,19 +121,26 @@ namespace AEX::Mem {
         return -1;
     }
 
-    optional<void*> mmap(Proc::Process* process, void*, size_t len, prot_flags_t,
-                         mmap_flags_t flags, FS::File_SP file, int64_t offset) {
+    optional<void*> mmap(Proc::Process* process, void* addr, size_t len, int prot, int flags,
+                         FS::File_SP file, FS::off_t offset) {
         // make addr be actually used
+        if (flags & MAP_FIXED)
+            NOT_IMPLEMENTED;
 
         if (!(flags & MAP_ANONYMOUS) && !file)
             return EBADF;
 
         AEX_ASSERT(process != nullptr);
 
+        int aflags = (process != Proc::Process::kernel()) ? PAGE_USER : 0;
+
+        if (prot & PROT_WRITE)
+            aflags |= PAGE_WRITE;
+
         MMapRegion* region;
 
         if (flags & MAP_ANONYMOUS) {
-            void* alloc_addr = process->pagemap->alloc(len);
+            void* alloc_addr = process->pagemap->alloc(len, aflags);
 
             region = new MMapRegion(process->pagemap, alloc_addr, len);
 
@@ -125,22 +155,20 @@ namespace AEX::Mem {
         if (!dupd_try)
             return dupd_try.error_code;
 
-        auto  dupd       = dupd_try.value;
-        void* alloc_addr = process->pagemap->map(len, 0, PAGE_ARBITRARY);
-
-        region = new FileBackedMMapRegion(process->pagemap, alloc_addr, len, dupd, offset);
+        auto dupd     = dupd_try.value;
+        auto mmap_try = dupd->mmap(process, addr, len, aflags, dupd, offset);
+        if (!mmap_try.has_value)
+            return mmap_try.error_code;
 
         process->lock.acquire();
-        process->mmap_regions.push(region);
+        process->mmap_regions.push(mmap_try.value);
         process->lock.release();
 
-        return region->start;
+        return mmap_try.value->start;
     }
 
-    // Make len work properly
-    error_t munmap(void* addr, size_t) {
-        auto process = Proc::Process::current();
-
+    // TODO: Make len work properly
+    error_t munmap(Proc::Process* process, void* addr, size_t) {
         remove_region(process, addr);
 
         return ENONE;

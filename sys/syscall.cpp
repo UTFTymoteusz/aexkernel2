@@ -7,7 +7,7 @@
 namespace AEX::Sys {
     syscall_t default_tbl[256];
 
-    void dummy_syscall();
+    int dummy_syscall();
 
     void syscall_init() {
         for (int i = 0; i < 256; i++)
@@ -18,8 +18,8 @@ namespace AEX::Sys {
         return default_tbl;
     }
 
-    void dummy_syscall() {
-        printk(PRINTK_WARN "syscall: dummy called\n");
+    int dummy_syscall() {
         Proc::Thread::current()->errno = ENOSYS;
+        return -1;
     }
 }

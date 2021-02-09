@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stddef.h>
+
 namespace AEX {
     class ScopeSpinlock;
 
@@ -9,6 +11,7 @@ namespace AEX {
         void release();
 
         bool tryAcquire();
+        bool isAcquired();
 
         void acquireRaw();
         void releaseRaw();

@@ -28,8 +28,12 @@ namespace AEX::FS {
 
             while (true) {
                 auto readd_try = inode->readDir(&context);
-                if (!readd_try)
+                if (!readd_try) {
+                    if (readd_try.error_code == ENONE)
+                        break;
+
                     return readd_try.error_code;
+                }
 
                 if (strcmp(readd_try.value.name, piece) != 0)
                     continue;

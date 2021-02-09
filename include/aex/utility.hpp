@@ -1,8 +1,13 @@
 #pragma once
 
+#include "aex/kpanic.hpp"
+
 #define PACKED __attribute((packed))
 #define WEAK __attribute((weak))
 #define UNUSED __attribute((unused))
+#define FALLTHROUGH __attribute__((fallthrough))
+
+#define fall FALLTHROUGH
 
 #define BIT64 INTPTR_MAX == INT64_MAX
 #define BIT32 INTPTR_MAX == INT32_MAX
@@ -24,6 +29,8 @@
 #ifndef VERSION
 #define VERSION "inv"
 #endif
+
+#define NOT_IMPLEMENTED kpanic("%s:%i: %s\n", __FILE__, __LINE__, "Not implemented")
 
 namespace AEX {
     template <typename T>

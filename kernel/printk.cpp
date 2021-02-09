@@ -37,7 +37,7 @@ namespace AEX {
         else if (Sys::CPU::currentID() != faulted_cpu)
             return; // printk_lock.acquire();
 
-        auto rootTTY = VTTYs[ROOT_TTY];
+        auto rootTTY = TTYs[ROOT_TTY];
 
         auto printk_common = [rootTTY](char padchar, int padlen, char* buffer) {
             for (int i = strlen(buffer); i < padlen; i++)

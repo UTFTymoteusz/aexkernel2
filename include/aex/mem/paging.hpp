@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 extern const int m_page_present, m_page_write, m_page_user, m_page_through, m_page_nocache,
-    m_page_combine, m_page_nophys, m_page_exec, m_page_fixed, m_page_arbitrary;
+    m_page_combine, m_page_global, m_page_nophys, m_page_exec, m_page_fixed, m_page_arbitrary;
 
 // Specifies if a page is present.
 #define PAGE_PRESENT m_page_present
@@ -14,10 +14,14 @@ extern const int m_page_present, m_page_write, m_page_user, m_page_through, m_pa
 #define PAGE_WRITE m_page_write
 // Specifies if a page is accessible by userspace code.
 #define PAGE_USER m_page_user
+// Write-through mode.
 #define PAGE_THROUGH m_page_through
+// Disables caching for a page.
 #define PAGE_NOCACHE m_page_nocache
 // Write-combining mode.
 #define PAGE_COMBINE m_page_combine
+// Makes the page not get flushed on context switches.
+#define PAGE_GLOBAL m_page_global
 // Marks the page as not being the owner of a physical memory frame.
 #define PAGE_NOPHYS m_page_nophys
 // Puts the page in the executable space.
@@ -39,6 +43,9 @@ namespace AEX::Mem {
         void* vend;
 
         phys_addr pageRoot;
+
+        // Flags that will be applied to every mapping under this pagemap;
+        uint32_t gflags;
 
         Pagemap();
         Pagemap(phys_addr pageRoot);
@@ -109,6 +116,7 @@ namespace AEX::Mem {
         size_t rawof(void* vaddr);
 
         Pagemap* fork();
+        void     dump();
 
         private:
         Spinlock m_lock;

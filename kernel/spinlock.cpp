@@ -74,6 +74,10 @@ namespace AEX {
         return ret;
     }
 
+    bool Spinlock::isAcquired() {
+        return m_lock;
+    }
+
 
     void Spinlock::acquireRaw() {
         volatile size_t count = 0;
