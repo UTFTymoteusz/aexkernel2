@@ -22,7 +22,7 @@ VERSION := $(shell date -u '+%d.%m.%Y').$(shell printf "%05d" $(shell date -d "1
 ISO  = $(BIN)grubiso/
 SYS  = $(ISO)sys/
 
-GFLAGS = -O0 -Wall -Wextra -Werror -nostdlib -pipe -lgcc
+GFLAGS = -O3 -Wall -Wextra -Werror -nostdlib -pipe -lgcc
 
 INCLUDES := -I. -Iinclude/ -Iarch/$(ARCH)/ -Iarch/$(ARCH)/include/
 
