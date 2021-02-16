@@ -3,6 +3,7 @@
 #include "aex/math.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc/types.hpp"
+#include "aex/sec/types.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -117,7 +118,7 @@ namespace AEX::IPC {
         int si_errno;
 
         Proc::pid_t si_pid;
-        // uid_t si_uid; TODO: Make this a reality
+        Sec::uid_t  si_uid;
 
         void*  si_addr;
         int    si_status;

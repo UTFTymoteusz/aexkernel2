@@ -218,7 +218,7 @@ namespace AEX::Sys {
             //            "    RIP: 0x%016lx\n",
             //            cpu->id, cr2, cr3, info->rip);
 
-            IPC::siginfo_t sinfo;
+            IPC::siginfo_t sinfo = {};
 
             sinfo.si_signo = IPC::SIGSEGV;
             sinfo.si_code  = (info->err & 0x01) ? SEGV_MAPERR : SEGV_ACCERR;
@@ -251,7 +251,7 @@ namespace AEX::Sys {
         //            "    RIP: 0x%016lx\n",
         //            cpu->id, cr2, cr3, info->rip);
 
-        IPC::siginfo_t sinfo;
+        IPC::siginfo_t sinfo = {};
 
         sinfo.si_signo = IPC::SIGILL;
         sinfo.si_code  = ILL_ILLOPC;
