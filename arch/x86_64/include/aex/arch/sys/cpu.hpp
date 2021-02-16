@@ -177,6 +177,7 @@ namespace AEX::Sys {
 
         // Safe to change again
         uint8_t in_interrupt = 1;
+        bool    should_yield;
 
         uint64_t measurement_start_ns;
 

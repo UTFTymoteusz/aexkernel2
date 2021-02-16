@@ -93,9 +93,8 @@ error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator
         if (!(section_header.flags & ELF::SC_ALLOC) || section_header.size == 0)
             continue;
 
-        if (!process->pagemap->paddrof((void*) section_header.address)) {
+        if (!process->pagemap->paddrof((void*) section_header.address))
             kpanic("section %i, start: 0x%p not present", i, section_header.address);
-        }
     }
 
     if (process->pagemap->paddrof((void*) 0x0000) == 0x0000)

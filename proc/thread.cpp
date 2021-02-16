@@ -99,6 +99,7 @@ namespace AEX::Proc {
     void Thread::yield() {
         bool ints = CPU::checkInterrupts();
         CPU::nointerrupts();
+        CPU::current()->should_yield = false;
 
         proc_reshed();
 
@@ -341,8 +342,11 @@ namespace AEX::Proc {
         // !CPU::current()->in_interrupt)
         //    CPU::interrupts();
 
-        Mem::atomic_sub(&m_critical, (uint16_t) 1);
+        uint16_t res = Mem::atomic_sub_fetch(&m_critical, (uint16_t) 1);
         Mem::atomic_sub(&m_busy, (uint16_t) 1);
+
+        if (res == 0 && CPU::current()->should_yield)
+            Thread::yield();
     }
 
     Thread::state Thread::saveState() {

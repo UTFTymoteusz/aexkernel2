@@ -14,8 +14,10 @@ namespace AEX::Proc {
         auto cpu    = CPU::current();
         auto thread = Thread::current();
 
-        if (thread->isCritical())
+        if (thread->isCritical()) {
+            cpu->should_yield = true;
             return;
+        }
 
         if (thread->sched_counter >= 1000000) {
             thread->sched_counter -= 1000000;
@@ -82,7 +84,7 @@ namespace AEX::Proc {
                 continue;
 
             thread->sched_counter = counter - 1000000;
-            AEX_ASSERT(thread->sched_counter < 25000000);
+            AEX_ASSERT_PEDANTIC(thread->sched_counter < 25000000);
 
             cpu->current_thread  = thread;
             cpu->current_context = thread->context;

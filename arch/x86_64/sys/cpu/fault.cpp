@@ -221,7 +221,7 @@ namespace AEX::Sys {
             IPC::siginfo_t sinfo = {};
 
             sinfo.si_signo = IPC::SIGSEGV;
-            sinfo.si_code  = (info->err & 0x01) ? SEGV_MAPERR : SEGV_ACCERR;
+            sinfo.si_code  = (info->err & 0x01) ? SEGV_ACCERR : SEGV_MAPERR;
             sinfo.si_addr  = addr;
 
             thread->signal(sinfo);
