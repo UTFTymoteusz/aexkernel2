@@ -3,6 +3,7 @@
 #include "aex/dev/input.hpp"
 #include "aex/dev/tty.hpp"
 #include "aex/dev/tty/ansi.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -14,7 +15,7 @@ namespace AEX::Dev::TTY {
     /**
      * A basic virtual terminal class.
      **/
-    class VTTY {
+    class API VTTY {
         public:
         int width, height;
 

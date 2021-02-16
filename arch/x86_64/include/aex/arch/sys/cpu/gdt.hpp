@@ -1,5 +1,7 @@
 #pragma once
 
+#include "aex/utility.hpp"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -27,7 +29,7 @@ namespace AEX::Sys {
         AC_PRESENT     = 0x80,
     };
 
-    struct gdt_entry {
+    struct API gdt_entry {
         uint16_t limit_low;
 
         uint16_t base_low;
@@ -56,7 +58,7 @@ namespace AEX::Sys {
         }
     } __attribute__((packed));
 
-    void load_gdt(gdt_entry* gdt, int entry_count);
+    API void load_gdt(gdt_entry* gdt, int entry_count);
 
     void mcore_gdt(tss** tsses);
 }

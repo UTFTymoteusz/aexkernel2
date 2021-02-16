@@ -6,9 +6,10 @@
 #include "aex/fs/types.hpp"
 #include "aex/mem/smartptr.hpp"
 #include "aex/optional.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::FS {
-    class Mount {
+    class API Mount {
         public:
         char path[MAX_PATH_LEN];
 

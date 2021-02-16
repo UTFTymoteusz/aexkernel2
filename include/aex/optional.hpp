@@ -1,13 +1,14 @@
 #pragma once
 
 #include "aex/errno.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX {
     template <typename T>
-    struct optional {
+    struct API optional {
         bool    has_value  = false;
         error_t error_code = ENONE;
         T       value;

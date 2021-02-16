@@ -10,11 +10,6 @@
 using namespace AEX;
 using namespace AEX::Proc;
 
-namespace AEX::Proc {
-    void add_thread(Thread* thread);
-    void remove_thread(Thread* thread);
-}
-
 void exit(int status) {
     Process::current()->exit(status);
     USR_ERRNO = ENONE;

@@ -1,9 +1,9 @@
-#include "sys/cpu/irq.hpp"
+#include "aex/sys/irq.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/arch/sys/cpu/irq.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
-#include "aex/sys/irq.hpp"
 
 #include "sys/irq/apic.hpp"
 

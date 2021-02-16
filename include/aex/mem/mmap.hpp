@@ -6,6 +6,7 @@
 #include "aex/mutex.hpp"
 #include "aex/optional.hpp"
 #include "aex/types.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -74,9 +75,9 @@ namespace AEX::Mem {
         int findSlot(int32_t id);
     };
 
-    optional<void*> mmap(Proc::Process* process, void* addr, size_t len, int prot, int flags,
-                         FS::File_SP file = FS::File_SP::getNull(), FS::off_t offset = 0);
-    error_t         munmap(Proc::Process* process, void* addr, size_t len);
+    API optional<void*> mmap(Proc::Process* process, void* addr, size_t len, int prot, int flags,
+                             FS::File_SP file = FS::File_SP::getNull(), FS::off_t offset = 0);
+    API error_t         munmap(Proc::Process* process, void* addr, size_t len);
 
     Mem::MMapRegion* find_mmap_region(Proc::Process* process, void* addr);
 }

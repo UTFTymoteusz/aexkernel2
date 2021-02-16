@@ -13,13 +13,14 @@
 #include "aex/proc/types.hpp"
 #include "aex/sec/types.hpp"
 #include "aex/sys/syscall.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Mem {
     class Pagemap;
 }
 
 namespace AEX::Proc {
-    class Process {
+    class API Process {
         public:
         pid_t pid;
         pid_t parent_pid;
@@ -126,4 +127,8 @@ namespace AEX::Proc {
 
         friend class Thread;
     };
+
+    API pid_t add_process(Process* process);
+    API void  remove_process(Process* process);
+    API Process* get_process(pid_t pid);
 }

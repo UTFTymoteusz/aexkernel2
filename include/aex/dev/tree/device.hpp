@@ -6,12 +6,13 @@
 #include "aex/optional.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Dev::Tree {
-    class Device {
+    class API Device {
         public:
         Device*                 parent = nullptr;
         Mem::SmartArray<Device> children;

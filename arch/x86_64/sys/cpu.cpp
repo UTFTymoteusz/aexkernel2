@@ -1,11 +1,11 @@
 #include "aex/arch/sys/cpu.hpp"
 
+#include "aex/arch/sys/cpu/idt.hpp"
+#include "aex/arch/sys/cpu/tss.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 
-#include "cpu/idt.hpp"
-#include "cpu/tss.hpp"
 #include "sys/irq/apic.hpp"
 
 // For some reason g++ adds 8 to the offset

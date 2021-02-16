@@ -4,13 +4,14 @@
 #include "aex/fs/file.hpp"
 #include "aex/mem/circularbuffer.hpp"
 #include "aex/mem/smartptr.hpp"
+#include "aex/utility.hpp"
 
 #include <stdint.h>
 
 namespace AEX::IPC {
     static constexpr auto PIPE_SIZE = 4096;
 
-    class Pipe {
+    class API Pipe {
         public:
         static error_t create(FS::File_SP& w, FS::File_SP& r);
 

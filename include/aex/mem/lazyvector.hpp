@@ -4,10 +4,11 @@
 #include "aex/mem/heap.hpp"
 #include "aex/optional.hpp"
 #include "aex/string.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Mem {
     template <typename T>
-    class LazyVector {
+    class API LazyVector {
         public:
         LazyVector() = default;
 

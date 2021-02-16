@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 namespace AEX::Net {
-    struct mac_addr {
+    struct API mac_addr {
         uint8_t bytes[6];
 
         mac_addr() {}

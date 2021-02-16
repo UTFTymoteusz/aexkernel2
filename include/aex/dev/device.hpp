@@ -1,5 +1,7 @@
 #pragma once
 
+#include "aex/utility.hpp"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -12,7 +14,7 @@ namespace AEX::Dev {
         DEV_NET   = 2,
     };
 
-    class Device {
+    class API Device {
         public:
         dev_type_t type;
 

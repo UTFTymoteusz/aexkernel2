@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 namespace AEX {
-    int WEAK strlen(const char* str) {
+    int strlen(const char* str) {
         int len = 0;
 
         while (*str++ != '\0')
@@ -16,7 +16,7 @@ namespace AEX {
         return len;
     }
 
-    int WEAK strcmp(const char* a, const char* b) {
+    int strcmp(const char* a, const char* b) {
         do {
             if (*a < *b)
                 return -1;
@@ -27,7 +27,7 @@ namespace AEX {
         return 0;
     }
 
-    char* WEAK strncpy(char* dst, const char* src, size_t num) {
+    char* strncpy(char* dst, const char* src, size_t num) {
         int len = min((size_t) strlen(src), num - 1);
         if (len < 0)
             return dst;
@@ -40,35 +40,35 @@ namespace AEX {
         return dst;
     }
 
-    void WEAK memset(void* mem, char c, size_t len) {
+    void memset(void* mem, char c, size_t len) {
         char* m_mem = (char*) mem;
 
         for (size_t i = 0; i < len; i++)
             m_mem[i] = c;
     }
 
-    void WEAK memset16(void* mem, uint16_t val, size_t count) {
+    void memset16(void* mem, uint16_t val, size_t count) {
         uint16_t* m_mem = (uint16_t*) mem;
 
         for (size_t i = 0; i < count; i++)
             m_mem[i] = val;
     }
 
-    void WEAK memset32(void* mem, uint32_t val, size_t count) {
+    void memset32(void* mem, uint32_t val, size_t count) {
         uint32_t* m_mem = (uint32_t*) mem;
 
         for (size_t i = 0; i < count; i++)
             m_mem[i] = val;
     }
 
-    void WEAK memset64(void* mem, uint64_t val, size_t count) {
+    void memset64(void* mem, uint64_t val, size_t count) {
         uint64_t* m_mem = (uint64_t*) mem;
 
         for (size_t i = 0; i < count; i++)
             m_mem[i] = val;
     }
 
-    void WEAK memcpy(void* dst, const void* src, size_t size) {
+    void memcpy(void* dst, const void* src, size_t size) {
         uint8_t* dst_b = (uint8_t*) dst;
         uint8_t* src_b = (uint8_t*) src;
 
@@ -76,7 +76,7 @@ namespace AEX {
             dst_b[i] = src_b[i];
     }
 
-    int WEAK memcmp(const void* a, const void* b, size_t num) {
+    int memcmp(const void* a, const void* b, size_t num) {
         uint8_t* _a = (uint8_t*) a;
         uint8_t* _b = (uint8_t*) b;
 

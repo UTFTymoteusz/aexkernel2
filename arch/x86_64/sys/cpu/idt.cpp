@@ -1,4 +1,4 @@
-#include "sys/cpu/idt.hpp"
+#include "aex/arch/sys/cpu/idt.hpp"
 
 #include "aex/string.hpp"
 

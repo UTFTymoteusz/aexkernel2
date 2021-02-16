@@ -4,9 +4,10 @@
 #include "aex/mem/vector.hpp"
 #include "aex/proc/thread.hpp"
 #include "aex/spinlock.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::IPC {
-    class Event {
+    class API Event {
         public:
         /**
          * Blocks the currently executing thread on this event.
@@ -36,7 +37,7 @@ namespace AEX::IPC {
         bool m_defunct = false;
     };
 
-    class SimpleEvent {
+    class API SimpleEvent {
         public:
         /**
          * Blocks the currently executing thread on this event.

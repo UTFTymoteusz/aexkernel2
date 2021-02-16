@@ -24,7 +24,8 @@ namespace AEX {
         auto list = (multiboot_mod_list*) (size_t) mbinfo->mods_addr;
 
         for (uint32_t i = 0; i < mbinfo->mods_count; i++) {
-            if (list[i].cmdline == 0 || strcmp((char*) (size_t) list[i].cmdline, "kernel") != 0)
+            if (list[i].cmdline == 0 ||
+                strcmp((char*) (size_t) list[i].cmdline, "kernel_symbols") != 0)
                 continue;
 
             Debug::load_symbols((void*) (size_t) list[i].mod_start);
@@ -35,7 +36,8 @@ namespace AEX {
         auto list = (multiboot_mod_list*) (size_t) mbinfo->mods_addr;
 
         for (uint32_t i = 0; i < mbinfo->mods_count; i++) {
-            if (list[i].cmdline != 0 && strcmp((char*) (size_t) list[i].cmdline, "kernel") == 0)
+            if (list[i].cmdline != 0 &&
+                strcmp((char*) (size_t) list[i].cmdline, "kernel_symbols") == 0)
                 continue;
 
             AEX_ASSERT(load_module((char*) (size_t) list[i].cmdline,

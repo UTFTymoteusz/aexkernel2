@@ -628,7 +628,7 @@ namespace AEX::Mem {
         create_first_levels();
     }
 
-    void cleanup_bootstrap() {
+    void cleanup() {
         int       pptr  = alloc_pptr();
         uint64_t* table = find_table(Mem::kernel_pagemap->pageRoot, pptr, 0x0000, nullptr);
 

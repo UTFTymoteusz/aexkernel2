@@ -5,12 +5,13 @@
 #include "aex/errno.hpp"
 #include "aex/mem.hpp"
 #include "aex/optional.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Dev {
-    class BlockDevice : public Device {
+    class API BlockDevice : public Device {
         public:
         BlockDevice(const char* name, uint16_t sector_size, uint64_t sector_count,
                     uint16_t max_sectors_at_once);
@@ -46,5 +47,5 @@ namespace AEX::Dev {
 
     typedef Mem::SmartPointer<BlockDevice> BlockDevice_SP;
 
-    optional<BlockHandle> open_block_handle(int id);
+    API optional<BlockHandle> open_block_handle(int id);
 }

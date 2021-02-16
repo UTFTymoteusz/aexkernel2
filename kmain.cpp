@@ -28,7 +28,6 @@
 #include "net/net.hpp"
 #include "proc/proc.hpp"
 #include "sys/acpi.hpp"
-#include "sys/cpu/idt.hpp"
 #include "sys/irq.hpp"
 #include "sys/irq_i.hpp"
 #include "sys/mcore.hpp"
@@ -95,7 +94,7 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
 
     load_modules(mbinfo);
 
-    Mem::cleanup_bootstrap();
+    Mem::cleanup();
     printk("\n");
 
     mount_fs();

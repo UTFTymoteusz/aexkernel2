@@ -1,5 +1,7 @@
 #pragma once
 
+#include "aex/utility.hpp"
+
 #include <stddef.h>
 
 /**
@@ -14,7 +16,7 @@ namespace AEX::Proc {
      * @param func The function to execute.
      * @param arg  The first and only argument of the function.
      **/
-    void broker(void* (*func)(void* arg), void* arg);
+    API void broker(void* (*func)(void* arg), void* arg);
 
     /**
      * Requests the broker to execute a function.
@@ -22,7 +24,7 @@ namespace AEX::Proc {
      * @param arg  The first and only argument of the function.
      **/
     template <typename AT>
-    void broker(void (*func)(AT arg), AT arg) {
+    API void broker(void (*func)(AT arg), AT arg) {
         broker((void* (*) (void*) )(size_t) func, (void*) arg);
     }
 
@@ -30,7 +32,7 @@ namespace AEX::Proc {
      * Requests the broker to execute a function.
      * @param func The function to execute.
      **/
-    inline void broker(void (*func)()) {
+    inline API void broker(void (*func)()) {
         broker((void* (*) (void*) )(size_t) func, nullptr);
     }
 }

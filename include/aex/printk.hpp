@@ -1,5 +1,7 @@
 #pragma once
 
+#include "aex/utility.hpp"
+
 #include <stdarg.h>
 
 #define PRINTK_INIT "^0"
@@ -20,8 +22,8 @@
     printk(PRINTK_WARN "%s:%i: " fmt "\n", __FILE__, __LINE__, a, b, c)
 
 namespace AEX {
-    void printk(const char* format, ...);
-    void printk(const char* format, va_list args);
+    API void printk(const char* format, ...);
+    API void printk(const char* format, va_list args);
 
     /**
      * Makes printk() not care about spinlocks and ignore prints from other processors.

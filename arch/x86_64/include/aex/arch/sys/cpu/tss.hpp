@@ -1,10 +1,12 @@
 #pragma once
 
+#include "aex/utility.hpp"
+
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Sys {
-    struct tss {
+    struct API tss {
         uint32_t reserved0;
 
         uint64_t rsp0;
@@ -27,5 +29,5 @@ namespace AEX::Sys {
 
         uint16_t reserved5;
         uint16_t io_bitmap_pointer = sizeof(tss);
-    } __attribute__((packed));
+    } PACKED;
 }

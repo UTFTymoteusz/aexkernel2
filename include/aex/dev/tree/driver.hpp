@@ -1,9 +1,11 @@
 #pragma once
 
+#include "aex/utility.hpp"
+
 namespace AEX::Dev::Tree {
     class Device;
 
-    class Driver {
+    class API Driver {
         public:
         char name[32];
 

@@ -6,13 +6,14 @@
 #include "aex/mem.hpp"
 #include "aex/mem/vector.hpp"
 #include "aex/optional.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Dev::Tree {
-    extern Mem::SmartArray<Bus> buses;
-    extern Tree::Device*        root_device;
+    API extern Mem::SmartArray<Bus> buses;
+    API extern Tree::Device*        root_device;
 
     /**
      * Tries to register a device in the specified bus.
@@ -20,7 +21,7 @@ namespace AEX::Dev::Tree {
      * @param device   The device.
      * @returns True if succeeded.
      **/
-    bool register_device(const char* bus_name, Device* device);
+    API bool register_device(const char* bus_name, Device* device);
 
     /**
      * Tries to register a driver in the specified bus.
@@ -28,19 +29,19 @@ namespace AEX::Dev::Tree {
      * @param driver   The driver.
      * @returns True if succeeded.
      **/
-    bool register_driver(const char* bus_name, Driver* driver);
+    API bool register_driver(const char* bus_name, Driver* driver);
 
     /**
      * Gets a bus by it's name.
      * @param bus_name The bus name.
      * @returns A smart pointer that points to the bus. Will be null on failure.
      **/
-    Mem::SmartPointer<Bus> get_bus(const char* bus_name);
+    API Mem::SmartPointer<Bus> get_bus(const char* bus_name);
 
     /**
      * Checks if a bus exists.
      * @param bus_name The bus name.
      * @returns True if the bus exists.
      **/
-    bool bus_exists(const char* bus_name);
+    API bool bus_exists(const char* bus_name);
 }

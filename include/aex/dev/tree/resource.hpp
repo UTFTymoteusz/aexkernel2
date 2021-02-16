@@ -1,10 +1,12 @@
 #pragma once
 
+#include "aex/utility.hpp"
+
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Dev::Tree {
-    struct resource {
+    struct API resource {
         enum type_t : uint8_t {
             MEMORY = 0,
             IO     = 1,

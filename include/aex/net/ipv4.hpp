@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 namespace AEX::Net {
-    struct ipv4_addr {
+    struct API ipv4_addr {
         uint8_t bytes[4];
 
         ipv4_addr() {
@@ -47,19 +47,19 @@ namespace AEX::Net {
 
     // Make these more efficient pls
 
-    inline ipv4_addr operator|(ipv4_addr a, ipv4_addr b) {
+    API inline ipv4_addr operator|(ipv4_addr a, ipv4_addr b) {
         return to_big_endian(*((uint32_t*) a.bytes) | *((uint32_t*) b.bytes));
     }
 
-    inline ipv4_addr operator&(ipv4_addr a, ipv4_addr b) {
+    API inline ipv4_addr operator&(ipv4_addr a, ipv4_addr b) {
         return to_big_endian(*((uint32_t*) a.bytes) & *((uint32_t*) b.bytes));
     }
 
-    inline ipv4_addr operator^(ipv4_addr a, ipv4_addr b) {
+    API inline ipv4_addr operator^(ipv4_addr a, ipv4_addr b) {
         return to_big_endian(*((uint32_t*) a.bytes) ^ *((uint32_t*) b.bytes));
     }
 
-    inline ipv4_addr operator~(ipv4_addr a) {
+    API inline ipv4_addr operator~(ipv4_addr a) {
         return to_big_endian(~(*((uint32_t*) a.bytes)));
     }
 }

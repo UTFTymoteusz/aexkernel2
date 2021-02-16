@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 namespace AEX::Sys::ACPI {
-    struct sdt_header {
+    struct API sdt_header {
         char signature[4];
 
         uint32_t length;

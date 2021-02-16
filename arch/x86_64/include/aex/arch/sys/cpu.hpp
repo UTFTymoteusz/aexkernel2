@@ -3,6 +3,8 @@
 #include "aex/spinlock.hpp"
 #include "aex/sys/syscall.hpp"
 
+#include <aex/utility.hpp>
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -24,7 +26,7 @@ namespace AEX::Sys {
      * The base CPU class that represents a processor in the system and contains some CPU-dependant
      * functionality.
      **/
-    class CPU {
+    class API CPU {
         public:
         enum ipp_type : uint8_t {
             IPP_HALT     = 0,

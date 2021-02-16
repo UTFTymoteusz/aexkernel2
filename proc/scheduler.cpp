@@ -10,7 +10,7 @@ using namespace AEX::Mem;
 using namespace AEX::Sys;
 
 namespace AEX::Proc {
-    WEAK void schedule() {
+    void schedule() {
         auto cpu    = CPU::current();
         auto thread = Thread::current();
 

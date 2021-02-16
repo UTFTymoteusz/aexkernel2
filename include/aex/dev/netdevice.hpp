@@ -5,12 +5,13 @@
 #include "aex/mem.hpp"
 #include "aex/net.hpp"
 #include "aex/net/ethernet.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Dev {
-    struct ipv4_info {
+    struct API ipv4_info {
         Net::mac_addr  mac;
         Net::ipv4_addr addr;
         Net::ipv4_addr mask;
@@ -18,14 +19,14 @@ namespace AEX::Dev {
         Net::ipv4_addr gateway;
     };
 
-    struct netdev_info {
+    struct API netdev_info {
         ipv4_info ipv4;
         char      boi[234];
     };
 
     static_assert(sizeof(netdev_info) == 256);
 
-    class NetDevice : public Device {
+    class API NetDevice : public Device {
         public:
         Net::link_type_t link_type;
 
@@ -68,5 +69,5 @@ namespace AEX::Dev {
 
     typedef Mem::SmartPointer<NetDevice> NetDevice_SP;
 
-    NetDevice_SP get_net_device(int id);
+    API NetDevice_SP get_net_device(int id);
 }

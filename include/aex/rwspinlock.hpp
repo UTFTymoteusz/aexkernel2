@@ -1,9 +1,10 @@
 #pragma once
 
 #include "aex/spinlock.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX {
-    class RWSpinlock {
+    class API RWSpinlock {
         public:
         void acquire_read();
         void acquire_write();
@@ -23,7 +24,7 @@ namespace AEX {
         Spinlock m_lock;
     };
 
-    class ScopeRWSpinlockRead {
+    class API ScopeRWSpinlockRead {
         public:
         ScopeRWSpinlockRead(RWSpinlock& lock) {
             lock.acquire_read();
@@ -39,7 +40,7 @@ namespace AEX {
         RWSpinlock* m_lock;
     };
 
-    class ScopeRWSpinlockWrite {
+    class API ScopeRWSpinlockWrite {
         public:
         ScopeRWSpinlockWrite(RWSpinlock& lock) {
             lock.acquire_write();

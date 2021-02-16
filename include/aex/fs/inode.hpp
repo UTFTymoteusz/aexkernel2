@@ -5,9 +5,10 @@
 #include "aex/mem/smartptr.hpp"
 #include "aex/optional.hpp"
 #include "aex/types.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::FS {
-    class INode {
+    class API INode {
         public:
         ino_t id;
 

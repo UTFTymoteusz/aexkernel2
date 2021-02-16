@@ -2,12 +2,13 @@
 
 #include "aex/fs/path.hpp"
 #include "aex/fs/types.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::FS {
-    struct dir_entry {
+    struct API dir_entry {
         int inode_id;
         int pos;
 
@@ -30,7 +31,7 @@ namespace AEX::FS {
         }
     };
 
-    struct dir_context {
+    struct API dir_context {
         uint64_t pos = 0;
     };
 }

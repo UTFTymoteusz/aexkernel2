@@ -6,6 +6,7 @@
 #include "aex/mem/smartptr.hpp"
 #include "aex/optional.hpp"
 #include "aex/types.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Mem {
     class MMapRegion;
@@ -28,7 +29,7 @@ namespace AEX::FS {
         FD_CLOEXEC = 0x0001,
     };
 
-    class File {
+    class API File {
         public:
         enum seek_mode {
             SEEK_SET     = 0,

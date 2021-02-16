@@ -1,11 +1,13 @@
 #pragma once
 
+#include "aex/utility.hpp"
+
 #include <stddef.h>
 
 namespace AEX {
     class ScopeSpinlock;
 
-    class Spinlock {
+    class API Spinlock {
         public:
         void acquire();
         void release();
@@ -25,7 +27,7 @@ namespace AEX {
         volatile int m_lock = 0;
     };
 
-    class ScopeSpinlock {
+    class API ScopeSpinlock {
         public:
         ScopeSpinlock(Spinlock& lock) {
             lock.acquire();

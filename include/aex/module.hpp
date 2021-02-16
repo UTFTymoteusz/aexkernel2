@@ -2,21 +2,22 @@
 
 #include "aex/errno.hpp"
 #include "aex/mem/vector.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX {
-    struct module_symbol {
+    struct API module_symbol {
         const char* name;
         void*       addr;
     };
 
-    struct module_section {
+    struct API module_section {
         void*  addr = nullptr;
         size_t size = 0;
 
         module_section() {}
     };
 
-    class Module {
+    class API Module {
         public:
         const char* name     = nullptr;
         int         name_len = 0;
@@ -72,8 +73,8 @@ namespace AEX {
         }
     };
 
-    error_t load_module(const char* path);
+    API error_t load_module(const char* path);
 
-    void  register_dynamic_symbol(const char* name, void* addr);
-    void* get_dynamic_symbol(const char* name);
+    API void  register_dynamic_symbol(const char* name, void* addr);
+    API void* get_dynamic_symbol(const char* name);
 }

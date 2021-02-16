@@ -1,15 +1,15 @@
 #include "sys/mcore.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/arch/sys/cpu/gdt.hpp"
+#include "aex/arch/sys/cpu/idt.hpp"
+#include "aex/arch/sys/cpu/tss.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 #include "aex/sys/acpi.hpp"
 #include "aex/sys/acpi/madt.hpp"
 
-#include "cpu/gdt.hpp"
-#include "cpu/idt.hpp"
-#include "cpu/tss.hpp"
 #include "sys/irq.hpp"
 #include "sys/irq/apic.hpp"
 

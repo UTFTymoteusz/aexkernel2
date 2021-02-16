@@ -1,9 +1,11 @@
 #pragma once
 
+#include "aex/utility.hpp"
+
 namespace AEX {
     class ScopeMutex;
 
-    class Mutex {
+    class API Mutex {
         public:
         void acquire();
         void release();
@@ -16,7 +18,7 @@ namespace AEX {
         volatile int m_lock = 0;
     };
 
-    class ScopeMutex {
+    class API ScopeMutex {
         public:
         ScopeMutex(Mutex& lock) {
             lock.acquire();

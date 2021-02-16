@@ -1,5 +1,7 @@
 #pragma once
 
+#include "aex/utility.hpp"
+
 namespace AEX {
-    [[noreturn]] void kpanic(const char* format, ...);
+    [[noreturn]] API void kpanic(const char* format, ...);
 }

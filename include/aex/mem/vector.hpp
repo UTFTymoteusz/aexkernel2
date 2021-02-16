@@ -3,10 +3,11 @@
 #include "aex/math.hpp"
 #include "aex/mem/heap.hpp"
 #include "aex/string.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Mem {
     template <typename T, int chunk_count = 16, int minimum_allocation = -1>
-    class Vector {
+    class API Vector {
         public:
         Vector() = default;
 

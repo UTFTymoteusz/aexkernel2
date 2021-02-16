@@ -1,9 +1,9 @@
 #include "proc/proc.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/arch/sys/cpu/idt.hpp"
 #include "aex/printk.hpp"
 
-#include "sys/cpu/idt.hpp"
 #include "sys/irq.hpp"
 #include "sys/irq/apic.hpp"
 

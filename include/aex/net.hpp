@@ -3,6 +3,7 @@
 #include "aex/errno.hpp"
 #include "aex/net/ipv4.hpp"
 #include "aex/net/socket.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -30,8 +31,8 @@ namespace AEX::Net {
      * @param protocol Pointer to the protocol class.
      * @returns Preferably ENONE, an error otherwise.
      **/
-    error_t register_inet_protocol(iproto_t id, INetProtocol* protocol);
+    API error_t register_inet_protocol(iproto_t id, INetProtocol* protocol);
 
-    const char* get_hostname();
-    void        set_hostname(const char* hostname);
+    API const char* get_hostname();
+    API void        set_hostname(const char* hostname);
 }

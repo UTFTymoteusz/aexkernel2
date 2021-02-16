@@ -4,6 +4,7 @@
 #include "aex/printk.hpp"
 #include "aex/proc/types.hpp"
 #include "aex/sec/types.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -111,7 +112,7 @@ namespace AEX::IPC {
         void* sigval_ptr;
     };
 
-    struct siginfo_t {
+    struct API siginfo_t {
         int si_signo;
         int si_code;
 
@@ -126,7 +127,7 @@ namespace AEX::IPC {
         sigval si_value;
     };
 
-    struct sigaction_usr {
+    struct API sigaction_usr {
         void (*sa_handler)(int);
         void (*sa_sigaction)(int, siginfo_t*, void*);
         sigset_t sa_mask;
@@ -134,7 +135,7 @@ namespace AEX::IPC {
         void (*sa_restorer)();
     };
 
-    struct sigaction {
+    struct API sigaction {
         sigaction() {}
         sigaction(const sigaction_usr& act) {
             size_t action_pre = (size_t)(act.sa_flags & SA_SIGINFO ? (void*) act.sa_sigaction

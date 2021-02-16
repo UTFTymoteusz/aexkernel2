@@ -1,5 +1,7 @@
 #pragma once
 
+#include <aex/utility.hpp>
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -8,7 +10,7 @@ namespace AEX::Mem {
 }
 
 namespace AEX::Proc {
-    class Context {
+    class API Context {
         public:
         uint64_t r15, r14, r13, r12, r11, r10, r9, r8, rbp, rdi, rsi, rdx, rcx, rbx, rax;
         uint64_t cr3;
@@ -73,5 +75,5 @@ namespace AEX::Proc {
         bool usermode() {
             return cs == 0x23 && ss == 0x1B;
         }
-    } __attribute__((packed));
+    } PACKED;
 }

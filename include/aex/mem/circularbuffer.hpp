@@ -2,12 +2,13 @@
 
 #include "aex/ipc/event.hpp"
 #include "aex/spinlock.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Mem {
-    class CircularBuffer {
+    class API CircularBuffer {
         public:
         CircularBuffer(int size);
         ~CircularBuffer();

@@ -3,9 +3,10 @@
 #include "aex/kpanic.hpp"
 #include "aex/mem/atomic.hpp"
 #include "aex/spinlock.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Mem {
-    struct ref_counter {
+    struct API ref_counter {
         int refs;
 
         ref_counter(int srefs) {
@@ -25,14 +26,14 @@ namespace AEX::Mem {
         }
     };
 
-    struct sp_shared : ref_counter {
+    struct API sp_shared : ref_counter {
         bool cleaning;
 
         sp_shared(int refs) : ref_counter(refs) {}
     };
 
     template <typename T>
-    class SmartPointer {
+    class API SmartPointer {
         public:
         SmartPointer() {
             m_val  = nullptr;

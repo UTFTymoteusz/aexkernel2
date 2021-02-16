@@ -6,6 +6,7 @@
 #include "aex/fs/path.hpp"
 #include "aex/fs/types.hpp"
 #include "aex/mem/smartarray.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Dev {
     class BlockDevice;
@@ -14,8 +15,8 @@ namespace AEX::Dev {
 namespace AEX::FS {
     enum fs_type_t;
 
-    extern Mem::SmartArray<Filesystem> filesystems;
-    extern Mem::SmartArray<Mount>      mounts;
+    API extern Mem::SmartArray<Filesystem> filesystems;
+    API extern Mem::SmartArray<Mount>      mounts;
 
-    error_t mount(const char* source, const char* path, const char* type);
+    API error_t mount(const char* source, const char* path, const char* type);
 }

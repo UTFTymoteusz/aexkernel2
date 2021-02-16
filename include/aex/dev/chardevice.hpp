@@ -7,12 +7,13 @@
 #include "aex/mem.hpp"
 #include "aex/optional.hpp"
 #include "aex/types.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Dev {
-    class CharDevice : public Device {
+    class API CharDevice : public Device {
         public:
         CharDevice(const char* name);
 
@@ -32,5 +33,5 @@ namespace AEX::Dev {
 
     typedef Mem::SmartPointer<CharDevice> CharDevice_SP;
 
-    optional<CharHandle_SP> open_char_handle(int id, int mode);
+    API optional<CharHandle_SP> open_char_handle(int id, int mode);
 }

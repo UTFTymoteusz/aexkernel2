@@ -3,6 +3,7 @@
 #include "aex/fs/file.hpp"
 #include "aex/net/ipv4.hpp"
 #include "aex/net/types.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Net {
     enum socket_domain_t : uint16_t {
@@ -39,12 +40,12 @@ namespace AEX::Net {
         SHUT_RDWR = 0x03,
     };
 
-    struct sockaddr {
+    struct API sockaddr {
         socket_domain_t domain;
         char            idk[14];
     };
 
-    struct sockaddr_inet {
+    struct API sockaddr_inet {
         socket_domain_t domain;
         uint16_t        port;
         ipv4_addr       addr;
@@ -61,7 +62,7 @@ namespace AEX::Net {
     static_assert(sizeof(sockaddr) == sizeof(sockaddr_inet));
     static_assert(sizeof(sockaddr) == 16);
 
-    class Socket : public FS::File {
+    class API Socket : public FS::File {
         public:
         virtual ~Socket();
 

@@ -1,9 +1,11 @@
 #pragma once
 
+#include "aex/utility.hpp"
+
 #include <stdint.h>
 
 namespace AEX::Dev::Input {
-    struct key {
+    struct API key {
         char normal;
         char shift;
         char ctrl;
@@ -31,7 +33,7 @@ namespace AEX::Dev::Input {
         }
     };
 
-    struct keymap {
+    struct API keymap {
         key keys[256];
     };
 }

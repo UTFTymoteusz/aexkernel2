@@ -1,11 +1,12 @@
 #pragma once
 
 #include "aex/spinlock.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
-extern const int m_page_present, m_page_write, m_page_user, m_page_through, m_page_nocache,
+API extern const int m_page_present, m_page_write, m_page_user, m_page_through, m_page_nocache,
     m_page_combine, m_page_global, m_page_nophys, m_page_exec, m_page_fixed, m_page_arbitrary;
 
 // Specifies if a page is present.
@@ -37,7 +38,7 @@ namespace AEX::Mem {
     /**
      * The pagemap class. Contains the methods required to allocate virtual memory.
      **/
-    class Pagemap {
+    class API Pagemap {
         public:
         void* vstart;
         void* vend;
@@ -140,9 +141,8 @@ namespace AEX::Mem {
     /**
      * The pagemap that is used by the kernel exclusively.
      **/
-    extern Pagemap* kernel_pagemap;
+    API extern Pagemap* kernel_pagemap;
 
     void init();
-
-    void cleanup_bootstrap();
+    void cleanup();
 }

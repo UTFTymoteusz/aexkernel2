@@ -9,6 +9,7 @@
 #include "aex/proc/resource_usage.hpp"
 #include "aex/proc/types.hpp"
 #include "aex/spinlock.hpp"
+#include "aex/utility.hpp"
 
 // pls consider making thread functions accept and return smartpointers
 // make the eventbong use an int or whatever
@@ -26,7 +27,7 @@ namespace AEX::Proc {
         TS_DEAD     = 0x80,
     };
 
-    class Thread {
+    class API Thread {
         public:
         static constexpr auto USER_STACK_SIZE   = 16384;
         static constexpr auto KERNEL_STACK_SIZE = 16384;
@@ -230,4 +231,7 @@ namespace AEX::Proc {
         void alloc_tls(uint16_t size);
         void setup_context(Mem::Pagemap* pagemap, size_t size, void* entry, bool usermode);
     };
+
+    API void add_thread(Thread* thread);
+    API void remove_thread(Thread* thread);
 }

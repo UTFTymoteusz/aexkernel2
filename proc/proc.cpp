@@ -7,6 +7,8 @@
 #include "aex/ipc/messagequeue.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
+#include "aex/proc/process.hpp"
+#include "aex/proc/thread.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/utility.hpp"
 
