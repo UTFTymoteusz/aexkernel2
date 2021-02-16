@@ -20,20 +20,20 @@ constexpr auto MEM_PAGE_MASK = ~0xFFF;
 
 extern void* pml4;
 
-const int m_page_present   = 0x01;
-const int m_page_write     = 0x02;
-const int m_page_user      = 0x04;
-const int m_page_through   = 0x08;
-const int m_page_nocache   = 0x10;
-const int m_page_pat       = 0x80;
-const int m_page_combine   = m_page_pat;
-const int m_page_global    = 0x100;
-const int m_page_nophys    = 0x200;
-const int m_page_exec      = 0x1000;
-const int m_page_fixed     = 0x2000;
-const int m_page_arbitrary = 0x4000;
-
 namespace AEX::Mem {
+    const int m_page_present   = 0x01;
+    const int m_page_write     = 0x02;
+    const int m_page_user      = 0x04;
+    const int m_page_through   = 0x08;
+    const int m_page_nocache   = 0x10;
+    const int m_page_pat       = 0x80;
+    const int m_page_combine   = m_page_pat;
+    const int m_page_global    = 0x100;
+    const int m_page_nophys    = 0x200;
+    const int m_page_exec      = 0x1000;
+    const int m_page_fixed     = 0x2000;
+    const int m_page_arbitrary = 0x4000;
+
     Pagemap* kernel_pagemap;
     Pagemap  m_kernel_pagemap = {0};
 
@@ -602,6 +602,8 @@ namespace AEX::Mem {
 
         kernel_pagemap = &m_kernel_pagemap;
 
+        uint64_t* prev_ptable = nullptr;
+
         for (size_t i = 0; i < PPTR_AMOUNT; i++) {
             void*    m_virt = m_kernel_pagemap.map(Sys::CPU::PAGE_SIZE, 0x0000, PAGE_WRITE);
             uint64_t virt   = (uint64_t) m_virt;
@@ -616,11 +618,18 @@ namespace AEX::Mem {
             uint64_t* pd     = (uint64_t*) (pdp[pdpindex] & ~0xFFF);
             uint64_t* ptable = (uint64_t*) (pd[pdindex] & ~0xFFF);
 
-            uint64_t* vpt = (uint64_t*) m_kernel_pagemap.map(Sys::CPU::PAGE_SIZE,
-                                                             (phys_addr) ptable, PAGE_WRITE);
+            uint64_t* vpt;
+
+            if (ptable != prev_ptable)
+                vpt = (uint64_t*) m_kernel_pagemap.map(Sys::CPU::PAGE_SIZE, (phys_addr) ptable,
+                                                       PAGE_WRITE);
+            else
+                vpt = prev_ptable;
 
             pptr_entries[i] = (uint64_t*) (vpt + ptindex);
             pptr_vaddr[i]   = (uint64_t*) m_virt;
+
+            prev_ptable = vpt;
         }
 
         ready = true;
