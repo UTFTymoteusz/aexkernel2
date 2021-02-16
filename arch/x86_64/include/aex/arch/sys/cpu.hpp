@@ -87,21 +87,13 @@ namespace AEX::Sys {
         static void cpuid(uint32_t code, uint32_t* eax, uint32_t* ebx, uint32_t* ecx,
                           uint32_t* edx);
 
-        static uint8_t inb(uint16_t m_port);
-        static void    outb(uint16_t m_port, uint8_t m_data);
-
+        static uint8_t  inb(uint16_t m_port);
         static uint16_t inw(uint16_t m_port);
-        static void     outw(uint16_t m_port, uint16_t m_data);
-
         static uint32_t ind(uint16_t m_port);
-        static void     outd(uint16_t m_port, uint32_t m_data);
 
-        /**
-         * Writes to a model specific register.
-         * @param reg  The register in question.
-         * @param data Value to write.
-         **/
-        static void wrmsr(uint32_t reg, uint64_t data);
+        static void outb(uint16_t m_port, uint8_t m_data);
+        static void outw(uint16_t m_port, uint16_t m_data);
+        static void outd(uint16_t m_port, uint32_t m_data);
 
         /**
          * Reads a model specific register.
@@ -109,6 +101,13 @@ namespace AEX::Sys {
          * @returns Value read.
          **/
         static uint64_t rdmsr(uint32_t reg);
+
+        /**
+         * Writes to a model specific register.
+         * @param reg  The register in question.
+         * @param data Value to write.
+         **/
+        static void wrmsr(uint32_t reg, uint64_t data);
 
         /**
          * Gets the ID of the executing CPU.
@@ -140,6 +139,18 @@ namespace AEX::Sys {
         static void tripleFault();
 
         static void breakpoint(int index, size_t addr, uint8_t mode, uint8_t size, bool enabled);
+
+        inline static void flushPg(void* addr) {
+            asm volatile("invlpg [%0]" : : "r"(addr));
+        }
+
+        inline static void flushPg(size_t addr) {
+            asm volatile("invlpg [%0]" : : "r"(addr));
+        }
+
+        inline static void flushPg() {
+            asm volatile("push rbx; mov rbx, cr3; mov cr3, rbx; pop rbx");
+        }
 
         void printDebug();
 

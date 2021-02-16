@@ -77,8 +77,6 @@ namespace AEX::Sys {
         us->in_interrupt++;
         us->handleIPP();
         us->in_interrupt--;
-
-        __sync_synchronize();
     }
 
     void CPU::handleIPP() {
@@ -88,19 +86,23 @@ namespace AEX::Sys {
         case IPP_HALT:
             m_ipi_ack = true;
 
-            IRQ::APIC::eoi();
+            if (us->in_interrupt)
+                IRQ::APIC::eoi();
+
             CPU::halt();
 
             return;
         case IPP_RESHED:
             m_ipi_ack = true;
 
-            IRQ::APIC::eoi();
+            if (us->in_interrupt)
+                IRQ::APIC::eoi();
 
             us->in_interrupt--;
             proc_reshed();
             us->in_interrupt++;
 
+            __sync_synchronize();
             return;
         case IPP_CALL:
             m_ipi_ack = true;
@@ -108,12 +110,12 @@ namespace AEX::Sys {
 
             break;
         case IPP_PG_FLUSH:
+            flushPg();
             m_ipi_ack = true;
-            asm volatile("mov rax, cr3; mov cr3, rax;");
 
             break;
         case IPP_PG_INV:
-            asm volatile("invlpg [%0]" : : "r"(m_ipi_packet.data));
+            flushPg(m_ipi_packet.data);
             m_ipi_ack = true;
 
             break;
@@ -121,10 +123,10 @@ namespace AEX::Sys {
             auto bong = (invm_data*) m_ipi_packet.data;
 
             size_t   addr  = bong->addr;
-            uint32_t pages = bong->pages + 1; // TODO: Figure out why + 1 makes it work
+            uint32_t pages = bong->pages;
 
             for (uint32_t i = 0; i < pages; i++) {
-                asm volatile("invlpg [%0]" : : "r"(addr));
+                flushPg(addr);
                 addr += CPU::PAGE_SIZE;
             }
 
@@ -138,6 +140,9 @@ namespace AEX::Sys {
             break;
         }
 
-        IRQ::APIC::eoi();
+        if (us->in_interrupt)
+            IRQ::APIC::eoi();
+
+        __sync_synchronize();
     }
 }

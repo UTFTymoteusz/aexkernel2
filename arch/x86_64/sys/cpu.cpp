@@ -124,18 +124,10 @@ namespace AEX::Sys {
         return val;
     }
 
-    void CPU::outb(uint16_t m_port, uint8_t m_data) {
-        asm volatile("outb %0, %1" : : "dN"(m_port), "a"(m_data));
-    }
-
     uint16_t CPU::inw(uint16_t m_port) {
         uint16_t val;
         asm volatile("inw %0, %1" : "=a"(val) : "dN"(m_port));
         return val;
-    }
-
-    void CPU::outw(uint16_t m_port, uint16_t m_data) {
-        asm volatile("outw %0, %1" : : "dN"(m_port), "a"(m_data));
     }
 
     uint32_t CPU::ind(uint16_t m_port) {
@@ -144,22 +136,16 @@ namespace AEX::Sys {
         return val;
     }
 
-    void CPU::outd(uint16_t m_port, uint32_t m_data) {
-        asm volatile("outd %0, %1" : : "d"(m_port), "a"(m_data));
+    void CPU::outb(uint16_t m_port, uint8_t m_data) {
+        asm volatile("outb %0, %1" : : "dN"(m_port), "a"(m_data));
     }
 
-    void CPU::wrmsr(uint32_t reg, uint64_t data) {
-        asm volatile(" \
-            mov rdx, %0; \
-            mov rax, %0; \
-            \
-            ror rdx, 32; \
-            \
-            wrmsr; \
-        "
-                     :
-                     : "r"(data), "c"(reg)
-                     : "memory");
+    void CPU::outw(uint16_t m_port, uint16_t m_data) {
+        asm volatile("outw %0, %1" : : "dN"(m_port), "a"(m_data));
+    }
+
+    void CPU::outd(uint16_t m_port, uint32_t m_data) {
+        asm volatile("outd %0, %1" : : "d"(m_port), "a"(m_data));
     }
 
     uint64_t CPU::rdmsr(uint32_t reg) {
@@ -179,6 +165,19 @@ namespace AEX::Sys {
         return out;
     }
 
+    void CPU::wrmsr(uint32_t reg, uint64_t data) {
+        asm volatile(" \
+            mov rdx, %0; \
+            mov rax, %0; \
+            \
+            ror rdx, 32; \
+            \
+            wrmsr; \
+        "
+                     :
+                     : "r"(data), "c"(reg)
+                     : "memory");
+    }
 
     CPU* CPU::current() {
         return CURRENT_CPU;
@@ -197,7 +196,10 @@ namespace AEX::Sys {
         load_idt(nullptr, 0);
 
         asm volatile("ud2;");
-        asm volatile("int 0;");
+        asm volatile("int 2;");
+        asm volatile("int 1;");
+        asm volatile("int 3;");
+        asm volatile("int 7;");
     }
 
     void CPU::breakpoint(int index, size_t addr, uint8_t trigger, uint8_t size, bool enabled) {

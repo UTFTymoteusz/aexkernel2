@@ -1,5 +1,6 @@
 #include "aex/module.hpp"
 
+#include "aex/assert.hpp"
 #include "aex/debug.hpp"
 #include "aex/elf.hpp"
 #include "aex/errno.hpp"
@@ -37,8 +38,9 @@ namespace AEX {
             if (list[i].cmdline != 0 && strcmp((char*) (size_t) list[i].cmdline, "kernel") == 0)
                 continue;
 
-            load_module((char*) (size_t) list[i].cmdline, (void*) (size_t) list[i].mod_start,
-                        list[i].mod_end - list[i].mod_start, true);
+            AEX_ASSERT(load_module((char*) (size_t) list[i].cmdline,
+                                   (void*) (size_t) list[i].mod_start,
+                                   list[i].mod_end - list[i].mod_start, true) == ENONE);
         }
     }
 

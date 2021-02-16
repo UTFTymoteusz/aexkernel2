@@ -350,7 +350,7 @@ void exec_init() {
     argv[0] = (char*) "aexinit";
     argv[1] = nullptr;
 
-    int status;
+    int status = 0;
 
     AEX_ASSERT(Proc::exec(nullptr, nullptr, "/sys/aexinit", argv, nullptr, &info) == ENONE);
     Proc::Process::wait(status);

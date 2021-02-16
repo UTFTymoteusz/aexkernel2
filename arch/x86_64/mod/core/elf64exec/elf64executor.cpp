@@ -84,9 +84,18 @@ error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator
             ptr += chk_size;
             fptr += chk_size;
         }
+    }
 
-        // The dissapearance of the last section seems to be a caching issue
-        // asm volatile("mov rax, cr3; mov cr3, rax");
+    // PEDANTIC: Goddamned paging issues, better to leave this in
+    for (int i = 0; i < elf.section_headers.count(); i++) {
+        auto section_header = elf.section_headers[i];
+
+        if (!(section_header.flags & ELF::SC_ALLOC) || section_header.size == 0)
+            continue;
+
+        if (!process->pagemap->paddrof((void*) section_header.address)) {
+            kpanic("section %i, start: 0x%p not present", i, section_header.address);
+        }
     }
 
     if (process->pagemap->paddrof((void*) 0x0000) == 0x0000)

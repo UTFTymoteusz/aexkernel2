@@ -443,7 +443,7 @@ optional<FS::File_SP> get_file(int fd) {
     auto scope   = current->files_lock.scope();
 
     if (!current->files.present(fd)) {
-        PRINTK_DEBUG_WARN1("ebadf (%i)", fd);
+        // PRINTK_DEBUG_WARN1("ebadf (%i)", fd);
         return EBADF;
     }
 
@@ -455,7 +455,7 @@ optional<FS::File_SP> pop_file(int fd) {
     auto scope   = current->files_lock.scope();
 
     if (!current->files.present(fd)) {
-        PRINTK_DEBUG_WARN1("ebadf (%i)", fd);
+        // PRINTK_DEBUG_WARN1("ebadf (%i)", fd);
         return EBADF;
     }
 

@@ -80,7 +80,7 @@ namespace AEX::Mem {
         debug_pptr_targets[index] = at;
         *pptr_entries[index]      = at | PAGE_WRITE | PAGE_PRESENT;
 
-        asm volatile("invlpg [%0]" : : "r"(pptr_vaddr[index]));
+        Sys::CPU::flushPg(pptr_vaddr[index]);
 
         return pptr_vaddr[index];
     }
@@ -269,7 +269,7 @@ namespace AEX::Mem {
             }
 
         free_pptr(pptr);
-        recache((void*) start, bytes);
+        recache((void*) start, bytes + Sys::CPU::PAGE_SIZE * !!offset);
 
         m_lock.release();
 
@@ -488,13 +488,10 @@ namespace AEX::Mem {
     };
 
     void Pagemap::recache(void* addr, size_t bytes) {
-        size_t   _addr  = (size_t) addr;
-        uint32_t _pages = ceiltopg(bytes) + 1; // TODO: Figure out why + 1 makes it work
-
-        auto bong = invm_data();
-
-        bong.addr  = _addr;
-        bong.pages = _pages;
+        invm_data bong = {
+            .addr  = (size_t) addr,
+            .pages = ceiltopg<uint32_t>(bytes),
+        };
 
         Sys::CPU::broadcast(Sys::CPU::IPP_PG_INVM, &bong, false);
     }
@@ -601,7 +598,7 @@ namespace AEX::Mem {
         m_kernel_pagemap.vstart = (void*) 0xFFFF800000000000;
         m_kernel_pagemap.vend   = (void*) 0xFFFFFFFFFFFFFFFF;
 
-        m_kernel_pagemap.gflags = PAGE_GLOBAL;
+        m_kernel_pagemap.gflags = 0;
 
         kernel_pagemap = &m_kernel_pagemap;
 
