@@ -6,7 +6,6 @@
 #include "aex/mem/vector.hpp"
 #include "aex/optional.hpp"
 #include "aex/printk.hpp"
-#include "aex/proc/resource_usage.hpp"
 #include "aex/proc/types.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/utility.hpp"

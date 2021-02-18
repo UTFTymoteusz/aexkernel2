@@ -9,7 +9,7 @@
 #include "aex/optional.hpp"
 #include "aex/proc.hpp"
 #include "aex/proc/affinity.hpp"
-#include "aex/proc/resource_usage.hpp"
+#include "aex/proc/rusage.hpp"
 #include "aex/proc/types.hpp"
 #include "aex/sec/types.hpp"
 #include "aex/sys/syscall.hpp"
@@ -28,8 +28,8 @@ namespace AEX::Proc {
         char  name[64];
         char* image_path;
 
-        affinity       cpu_affinity;
-        resource_usage usage;
+        affinity cpu_affinity;
+        rusage   usage;
 
         Spinlock lock;
 
