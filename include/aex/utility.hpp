@@ -37,10 +37,10 @@
 
 #define ENSURE_R(cond, err) \
     ({                      \
-        if (!cond)          \
+        if (!(cond))        \
             return err;     \
     })
-#define ENSURE(cond) ENSURE_R(cond, AEX::EINVAL)
+#define ENSURE(cond) ENSURE_R((cond), AEX::EINVAL)
 #define ENSURE_FL(flags, mask) ENSURE_R(!(flags & ~mask), AEX::EINVAL)
 
 namespace AEX {

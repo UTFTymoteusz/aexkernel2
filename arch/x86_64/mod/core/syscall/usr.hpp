@@ -86,10 +86,10 @@ bool copy_and_canonize(char buffer[AEX::FS::MAX_PATH_LEN], const usr_char* usr_p
 
 #define ENSURE_USR_R(cond, err) \
     ({                          \
-        if (!cond) {            \
+        if (!(cond)) {          \
             USR_ERRNO = err;    \
             return -1;          \
         }                       \
     })
-#define ENSURE_USR(cond) ENSURE_USR_R(cond, AEX::EINVAL)
+#define ENSURE_USR(cond) ENSURE_USR_R((cond), AEX::EINVAL)
 #define ENSURE_USR_FL(flags, mask) ENSURE_USR_R(!(flags & ~mask), AEX::EINVAL)

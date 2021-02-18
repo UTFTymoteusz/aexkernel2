@@ -130,38 +130,33 @@ optional<int> usr_get_argc(usr_char* const argv[]) {
 
 int execve(const usr_char* path, usr_char* const argv[], usr_char* const envp[]) {
     auto strlen_try = usr_strlen(path);
-    if (!strlen_try) {
-        USR_ERRNO = EINVAL;
-        return -1;
-    }
+    ENSURE_USR(strlen_try);
 
     char path_buffer[FS::MAX_PATH_LEN];
-    if (!copy_and_canonize(path_buffer, path)) {
-        USR_ERRNO = EINVAL;
-        return -1;
-    }
+    ENSURE_USR(copy_and_canonize(path_buffer, path));
 
     auto argc_try = usr_get_argc(argv);
-    if (!argc_try.value) {
-        USR_ERRNO = EINVAL;
-        return -1;
-    }
+    ENSURE_USR(argc_try);
 
     int argc = argc_try.value;
+    int len  = 0;
+
+    ENSURE_USR(argc > 0 && argc <= ARGC_MAX);
 
     tmp_array<char> tmp_buffers[argc];
     char*           argv_buffer[argc + 1];
 
     for (size_t i = 0; i < argc; i++) {
         auto strlen_try = usr_strlen(argv[i]);
-        if (!strlen_try)
-            return EINVAL;
+        ENSURE_USR(strlen_try);
+
+        len += strlen_try.value + 1;
+        ENSURE_USR(len <= ARG_MAX);
 
         tmp_buffers[i].resize(strlen_try.value + 1);
         argv_buffer[i] = tmp_buffers[i].get();
 
-        if (!u2k_memcpy(argv_buffer[i], argv[i], strlen_try.value + 1))
-            return EINVAL;
+        ENSURE_USR(u2k_memcpy(argv_buffer[i], argv[i], strlen_try.value + 1));
     }
 
     argv_buffer[argc] = nullptr;

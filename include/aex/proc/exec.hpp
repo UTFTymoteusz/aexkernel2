@@ -8,6 +8,9 @@
 #include "aex/utility.hpp"
 
 namespace AEX::Proc {
+    static constexpr auto ARG_MAX  = 8192;
+    static constexpr auto ARGC_MAX = 256;
+
     class API Executor {
         public:
         virtual error_t exec(Process* process, Thread* initiator, const char* path,
