@@ -50,6 +50,7 @@ void register_fs();
 void register_ipc();
 void register_proc();
 void register_sec();
+void register_net();
 void register_test();
 void print_all();
 
@@ -88,6 +89,7 @@ void register_syscalls() {
     register_ipc();
     register_proc();
     register_sec();
+    register_net();
     register_test();
 }
 

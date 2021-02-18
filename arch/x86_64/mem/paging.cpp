@@ -135,6 +135,11 @@ namespace AEX::Mem {
 
     Pagemap::Pagemap(phys_addr rootAddr) {
         pageRoot = rootAddr;
+
+        vstart = (void*) 0x0000000000000000;
+        vend   = (void*) 0x00007FFFFFFFFFFF;
+
+        gflags = 0;
     }
 
     Pagemap::Pagemap(size_t start, size_t end) {

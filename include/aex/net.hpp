@@ -3,6 +3,7 @@
 #include "aex/errno.hpp"
 #include "aex/net/ipv4.hpp"
 #include "aex/net/socket.hpp"
+#include "aex/optional.hpp"
 #include "aex/utility.hpp"
 
 #include <stddef.h>
@@ -33,6 +34,6 @@ namespace AEX::Net {
      **/
     API error_t register_inet_protocol(iproto_t id, INetProtocol* protocol);
 
-    API const char* get_hostname();
-    API void        set_hostname(const char* hostname);
+    API optional<char*> get_hostname(char* buffer, size_t len);
+    API void            set_hostname(const char* hostname);
 }
