@@ -355,7 +355,7 @@ long readdir(int fd, dirent* uent) {
     auto fd_try = get_file(fd);
     if (!fd_try) {
         USR_ERRNO = fd_try.error_code;
-        return false;
+        return -1;
     }
 
     auto rd_try = fd_try.value->readdir();
@@ -420,7 +420,7 @@ int fcntl(int fd, int cmd, int val) {
     case F_GETFL:
         return file->get_flags() & 0xFFFF | flags << 16;
     case F_SETFL:
-        ENSURE_FL(val, 0x00010001);
+        ENSURE_USR_FL(val, 0x00010001);
 
         set_flags(fd, val >> 16);
         file->set_flags(file->get_flags() | (val & 0xFFFF));
