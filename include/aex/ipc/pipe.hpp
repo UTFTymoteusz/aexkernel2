@@ -9,7 +9,8 @@
 #include <stdint.h>
 
 namespace AEX::IPC {
-    static constexpr auto PIPE_SIZE = 4096;
+    static constexpr auto PIPE_BUF  = 512;
+    static constexpr auto PIPE_SIZE = 8192;
 
     class API Pipe {
         public:

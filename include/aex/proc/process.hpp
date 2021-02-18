@@ -1,6 +1,6 @@
 #pragma once
 
-#include "aex/fs/file.hpp"
+#include "aex/fs/descriptor.hpp"
 #include "aex/ipc/event.hpp"
 #include "aex/ipc/signal.hpp"
 #include "aex/mem.hpp"
@@ -37,8 +37,8 @@ namespace AEX::Proc {
         Mutex                    threads_lock;
         Mem::LazyVector<Thread*> threads;
 
-        Mutex                        files_lock;
-        Mem::LazyVector<FS::File_SP> files;
+        Mutex                           descs_lock;
+        Mem::LazyVector<FS::Descriptor> descs;
 
         Mem::Pagemap*                     pagemap;
         Mem::LazyVector<Mem::MMapRegion*> mmap_regions;

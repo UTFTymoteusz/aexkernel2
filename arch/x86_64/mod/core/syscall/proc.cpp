@@ -35,11 +35,12 @@ pid_t fork() {
     auto child =
         new Process(parent->image_path, parent->pid, parent->pagemap->fork(), parent->name);
 
-    for (int i = 0; i < parent->files.count(); i++) {
-        if (!parent->files.present(i))
+    for (int i = 0; i < parent->descs.count(); i++) {
+        if (!parent->descs.present(i))
             continue;
 
-        child->files.set(i, parent->files.at(i)->dup().value);
+        auto desc = parent->descs.at(i);
+        child->descs.set(i, {desc.file->dup().value, desc.flags});
     }
 
     for (int i = 0; i < parent->mmap_regions.count(); i++) {

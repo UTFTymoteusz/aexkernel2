@@ -56,7 +56,7 @@ format:
 	clang-format -style=file -i ${CXXFILES} ${HXXFILES}
 
 all: $(OBJS)	
-	@$(MKDIR) $(ISO) $(SYS) $(SYS)core/ $(SYS)init/
+	@$(MKDIR) $(ISO) $(SYS)
 
 	cd mod/core && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../..
 	cd mod/init && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../..
@@ -71,7 +71,7 @@ all: $(OBJS)
 
 copy:
 	@cp $(SYS)aexkrnl    "$(ROOT_DIR)sys/"
-	@cp $(SYS)aexkrnl.sf "$(ROOT_DIR)sys/"
+	@cp $(SYS)aexkrnl.sf "$(ROOT_DIR)sys/sym/"
 
 include $(shell find $(DEP_DEST) -type f -name *.d)
 

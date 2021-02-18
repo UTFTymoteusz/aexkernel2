@@ -79,4 +79,6 @@ namespace AEX::FS {
 
     class Directory;
     typedef Mem::SmartPointer<Directory> Directory_SP;
+
+    class Descriptor;
 }

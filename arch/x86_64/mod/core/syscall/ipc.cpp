@@ -20,12 +20,12 @@ int pipe(usr_int* rp, usr_int* wp) {
     if (err != ENONE)
         return err;
 
-    current->files_lock.acquire();
+    current->descs_lock.acquire();
 
-    int rfd = current->files.push(rsp);
-    int wfd = current->files.push(wsp);
+    int rfd = current->descs.push(rsp);
+    int wfd = current->descs.push(wsp);
 
-    current->files_lock.release();
+    current->descs_lock.release();
 
     if (!usr_write(rp, rfd) || !usr_write(wp, wfd)) {
         USR_ERRNO = EINVAL;

@@ -13,8 +13,9 @@ namespace AEX::Mem {
         CircularBuffer(int size);
         ~CircularBuffer();
 
-        int read(void* buffer, int len);
+        int read(void* buffer, int len, int quota = -1);
         int write(const void* buffer, int len);
+        int writeAtomic(const void* buffer, int len);
 
         int readAvailable();
         int writeAvailable();

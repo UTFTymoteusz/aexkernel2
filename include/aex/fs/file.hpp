@@ -29,6 +29,10 @@ namespace AEX::FS {
         FD_CLOEXEC = 0x0001,
     };
 
+    enum o_t {
+        O_NONBLOCK = 0x0001,
+    };
+
     class API File {
         public:
         enum seek_mode {
