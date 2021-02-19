@@ -59,6 +59,9 @@ namespace AEX::Proc {
 
             process->lock.release();
 
+            if (envp)
+                process->env(envp);
+
             process->descs_lock.acquire();
 
             for (int i = 0; i < process->descs.count(); i++) {

@@ -23,49 +23,30 @@ int open(const usr_char* usr_path, int mode) {
     auto current = Proc::Process::current();
     char path_buffer[FS::MAX_PATH_LEN];
 
-    if (!copy_and_canonize(path_buffer, usr_path)) {
-        USR_ERRNO = EINVAL;
-        return -1;
-    }
+    USR_ENSURE(copy_and_canonize(path_buffer, usr_path));
 
-    auto file_try = FS::File::open(path_buffer, mode);
-    if (!file_try) {
-        USR_ERRNO = file_try.error_code;
-        return -1;
-    }
+    auto file = USR_ENSURE_OPT(FS::File::open(path_buffer, mode));
 
     current->descs_lock.acquire();
-    int fd = current->descs.push(file_try.value);
+    int fd = current->descs.push(file);
     current->descs_lock.release();
 
     return fd;
 }
 
 ssize_t read(int fd, usr_void* usr_buf, size_t count) {
-    auto fd_try = get_file(fd);
-    if (!fd_try) {
-        USR_ERRNO = fd_try.error_code;
-        return -1;
-    }
-
+    auto file      = USR_ENSURE_OPT(get_file(fd));
     auto usr_buf_c = (usr_uint8_t*) usr_buf;
 
     uint8_t buffer[1024];
-    size_t  read = 0;
+    ssize_t read = 0;
 
     for (size_t i = 0; i < count; i += sizeof(buffer)) {
-        int len = min<size_t>(count - i, sizeof(buffer));
+        int  len      = min<size_t>(count - i, sizeof(buffer));
+        auto read_try = file->read(buffer, len);
 
-        auto read_try = fd_try.value->read(buffer, len);
-        if (!read_try) {
-            USR_ERRNO = read_try.error_code;
-            return -1;
-        }
-
-        if (!k2u_memcpy(&usr_buf_c[i], buffer, len)) {
-            USR_ERRNO = EINVAL;
-            return -1;
-        }
+        USR_ENSURE(read_try);
+        USR_ENSURE(k2u_memcpy(&usr_buf_c[i], buffer, len));
 
         read += read_try.value;
         if (read_try.error_code != EINTR)
@@ -76,77 +57,37 @@ ssize_t read(int fd, usr_void* usr_buf, size_t count) {
 }
 
 ssize_t write(int fd, const usr_void* usr_buf, size_t count) {
-    auto fd_try = get_file(fd);
-    if (!fd_try) {
-        USR_ERRNO = fd_try.error_code;
-        return -1;
-    }
-
+    auto file      = USR_ENSURE_OPT(get_file(fd));
     auto usr_buf_c = (const usr_uint8_t*) usr_buf;
 
     uint8_t buffer[1024];
-    size_t  written = 0;
+    ssize_t written = 0;
 
     for (size_t i = 0; i < count; i += sizeof(buffer)) {
         int len = min<size_t>(count - i, sizeof(buffer));
+        USR_ENSURE(u2k_memcpy(buffer, &usr_buf_c[i], len));
 
-        if (!u2k_memcpy(buffer, &usr_buf_c[i], len)) {
-            USR_ERRNO = EINVAL;
-            return -1;
-        }
-
-        auto write_try = fd_try.value->write(buffer, len);
-        if (!write_try) {
-            USR_ERRNO = write_try.error_code;
-            return -1;
-        }
-
-        written += len;
+        written += USR_ENSURE_OPT(file->write(buffer, len));
     }
 
     return written;
 }
 
 int close(int fd) {
-    auto fd_try = pop_file(fd);
-    if (!fd_try) {
-        USR_ERRNO = fd_try.error_code;
-        return -1;
-    }
-
-    USR_ERRNO = fd_try.value->close();
-    return USR_ERRNO ? -1 : 0;
+    return USR_ENSURE_ENONE(USR_ENSURE_OPT(get_file(fd))->close());
 }
 
 int ioctl(int fd, int rq, uint64_t val) {
-    auto fd_try = get_file(fd);
-    if (!fd_try) {
-        USR_ERRNO = fd_try.error_code;
-        return -1;
-    }
-
-    auto ioctl = fd_try.value->ioctl(rq, val);
-
-    USR_ERRNO = ioctl.error_code;
-    return USR_ERRNO ? -1 : ioctl.value;
+    return USR_ENSURE_OPT(USR_ENSURE_OPT(get_file(fd))->ioctl(rq, val));
 }
 
 int dup(int fd) {
     auto current = Proc::Process::current();
-    auto fd_try  = get_file(fd);
-    if (!fd_try) {
-        USR_ERRNO = fd_try.error_code;
-        return -1;
-    }
-
-    auto dup_try = fd_try.value->dup();
-    if (!dup_try) {
-        USR_ERRNO = dup_try.error_code;
-        return -1;
-    }
+    auto file    = USR_ENSURE_OPT(get_file(fd));
+    auto dupd    = USR_ENSURE_OPT(file->dup());
 
     current->descs_lock.acquire();
-    int fd2 = current->descs.push(dup_try.value);
+    int fd2 = current->descs.push(dupd);
     current->descs_lock.release();
 
     return fd2;
@@ -154,23 +95,12 @@ int dup(int fd) {
 
 int dup2(int srcfd, int dstfd) {
     auto current = Proc::Process::current();
-    auto fd_try  = get_file(srcfd);
-    if (!fd_try) {
-        USR_ERRNO = fd_try.error_code;
-        return -1;
-    }
-
-    auto dup_try = fd_try.value->dup();
-    if (!dup_try) {
-        USR_ERRNO = dup_try.error_code;
-        return -1;
-    }
+    auto file    = USR_ENSURE_OPT(get_file(srcfd));
+    auto dupd    = USR_ENSURE_OPT(file->dup());
 
     current->descs_lock.acquire();
-    current->descs.set(dstfd, dup_try.value);
+    current->descs.set(dstfd, dupd);
     current->descs_lock.release();
-
-    fd_try.value->close();
 
     return dstfd;
 }
@@ -179,24 +109,13 @@ int dup2(int srcfd, int dstfd) {
 int chdir(const usr_char* path) {
     char path_buffer[FS::MAX_PATH_LEN];
 
-    auto strlen_try = usr_strlen(path);
-    if (!strlen_try) {
-        USR_ERRNO = EINVAL;
-        return -1;
-    }
+    int strlen = USR_ENSURE_OPT(usr_strlen(path));
+    int len    = min<int>(strlen, sizeof(path_buffer) - 1);
 
-    int len = min<int>(strlen_try.value, sizeof(path_buffer) - 1);
-
-    auto memcpy_try = u2k_memcpy(path_buffer, path, len);
-    if (!memcpy_try) {
-        USR_ERRNO = EINVAL;
-        return -1;
-    }
-
+    USR_ENSURE_OPT(u2k_memcpy(path_buffer, path, len));
     path_buffer[len] = '\0';
 
     Proc::Process::current()->set_cwd(path_buffer);
-
     return 0;
 }
 
@@ -210,25 +129,15 @@ char* getcwd(char* buffer, size_t buffer_len) {
     }
 
     k2u_memcpy(buffer, cwd, len + 1);
-
     return buffer;
 }
 
 int statat(const usr_char* usr_path, stat* usr_statbuf, int flags) {
     char path_buffer[FS::MAX_PATH_LEN];
-
-    if (!copy_and_canonize(path_buffer, usr_path)) {
-        USR_ERRNO = EINVAL;
-        return -1;
-    }
+    USR_ENSURE(copy_and_canonize(path_buffer, usr_path));
 
     stat ker_statbuf;
-
-    auto info = FS::File::info(path_buffer);
-    if (!info) {
-        USR_ERRNO = info.error_code;
-        return -1;
-    }
+    auto info = USR_ENSURE(FS::File::info(path_buffer));
 
     ker_statbuf.st_rdev    = info.value.containing_dev_id;
     ker_statbuf.st_ino     = info.value.inode;
@@ -244,64 +153,39 @@ int statat(const usr_char* usr_path, stat* usr_statbuf, int flags) {
     ker_statbuf.st_blksize = info.value.block_size;
     ker_statbuf.st_blocks  = info.value.blocks;
 
-    if (!u2k_memcpy(usr_statbuf, &ker_statbuf, sizeof(ker_statbuf))) {
-        USR_ERRNO = info.error_code;
-        return -1;
-    }
-
+    USR_ENSURE_OPT(u2k_memcpy(usr_statbuf, &ker_statbuf, sizeof(ker_statbuf)));
     return 0;
 }
 
 int fstat(int fd, stat* usr_statbuf) {
-    auto fd_try = get_file(fd);
-    if (!fd_try) {
-        USR_ERRNO = fd_try.error_code;
-        return false;
-    }
+    auto file = USR_ENSURE_OPT(get_file(fd));
+    auto info = USR_ENSURE_OPT(file->finfo());
 
     stat ker_statbuf;
 
-    auto info = fd_try.value->finfo();
-    if (!info) {
-        USR_ERRNO = info.error_code;
-        return -1;
-    }
+    ker_statbuf.st_rdev    = info.containing_dev_id;
+    ker_statbuf.st_ino     = info.inode;
+    ker_statbuf.st_mode    = info.mode | info.type;
+    ker_statbuf.st_nlink   = info.hard_links;
+    ker_statbuf.st_uid     = info.uid;
+    ker_statbuf.st_gid     = info.gid;
+    ker_statbuf.st_dev     = info.dev;
+    ker_statbuf.st_size    = info.total_size;
+    ker_statbuf.st_atime   = info.access_time;
+    ker_statbuf.st_mtime   = info.modify_time;
+    ker_statbuf.st_ctime   = info.change_time;
+    ker_statbuf.st_blksize = info.block_size;
+    ker_statbuf.st_blocks  = info.blocks;
 
-    ker_statbuf.st_rdev    = info.value.containing_dev_id;
-    ker_statbuf.st_ino     = info.value.inode;
-    ker_statbuf.st_mode    = info.value.mode | info.value.type;
-    ker_statbuf.st_nlink   = info.value.hard_links;
-    ker_statbuf.st_uid     = info.value.uid;
-    ker_statbuf.st_gid     = info.value.gid;
-    ker_statbuf.st_dev     = info.value.dev;
-    ker_statbuf.st_size    = info.value.total_size;
-    ker_statbuf.st_atime   = info.value.access_time;
-    ker_statbuf.st_mtime   = info.value.modify_time;
-    ker_statbuf.st_ctime   = info.value.change_time;
-    ker_statbuf.st_blksize = info.value.block_size;
-    ker_statbuf.st_blocks  = info.value.blocks;
-
-    if (!u2k_memcpy(usr_statbuf, &ker_statbuf, sizeof(ker_statbuf))) {
-        USR_ERRNO = info.error_code;
-        return -1;
-    }
-
+    USR_ENSURE_OPT(u2k_memcpy(usr_statbuf, &ker_statbuf, sizeof(ker_statbuf)));
     return 0;
 }
 
 int access(const usr_char* usr_path, int mode) {
     char path_buffer[FS::MAX_PATH_LEN];
 
-    if (!copy_and_canonize(path_buffer, usr_path)) {
-        USR_ERRNO = EINVAL;
-        return -1;
-    }
-
-    auto info = FS::File::info(path_buffer);
-    if (!info) {
-        USR_ERRNO = info.error_code;
-        return -1;
-    }
+    USR_ENSURE(copy_and_canonize(path_buffer, usr_path));
+    USR_ENSURE_OPT(FS::File::info(path_buffer));
 
     // add permission checks
 
@@ -352,28 +236,15 @@ int munmap(void* addr, size_t len) {
 }
 
 long readdir(int fd, dirent* uent) {
-    auto fd_try = get_file(fd);
-    if (!fd_try) {
-        USR_ERRNO = fd_try.error_code;
-        return -1;
-    }
-
-    auto rd_try = fd_try.value->readdir();
-    if (!rd_try.has_value) {
-        USR_ERRNO = rd_try.error_code;
-        return -1;
-    }
+    auto file   = USR_ENSURE_OPT(get_file(fd));
+    auto dentry = USR_ENSURE_OPT(file->readdir());
 
     dirent kent;
 
-    kent.d_ino = rd_try.value.inode_id;
-    strncpy(kent.d_name, rd_try.value.name, sizeof(kent.d_name));
+    kent.d_ino = dentry.inode_id;
+    strncpy(kent.d_name, dentry.name, sizeof(kent.d_name));
 
-    if (!u2k_memcpy(uent, &kent, sizeof(kent))) {
-        USR_ERRNO = EINVAL;
-        return -1;
-    }
-
+    USR_ENSURE_OPT(u2k_memcpy(uent, &kent, sizeof(kent)));
     return 0;
 }
 
@@ -388,31 +259,13 @@ void seekdir(int fd, long pos) {
 }
 
 long telldir(int fd) {
-    auto fd_try = get_file(fd);
-    if (!fd_try) {
-        USR_ERRNO = fd_try.error_code;
-        return -1;
-    }
-
-    return fd_try.value->telldir();
+    auto file = USR_ENSURE_OPT(get_file(fd));
+    return file->telldir();
 }
 
 int fcntl(int fd, int cmd, int val) {
-    auto fd_try = get_file(fd);
-    auto fl_try = get_flags(fd);
-
-    if (!fd_try) {
-        USR_ERRNO = fd_try.error_code;
-        return -1;
-    }
-
-    if (!fl_try) {
-        USR_ERRNO = fl_try.error_code;
-        return -1;
-    }
-
-    auto file  = fd_try.value;
-    auto flags = fl_try.value;
+    auto file  = USR_ENSURE_OPT(get_file(fd));
+    auto flags = USR_ENSURE_OPT(get_flags(fd));
 
     switch (cmd) {
     case F_DUPFD:
@@ -420,7 +273,7 @@ int fcntl(int fd, int cmd, int val) {
     case F_GETFL:
         return file->get_flags() & 0xFFFF | flags << 16;
     case F_SETFL:
-        ENSURE_USR_FL(val, 0x00010001);
+        USR_ENSURE_FL(val, 0x00010001);
 
         set_flags(fd, val >> 16);
         file->set_flags(file->get_flags() | (val & 0xFFFF));

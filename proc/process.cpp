@@ -224,4 +224,42 @@ namespace AEX::Proc {
 
         threads_lock.release();
     }
+
+    void Process::env(char* const envp[]) {
+        clearEnv();
+
+        auto scope = lock.scope();
+
+        for (int i = 0; i < 256; i++) {
+            if (!envp[i])
+                break;
+
+            char const* var   = envp[i];
+            char*       var_d = new char[strlen(var) + 1];
+
+            environment.push(var_d);
+            strncpy(var_d, var, (size_t) strlen(var) + 1);
+        }
+    }
+
+    void Process::env(Mem::Vector<char const*, 4>* env) {
+        clearEnv();
+
+        auto scope = lock.scope();
+        for (int i = 0; i < env->count(); i++) {
+            char const* var   = env->at(i);
+            char*       var_d = new char[strlen(var) + 1];
+
+            environment.push(var_d);
+            strncpy(var_d, var, (size_t) strlen(var) + 1);
+        }
+    }
+
+    void Process::clearEnv() {
+        auto scope = lock.scope();
+        for (int i = 0; i < environment.count(); i++)
+            delete environment[i];
+
+        environment.clear();
+    }
 }

@@ -100,6 +100,7 @@ pid_t fork() {
 
     child->set_cwd(parent->get_cwd());
     child->assoc(thread);
+    child->env(&parent->environment);
     child->ready();
 
     PRINTK_DEBUG2("pid%i: forked as pid%i", parent->pid, child->pid);
@@ -109,15 +110,12 @@ pid_t fork() {
     return child->pid;
 }
 
-optional<int> usr_get_argc(usr_char* const argv[]) {
+optional<int> usr_get_tblc(usr_char* const argv[]) {
     int argc = 0;
 
     for (int i = 0; i < 32; i++) {
         auto read_try = usr_read<usr_char*>(&argv[i]);
-        if (!read_try) {
-            USR_ERRNO = EINVAL;
-            return -1;
-        }
+        USR_ENSURE(read_try);
 
         if (read_try.value == nullptr)
             break;
@@ -128,55 +126,72 @@ optional<int> usr_get_argc(usr_char* const argv[]) {
     return argc;
 }
 
-int execve(const usr_char* path, usr_char* const argv[], usr_char* const envp[]) {
-    auto strlen_try = usr_strlen(path);
-    ENSURE_USR(strlen_try);
-
-    char path_buffer[FS::MAX_PATH_LEN];
-    ENSURE_USR(copy_and_canonize(path_buffer, path));
-
-    auto argc_try = usr_get_argc(argv);
-    ENSURE_USR(argc_try);
-
-    int argc = argc_try.value;
-    int len  = 0;
-
-    ENSURE_USR(argc > 0 && argc <= ARGC_MAX);
-
-    tmp_array<char> tmp_buffers[argc];
-    char*           argv_buffer[argc + 1];
+bool usr_get_tbl(usr_char* const argv[], int argc, tmp_array<char>* argv_buff) {
+    int arg_len = 0;
 
     for (size_t i = 0; i < argc; i++) {
         auto strlen_try = usr_strlen(argv[i]);
-        ENSURE_USR(strlen_try);
+        if (!strlen_try)
+            return false;
 
-        len += strlen_try.value + 1;
-        ENSURE_USR(len <= ARG_MAX);
+        arg_len += strlen_try.value + 1;
+        if (arg_len + 1 > ARG_MAX)
+            return false;
 
-        tmp_buffers[i].resize(strlen_try.value + 1);
-        argv_buffer[i] = tmp_buffers[i].get();
-
-        ENSURE_USR(u2k_memcpy(argv_buffer[i], argv[i], strlen_try.value + 1));
+        argv_buff[i].resize(strlen_try.value + 1);
+        if (!u2k_memcpy(argv_buff[i].get(), argv[i], strlen_try.value + 1))
+            return false;
     }
 
-    argv_buffer[argc] = nullptr;
+    return true;
+}
+
+void usr_finalize_tbl(tmp_array<char>* argv_buff, int argc, char** table) {
+    for (int i = 0; i < argc; i++)
+        table[i] = argv_buff[i].get();
+
+    table[argc] = nullptr;
+}
+
+int execve(const usr_char* path, usr_char* const usr_argv[], usr_char* const usr_envp[]) {
+    char path_buffer[FS::MAX_PATH_LEN];
+    USR_ENSURE(copy_and_canonize(path_buffer, path));
+
+    int argc = USR_ENSURE(usr_get_tblc(usr_argv));
+    USR_ENSURE(argc > 0 && argc <= ARGC_MAX);
+
+    tmp_array<char> argv_buffers[argc];
+    char*           argv[argc + 1];
+
+    USR_ENSURE(usr_get_tbl(usr_argv, argc, argv_buffers));
+    usr_finalize_tbl(argv_buffers, argc, argv);
+
+    int envc    = 1;
+    int env_len = 0;
+
+    if (usr_envp) {
+        envc = USR_ENSURE(usr_get_tblc(usr_envp));
+        USR_ENSURE(envc > 0 && envc <= ENVC_MAX);
+    }
+
+    tmp_array<char> envp_buffers[envc];
+    char*           envp[envc + 1];
+
+    if (usr_envp) {
+        USR_ENSURE(usr_get_tbl(usr_envp, envc, envp_buffers));
+        usr_finalize_tbl(envp_buffers, envc, envp);
+    }
 
     PRINTK_DEBUG2("pid%i: exec '%s'", Process::current()->pid, path_buffer);
 
-    USR_ERRNO =
-        exec(Process::current(), Thread::current(), path_buffer, argv_buffer, envp, nullptr);
+    USR_ERRNO = exec(Process::current(), Thread::current(), path_buffer, argv,
+                     usr_envp ? envp : nullptr, nullptr);
 
     return USR_ERRNO != ENONE ? -1 : 0;
 }
 
 pid_t wait(usr_int* wstatus) {
-    auto result = Process::current()->wait(*wstatus);
-    if (!result) {
-        USR_ERRNO = result.error_code;
-        return -1;
-    }
-
-    return result.value;
+    return USR_ENSURE_OPT(Process::current()->wait(*wstatus));
 }
 
 pid_t getpid() {
