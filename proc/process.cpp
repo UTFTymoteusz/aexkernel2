@@ -225,6 +225,11 @@ namespace AEX::Proc {
         threads_lock.release();
     }
 
+    Mem::Vector<char const*, 4>& Process::env() {
+        AEX_ASSERT(lock.isAcquired());
+        return m_environment;
+    }
+
     void Process::env(char* const envp[]) {
         clearEnv();
 
@@ -237,7 +242,7 @@ namespace AEX::Proc {
             char const* var   = envp[i];
             char*       var_d = new char[strlen(var) + 1];
 
-            environment.push(var_d);
+            m_environment.push(var_d);
             strncpy(var_d, var, (size_t) strlen(var) + 1);
         }
     }
@@ -250,16 +255,16 @@ namespace AEX::Proc {
             char const* var   = env->at(i);
             char*       var_d = new char[strlen(var) + 1];
 
-            environment.push(var_d);
+            m_environment.push(var_d);
             strncpy(var_d, var, (size_t) strlen(var) + 1);
         }
     }
 
     void Process::clearEnv() {
         auto scope = lock.scope();
-        for (int i = 0; i < environment.count(); i++)
-            delete environment[i];
+        for (int i = 0; i < m_environment.count(); i++)
+            delete m_environment[i];
 
-        environment.clear();
+        m_environment.clear();
     }
 }

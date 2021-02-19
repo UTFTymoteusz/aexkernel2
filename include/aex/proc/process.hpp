@@ -64,8 +64,6 @@ namespace AEX::Proc {
         Sec::gid_t eff_gid;
         Sec::gid_t saved_gid;
 
-        Mem::Vector<char const*, 4> environment;
-
         Process() = default;
 
         /**
@@ -111,9 +109,10 @@ namespace AEX::Proc {
         void assoc(Thread* thread);
         void unassoc(Thread* thread);
 
-        void env(char* const envp[]);
-        void env(Mem::Vector<char const*, 4>* env);
-        void clearEnv();
+        Mem::Vector<char const*, 4>& env();
+        void                         env(char* const envp[]);
+        void                         env(Mem::Vector<char const*, 4>* env);
+        void                         clearEnv();
 
         // IPC Stuff
         /**
@@ -127,7 +126,8 @@ namespace AEX::Proc {
         bool  m_exiting = false;
         char* m_cwd;
 
-        IPC::sigaction m_signals[32];
+        IPC::sigaction              m_signals[32];
+        Mem::Vector<char const*, 4> m_environment;
 
         void ipc_init();
 

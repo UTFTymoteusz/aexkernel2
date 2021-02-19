@@ -98,9 +98,12 @@ pid_t fork() {
 
     Mem::atomic_add(&child->thread_counter, 1);
 
+    parent->lock.acquire();
+    child->env(&parent->env());
+    parent->lock.release();
+
     child->set_cwd(parent->get_cwd());
     child->assoc(thread);
-    child->env(&parent->environment);
     child->ready();
 
     PRINTK_DEBUG2("pid%i: forked as pid%i", parent->pid, child->pid);
@@ -166,8 +169,7 @@ int execve(const usr_char* path, usr_char* const usr_argv[], usr_char* const usr
     USR_ENSURE(usr_get_tbl(usr_argv, argc, argv_buffers));
     usr_finalize_tbl(argv_buffers, argc, argv);
 
-    int envc    = 1;
-    int env_len = 0;
+    int envc = 1;
 
     if (usr_envp) {
         envc = USR_ENSURE(usr_get_tblc(usr_envp));
