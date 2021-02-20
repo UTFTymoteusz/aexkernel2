@@ -218,6 +218,18 @@ int nice(int nice) {
     return nice;
 }
 
+int getenv(int index, usr_char* buffer, size_t len) {
+    auto current = Process::current();
+    auto scope   = current->lock.scope();
+
+    char* line = USR_ENSURE_OPT(current->envGet(index));
+
+    USR_ENSURE_R(strlen(line) + 1 <= len, ERANGE);
+    USR_ENSURE_OPT(k2u_memcpy(buffer, line, strlen(line) + 1));
+
+    return 0;
+}
+
 void register_proc() {
     auto table = Sys::default_table();
 
@@ -230,4 +242,5 @@ void register_proc() {
     table[SYS_WAIT]   = (void*) wait;
     table[SYS_GETPID] = (void*) getpid;
     table[SYS_NICE]   = (void*) nice;
+    table[SYS_GETENV] = (void*) getenv;
 }

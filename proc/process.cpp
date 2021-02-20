@@ -225,7 +225,7 @@ namespace AEX::Proc {
         threads_lock.release();
     }
 
-    Mem::Vector<char const*, 4>& Process::env() {
+    Mem::Vector<char*, 4>& Process::env() {
         AEX_ASSERT(lock.isAcquired());
         return m_environment;
     }
@@ -247,7 +247,7 @@ namespace AEX::Proc {
         }
     }
 
-    void Process::env(Mem::Vector<char const*, 4>* env) {
+    void Process::env(Mem::Vector<char*, 4>* env) {
         clearEnv();
 
         auto scope = lock.scope();
@@ -266,5 +266,38 @@ namespace AEX::Proc {
             delete m_environment[i];
 
         m_environment.clear();
+    }
+
+    optional<char*> Process::envGet(int index) {
+        AEX_ASSERT(lock.isAcquired());
+
+        if (index < 0 || index >= m_environment.count())
+            return EINVAL;
+
+        return m_environment[index];
+    }
+
+    error_t Process::envSet(int index, char const* val) {
+        AEX_ASSERT(lock.isAcquired());
+
+        if (index == -1) {
+            int   len    = strlen(val);
+            char* buffer = new char[len + 1];
+
+            m_environment.push(buffer);
+            strncpy(buffer, val, len + 1);
+
+            return ENONE;
+        }
+
+        if (index < 0 || index >= m_environment.count())
+            return EINVAL;
+
+        int len = strlen(val);
+
+        m_environment[index] = (char*) Mem::Heap::realloc(m_environment[index], len + 1);
+        strncpy(m_environment[index], val, len + 1);
+
+        return ENONE;
     }
 }

@@ -109,10 +109,13 @@ namespace AEX::Proc {
         void assoc(Thread* thread);
         void unassoc(Thread* thread);
 
-        Mem::Vector<char const*, 4>& env();
-        void                         env(char* const envp[]);
-        void                         env(Mem::Vector<char const*, 4>* env);
-        void                         clearEnv();
+        Mem::Vector<char*, 4>& env();
+        void                   env(char* const envp[]);
+        void                   env(Mem::Vector<char*, 4>* env);
+        void                   clearEnv();
+
+        optional<char*> envGet(int index);
+        error_t         envSet(int index, char const* val);
 
         // IPC Stuff
         /**
@@ -126,8 +129,8 @@ namespace AEX::Proc {
         bool  m_exiting = false;
         char* m_cwd;
 
-        IPC::sigaction              m_signals[32];
-        Mem::Vector<char const*, 4> m_environment;
+        IPC::sigaction        m_signals[32];
+        Mem::Vector<char*, 4> m_environment;
 
         void ipc_init();
 

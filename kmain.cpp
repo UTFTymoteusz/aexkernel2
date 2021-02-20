@@ -344,14 +344,20 @@ void exec_init() {
         .stderr = tty_wre.value,
     };
 
-    char* argv[2];
+    char* argv[2] = {
+        (char*) "aexinit",
+        nullptr,
+    };
 
-    argv[0] = (char*) "aexinit";
-    argv[1] = nullptr;
+    char* envp[3] = {
+        (char*) "BIN=/bin/",
+        (char*) "DOES_THIS_WORK=yes",
+        nullptr,
+    };
 
     int status = 0;
 
-    AEX_ASSERT(Proc::exec(nullptr, nullptr, "/sys/aexinit", argv, nullptr, &info) == ENONE);
+    AEX_ASSERT(Proc::exec(nullptr, nullptr, "/sys/aexinit", argv, envp, &info) == ENONE);
     Proc::Process::wait(status);
 
     printk("init exited with a code %i\n", status);
