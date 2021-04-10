@@ -249,14 +249,10 @@ long readdir(int fd, dirent* uent) {
 }
 
 long seek(int fd, long pos, int mode) {
-    auto fd_try = get_file(fd);
-    if (!fd_try) {
-        USR_ERRNO = fd_try.error_code;
-        return -1;
-    }
+    auto file = USR_ENSURE_OPT(get_file(fd));
 
-    USR_ENSURE(mode > FS::File::SEEK_SET && mode < FS::File::SEEK_END);
-    return USR_ENSURE_OPT(fd_try.value->seek(pos, (FS::File::seek_mode) mode));
+    USR_ENSURE(mode >= FS::File::SEEK_SET && mode <= FS::File::SEEK_END);
+    return USR_ENSURE_OPT(file->seek(pos, (FS::File::seek_mode) mode));
 }
 
 void seekdir(int fd, long pos) {
