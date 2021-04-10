@@ -248,6 +248,17 @@ long readdir(int fd, dirent* uent) {
     return 0;
 }
 
+long seek(int fd, long pos, int mode) {
+    auto fd_try = get_file(fd);
+    if (!fd_try) {
+        USR_ERRNO = fd_try.error_code;
+        return -1;
+    }
+
+    USR_ENSURE(mode > FS::File::SEEK_SET && mode < FS::File::SEEK_END);
+    return USR_ENSURE_OPT(fd_try.value->seek(pos, (FS::File::seek_mode) mode));
+}
+
 void seekdir(int fd, long pos) {
     auto fd_try = get_file(fd);
     if (!fd_try) {
@@ -291,6 +302,7 @@ void register_fs() {
     table[SYS_READ]    = (void*) read;
     table[SYS_WRITE]   = (void*) write;
     table[SYS_CLOSE]   = (void*) close;
+    table[SYS_SEEK]    = (void*) seek;
     table[SYS_IOCTL]   = (void*) ioctl;
     table[SYS_FSTAT]   = (void*) fstat;
     table[SYS_ISATTY]  = (void*) isatty;
