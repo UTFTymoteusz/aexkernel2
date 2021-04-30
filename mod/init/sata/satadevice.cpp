@@ -153,6 +153,39 @@ namespace AEX::Sys::SATA {
         }
     }
 
+    void SATADevice::readWrite(void* buffer, uint64_t sector, uint32_t sector_count, bool write) {
+        int slot = findSlot();
+
+        auto header = getHeader(slot);
+        auto table  = getTable(slot);
+
+        header->fis_length = sizeof(AHCI::fis_reg_h2d) / sizeof(uint32_t);
+        header->write      = false;
+        header->atapi      = true;
+
+        header->phys_region_table_transferred = 0;
+
+        fillPRDTs(table, buffer, sector_count * 512);
+
+        auto fis = &table->fis_reg_h2d_data;
+
+        fis->command         = AHCI::ata_command::READ_DMA_EXT;
+        fis->command_control = true;
+        fis->fis_type        = AHCI::fis_type::REG_H2D;
+
+        fis->lba0   = sector;
+        fis->lba1   = sector >> 8;
+        fis->lba2   = sector >> 16;
+        fis->lba3   = sector >> 24;
+        fis->lba4   = sector >> 32;
+        fis->lba5   = sector >> 40;
+        fis->count  = sector_count;
+        fis->device = 1 << 6;
+
+        issueCMD(slot);
+        releaseSlot(slot);
+    }
+
     void SATADevice::scsiPacket(uint8_t* packet, void* buffer, int len) {
         int slot = findSlot();
 

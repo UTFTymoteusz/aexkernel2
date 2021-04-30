@@ -52,6 +52,7 @@ namespace AEX::Sys::SATA {
 
         void fillPRDTs(volatile AHCI::hba_command_table* table, void* dst, size_t len);
 
+        void readWrite(void* buffer, uint64_t sector, uint32_t sector_count, bool write);
         void scsiPacket(uint8_t* packet, void* buffer, int len);
 
         private:

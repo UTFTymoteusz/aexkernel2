@@ -15,11 +15,6 @@ namespace AEX::Sys::SATA {
             m_device = device;
         }
 
-        private:
-        static constexpr auto SECTOR_SIZE = 2048;
-
-        SATADevice* m_device;
-
         int64_t readBlock(void* buffer, uint64_t sector, uint32_t sector_count) {
             readWrite(buffer, sector, sector_count, false);
             return sector_count * SECTOR_SIZE;
@@ -30,9 +25,13 @@ namespace AEX::Sys::SATA {
             return sector_count * SECTOR_SIZE;
         }
 
-        void readWrite(void* buffer, uint32_t sector, uint32_t sector_count, bool write) {
+        private:
+        static constexpr auto SECTOR_SIZE = 2048;
+
+        SATADevice* m_device;
+        void        readWrite(void* buffer, uint32_t sector, uint32_t sector_count, bool write) {
             uint8_t packet[12] = {write ? AHCI::scsi_command::WRITE_12
-                                        : AHCI::scsi_command::READ_12};
+                                               : AHCI::scsi_command::READ_12};
 
             *((uint32_t*) &(packet[2])) = bswap(sector);
             *((uint32_t*) &(packet[6])) = bswap(sector_count);
