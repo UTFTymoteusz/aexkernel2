@@ -26,6 +26,10 @@ namespace AEX::Dev {
         virtual int64_t writeBlock(const void* buffer, uint64_t sector, uint32_t sector_count) = 0;
         virtual error_t releaseBlock();
 
+        uint64_t sectorCount() {
+            return m_sector_count;
+        }
+
         uint16_t sectorSize() {
             return m_sector_size;
         }

@@ -20,6 +20,8 @@ namespace AEX::Dev {
         int64_t read(void* buffer, uint64_t start, uint32_t len);
         int64_t write(const void* buffer, uint64_t start, uint32_t len);
 
+        Mem::SmartPointer<BlockDevice> getDev();
+
         private:
         struct shared {
             uint8_t* m_buffer = nullptr;

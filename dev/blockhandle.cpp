@@ -132,6 +132,10 @@ namespace AEX::Dev {
         kpanic("Block::write is unimplemented, I'm too lazy atm");
     }
 
+    Mem::SmartPointer<BlockDevice> BlockHandle::getDev() {
+        return m_dev;
+    }
+
     bool BlockHandle::isAligned(void* addr) {
         return ((size_t) addr & 0x01) == 0;
     }
