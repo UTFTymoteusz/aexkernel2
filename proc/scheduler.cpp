@@ -39,11 +39,15 @@ namespace AEX::Proc {
 
         auto uptime = Time::uptime_raw();
         auto delta  = uptime - cpu->measurement_start_ns;
+        auto next   = thread->next;
 
         cpu->measurement_start_ns = uptime;
 
         thread->parent->usage.cpu_time_ns += delta;
         thread->lock.releaseRaw();
+
+        if (next == nullptr)
+            thread = thread_list_head;
 
         for (int i = 0; i <= thread_list_size; i++) {
             thread = thread->next;
@@ -102,7 +106,7 @@ namespace AEX::Proc {
         if (thread == idle)
             thread = thread_list_head;
 
-        // We don't care, it's our private thread anyways
+        // We don't care either way, it's our private thread anyways
         idle->lock.tryAcquireRaw();
 
         cpu->current_thread  = idle;

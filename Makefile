@@ -64,10 +64,13 @@ all: $(OBJS)
 	cd arch/$(ARCH)/mod/init && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../../../..
 
 	@$(CXX) $(OBJS) $(LDFLAGS) -T linker.ld -o $(SYS)aexkrnl
-	objcopy --localize-hidden -K __dso_handle $(SYS)aexkrnl
-	nm $(SYS)aexkrnl | grep -o 'W \w*$$' | sed 's/W /-L/g' | xargs objcopy $(SYS)aexkrnl
-	objcopy -x -g -K __dso_handle $(SYS)aexkrnl
+	# Yees, absolutely EVERY symbol to debug it all, for now
 	objcopy --extract-symbol $(SYS)aexkrnl $(SYS)aexkrnl.sf
+	#objcopy -S $(SYS)aexkrnl
+	
+	#objcopy --localize-hidden -K __dso_handle $(SYS)aexkrnl
+	#nm $(SYS)aexkrnl | grep -o 'W \w*$$' | sed 's/W /-L/g' | xargs objcopy $(SYS)aexkrnl
+	#objcopy -x -g -K __dso_handle $(SYS)aexkrnl
 
 copy:
 	@cp $(SYS)aexkrnl    "$(ROOT_DIR)sys/"

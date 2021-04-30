@@ -249,15 +249,15 @@ namespace AEX::Sys::PCI {
             if (get_vendor_id(bus, device, function) == 0xFFFF)
                 continue;
 
+            char buffer[32];
+            snprintf(buffer, sizeof(buffer), "%02x.%02x.%02x", bus, device, function);
+
             auto _class    = get_class(bus, device, function);
             auto _subclass = get_subclass(bus, device, function);
             auto _prog_if  = get_prog_if(bus, device, function);
 
-            printk("pci: Found %93$%3i %3i %3i%$ - 0x%02x, 0x%02x: %s\n", bus, device, function,
-                   _class, _subclass, resolve(_class, _subclass, _prog_if));
-
-            char buffer[32];
-            snprintf(buffer, sizeof(buffer), "%02x.%02x.%02x", bus, device, function);
+            printk("pci: Found %93$%s%$ - 0x%02x, 0x%02x: %s\n", buffer, _class, _subclass,
+                   resolve(_class, _subclass, _prog_if));
 
             auto dev_device = new PCIDevice(buffer, pci_root);
 

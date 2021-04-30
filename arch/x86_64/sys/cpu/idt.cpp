@@ -71,6 +71,9 @@ namespace AEX::Sys {
                 .setIST(0)
                 .setPresent(true);
 
+        for (int i = 64; i < 255; i++)
+            idt[i].setSelector(0x08).setType(0x0E).setIST(0).setPresent(false);
+
         // clang-format off
         idt[255]
             .setOffset((size_t) &irq_spurious)

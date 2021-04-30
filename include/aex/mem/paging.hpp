@@ -53,6 +53,7 @@ namespace AEX::Mem {
         Pagemap();
         Pagemap(phys_addr pageRoot);
         Pagemap(size_t start, size_t end);
+        ~Pagemap();
 
         /**
          * Allocates enough pages to fit the specified size and zeroes them out.
@@ -138,6 +139,9 @@ namespace AEX::Mem {
         uint64_t* findTableEnsure(int pptr, uint64_t virt_addr);
 
         void* findContiguous(int pptr, size_t amount, bool executable = false);
+
+        phys_addr paddrof_internal(int pptr, void* vaddr);
+        size_t    rawof_internal(int pptr, void* vaddr);
     };
 
     /**

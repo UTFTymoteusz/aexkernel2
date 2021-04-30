@@ -24,7 +24,8 @@ namespace AEX {
         ScopeSpinlock scope();
 
         private:
-        volatile int m_lock = 0;
+        volatile int m_lock   = 0;
+        void*        m_thread = 0;
     };
 
     class API ScopeSpinlock {

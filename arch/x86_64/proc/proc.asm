@@ -3,10 +3,12 @@
 section .text
 
 global proc_timer_tick
+global proc_sched_int
+
 global proc_reshed
 
 extern proc_timer_tick_ext
-extern proc_reshed_manual_ext
+extern proc_sched_int_ext
 
 %macro save_context 0
     push rcx
@@ -73,10 +75,10 @@ enter_context:
     fxrstor [rax + 0x08 * 22]
 
     mov qword rbx, [rax + 0x08 * 15] ; Thread-to-enter cr3
-    mov rcx, cr3                     ; Current cr3
+    ;mov rcx, cr3                     ; Current cr3
 
-    cmp rcx, rbx  ; Let's check if they are equal, and if they are, skip to not anger the cache.
-    je .no_reload
+    ;cmp rcx, rbx  ; Let's check if they are equal, and if they are, skip to not anger the cache.
+    ;je .no_reload
 
     mov cr3, rbx
 
@@ -103,7 +105,6 @@ enter_context:
 
     iretq
 
-
 proc_timer_tick:
     save_context
 
@@ -116,40 +117,18 @@ proc_timer_tick:
 
     jmp enter_context
 
-proc_reshed_manual:
+proc_sched_int:
     save_context
 
     push rbp
     mov rbp, rsp
 
-    call proc_reshed_manual_ext
+    call proc_sched_int_ext
 
     pop rbp
 
     jmp enter_context
 
-
 proc_reshed:
-    push rbp
-    mov rbp, rsp
-
-    mov rdi, rsp
-
-    mov  rax, ss
-    push rax
-
-    push rdi
-
-    pushfq
-
-    mov  rax, cs
-    push rax
-
-    push .ret
-
-    cli
-    jmp proc_reshed_manual
-
-    .ret:
-        pop rbp
-        ret
+    int 0x70
+    ret

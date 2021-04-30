@@ -3,7 +3,6 @@
 #define API __attribute__((visibility("default")))
 
 #include "aex/errno.hpp"
-#include "aex/kpanic.hpp"
 
 #define PACKED __attribute((packed))
 #define WEAK __attribute((weak))
@@ -32,6 +31,10 @@
 #ifndef VERSION
 #define VERSION "inv"
 #endif
+
+namespace AEX {
+    [[noreturn]] API void kpanic(const char* format, ...);
+}
 
 #define NOT_IMPLEMENTED kpanic("%s:%i: %s\n", __FILE__, __LINE__, "Not implemented")
 

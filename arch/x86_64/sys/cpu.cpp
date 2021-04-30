@@ -83,6 +83,8 @@ namespace AEX::Sys {
     void CPU::halt() {
         printk(PRINTK_WARN "cpu%i: Halted\n", CPU::currentID());
 
+        CPU::current()->halted = true;
+
         asm volatile("cli;");
         while (true)
             asm volatile("hlt;");
@@ -99,15 +101,16 @@ namespace AEX::Sys {
     bool CPU::checkInterrupts() {
         size_t flags;
 
-        asm volatile("pushf ; \
+        asm volatile("pushfq ; \
                     pop %0;"
                      : "=r"(flags)
                      :);
 
-        return flags & 0x200;
+        return flags & 0x0200;
     }
 
     void CPU::wait() {
+        AEX_ASSERT(CPU::checkInterrupts());
         asm volatile("hlt");
     }
 
@@ -240,10 +243,28 @@ namespace AEX::Sys {
 
     void CPU::update(Proc::Thread* thread) {
         // 3 weeks of rest because of the goddamned + thread->fault_stack_size
-        m_tss->ist1 = thread->fault_stack + thread->fault_stack_size;
-        m_tss->ist7 = thread->kernel_stack + thread->kernel_stack_size;
+        local_tss->ist1 = thread->fault_stack + thread->fault_stack_size;
+        local_tss->ist7 = thread->kernel_stack + thread->kernel_stack_size;
 
         wrmsr(MSR_FSBase, (size_t) thread->tls);
+
+        AEX_ASSERT(thread->parent);
+    }
+
+    void CPU::pushFmsg(const char* msg) {
+        if (m_fmsg_ptr >= 16)
+            return;
+
+        memcpy(m_fmsgs[m_fmsg_ptr++], msg, 256);
+    }
+
+    void CPU::printFmsgs() {
+        for (int i = 0; i < m_fmsg_ptr; i++)
+            printk("  cpu%i: %s\n", id, m_fmsgs[i]);
+    }
+
+    int CPU::countFmsgs() {
+        return m_fmsg_ptr;
     }
 
     void CPU::getName() {

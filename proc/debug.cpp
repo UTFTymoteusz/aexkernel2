@@ -37,14 +37,14 @@ namespace AEX::Proc {
             const char* name  = Debug::addr2name(addr, delta);
 
             printk("cpu%i: PID %8i, TID %8i @ 0x%p <%s+0x%x> (b%i, c%i, i%i)\n", i,
-                   cpu->current_thread->parent->pid, cpu->unused, addr, name ? name : "no idea",
-                   delta, cpu->current_thread->getBusy(), cpu->current_thread->getCritical(),
+                   cpu->current_thread->parent->pid, cpu->unused, addr, name ?: "no idea", delta,
+                   cpu->current_thread->getBusy(), cpu->current_thread->getCritical(),
                    cpu->in_interrupt);
         }
     }
 
     void debug_print_threads() {
-        printk("head: 0x%p, Count: %i\n", thread_list_head, thread_list_size);
+        // auto scope  = sched_lock.scope();
         auto thread = thread_list_head;
 
         for (int i = 0; i < thread_list_size; i++) {
@@ -60,13 +60,19 @@ namespace AEX::Proc {
             if (!name)
                 name = "unknown";
 
-            printk("0x%p %6i <%s> <%s> %s 0x%p %li [%i, %i]\n", thread, thread->parent->pid, buffer,
-                   name, thread->detached() ? "detached" : (thread->joiner() ? "joined by" : ""),
+            printk("  0x%p %6i <%s> <%s> %s 0x%p %li [%i, %i] %i %s %s\n", thread,
+                   thread->parent->pid, buffer, name,
+                   thread->detached() ? "detached" : (thread->joiner() ? "joined by" : ""),
                    thread->joiner(), thread->interrupted(), thread->getCritical(),
-                   thread->getBusy());
+                   thread->getBusy(), thread->sched_counter,
+                   thread->context->rflags & 0x200 ? "interrupts" : "nointerrupts",
+                   thread->faulting ? "faulting" : "not faulting");
+
+            // Debug::stack_trace(0, (Debug::stack_frame*) thread->context->rsp);
+            // printk("\n");
 
             // const char* name = Debug::addr2name(thread->original_entry);
-            // name             = name ? name : "no idea";
+            // name             = name ?: "no idea";
 
             /*printk("0x%p, <%s>, 0x%p-0x%p (0x%lx), 0x%p-0x%p (0x%lx)\n", thread, name,
                    thread->kernel_stack, thread->kernel_stack + thread->kernel_stack_size,
@@ -74,17 +80,16 @@ namespace AEX::Proc {
                    thread->fault_stack + thread->fault_stack_size, thread->fault_stack_size);*/
             thread = thread->next;
         }
+    }
 
-        printk("tail: 0x%p\n", thread_list_tail);
-        printk("idles:\n");
-
+    void debug_print_idles() {
         for (int i = 0; i < Sys::MCore::cpu_count; i++) {
-            thread = idle_threads[i];
+            auto thread = idle_threads[i];
 
             char buffer[32];
             debug_serialize_flags(buffer, thread->status);
 
-            printk("0x%p (p: 0x%p, n: 0x%p) <%s> <%s> %s 0x%p\n", thread, thread->prev,
+            printk("  0x%p (p: 0x%p, n: 0x%p) <%s> <%s> %s 0x%p\n", thread, thread->prev,
                    thread->next, buffer, Debug::addr2name(thread->original_entry),
                    thread->detached() ? "detached" : (thread->joiner() ? "joined by" : ""),
                    thread->joiner());

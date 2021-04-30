@@ -91,15 +91,25 @@ irq_array:
 %endrep
 
 irq_spurious:
-    ud2
     iretq
 
 irq_common:
     pusha
-    
+
+    sub rsp, 512
+    fxsave [rsp]
+
     mov rdi, rsp
     xor rbp, rbp
+    
+    mov rax, 0x0002
+    push rax
+    popfq
+
     call common_irq_handler
+
+    fxrstor [rsp]
+    add rsp, 512
 
     popa
 
@@ -111,6 +121,11 @@ _irq_marker:
 
     mov rdi, rsp
     xor rbp, rbp
+    
+    mov rax, 0x0002
+    push rax
+    popfq
+
     call irq_marker
 
     popa
@@ -119,8 +134,19 @@ _irq_marker:
 irq_ipi:
     pusha
 
+    sub rsp, 512
+    fxsave [rsp]
+
     xor rbp, rbp
+    
+    mov rax, 0x0002
+    push rax
+    popfq
+
     call ipi_handle
+
+    fxrstor [rsp]
+    add rsp, 512
 
     popa
     iretq

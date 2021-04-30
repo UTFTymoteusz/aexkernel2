@@ -24,7 +24,7 @@ namespace AEX::Net {
 
     class INetProtocol;
 
-    extern INetProtocol** inet_protocols;
+    extern API INetProtocol** inet_protocols;
 
     /**
      * Registers an inet protocol in the network subsystem.

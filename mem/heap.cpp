@@ -120,7 +120,7 @@ namespace AEX::Mem::Heap {
             unmark((uint32_t)((size_t) block - (size_t) data) / ALLOC_SIZE, header->len);
             Mem::atomic_add(&heap_free, (uint64_t) header->len * ALLOC_SIZE);
 
-            memset(block, '\0', header->len * ALLOC_SIZE);
+            memset(block, '\x5A', header->len * ALLOC_SIZE);
             lock.release();
         }
 
@@ -128,8 +128,19 @@ namespace AEX::Mem::Heap {
             return ptr >= data && ptr <= (void*) ((size_t) data + pieces * ALLOC_SIZE);
         }
 
-        size_t getAllocSize(void* ptr) {
+        size_t size(void* ptr) {
             auto header = (alloc_block*) ((size_t) ptr - ALLOC_SIZE);
+
+            if (header->sanity != ((size_t) ptr ^ SANITY_XOR)) {
+                printk_fault();
+
+                Debug::dump_bytes((uint8_t*) header - 96, 128 + 80);
+
+                kpanic("heap: size(0x%p) sanity check failed (sanity was 0x%lx (0x%lx), should "
+                       "have been %p)",
+                       ptr, header->sanity, header->sanity ^ SANITY_XOR, (size_t) ptr ^ SANITY_XOR);
+            }
+
             return (header->len - 1) * ALLOC_SIZE;
         }
 
@@ -328,7 +339,7 @@ namespace AEX::Mem::Heap {
 
         do {
             if (slab->owns(ptr))
-                return slab->getAllocSize(ptr);
+                return slab->size(ptr);
 
             slab = slab->next;
         } while (slab != nullptr);

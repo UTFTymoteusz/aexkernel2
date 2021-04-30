@@ -15,12 +15,12 @@ namespace AEX::FS {
         public:
         char label[64];
 
-        int      root_inode_id;
-        uint16_t block_size;
+        ino_t     root_inode_id;
+        blksize_t block_size;
 
         virtual ~ControlBlock();
 
-        virtual optional<INode_SP> getINode(INode_SP dir, dir_entry dentry, int id);
+        virtual optional<INode_SP> getINode(INode_SP dir, dir_entry dentry, ino_t id);
 
         optional<INode_SP> findINode(const char* lpath);
     };

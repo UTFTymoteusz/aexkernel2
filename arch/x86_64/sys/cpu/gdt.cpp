@@ -58,6 +58,7 @@ namespace AEX::Sys {
 
             m_tss->ist1 = (size_t) 0;
             m_tss->ist2 = (size_t) Mem::kernel_pagemap->alloc(16384) + 16384;
+            m_tss->ist3 = (size_t) Mem::kernel_pagemap->alloc(4096) + 4096;
 
             tsses[i / 2] = m_tss;
         }

@@ -29,6 +29,11 @@ namespace AEX::IPC {
          **/
         int defunct();
 
+        /**
+         * Removes the currently executing thread from this event.
+         **/
+        void nevermind();
+
         private:
         Spinlock m_lock;
 

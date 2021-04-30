@@ -34,7 +34,7 @@ namespace AEX::Proc {
         Spinlock lock;
 
         int                      thread_counter;
-        Mutex                    threads_lock;
+        Spinlock                 threads_lock;
         Mem::LazyVector<Thread*> threads;
 
         Mutex                           descs_lock;
@@ -48,9 +48,9 @@ namespace AEX::Proc {
         Process* next;
         Process* prev;
 
-        IPC::Event child_event;
-        int        status;
-        int        ret_code;
+        IPC::Event        child_event;
+        volatile status_t status;
+        int               ret_code;
 
         uint16_t tls_size;
 
@@ -63,6 +63,8 @@ namespace AEX::Proc {
         Sec::gid_t real_gid;
         Sec::gid_t eff_gid;
         Sec::gid_t saved_gid;
+
+        bool disposed;
 
         Process() = default;
 

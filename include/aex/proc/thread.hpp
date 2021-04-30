@@ -18,7 +18,7 @@ namespace AEX::Proc {
     class Event;
     class Context;
 
-    enum thread_status_t : uint8_t {
+    enum status_t : uint8_t {
         TS_FRESH    = 0x00,
         TS_RUNNABLE = 0x01,
         TS_SLEEPING = 0x02,
@@ -37,24 +37,26 @@ namespace AEX::Proc {
             uint16_t busy;
             uint16_t critical;
 
-            thread_status_t status;
+            status_t status;
         };
 
-        // Don't change the order of these or the kernel will go boom boom
-        Thread* self = this; // 0x00
-        tid_t   tid;         // 0x08
+        Thread* self = this;
 
-        Context* context;     // 0x10
-        Context* context_aux; // 0x18
+        // Do not change the order of these or the kernel will go boom
+        struct {
+            tid_t tid; // 0x08
 
-        error_t errno; // 0x20
+            Context* context;     // 0x10
+            Context* context_aux; // 0x18
 
-        size_t saved_stack; // 0x28
+            error_t errno; // 0x20
 
-        // Safe to change again
+            size_t saved_stack; // 0x28
+        };
+
         Spinlock lock;
 
-        thread_status_t status;
+        volatile status_t status;
         union {
             int64_t wakeup_at;
         };
@@ -81,6 +83,7 @@ namespace AEX::Proc {
         void* tls;
 
         int sched_counter;
+        int held_mutexes;
 
         Thread();
         Thread(Process* parent);
@@ -136,7 +139,7 @@ namespace AEX::Proc {
          * Sets the status of the thread.
          * @param status Status to set to.
          **/
-        void setStatus(thread_status_t status);
+        void setStatus(status_t status);
 
         // pls atomic<T> later
         /**

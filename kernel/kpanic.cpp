@@ -5,6 +5,10 @@
 #include "aex/dev/tty.hpp"
 #include "aex/printk.hpp"
 
+#ifdef BSOD_PARODY
+#include "aex/dev/tty/vtty.hpp"
+#endif
+
 #include "proc/proc.hpp"
 
 #include <stdarg.h>
@@ -12,13 +16,20 @@
 using CPU = AEX::Sys::CPU;
 
 namespace AEX {
+    Hook<void (*)()> kpanic_hook;
+
     void kpanic(const char* format, ...) {
-        static int panicked = false;
+        static int panicked = 0;
 
         va_list args;
         va_start(args, format);
 
         CPU::nointerrupts();
+
+        char buffer[512];
+        snprintf(buffer, sizeof(buffer), format, args);
+
+        CPU::current()->pushFmsg(buffer);
 
         if (Mem::atomic_add_fetch(&panicked, 1) > 20)
             while (true)
@@ -50,17 +61,41 @@ namespace AEX {
         printk("\rTechnical information:\n\n");
 #endif
 
-        printk(PRINTK_FAIL "Kernel Panic (cpu%i)\n", CPU::currentID());
+        printk(PRINTK_FAIL "Kernel Panic (cpu%i, pid%i, th0x%p)\n", CPU::currentID(),
+               CPU::current()->current_thread->parent->pid, CPU::current()->current_thread);
+        printk("%s", buffer);
+        printk("\n");
+
+        va_end(args);
+
+        kpanic_hook.invoke();
+
+        CPU::broadcast(CPU::IPP_HALT);
+        CPU::halt();
+    }
+
+    void kcalmness(const char* format, ...) {
+        static int panicked = 0;
+
+        va_list args;
+        va_start(args, format);
+
+        CPU::nointerrupts();
+
+        if (Mem::atomic_add_fetch(&panicked, 1) > 20)
+            while (true)
+                CPU::wait();
+
+        printk_fault();
+
+        printk(PRINTK_OK "Kernel Calmness (cpu%i, pid%i, th0x%p)\n", CPU::currentID(),
+               CPU::current()->current_thread->parent->pid, CPU::current()->current_thread);
         printk(format, args);
         printk("\n");
 
-        if (Proc::ready)
-            Proc::debug_print_threads();
-
-        printk("Stack trace:\n");
-        Debug::stack_trace(1);
-
         va_end(args);
+
+        kpanic_hook.invoke();
 
         CPU::broadcast(CPU::IPP_HALT);
         CPU::halt();

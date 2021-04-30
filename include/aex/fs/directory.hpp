@@ -9,8 +9,8 @@
 
 namespace AEX::FS {
     struct API dir_entry {
-        int inode_id;
-        int pos;
+        ino_t inode_id;
+        int   pos;
 
         char          name[MAX_FILENAME_LEN] = {};
         FS::fs_type_t type                   = FT_UNKNOWN;

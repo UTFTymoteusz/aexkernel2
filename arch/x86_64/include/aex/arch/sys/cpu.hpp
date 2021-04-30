@@ -51,6 +51,32 @@ namespace AEX::Sys {
             uint64_t rip, cs, rflags, rsp, ss;
         } __attribute((packed));
 
+        // Don't change the order of these or the kernel will go boom boom
+        int id;
+        int apic_id;
+
+        CPU* self;
+
+        // Do not change the order of these or the kernel will go boom
+        struct {
+            Proc::Context* current_context; // 0x08
+            Proc::Thread*  current_thread;  // 0x10
+
+            volatile uint64_t unused; // 0x18
+
+            uint64_t        kernel_stack;  // 0x20
+            Sys::syscall_t* syscall_table; // 0x28
+        };
+
+        uint8_t       in_interrupt = 1;
+        volatile bool halted;
+        bool          should_yield;
+        tss*          local_tss;
+
+        uint64_t measurement_start_ns;
+
+        char name[48];
+
         CPU(int id);
 
         /**
@@ -165,37 +191,23 @@ namespace AEX::Sys {
 
         void update(Proc::Thread* thread);
 
-        // Don't change the order of these or the kernel will go boom boom
-        int id;
-        int apic_id;
-
-        CPU* self; // 0x00
-
-        Proc::Context*    current_context; // 0x08
-        Proc::Thread*     current_thread;  // 0x10
-        volatile uint64_t unused;          // 0x18
-        uint64_t          kernel_stack;    // 0x20
-        Sys::syscall_t*   syscall_table;   // 0x28
-
-        // Safe to change again
-        uint8_t in_interrupt = 1;
-        bool    should_yield;
-
-        uint64_t measurement_start_ns;
-
-        char name[48];
+        void pushFmsg(const char* msg);
+        void printFmsgs();
+        int  countFmsgs();
 
         private:
         struct ipi_packet {
             ipp_type type;
             void*    data;
+
+            volatile bool ack;
         };
 
-        Spinlock      m_ipi_lock;
-        volatile bool m_ipi_ack;
-        ipi_packet    m_ipi_packet;
+        Spinlock   m_ipi_lock;
+        ipi_packet m_ipi_packet;
 
-        tss* m_tss;
+        char m_fmsgs[16][128];
+        int  m_fmsg_ptr;
 
         void getName();
 

@@ -8,7 +8,7 @@
 namespace AEX::FS {
     ControlBlock::~ControlBlock() {}
 
-    optional<INode_SP> ControlBlock::getINode(INode_SP, dir_entry, int) {
+    optional<INode_SP> ControlBlock::getINode(INode_SP, dir_entry, ino_t) {
         return ENOSYS;
     }
 

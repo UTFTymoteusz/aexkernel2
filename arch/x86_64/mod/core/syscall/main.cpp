@@ -94,17 +94,25 @@ void register_syscalls() {
 }
 
 extern "C" void syscall_prepare() {
+    AEX_ASSERT(!Proc::Thread::current()->isBusy());
+    AEX_ASSERT(!Proc::Thread::current()->isCritical());
+
     Proc::Thread::current()->addBusy();
 }
 
 extern "C" void syscall_done() {
     Proc::Thread::current()->subBusy();
+
+    if (Proc::Thread::current()->getBusy() > 64)
+        printk(PRINTK_WARN "thread's busy is %i? wuzz\n", Proc::Thread::current()->getBusy());
+
     AEX_ASSERT(!Proc::Thread::current()->isBusy());
+    AEX_ASSERT(!Proc::Thread::current()->isCritical());
 }
 
 void print_all() {
     for (size_t i = 0; i < 256; i++) {
         auto aaa = Debug::addr2name(Sys::default_table()[i]);
-        printk("%4i. %s\n", i, aaa ? aaa : "unknown");
+        printk("%4i. %s\n", i, aaa ?: "unknown");
     }
 }

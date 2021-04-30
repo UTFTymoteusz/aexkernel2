@@ -34,5 +34,6 @@ namespace AEX::Proc {
 
     void debug_print_cpu_jobs();
     void debug_print_threads();
+    void debug_print_idles();
     void debug_print_processes();
 }

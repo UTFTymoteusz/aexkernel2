@@ -9,6 +9,9 @@
 #define PRINTK_WARN "^2"
 #define PRINTK_FAIL "^3"
 
+#define NOBONG
+
+#ifndef NOBONG
 #define PRINTK_DEBUG(msg) printk("%s:%i: %s\n", __FILE__, __LINE__, msg)
 #define PRINTK_DEBUG1(fmt, a) printk("%s:%i: " fmt "\n", __FILE__, __LINE__, a)
 #define PRINTK_DEBUG2(fmt, a, b) printk("%s:%i: " fmt "\n", __FILE__, __LINE__, a, b)
@@ -20,6 +23,17 @@
     printk(PRINTK_WARN "%s:%i: " fmt "\n", __FILE__, __LINE__, a, b)
 #define PRINTK_DEBUG_WARN3(fmt, a, b, c) \
     printk(PRINTK_WARN "%s:%i: " fmt "\n", __FILE__, __LINE__, a, b, c)
+#else
+#define PRINTK_DEBUG(msg) ;
+#define PRINTK_DEBUG1(fmt, a) ;
+#define PRINTK_DEBUG2(fmt, a, b) ;
+#define PRINTK_DEBUG3(fmt, a, b, c) ;
+
+#define PRINTK_DEBUG_WARN(msg) ;
+#define PRINTK_DEBUG_WARN1(fmt, a) ;
+#define PRINTK_DEBUG_WARN2(fmt, a, b) ;
+#define PRINTK_DEBUG_WARN3(fmt, a, b, c) ;
+#endif
 
 namespace AEX {
     API void printk(const char* format, ...);

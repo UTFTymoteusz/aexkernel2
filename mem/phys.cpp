@@ -111,7 +111,7 @@ namespace AEX::Mem::Phys {
 
         do {
             if (piece->frames_free < frames) {
-                printk("alloc !free: %i < %i", piece->frames_free, frames);
+                printk("alloc !free: %i < %i\n", piece->frames_free, frames);
                 continue;
             }
 

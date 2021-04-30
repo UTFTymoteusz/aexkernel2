@@ -103,8 +103,19 @@ exc_noerr 31
 exc_common:
     pusha
 
+    sub rsp, 512
+    fxsave [rsp]
+
+    lahf
+    mov ah, 0x202
+    sahf
+
     mov rdi, rsp
+    add rdi, 512
     call common_fault_handler
+
+    fxrstor [rsp]
+    add rsp, 512
 
     popa
 

@@ -109,8 +109,15 @@ namespace AEX::Sys::MCore {
             if (!CPUs[i])
                 continue;
 
-            CPUs[i]->m_tss = tsses[i];
+            CPUs[i]->local_tss = tsses[i];
         }
+
+        kpanic_hook.subscribe([]() {
+            printk("CPU fmsgs:\n");
+
+            for (int i = 0; i < cpu_count; i++)
+                CPUs[i]->printFmsgs();
+        });
 
         printk(PRINTK_OK "mcore: Initialized\n");
     }

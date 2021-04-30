@@ -5,11 +5,19 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define COOKIE() ((AEX::Debug::cookie){__FILE__, __LINE__})
+#define COOKIEB() ((AEX::Debug::cookie){__FILE__, 0})
+
 namespace AEX::Debug {
     enum thread_entry_type {
         ENTRY_BOOT   = 0,
         ENTRY_USER   = 1,
         ENTRY_KERNEL = 2,
+    };
+
+    struct cookie {
+        const char* file;
+        int         line;
     };
 
     struct stack_frame;

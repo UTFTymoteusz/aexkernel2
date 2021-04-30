@@ -38,7 +38,6 @@ namespace AEX::Sys::PCI {
                 case 0x02:
                     return "NVMe Controller";
                 }
-                break;
             }
             return "Mass Storage Controller";
         case 0x02:
@@ -366,7 +365,6 @@ namespace AEX::Sys::PCI {
         case 0x40:
             return "Co-Processor";
         }
-
         return "Unknown";
     }
 }
