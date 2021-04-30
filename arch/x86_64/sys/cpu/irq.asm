@@ -98,14 +98,14 @@ irq_common:
 
     sub rsp, 512
     fxsave [rsp]
-
-    mov rdi, rsp
-    xor rbp, rbp
     
     mov rax, 0x0002
     push rax
     popfq
 
+    mov rdi, rsp
+    add rdi, 512
+    xor rbp, rbp
     call common_irq_handler
 
     fxrstor [rsp]

@@ -105,10 +105,10 @@ exc_common:
 
     sub rsp, 512
     fxsave [rsp]
-
-    lahf
-    mov ah, 0x202
-    sahf
+    
+    mov rax, 0x0002
+    push rax
+    popfq
 
     mov rdi, rsp
     add rdi, 512
