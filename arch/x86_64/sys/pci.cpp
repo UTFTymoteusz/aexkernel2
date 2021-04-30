@@ -14,6 +14,7 @@
 #include <stdint.h>
 
 using namespace AEX::Dev;
+using resource = AEX::Dev::Tree::resource;
 
 namespace AEX::Sys::PCI {
     constexpr auto CONFIG_ADDRESS = 0xCF8;
@@ -211,24 +212,10 @@ namespace AEX::Sys::PCI {
             if ((len & 0xFFFF0000) > 0)
                 len &= 0xFFFF;
 
-            if (io) {
-                auto resource = Tree::resource();
-
-                resource.type  = Tree::resource::type_t::IO;
-                resource.value = addr;
-                resource.end   = addr + len;
-
-                dev_device->add(resource);
-            }
-            else {
-                auto resource = Tree::resource();
-
-                resource.type  = Tree::resource::type_t::MEMORY;
-                resource.value = addr;
-                resource.end   = addr + len;
-
-                dev_device->add(resource);
-            }
+            if (io)
+                dev_device->add(resource(resource::RES_IO, addr, addr + len));
+            else
+                dev_device->add(resource(resource::RES_MEMORY, addr, addr + len));
 
             write_dword(bus, device, function, offset, bar0);
 

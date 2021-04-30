@@ -8,9 +8,9 @@
 namespace AEX::Dev::Tree {
     struct API resource {
         enum type_t : uint8_t {
-            MEMORY = 0,
-            IO     = 1,
-            IRQ    = 2,
+            RES_MEMORY = 0,
+            RES_IO     = 1,
+            RES_IRQ    = 2,
         };
 
         type_t type;
@@ -21,7 +21,11 @@ namespace AEX::Dev::Tree {
         };
         size_t end;
 
-        resource() {}
+        resource() {
+            type  = RES_MEMORY;
+            start = 0;
+            end   = 0;
+        }
 
         resource(type_t type, size_t value) {
             this->type  = type;

@@ -40,7 +40,7 @@ namespace AEX::Sys::SATA {
 
             for (int i = 5; i >= 0; i--) {
                 auto resource = device->getResource(i);
-                if (!resource || resource.value.type != Tree::resource::MEMORY)
+                if (!resource || resource.value.type != Tree::resource::RES_MEMORY)
                     continue;
 
                 paddr = resource.value.start;
