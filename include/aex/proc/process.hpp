@@ -1,6 +1,6 @@
 #pragma once
 
-#include "aex/fs/file.hpp"
+#include "aex/fs/descriptor.hpp"
 #include "aex/ipc/event.hpp"
 #include "aex/ipc/signal.hpp"
 #include "aex/mem.hpp"
@@ -9,17 +9,18 @@
 #include "aex/optional.hpp"
 #include "aex/proc.hpp"
 #include "aex/proc/affinity.hpp"
-#include "aex/proc/resource_usage.hpp"
+#include "aex/proc/rusage.hpp"
 #include "aex/proc/types.hpp"
 #include "aex/sec/types.hpp"
 #include "aex/sys/syscall.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Mem {
     class Pagemap;
 }
 
 namespace AEX::Proc {
-    class Process {
+    class API Process {
         public:
         pid_t pid;
         pid_t parent_pid;
@@ -27,17 +28,17 @@ namespace AEX::Proc {
         char  name[64];
         char* image_path;
 
-        affinity       cpu_affinity;
-        resource_usage usage;
+        affinity cpu_affinity;
+        rusage   usage;
 
         Spinlock lock;
 
         int                      thread_counter;
-        Mutex                    threads_lock;
+        Spinlock                 threads_lock;
         Mem::LazyVector<Thread*> threads;
 
-        Mutex                        files_lock;
-        Mem::LazyVector<FS::File_SP> files;
+        Mutex                           descs_lock;
+        Mem::LazyVector<FS::Descriptor> descs;
 
         Mem::Pagemap*                     pagemap;
         Mem::LazyVector<Mem::MMapRegion*> mmap_regions;
@@ -47,9 +48,9 @@ namespace AEX::Proc {
         Process* next;
         Process* prev;
 
-        IPC::Event child_event;
-        int        status;
-        int        ret_code;
+        IPC::Event        child_event;
+        volatile status_t status;
+        int               ret_code;
 
         uint16_t tls_size;
 
@@ -62,6 +63,8 @@ namespace AEX::Proc {
         Sec::gid_t real_gid;
         Sec::gid_t eff_gid;
         Sec::gid_t saved_gid;
+
+        bool disposed;
 
         Process() = default;
 
@@ -108,6 +111,14 @@ namespace AEX::Proc {
         void assoc(Thread* thread);
         void unassoc(Thread* thread);
 
+        Mem::Vector<char*, 4>& env();
+        void                   env(char* const envp[]);
+        void                   env(Mem::Vector<char*, 4>* env);
+        void                   clearEnv();
+
+        optional<char*> envGet(int index);
+        error_t         envSet(int index, char const* val);
+
         // IPC Stuff
         /**
          *
@@ -120,10 +131,15 @@ namespace AEX::Proc {
         bool  m_exiting = false;
         char* m_cwd;
 
-        IPC::sigaction m_signals[32];
+        IPC::sigaction        m_signals[32];
+        Mem::Vector<char*, 4> m_environment;
 
         void ipc_init();
 
         friend class Thread;
     };
+
+    API pid_t add_process(Process* process);
+    API void  remove_process(Process* process);
+    API Process* get_process(pid_t pid);
 }

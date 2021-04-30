@@ -6,45 +6,58 @@
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
 
+#include "sys/mcore.hpp"
+
 using Thread = AEX::Proc::Thread;
 
 namespace AEX {
     bool spinlock_faulted = false;
 
+    inline bool acquireLock(volatile int* lock) {
+        return __sync_bool_compare_and_swap(lock, false, true);
+    }
+
+    inline bool releaseLock(volatile int* lock) {
+        return __sync_bool_compare_and_swap(lock, true, false);
+    }
+
     void Spinlock::acquire() {
         volatile size_t count = 0;
         Thread::current()->addCritical();
 
-        while (!__sync_bool_compare_and_swap(&m_lock, false, true)) {
+        while (!acquireLock(&m_lock)) {
             Thread::current()->subCritical();
 
             asm volatile("pause");
             count++;
 
-            if (count > 12212222) {
+            if (count > 12212222 * 50) {
                 int  delta = 0;
                 auto name  = Debug::addr2name((void*) this, delta);
                 if (!name)
                     name = "no idea";
 
-                if (__sync_bool_compare_and_swap(&spinlock_faulted, false, true)) {
-                    kpanic("spinlock 0x%p <%s+0x%x> hung (val: %i, cpu: %i)", this, name, delta,
-                           m_lock, Sys::CPU::currentID());
-                }
+                if (__sync_bool_compare_and_swap(&spinlock_faulted, false, true))
+                    kpanic("spinlock 0x%p <%s+0x%x> hung (val: %i (held by thread 0x%p), cpu: %i)",
+                           this, name, delta, m_lock, m_thread, Sys::CPU::currentID());
                 else
                     Sys::CPU::halt();
             }
 
+            if (Sys::MCore::cpu_count == 1 && !Thread::current()->isCritical())
+                Proc::Thread::yield();
+
             Thread::current()->addCritical();
         }
 
+        m_thread = Thread::current();
         __sync_synchronize();
     }
 
     void Spinlock::release() {
         __sync_synchronize();
 
-        if (!__sync_bool_compare_and_swap(&m_lock, true, false)) {
+        if (!releaseLock(&m_lock)) {
             Sys::CPU::nointerrupts();
 
             printk_fault();
@@ -59,7 +72,10 @@ namespace AEX {
             kpanic("spinlock: Too many releases");
         }
 
+        __sync_synchronize();
         Thread::current()->subCritical();
+
+        m_thread = nullptr;
     }
 
     bool Spinlock::tryAcquire() {
@@ -82,11 +98,11 @@ namespace AEX {
     void Spinlock::acquireRaw() {
         volatile size_t count = 0;
 
-        while (!__sync_bool_compare_and_swap(&m_lock, false, true)) {
+        while (!acquireLock(&m_lock)) {
             asm volatile("pause");
             count++;
 
-            if (count > 12212222) {
+            if (count > 12212222 * 10) {
                 int  delta = 0;
                 auto name  = Debug::addr2name((void*) this, delta);
                 if (!name)
@@ -107,7 +123,7 @@ namespace AEX {
     void Spinlock::releaseRaw() {
         __sync_synchronize();
 
-        if (!__sync_bool_compare_and_swap(&m_lock, true, false)) {
+        if (!releaseLock(&m_lock)) {
             Sys::CPU::nointerrupts();
 
             printk_fault();
@@ -124,7 +140,7 @@ namespace AEX {
     }
 
     bool Spinlock::tryAcquireRaw() {
-        bool ret = __sync_bool_compare_and_swap(&m_lock, false, true);
+        bool ret = acquireLock(&m_lock);
 
         __sync_synchronize();
         return ret;
@@ -132,8 +148,7 @@ namespace AEX {
 
     bool Spinlock::tryReleaseRaw() {
         __sync_synchronize();
-
-        return __sync_bool_compare_and_swap(&m_lock, true, false);
+        return releaseLock(&m_lock);
     }
 
     ScopeSpinlock Spinlock::scope() {

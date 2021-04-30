@@ -21,7 +21,7 @@ namespace AEX::Mem {
         m_buffer = nullptr;
     }
 
-    int CircularBuffer::read(void* buffer, int len) {
+    int CircularBuffer::read(void* buffer, int len, int quota) {
         if (len <= 0)
             return 0;
 
@@ -32,10 +32,9 @@ namespace AEX::Mem {
         while (len > 0) {
             int clen = min(len, readAvailableCut());
             if (clen == 0) {
-                if (writeAvailable() < len && Thread::current()->interrupted()) {
-                    m_lock.release();
-                    return offset;
-                }
+                if ((writeAvailable() < len && Thread::current()->interrupted()) ||
+                    (readAvailable() <= len && quota != -1 && offset >= quota))
+                    break;
 
                 m_event.wait();
                 m_lock.release();
@@ -73,10 +72,47 @@ namespace AEX::Mem {
         while (len > 0) {
             int clen = min(len, writeAvailableCut());
             if (clen == 0) {
-                if (writeAvailable() < len && Thread::current()->interrupted()) {
-                    m_lock.release();
-                    return offset;
-                }
+                if ((writeAvailable() < len && Thread::current()->interrupted()))
+                    break;
+
+                m_event.wait();
+                m_lock.release();
+
+                Thread::yield();
+
+                m_lock.acquire();
+                continue;
+            }
+
+            memcpy(m_buffer + m_writePos, (uint8_t*) buffer + offset, clen);
+
+            m_writePos += clen;
+            m_event.raise();
+
+            offset += clen;
+            len -= clen;
+
+            if (m_writePos == m_size)
+                m_writePos = 0;
+        }
+
+        m_lock.release();
+        return offset;
+    }
+
+    int CircularBuffer::writeAtomic(const void* buffer, int len) {
+        if (len <= 0)
+            return 0;
+
+        m_lock.acquire();
+
+        int offset = 0;
+
+        while (len > 0) {
+            int clen = min(len, writeAvailableCut());
+            if (clen < len) {
+                if ((writeAvailable() < len && Thread::current()->interrupted()))
+                    break;
 
                 m_event.wait();
                 m_lock.release();

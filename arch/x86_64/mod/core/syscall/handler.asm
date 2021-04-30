@@ -34,6 +34,10 @@ handler:
     push rdx
     push rcx
 
+    mov rax, 0x0202
+    push rax
+    popfq 
+    
     call syscall_prepare
 
     pop rcx

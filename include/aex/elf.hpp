@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 namespace AEX {
-    class ELF {
+    class API ELF {
         public:
         enum relocation_type {
             R_X86_64_NONE  = 0,
@@ -76,7 +76,7 @@ namespace AEX {
         enum sym_binding : uint8_t {
             SB_LOCAL  = 0,
             SB_GLOBAL = 1,
-            SB_WEAK   = 2,
+            SB_       = 2,
         };
 
         enum sym_special {

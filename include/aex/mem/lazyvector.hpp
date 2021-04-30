@@ -4,10 +4,11 @@
 #include "aex/mem/heap.hpp"
 #include "aex/optional.hpp"
 #include "aex/string.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Mem {
     template <typename T>
-    class LazyVector {
+    class API LazyVector {
         public:
         LazyVector() = default;
 
@@ -35,12 +36,16 @@ namespace AEX::Mem {
             if (index < 0 || index >= m_count)
                 return m_array[0].value;
 
+            AEX_ASSERT(m_array);
+
             return m_array[index].value;
         }
 
         T at(int index) {
             if (index < 0 || index >= m_count)
                 return m_array[0].value;
+
+            AEX_ASSERT(m_array);
 
             return m_array[index].value;
         }
@@ -58,11 +63,17 @@ namespace AEX::Mem {
             m_array[index].has_value = true;
 
             AEX_ASSERT(m_rcount <= m_count);
+
+            if (!m_array)
+                AEX_ASSERT(m_count == 0);
         }
 
         bool present(int index) {
             if (index < 0 || index >= m_count)
                 return false;
+
+            if (!m_array)
+                AEX_ASSERT(m_array);
 
             return m_array[index].has_value;
         }
@@ -88,6 +99,9 @@ namespace AEX::Mem {
 
             AEX_ASSERT(m_rcount <= m_count);
 
+            if (!m_array)
+                AEX_ASSERT(m_count == 0);
+
             return m_count - 1;
         }
 
@@ -109,6 +123,9 @@ namespace AEX::Mem {
                 resize();
 
             AEX_ASSERT(m_rcount <= m_count);
+
+            if (!m_array)
+                AEX_ASSERT(m_count == 0);
         }
 
         int count() {

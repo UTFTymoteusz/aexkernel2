@@ -1,8 +1,10 @@
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/debug.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/mutex.hpp"
 #include "aex/printk.hpp"
 
+#include "proc/proc.hpp"
 #include "sys/irq/apic.hpp"
 #include "sys/mcore.hpp"
 
@@ -38,15 +40,20 @@ namespace AEX::Sys {
 
     void CPU::_send(ipp_type type, void* data) {
         m_ipi_lock.acquire();
-        m_ipi_ack = false;
 
         m_ipi_packet.type = type;
         m_ipi_packet.data = data;
+        m_ipi_packet.ack  = false;
 
         if (CPU::currentID() == this->id) {
+            bool ints = checkInterrupts();
+            nointerrupts();
             handleIPP();
-            m_ipi_lock.release();
 
+            if (ints)
+                interrupts();
+
+            m_ipi_lock.release();
             return;
         }
 
@@ -54,18 +61,26 @@ namespace AEX::Sys {
 
         volatile size_t counter = 0;
 
-        while (!m_ipi_ack) {
+        while (!m_ipi_packet.ack) {
             counter++;
 
-            if (counter == 4000000 * 8)
-                IRQ::APIC::nmi(apic_id);
+            AEX_ASSERT(Sys::CPU::current()->id != this->id);
 
-            if (counter == 4000000 * 128)
+            if (counter == 100000000l * 4) {
+                IRQ::APIC::nmi(apic_id);
+            }
+
+            if (counter == 100000000l * 8) {
+                m_ipi_lock.release();
                 kpanic("ipi to cpu%i from cpu%i stuck (%i, 0x%p)", this->id, CPU::currentID(), type,
                        data);
+            }
         }
 
         m_ipi_lock.release();
+
+        if (halted)
+            CPU::halt();
     }
 
     /**
@@ -77,67 +92,78 @@ namespace AEX::Sys {
         us->in_interrupt++;
         us->handleIPP();
         us->in_interrupt--;
-
-        __sync_synchronize();
     }
 
     void CPU::handleIPP() {
         auto us = CPU::current();
 
+        AEX_ASSERT(us->m_ipi_lock.isAcquired());
+        AEX_ASSERT(!CPU::checkInterrupts());
+
         switch (m_ipi_packet.type) {
         case IPP_HALT:
-            m_ipi_ack = true;
+            m_ipi_packet.ack = true;
 
-            IRQ::APIC::eoi();
+            if (us->in_interrupt)
+                IRQ::APIC::eoi();
+
             CPU::halt();
 
             return;
         case IPP_RESHED:
-            m_ipi_ack = true;
+            m_ipi_packet.ack = true;
 
-            IRQ::APIC::eoi();
+            if (us->in_interrupt)
+                IRQ::APIC::eoi();
 
             us->in_interrupt--;
             proc_reshed();
             us->in_interrupt++;
 
+            __sync_synchronize();
             return;
         case IPP_CALL:
-            m_ipi_ack = true;
             ((void (*)(void)) m_ipi_packet.data)();
-
+            m_ipi_packet.ack = true;
             break;
         case IPP_PG_FLUSH:
-            m_ipi_ack = true;
-            asm volatile("mov rax, cr3; mov cr3, rax;");
+            flushPg();
+            m_ipi_packet.ack = true;
 
             break;
         case IPP_PG_INV:
-            asm volatile("invlpg [%0]" : : "r"(m_ipi_packet.data));
-            m_ipi_ack = true;
+            flushPg(m_ipi_packet.data);
+            m_ipi_packet.ack = true;
 
             break;
         case IPP_PG_INVM: {
             auto bong = (invm_data*) m_ipi_packet.data;
 
             size_t   addr  = bong->addr;
-            uint32_t pages = bong->pages + 1; // TODO: Figure out why + 1 makes it work
+            uint32_t pages = bong->pages;
+
+            if (us->in_interrupt)
+                IRQ::APIC::eoi();
 
             for (uint32_t i = 0; i < pages; i++) {
-                asm volatile("invlpg [%0]" : : "r"(addr));
+                flushPg(addr);
                 addr += CPU::PAGE_SIZE;
             }
 
-            m_ipi_ack = true;
-        } break;
+            m_ipi_packet.ack = true;
+        }
+            return;
         default:
-            m_ipi_ack = true;
+            m_ipi_packet.ack = true;
             printk(PRINTK_WARN "cpu%i: Received an IPP with an unknown type (%i)\n",
                    CPU::currentID(), m_ipi_packet.type);
 
             break;
         }
 
-        IRQ::APIC::eoi();
+        if (us->in_interrupt)
+            IRQ::APIC::eoi();
+
+        __sync_synchronize();
     }
 }

@@ -5,12 +5,14 @@
 #include "aex/math.hpp"
 #include "aex/net/inetprotocol.hpp"
 #include "aex/printk.hpp"
+#include "aex/spinlock.hpp"
 
 namespace AEX::Net {
     INetProtocol** inet_protocols;
     INetProtocol*  null_protocol;
 
-    char* hostname;
+    char*    hostname;
+    Spinlock hostname_lock;
 
     void read_hostname();
 
@@ -25,7 +27,9 @@ namespace AEX::Net {
 
         read_hostname();
 
-        printk("net: Hostname: %s\n", get_hostname());
+        char buffer[256];
+
+        printk("net: Hostname: %s\n", get_hostname(buffer, sizeof(buffer)).value);
         printk(PRINTK_OK "net: Initialized\n");
     }
 
@@ -35,12 +39,18 @@ namespace AEX::Net {
         return ENONE;
     }
 
-    const char* get_hostname() {
-        return hostname;
+    optional<char*> get_hostname(char* buffer, size_t len) {
+        auto scope = hostname_lock.scope();
+
+        if ((size_t) strlen(hostname) + 1 > len)
+            return EINVAL;
+
+        return strncpy(buffer, hostname, len + 1);
     }
 
     void set_hostname(const char* hostname_new) {
-        int len = min<int>(strlen(hostname_new), 255);
+        auto scope = hostname_lock.scope();
+        int  len   = min<int>(strlen(hostname_new), 255);
 
         hostname = Mem::Heap::realloc(hostname, len + 1);
         strncpy(hostname, hostname_new, len + 1);
@@ -48,8 +58,9 @@ namespace AEX::Net {
 
     void read_hostname() {
         auto hostname_try = FS::File::open("/etc/hostname", FS::O_RD);
-        if (!hostname_try)
+        if (!hostname_try) {
             set_hostname("default");
+        }
         else {
             char buffer[256];
 

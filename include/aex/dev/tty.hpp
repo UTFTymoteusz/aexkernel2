@@ -3,6 +3,7 @@
 #include "aex/dev/tty/tty.hpp"
 #include "aex/mem.hpp"
 #include "aex/spinlock.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Dev::Input {
     void init();
@@ -19,12 +20,12 @@ namespace AEX::Dev::TTY {
     /**
      * An array of all terminals.
      **/
-    extern TTY* TTYs[TTY_AMOUNT];
+    API extern TTY* TTYs[TTY_AMOUNT];
 
     /**
      * An array of all virtual terminals.
      **/
-    extern VTTY* VTTYs[TTY_AMOUNT];
+    API extern VTTY* VTTYs[TTY_AMOUNT];
 
     /**
      * Initializes the bare neccesities required for a single terminal.

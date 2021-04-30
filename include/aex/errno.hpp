@@ -1,5 +1,7 @@
 #pragma once
 
+#include "aex/utility.hpp"
+
 namespace AEX {
     enum error_t {
         ENONE = 0,       // None
@@ -82,5 +84,5 @@ namespace AEX {
         ETIMEDOUT,       // Connection timed out
     };
 
-    const char* strerror(error_t code);
+    API const char* strerror(error_t code);
 }

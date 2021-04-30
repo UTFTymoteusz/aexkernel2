@@ -2,11 +2,12 @@
 
 #include "aex/proc/process.hpp"
 #include "aex/proc/thread.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 
 namespace AEX::Mem {
-    class usr_stack {
+    class API usr_stack {
         public:
         usr_stack(Proc::Thread* thread, size_t rsp) {
             m_thread = thread;

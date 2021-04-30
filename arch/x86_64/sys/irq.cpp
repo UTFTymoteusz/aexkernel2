@@ -1,14 +1,14 @@
 #include "sys/irq.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/arch/sys/cpu/idt.hpp"
+#include "aex/arch/sys/cpu/irq.hpp"
 #include "aex/assert.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/sys/acpi.hpp"
 #include "aex/sys/acpi/madt.hpp"
 
-#include "sys/cpu/idt.hpp"
-#include "sys/cpu/irq.hpp"
 #include "sys/irq/apic.hpp"
 #include "sys/irq/pic.hpp"
 #include "sys/irq/pit.hpp"

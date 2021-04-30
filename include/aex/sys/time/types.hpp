@@ -1,10 +1,12 @@
 #pragma once
 
+#include "aex/utility.hpp"
+
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Sys::Time {
-    struct date_time {
+    struct API date_time {
         uint32_t year;
         uint8_t  month;
         uint8_t  day;

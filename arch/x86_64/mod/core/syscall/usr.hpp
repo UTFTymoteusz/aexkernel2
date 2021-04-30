@@ -83,3 +83,33 @@ class tmp_array {
 };
 
 bool copy_and_canonize(char buffer[AEX::FS::MAX_PATH_LEN], const usr_char* usr_path);
+
+#define USR_ENSURE_R(cond, err) \
+    ({                          \
+        auto res = cond;        \
+        if (!res) {             \
+            USR_ERRNO = err;    \
+            return -1;          \
+        }                       \
+        res;                    \
+    })
+#define USR_ENSURE_OPT(opt)             \
+    ({                                  \
+        auto res = opt;                 \
+        if (!res) {                     \
+            USR_ERRNO = res.error_code; \
+            return -1;                  \
+        }                               \
+        res.value;                      \
+    })
+#define USR_ENSURE_ENONE(exp)    \
+    ({                           \
+        auto res = exp;          \
+        if (res != AEX::ENONE) { \
+            USR_ERRNO = res;     \
+            -1;                  \
+        }                        \
+        0;                       \
+    })
+#define USR_ENSURE(cond) USR_ENSURE_R((cond), AEX::EINVAL)
+#define USR_ENSURE_FL(flags, mask) USR_ENSURE_R(!(flags & ~mask), AEX::EINVAL)

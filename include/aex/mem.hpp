@@ -9,6 +9,7 @@
 #include "aex/mem/phys.hpp"
 #include "aex/mem/smartarray.hpp"
 #include "aex/mem/smartptr.hpp"
+#include "aex/mem/types.hpp"
 #include "aex/mem/vector.hpp"
 
 namespace AEX::Mem {}

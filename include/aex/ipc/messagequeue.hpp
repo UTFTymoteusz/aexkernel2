@@ -4,9 +4,10 @@
 #include "aex/mem/circularbuffer.hpp"
 #include "aex/proc.hpp"
 #include "aex/spinlock.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::IPC {
-    class MessageQueue {
+    class API MessageQueue {
         public:
         static constexpr auto MAX_WAITING_SIZE = 65536 - 1;
 

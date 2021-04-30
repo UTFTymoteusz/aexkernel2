@@ -4,6 +4,7 @@
 #include "aex/mem/smartptr.hpp"
 #include "aex/sec/types.hpp"
 #include "aex/sys/time/types.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::FS {
     typedef int64_t blkcnt_t;
@@ -31,7 +32,7 @@ namespace AEX::FS {
         FT_SHM       = 0x04000000,
     };
 
-    struct file_info {
+    struct API file_info {
         Dev::dev_t containing_dev_id = -1;
         ino_t      inode;
 
@@ -78,4 +79,6 @@ namespace AEX::FS {
 
     class Directory;
     typedef Mem::SmartPointer<Directory> Directory_SP;
+
+    class Descriptor;
 }

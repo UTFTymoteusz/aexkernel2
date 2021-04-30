@@ -3,6 +3,7 @@
 #include "aex/dev/input.hpp"
 #include "aex/dev/tty.hpp"
 #include "aex/dev/tty/ansi.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -11,7 +12,7 @@ extern "C" struct multiboot_info;
 typedef struct multiboot_info multiboot_info_t;
 
 namespace AEX::Dev::TTY {
-    struct tty_info {
+    struct API tty_info {
         int width;
         int height;
 
@@ -24,7 +25,7 @@ namespace AEX::Dev::TTY {
     /**
      * A basic terminal class.
      **/
-    class TTY {
+    class API TTY {
         public:
         /**
          * Reads a character from the virtual terminal.

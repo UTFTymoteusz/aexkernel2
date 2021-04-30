@@ -20,17 +20,15 @@ int pipe(usr_int* rp, usr_int* wp) {
     if (err != ENONE)
         return err;
 
-    current->files_lock.acquire();
+    current->descs_lock.acquire();
 
-    int rfd = current->files.push(rsp);
-    int wfd = current->files.push(wsp);
+    int rfd = current->descs.push(rsp);
+    int wfd = current->descs.push(wsp);
 
-    current->files_lock.release();
+    current->descs_lock.release();
 
-    if (!usr_write(rp, rfd) || !usr_write(wp, wfd)) {
-        USR_ERRNO = EINVAL;
-        return -1;
-    }
+    USR_ENSURE_OPT(usr_write(rp, rfd));
+    USR_ENSURE_OPT(usr_write(wp, wfd));
 
     return 0;
 }
@@ -50,35 +48,13 @@ int sigact(int signum, const IPC::sigaction_usr* act, IPC::sigaction_usr* oldact
     auto current = Proc::Process::current();
 
     if (oldact) {
-        auto action_try = current->sigaction(signum);
-        if (!action_try) {
-            USR_ERRNO = action_try.error_code;
-            return -1;
-        }
-
-        auto act_ker = usr_write(oldact, act);
-        if (!act_ker) {
-            USR_ERRNO = EINVAL;
-            return -1;
-        }
+        auto action = USR_ENSURE_OPT(current->sigaction(signum));
+        USR_ENSURE_OPT(usr_write(oldact, action));
     }
 
     if (act) {
-        auto act_ker = usr_read(act);
-        if (!act_ker) {
-            USR_ERRNO = EINVAL;
-            return -1;
-        }
-
-        IPC::sigaction action = act_ker.value;
-
-        auto result = current->sigaction(signum, action);
-        if (result != ENONE) {
-            USR_ERRNO = result;
-            return -1;
-        }
-
-        return 0;
+        IPC::sigaction action = USR_ENSURE_OPT(usr_read(act));
+        USR_ENSURE_ENONE(current->sigaction(signum, action));
     }
 
     return 0;

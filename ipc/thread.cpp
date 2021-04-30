@@ -65,9 +65,11 @@ namespace AEX::Proc {
         case SIG_CORE:
             PRINTK_DEBUG1("pid%i: Core dump", process->pid);
 
-            info.si_signo |= 0x80;
-            fall;
+            process->exit(info.si_signo | 0x80);
+            break;
         case SIG_TERM:
+            PRINTK_DEBUG1("pid%i: Termination", process->pid);
+
             process->exit(info.si_signo);
             break;
         case SIG_STOP:
@@ -108,6 +110,7 @@ namespace AEX::Proc {
         auto action = thread->getProcess()->sigaction(info.si_signo).value;
 
         *thread->context_aux = *thread->context;
+        thread->status       = TS_RUNNABLE;
 
         swap(thread->kernel_stack, thread->aux_stack);
         swap(thread->kernel_stack_size, thread->aux_stack_size);

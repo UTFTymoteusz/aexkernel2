@@ -1,11 +1,11 @@
 #include "aex/arch/sys/cpu.hpp"
 
+#include "aex/arch/sys/cpu/idt.hpp"
+#include "aex/arch/sys/cpu/tss.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 
-#include "cpu/idt.hpp"
-#include "cpu/tss.hpp"
 #include "sys/irq/apic.hpp"
 
 // For some reason g++ adds 8 to the offset
@@ -83,6 +83,8 @@ namespace AEX::Sys {
     void CPU::halt() {
         printk(PRINTK_WARN "cpu%i: Halted\n", CPU::currentID());
 
+        CPU::current()->halted = true;
+
         asm volatile("cli;");
         while (true)
             asm volatile("hlt;");
@@ -99,15 +101,16 @@ namespace AEX::Sys {
     bool CPU::checkInterrupts() {
         size_t flags;
 
-        asm volatile("pushf ; \
+        asm volatile("pushfq ; \
                     pop %0;"
                      : "=r"(flags)
                      :);
 
-        return flags & 0x200;
+        return flags & 0x0200;
     }
 
     void CPU::wait() {
+        AEX_ASSERT(CPU::checkInterrupts());
         asm volatile("hlt");
     }
 
@@ -124,18 +127,10 @@ namespace AEX::Sys {
         return val;
     }
 
-    void CPU::outb(uint16_t m_port, uint8_t m_data) {
-        asm volatile("outb %0, %1" : : "dN"(m_port), "a"(m_data));
-    }
-
     uint16_t CPU::inw(uint16_t m_port) {
         uint16_t val;
         asm volatile("inw %0, %1" : "=a"(val) : "dN"(m_port));
         return val;
-    }
-
-    void CPU::outw(uint16_t m_port, uint16_t m_data) {
-        asm volatile("outw %0, %1" : : "dN"(m_port), "a"(m_data));
     }
 
     uint32_t CPU::ind(uint16_t m_port) {
@@ -144,22 +139,16 @@ namespace AEX::Sys {
         return val;
     }
 
-    void CPU::outd(uint16_t m_port, uint32_t m_data) {
-        asm volatile("outd %0, %1" : : "d"(m_port), "a"(m_data));
+    void CPU::outb(uint16_t m_port, uint8_t m_data) {
+        asm volatile("outb %0, %1" : : "dN"(m_port), "a"(m_data));
     }
 
-    void CPU::wrmsr(uint32_t reg, uint64_t data) {
-        asm volatile(" \
-            mov rdx, %0; \
-            mov rax, %0; \
-            \
-            ror rdx, 32; \
-            \
-            wrmsr; \
-        "
-                     :
-                     : "r"(data), "c"(reg)
-                     : "memory");
+    void CPU::outw(uint16_t m_port, uint16_t m_data) {
+        asm volatile("outw %0, %1" : : "dN"(m_port), "a"(m_data));
+    }
+
+    void CPU::outd(uint16_t m_port, uint32_t m_data) {
+        asm volatile("outd %0, %1" : : "d"(m_port), "a"(m_data));
     }
 
     uint64_t CPU::rdmsr(uint32_t reg) {
@@ -179,6 +168,19 @@ namespace AEX::Sys {
         return out;
     }
 
+    void CPU::wrmsr(uint32_t reg, uint64_t data) {
+        asm volatile(" \
+            mov rdx, %0; \
+            mov rax, %0; \
+            \
+            ror rdx, 32; \
+            \
+            wrmsr; \
+        "
+                     :
+                     : "r"(data), "c"(reg)
+                     : "memory");
+    }
 
     CPU* CPU::current() {
         return CURRENT_CPU;
@@ -197,7 +199,10 @@ namespace AEX::Sys {
         load_idt(nullptr, 0);
 
         asm volatile("ud2;");
-        asm volatile("int 0;");
+        asm volatile("int 2;");
+        asm volatile("int 1;");
+        asm volatile("int 3;");
+        asm volatile("int 7;");
     }
 
     void CPU::breakpoint(int index, size_t addr, uint8_t trigger, uint8_t size, bool enabled) {
@@ -238,10 +243,28 @@ namespace AEX::Sys {
 
     void CPU::update(Proc::Thread* thread) {
         // 3 weeks of rest because of the goddamned + thread->fault_stack_size
-        m_tss->ist1 = thread->fault_stack + thread->fault_stack_size;
-        m_tss->ist7 = thread->kernel_stack + thread->kernel_stack_size;
+        local_tss->ist1 = thread->fault_stack + thread->fault_stack_size;
+        local_tss->ist7 = thread->kernel_stack + thread->kernel_stack_size;
 
         wrmsr(MSR_FSBase, (size_t) thread->tls);
+
+        AEX_ASSERT(thread->parent);
+    }
+
+    void CPU::pushFmsg(const char* msg) {
+        if (m_fmsg_ptr >= 16)
+            return;
+
+        memcpy(m_fmsgs[m_fmsg_ptr++], msg, 256);
+    }
+
+    void CPU::printFmsgs() {
+        for (int i = 0; i < m_fmsg_ptr; i++)
+            printk("  cpu%i: %s\n", id, m_fmsgs[i]);
+    }
+
+    int CPU::countFmsgs() {
+        return m_fmsg_ptr;
     }
 
     void CPU::getName() {

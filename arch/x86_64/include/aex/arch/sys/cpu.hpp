@@ -3,6 +3,8 @@
 #include "aex/spinlock.hpp"
 #include "aex/sys/syscall.hpp"
 
+#include <aex/utility.hpp>
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -24,7 +26,7 @@ namespace AEX::Sys {
      * The base CPU class that represents a processor in the system and contains some CPU-dependant
      * functionality.
      **/
-    class CPU {
+    class API CPU {
         public:
         enum ipp_type : uint8_t {
             IPP_HALT     = 0,
@@ -48,6 +50,32 @@ namespace AEX::Sys {
             uint64_t irq_no;
             uint64_t rip, cs, rflags, rsp, ss;
         } __attribute((packed));
+
+        // Don't change the order of these or the kernel will go boom boom
+        int id;
+        int apic_id;
+
+        CPU* self;
+
+        // Do not change the order of these or the kernel will go boom
+        struct {
+            Proc::Context* current_context; // 0x08
+            Proc::Thread*  current_thread;  // 0x10
+
+            volatile uint64_t unused; // 0x18
+
+            uint64_t        kernel_stack;  // 0x20
+            Sys::syscall_t* syscall_table; // 0x28
+        };
+
+        uint8_t       in_interrupt = 1;
+        volatile bool halted;
+        bool          should_yield;
+        tss*          local_tss;
+
+        uint64_t measurement_start_ns;
+
+        char name[48];
 
         CPU(int id);
 
@@ -87,21 +115,13 @@ namespace AEX::Sys {
         static void cpuid(uint32_t code, uint32_t* eax, uint32_t* ebx, uint32_t* ecx,
                           uint32_t* edx);
 
-        static uint8_t inb(uint16_t m_port);
-        static void    outb(uint16_t m_port, uint8_t m_data);
-
+        static uint8_t  inb(uint16_t m_port);
         static uint16_t inw(uint16_t m_port);
-        static void     outw(uint16_t m_port, uint16_t m_data);
-
         static uint32_t ind(uint16_t m_port);
-        static void     outd(uint16_t m_port, uint32_t m_data);
 
-        /**
-         * Writes to a model specific register.
-         * @param reg  The register in question.
-         * @param data Value to write.
-         **/
-        static void wrmsr(uint32_t reg, uint64_t data);
+        static void outb(uint16_t m_port, uint8_t m_data);
+        static void outw(uint16_t m_port, uint16_t m_data);
+        static void outd(uint16_t m_port, uint32_t m_data);
 
         /**
          * Reads a model specific register.
@@ -109,6 +129,13 @@ namespace AEX::Sys {
          * @returns Value read.
          **/
         static uint64_t rdmsr(uint32_t reg);
+
+        /**
+         * Writes to a model specific register.
+         * @param reg  The register in question.
+         * @param data Value to write.
+         **/
+        static void wrmsr(uint32_t reg, uint64_t data);
 
         /**
          * Gets the ID of the executing CPU.
@@ -141,6 +168,18 @@ namespace AEX::Sys {
 
         static void breakpoint(int index, size_t addr, uint8_t mode, uint8_t size, bool enabled);
 
+        inline static void flushPg(void* addr) {
+            asm volatile("invlpg [%0]" : : "r"(addr));
+        }
+
+        inline static void flushPg(size_t addr) {
+            asm volatile("invlpg [%0]" : : "r"(addr));
+        }
+
+        inline static void flushPg() {
+            asm volatile("push rbx; mov rbx, cr3; mov cr3, rbx; pop rbx");
+        }
+
         void printDebug();
 
         /**
@@ -152,36 +191,23 @@ namespace AEX::Sys {
 
         void update(Proc::Thread* thread);
 
-        // Don't change the order of these or the kernel will go boom boom
-        int id;
-        int apic_id;
-
-        CPU* self; // 0x00
-
-        Proc::Context*    current_context; // 0x08
-        Proc::Thread*     current_thread;  // 0x10
-        volatile uint64_t unused;          // 0x18
-        uint64_t          kernel_stack;    // 0x20
-        Sys::syscall_t*   syscall_table;   // 0x28
-
-        // Safe to change again
-        uint8_t in_interrupt = 1;
-
-        uint64_t measurement_start_ns;
-
-        char name[48];
+        void pushFmsg(const char* msg);
+        void printFmsgs();
+        int  countFmsgs();
 
         private:
         struct ipi_packet {
             ipp_type type;
             void*    data;
+
+            volatile bool ack;
         };
 
-        Spinlock      m_ipi_lock;
-        volatile bool m_ipi_ack;
-        ipi_packet    m_ipi_packet;
+        Spinlock   m_ipi_lock;
+        ipi_packet m_ipi_packet;
 
-        tss* m_tss;
+        char m_fmsgs[16][128];
+        int  m_fmsg_ptr;
 
         void getName();
 

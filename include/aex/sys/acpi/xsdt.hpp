@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 namespace AEX::Sys::ACPI {
-    struct xsdp {
+    struct API xsdp {
         rsdp m_rsdp;
 
         uint32_t length;
@@ -16,7 +16,7 @@ namespace AEX::Sys::ACPI {
         uint8_t  reserved[3];
     } PACKED;
 
-    struct xsdt {
+    struct API xsdt {
         sdt_header header;
         uint64_t   table_pointers[];
     } PACKED;

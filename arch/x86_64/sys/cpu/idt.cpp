@@ -1,4 +1,4 @@
-#include "sys/cpu/idt.hpp"
+#include "aex/arch/sys/cpu/idt.hpp"
 
 #include "aex/string.hpp"
 
@@ -70,6 +70,9 @@ namespace AEX::Sys {
                 .setType(0x0E)
                 .setIST(0)
                 .setPresent(true);
+
+        for (int i = 64; i < 255; i++)
+            idt[i].setSelector(0x08).setType(0x0E).setIST(0).setPresent(false);
 
         // clang-format off
         idt[255]

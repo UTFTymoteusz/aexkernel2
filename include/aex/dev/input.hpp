@@ -4,9 +4,10 @@
 #include "aex/dev/input/event.hpp"
 #include "aex/dev/input/handle.hpp"
 #include "aex/dev/input/keymap.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Dev::Input {
-    extern keymap default_keymap;
+    API extern keymap default_keymap;
 
     /**
      * Translates a event into a character.
@@ -14,5 +15,5 @@ namespace AEX::Dev::Input {
      * @param m_event Reference to the event.
      * @returns The translated character.
      **/
-    char translate(keymap* m_keymap, event& m_event);
+    API char translate(keymap* m_keymap, event& m_event);
 }

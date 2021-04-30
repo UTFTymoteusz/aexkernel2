@@ -8,11 +8,10 @@
 #include <stdint.h>
 
 namespace AEX::Sys::ACPI {
-    struct acpi_table {};
+    struct API acpi_table {};
 
-    extern uint8_t revision;
+    API extern uint8_t revision;
 
-    bool validate_table(const void* tbl, size_t len);
-
-    acpi_table* find_table(const char signature[4], int index);
+    API bool validate_table(const void* tbl, size_t len);
+    API acpi_table* find_table(const char signature[4], int index);
 }

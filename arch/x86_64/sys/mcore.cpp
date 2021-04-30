@@ -1,15 +1,15 @@
 #include "sys/mcore.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/arch/sys/cpu/gdt.hpp"
+#include "aex/arch/sys/cpu/idt.hpp"
+#include "aex/arch/sys/cpu/tss.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 #include "aex/sys/acpi.hpp"
 #include "aex/sys/acpi/madt.hpp"
 
-#include "cpu/gdt.hpp"
-#include "cpu/idt.hpp"
-#include "cpu/tss.hpp"
 #include "sys/irq.hpp"
 #include "sys/irq/apic.hpp"
 
@@ -109,8 +109,15 @@ namespace AEX::Sys::MCore {
             if (!CPUs[i])
                 continue;
 
-            CPUs[i]->m_tss = tsses[i];
+            CPUs[i]->local_tss = tsses[i];
         }
+
+        kpanic_hook.subscribe([]() {
+            printk("CPU fmsgs:\n");
+
+            for (int i = 0; i < cpu_count; i++)
+                CPUs[i]->printFmsgs();
+        });
 
         printk(PRINTK_OK "mcore: Initialized\n");
     }

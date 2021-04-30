@@ -2,14 +2,15 @@
 
 #include "aex/fs/path.hpp"
 #include "aex/fs/types.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::FS {
-    struct dir_entry {
-        int inode_id;
-        int pos;
+    struct API dir_entry {
+        ino_t inode_id;
+        int   pos;
 
         char          name[MAX_FILENAME_LEN] = {};
         FS::fs_type_t type                   = FT_UNKNOWN;
@@ -30,7 +31,7 @@ namespace AEX::FS {
         }
     };
 
-    struct dir_context {
+    struct API dir_context {
         uint64_t pos = 0;
     };
 }

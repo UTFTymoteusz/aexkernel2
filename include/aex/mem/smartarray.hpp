@@ -2,10 +2,11 @@
 
 #include "aex/mem/heap.hpp"
 #include "aex/mem/smartptr.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Mem {
     template <typename T>
-    class SmartArray {
+    class API SmartArray {
         public:
         class Iterator {
             public:

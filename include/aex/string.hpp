@@ -1,20 +1,21 @@
 #pragma once
 
 #include "aex/math.hpp"
+#include "aex/utility.hpp"
 
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX {
-    static const char* dictionary = "zyxwvutsrqponmlkjihgfedcba9876543210123456"
-                                    "789abcdefghijklmnopqrstuvwxyz";
+    static const char* xtox_dictionary = "zyxwvutsrqponmlkjihgfedcba9876543210123456"
+                                         "789abcdefghijklmnopqrstuvwxyz";
 
-    void snprintf(char* buffer, size_t n, const char* format, ...);
-    void snprintf(char* buffer, size_t n, const char* format, va_list args);
+    API void snprintf(char* buffer, size_t n, const char* format, ...);
+    API void snprintf(char* buffer, size_t n, const char* format, va_list args);
 
     template <typename T>
-    char* itos(T num, int base, char* buffer) {
+    API char* itos(T num, int base, char* buffer) {
         char* ptr;
         char* low;
 
@@ -29,7 +30,7 @@ namespace AEX {
 
         low = ptr;
         do {
-            *ptr++ = dictionary[35 + num % base];
+            *ptr++ = xtox_dictionary[35 + num % base];
             num /= base;
         } while (num);
 
@@ -45,7 +46,7 @@ namespace AEX {
     }
 
     template <typename T>
-    T stoi(int base, const char* str) {
+    API T stoi(int base, const char* str) {
         T   res  = 0;
         int sign = 1;
         int i    = 0;
@@ -61,22 +62,22 @@ namespace AEX {
         return sign * res;
     }
 
-    int   strlen(const char* str);
-    int   strcmp(const char* a, const char* b);
-    char* strncpy(char* dst, const char* src, size_t num);
+    API int   strlen(const char* str);
+    API int   strcmp(const char* a, const char* b);
+    API char* strncpy(char* dst, const char* src, size_t num);
 
-    void memset(void* mem, char c, size_t len);
-    void memset16(void* mem, uint16_t val, size_t count);
-    void memset32(void* mem, uint32_t val, size_t count);
-    void memset64(void* mem, uint64_t val, size_t count);
-    void memcpy(void* dst, const void* src, size_t size);
-    int  memcmp(const void* a, const void* b, size_t num);
+    API void memset(void* mem, char c, size_t len);
+    API void memset16(void* mem, uint16_t val, size_t count);
+    API void memset32(void* mem, uint32_t val, size_t count);
+    API void memset64(void* mem, uint64_t val, size_t count);
+    API void memcpy(void* dst, const void* src, size_t size);
+    API int  memcmp(const void* a, const void* b, size_t num);
 
-    inline char tolower(char c) {
+    API inline char tolower(char c) {
         return inrange(c, 'A', 'Z') ? c + 32 : c;
     }
 
-    inline char toupper(char c) {
+    API inline char toupper(char c) {
         return inrange(c, 'a', 'z') ? c - 32 : c;
     }
 }

@@ -1,6 +1,8 @@
 #pragma once
 
-#include "aex/kpanic.hpp"
+#define API __attribute__((visibility("default")))
+
+#include "aex/errno.hpp"
 
 #define PACKED __attribute((packed))
 #define WEAK __attribute((weak))
@@ -30,7 +32,19 @@
 #define VERSION "inv"
 #endif
 
+namespace AEX {
+    [[noreturn]] API void kpanic(const char* format, ...);
+}
+
 #define NOT_IMPLEMENTED kpanic("%s:%i: %s\n", __FILE__, __LINE__, "Not implemented")
+
+#define ENSURE_R(cond, err) \
+    ({                      \
+        if (!(cond))        \
+            return err;     \
+    })
+#define ENSURE(cond) ENSURE_R((cond), AEX::EINVAL)
+#define ENSURE_FL(flags, mask) ENSURE_R(!(flags & ~mask), AEX::EINVAL)
 
 namespace AEX {
     template <typename T>

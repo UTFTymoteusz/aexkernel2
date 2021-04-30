@@ -10,11 +10,6 @@
 using namespace AEX;
 using namespace AEX::Proc;
 
-namespace AEX::Proc {
-    void add_thread(Thread* thread);
-    void remove_thread(Thread* thread);
-}
-
 void exit(int status) {
     Process::current()->exit(status);
     USR_ERRNO = ENONE;
@@ -40,11 +35,12 @@ pid_t fork() {
     auto child =
         new Process(parent->image_path, parent->pid, parent->pagemap->fork(), parent->name);
 
-    for (int i = 0; i < parent->files.count(); i++) {
-        if (!parent->files.present(i))
+    for (int i = 0; i < parent->descs.count(); i++) {
+        if (!parent->descs.present(i))
             continue;
 
-        child->files.set(i, parent->files.at(i)->dup().value);
+        auto desc = parent->descs.at(i);
+        child->descs.set(i, {desc.file->dup().value, desc.flags});
     }
 
     for (int i = 0; i < parent->mmap_regions.count(); i++) {
@@ -102,6 +98,10 @@ pid_t fork() {
 
     Mem::atomic_add(&child->thread_counter, 1);
 
+    parent->lock.acquire();
+    child->env(&parent->env());
+    parent->lock.release();
+
     child->set_cwd(parent->get_cwd());
     child->assoc(thread);
     child->ready();
@@ -113,15 +113,12 @@ pid_t fork() {
     return child->pid;
 }
 
-optional<int> usr_get_argc(usr_char* const argv[]) {
+optional<int> usr_get_tblc(usr_char* const argv[]) {
     int argc = 0;
 
     for (int i = 0; i < 32; i++) {
         auto read_try = usr_read<usr_char*>(&argv[i]);
-        if (!read_try) {
-            USR_ERRNO = EINVAL;
-            return -1;
-        }
+        USR_ENSURE(read_try);
 
         if (read_try.value == nullptr)
             break;
@@ -132,60 +129,71 @@ optional<int> usr_get_argc(usr_char* const argv[]) {
     return argc;
 }
 
-int execve(const usr_char* path, usr_char* const argv[], usr_char* const envp[]) {
-    auto strlen_try = usr_strlen(path);
-    if (!strlen_try) {
-        USR_ERRNO = EINVAL;
-        return -1;
-    }
-
-    char path_buffer[FS::MAX_PATH_LEN];
-    if (!copy_and_canonize(path_buffer, path)) {
-        USR_ERRNO = EINVAL;
-        return -1;
-    }
-
-    auto argc_try = usr_get_argc(argv);
-    if (!argc_try.value) {
-        USR_ERRNO = EINVAL;
-        return -1;
-    }
-
-    int argc = argc_try.value;
-
-    tmp_array<char> tmp_buffers[argc];
-    char*           argv_buffer[argc + 1];
+bool usr_get_tbl(usr_char* const argv[], int argc, tmp_array<char>* argv_buff) {
+    int arg_len = 0;
 
     for (size_t i = 0; i < argc; i++) {
         auto strlen_try = usr_strlen(argv[i]);
         if (!strlen_try)
-            return EINVAL;
+            return false;
 
-        tmp_buffers[i].resize(strlen_try.value + 1);
-        argv_buffer[i] = tmp_buffers[i].get();
+        arg_len += strlen_try.value + 1;
+        if (arg_len + 1 > ARG_MAX)
+            return false;
 
-        if (!u2k_memcpy(argv_buffer[i], argv[i], strlen_try.value + 1))
-            return EINVAL;
+        argv_buff[i].resize(strlen_try.value + 1);
+        if (!u2k_memcpy(argv_buff[i].get(), argv[i], strlen_try.value + 1))
+            return false;
     }
 
-    argv_buffer[argc] = nullptr;
+    return true;
+}
+
+void usr_finalize_tbl(tmp_array<char>* argv_buff, int argc, char** table) {
+    for (int i = 0; i < argc; i++)
+        table[i] = argv_buff[i].get();
+
+    table[argc] = nullptr;
+}
+
+int execve(const usr_char* path, usr_char* const usr_argv[], usr_char* const usr_envp[]) {
+    char path_buffer[FS::MAX_PATH_LEN];
+    USR_ENSURE(copy_and_canonize(path_buffer, path));
+
+    int argc = USR_ENSURE(usr_get_tblc(usr_argv));
+    USR_ENSURE(argc > 0 && argc <= ARGC_MAX);
+
+    tmp_array<char> argv_buffers[argc];
+    char*           argv[argc + 1];
+
+    USR_ENSURE(usr_get_tbl(usr_argv, argc, argv_buffers));
+    usr_finalize_tbl(argv_buffers, argc, argv);
+
+    int envc = 1;
+
+    if (usr_envp) {
+        envc = USR_ENSURE(usr_get_tblc(usr_envp));
+        USR_ENSURE(envc > 0 && envc <= ENVC_MAX);
+    }
+
+    tmp_array<char> envp_buffers[envc];
+    char*           envp[envc + 1];
+
+    if (usr_envp) {
+        USR_ENSURE(usr_get_tbl(usr_envp, envc, envp_buffers));
+        usr_finalize_tbl(envp_buffers, envc, envp);
+    }
 
     PRINTK_DEBUG2("pid%i: exec '%s'", Process::current()->pid, path_buffer);
 
-    USR_ERRNO =
-        exec(Process::current(), Thread::current(), path_buffer, argv_buffer, envp, nullptr);
+    USR_ERRNO = exec(Process::current(), Thread::current(), path_buffer, argv,
+                     usr_envp ? envp : nullptr, nullptr);
 
     return USR_ERRNO != ENONE ? -1 : 0;
 }
 
 pid_t wait(usr_int* wstatus) {
-    auto result = Process::current()->wait(*wstatus);
-    if (!result) {
-        USR_ERRNO = result.error_code;
-        return -1;
-    }
-
-    return result.value;
+    return USR_ENSURE_OPT(Process::current()->wait(*wstatus));
 }
 
 pid_t getpid() {
@@ -210,6 +218,18 @@ int nice(int nice) {
     return nice;
 }
 
+int getenv(int index, usr_char* buffer, size_t len) {
+    auto current = Process::current();
+    auto scope   = current->lock.scope();
+
+    char* line = USR_ENSURE_OPT(current->envGet(index));
+
+    USR_ENSURE_R(strlen(line) + 1 <= len, ERANGE);
+    USR_ENSURE_OPT(k2u_memcpy(buffer, line, strlen(line) + 1));
+
+    return 0;
+}
+
 void register_proc() {
     auto table = Sys::default_table();
 
@@ -222,4 +242,5 @@ void register_proc() {
     table[SYS_WAIT]   = (void*) wait;
     table[SYS_GETPID] = (void*) getpid;
     table[SYS_NICE]   = (void*) nice;
+    table[SYS_GETENV] = (void*) getenv;
 }

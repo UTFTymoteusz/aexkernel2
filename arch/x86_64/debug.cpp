@@ -21,6 +21,7 @@ namespace AEX::Debug {
 
         while (frame > (stack_frame*) 8) {
             if (skip != 0) {
+                frame = frame->rbp;
                 skip--;
                 continue;
             }
@@ -48,7 +49,7 @@ namespace AEX::Debug {
                 int         delta = 0;
                 const char* name  = addr2name((void*) frame->rip, delta);
 
-                printk("  0x%p <%s+0x%x>\n", frame->rip, name ? name : "no idea", delta);
+                printk("  0x%p <%s+0x%x>\n", frame->rip, name ?: "no idea", delta);
 
                 if ((frame->rip & 0xFFFFFFFFF0000000) != 0xFFFFFFFF80000000)
                     return;
@@ -57,8 +58,8 @@ namespace AEX::Debug {
             }
 
             frame = frame->rbp;
-            if (!Mem::kernel_pagemap->paddrof(frame))
-                return;
+            // if (!Mem::kernel_pagemap->paddrof(frame))
+            //    return;
         }
     }
 }

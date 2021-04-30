@@ -2,20 +2,21 @@
 
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/math.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Mem {
     template <typename T>
-    bool pagealigned(T val) {
+    API bool pagealigned(T val) {
         return !(val & (Sys::CPU::PAGE_SIZE - 1));
     }
 
     template <typename T>
-    T pagefloor(T val) {
+    API T pagefloor(T val) {
         return int_floor<T>(val, Sys::CPU::PAGE_SIZE);
     }
 
     template <typename T>
-    T pageceil(T val) {
+    API T pageceil(T val) {
         return int_ceil<T>(val, Sys::CPU::PAGE_SIZE);
     }
 }

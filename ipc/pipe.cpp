@@ -14,6 +14,9 @@ namespace AEX::IPC {
     PipeWriter::PipeWriter(Mem::SmartPointer<Pipe> pipe) : _pipe(pipe) {}
 
     optional<ssize_t> PipeWriter::write(void* buf, size_t count) {
+        if (count <= PIPE_BUF)
+            return _pipe->buffer.writeAtomic(buf, count);
+
         return _pipe->buffer.write(buf, count);
     }
 
@@ -24,7 +27,7 @@ namespace AEX::IPC {
     PipeReader::PipeReader(Mem::SmartPointer<Pipe> pipe) : _pipe(pipe) {}
 
     optional<ssize_t> PipeReader::read(void* buf, size_t count) {
-        return _pipe->buffer.read(buf, count);
+        return _pipe->buffer.read(buf, count, 1);
     }
 
     optional<FS::File_SP> PipeReader::dup() {

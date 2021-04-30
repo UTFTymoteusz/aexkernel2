@@ -9,7 +9,7 @@ namespace AEX::Sys::ACPI {
     constexpr auto PROCESSOR_ENABLED = 1 << 0;
     constexpr auto PROCESSOR_ONLINE  = 1 << 1;
 
-    struct madt {
+    struct API madt {
         enum entry_type {
             LAPIC      = 0,
             IOAPIC     = 1,

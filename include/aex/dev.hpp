@@ -6,7 +6,8 @@
 #include "aex/dev/netdevice.hpp"
 #include "aex/dev/types.hpp"
 #include "aex/mem/smartarray.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Dev {
-    extern Mem::SmartArray<Device> devices;
+    API extern Mem::SmartArray<Device> devices;
 }

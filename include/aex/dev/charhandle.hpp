@@ -5,6 +5,7 @@
 #include "aex/mutex.hpp"
 #include "aex/optional.hpp"
 #include "aex/types.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -12,7 +13,7 @@
 namespace AEX::Dev {
     class CharDevice;
 
-    class CharHandle {
+    class API CharHandle {
         public:
         void* device_data = nullptr;
 

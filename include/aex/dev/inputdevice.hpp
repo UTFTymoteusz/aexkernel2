@@ -1,9 +1,10 @@
 #pragma once
 
 #include "aex/dev/input.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Dev {
-    class InputDevice {
+    class API InputDevice {
         public:
         enum led_flag_t {
             LED_NONE       = 0x00,

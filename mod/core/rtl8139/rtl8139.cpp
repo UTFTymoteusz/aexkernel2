@@ -169,8 +169,8 @@ class RTL8139 : public Dev::NetDevice {
             frame->destination = arp->header.operation != NetStack::ARP_REQUEST
                                      ? arp->eth_ipv4.destination_mac
                                      : Net::mac_addr(0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF);
-            frame->source    = this->info.ipv4.mac;
-            frame->ethertype = NetStack::ETH_ARP;
+            frame->source      = this->info.ipv4.mac;
+            frame->ethertype   = NetStack::ETH_ARP;
 
             memcpy(frame->payload, buffer, len);
 
@@ -188,7 +188,7 @@ class RTL8139 : public Dev::NetDevice {
                 auto arp_addr = ipv4->destination.isSubnettedWith(info.ipv4.addr, info.ipv4.mask)
                                     ? ipv4->destination
                                     : info.ipv4.gateway;
-                auto mac_try = NetStack::arp_get_mac(arp_addr);
+                auto mac_try  = NetStack::arp_get_mac(arp_addr);
                 if (!mac_try)
                     return EAGAIN;
 

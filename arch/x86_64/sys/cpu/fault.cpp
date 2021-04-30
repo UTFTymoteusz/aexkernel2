@@ -8,13 +8,15 @@
 #include "aex/utility.hpp"
 
 #include "proc/proc.hpp"
+#include "sys/irq/apic.hpp"
+#include "sys/mcore.hpp"
 
 constexpr auto EXC_DEBUG          = 1;
 constexpr auto EXC_NMI            = 2;
 constexpr auto EXC_INVALID_OPCODE = 6;
 constexpr auto EXC_PAGE_FAULT     = 14;
 
-extern "C" void common_fault_handler(void* info);
+extern "C" void common_fault_handler(AEX::Sys::CPU::fault_info* info);
 
 namespace AEX::Sys {
     char exception_names[][32] = {
@@ -60,10 +62,9 @@ namespace AEX::Sys {
     inline Proc::Thread::state out(Proc::Thread* thread, CPU*& cpu);
     inline void                in(Proc::Thread::state& state, Proc::Thread* thread, CPU*& cpu);
 
-    extern "C" void common_fault_handler(void* m_info) {
+    extern "C" void common_fault_handler(CPU::fault_info* info) {
         CPU::current()->in_interrupt++;
 
-        auto info   = (CPU::fault_info*) m_info;
         auto cpu    = CPU::current();
         auto thread = cpu->current_thread;
 
@@ -114,14 +115,30 @@ namespace AEX::Sys {
         switch (info->int_no) {
         case EXC_DEBUG:
         case EXC_NMI:
-            printk(PRINTK_WARN
-                   "cpu%i: %93$%s%$ Exception (%i) (%93$%i%$)\nRIP: 0x%016lx <%s+0x%x>\n",
+            printk(PRINTK_WARN "cpu%i: %93$%s%$ Exception (%i) (%93$%i%$)\nRIP: 0x%016lx <%s+0x%x> "
+                               "(cpu%i, pid%i, th0x%p)\n",
                    CPU::currentID(), exception_names[info->int_no], info->int_no, info->err,
-                   info->rip, name, delta);
+                   info->rip, name, delta, CPU::currentID(),
+                   CPU::current()->current_thread->parent->pid, CPU::current()->current_thread);
 
-            Proc::debug_print_threads();
-            Proc::debug_print_processes();
-            break;
+            print_info(info);
+            printk(info->rflags & 0x0200 ? "Interrupts were on\n" : "Interrupts were off\n");
+
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < 32; j++)
+                    if (Sys::IRQ::APIC::read(0x100 + i * 0x10) & (1 << j))
+                        printk("apparently i'm handling interrupt %i\n", i * 32 + j);
+            }
+
+            printk("Stack trace:\n");
+            Debug::stack_trace(1);
+
+            CPU::current()->in_interrupt--;
+
+            thread->faulting = false;
+            thread->subBusy();
+
+            return;
         default:
             printk(PRINTK_FAIL
                    "cpu%i: %93$%s%$ Exception (%i) (%91$%i%$)\nRIP: 0x%016lx <%s+0x%x>\n",
@@ -175,19 +192,6 @@ namespace AEX::Sys {
             return;
         }
 
-        if (info->int_no == EXC_NMI) {
-            Debug::stack_trace();
-
-            Proc::debug_print_processes();
-            Proc::debug_print_threads();
-
-            thread->faulting = false;
-            thread->subBusy();
-
-            CPU::current()->in_interrupt--;
-            return;
-        }
-
         kpanic("Unrecoverable processor exception occured in CPU %i", CPU::currentID());
 
         thread->faulting = false;
@@ -218,10 +222,10 @@ namespace AEX::Sys {
             //            "    RIP: 0x%016lx\n",
             //            cpu->id, cr2, cr3, info->rip);
 
-            IPC::siginfo_t sinfo;
+            IPC::siginfo_t sinfo = {};
 
             sinfo.si_signo = IPC::SIGSEGV;
-            sinfo.si_code  = (info->err & 0x01) ? SEGV_MAPERR : SEGV_ACCERR;
+            sinfo.si_code  = (info->err & 0x01) ? SEGV_ACCERR : SEGV_MAPERR;
             sinfo.si_addr  = addr;
 
             thread->signal(sinfo);
@@ -251,7 +255,7 @@ namespace AEX::Sys {
         //            "    RIP: 0x%016lx\n",
         //            cpu->id, cr2, cr3, info->rip);
 
-        IPC::siginfo_t sinfo;
+        IPC::siginfo_t sinfo = {};
 
         sinfo.si_signo = IPC::SIGILL;
         sinfo.si_code  = ILL_ILLOPC;
@@ -301,7 +305,7 @@ namespace AEX::Sys {
             name = "no idea";
 
         printk("RIP: 0x%p <%s+0x%x>\n", info->rip, name, delta);
-        printk("RFLAGS: 0x%016lx\n", info->rflags);
+        printk("RFLAGS: 0x%016lx  CS: 0x%04x  SS: 0x%04x\n", info->rflags, info->cs, info->ss);
 
         size_t cr0, cr2, cr3, cr4;
 

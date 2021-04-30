@@ -72,6 +72,9 @@ namespace AEX::Proc {
         if (!inrange(id, 1, IPC::SIGSYS))
             return EINVAL;
 
+        if (id == SIGKILL || id == SIGSTOP || id == SIGCONT)
+            return EINVAL;
+
         lock.acquire();
         m_signals[id] = action;
 

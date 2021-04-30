@@ -1,5 +1,7 @@
 #pragma once
 
+#include "aex/utility.hpp"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -8,7 +10,7 @@ namespace AEX::FS {
     constexpr auto MAX_FILENAME_LEN = 256;
     constexpr auto MAX_DEPTH        = 256;
 
-    class Walker {
+    class API Walker {
         public:
         Walker(const char* path);
 
@@ -36,19 +38,17 @@ namespace AEX::FS {
      * @param num    Size of destination buffer.
      * @returns Pointer to destination buffer.
      **/
-    char* get_filename(char* buffer, const char* path, size_t num);
+    API char* get_filename(char* buffer, const char* path, size_t num);
 
     /**
      * Checks if a path fits in MAX_PATH_LEN.
      * @returns True if the specified path fits, false otherwies.
      **/
-    bool check_length(const char* path);
+    API bool check_length(const char* path);
 
-    bool ends_with_slash(const char* path);
-
-    bool is_valid(const char* path);
-
-    char* canonize_path(const char* path, const char* base_path, char* buffer, size_t buffer_len);
-
-    int count_levels(const char* path);
+    API bool  ends_with_slash(const char* path);
+    API bool  is_valid(const char* path);
+    API char* canonize_path(const char* path, const char* base_path, char* buffer,
+                            size_t buffer_len);
+    API int   count_levels(const char* path);
 }

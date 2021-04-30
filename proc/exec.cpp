@@ -59,26 +59,29 @@ namespace AEX::Proc {
 
             process->lock.release();
 
-            process->files_lock.acquire();
+            if (envp)
+                process->env(envp);
 
-            for (int i = 0; i < process->files.count(); i++) {
-                if (!process->files.present(i))
+            process->descs_lock.acquire();
+
+            for (int i = 0; i < process->descs.count(); i++) {
+                if (!process->descs.present(i))
                     continue;
 
-                auto file = process->files.at(i);
-                if (file->get_flags() & FS::FD_CLOEXEC) {
-                    file->close();
-                    process->files.erase(i);
+                auto desc = process->descs.at(i);
+                if (desc.flags & FS::FD_CLOEXEC) {
+                    desc.file->close();
+                    process->descs.erase(i);
                 }
             }
 
             if (options) {
-                process->files.set(0, options->stdin);
-                process->files.set(1, options->stdout);
-                process->files.set(2, options->stderr);
+                process->descs.set(0, options->stdin);
+                process->descs.set(1, options->stdout);
+                process->descs.set(2, options->stderr);
             }
 
-            process->files_lock.release();
+            process->descs_lock.release();
             process->ready();
 
             if (initiator)

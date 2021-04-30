@@ -1,10 +1,12 @@
 #pragma once
 
+#include "aex/utility.hpp"
+
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Sys {
-    struct idt_entry {
+    struct API idt_entry {
         uint16_t offset_0;
 
         uint16_t selector;
@@ -22,11 +24,11 @@ namespace AEX::Sys {
         idt_entry& setSelector(uint8_t selector);
         idt_entry& setPresent(bool present);
         idt_entry& setIST(uint8_t ist);
-    } __attribute((packed));
+    } PACKED;
 
-    extern idt_entry idt[256];
+    API extern idt_entry idt[256];
 
-    void setup_idt();
-    void load_idt(idt_entry* idt, size_t entry_count);
-    void set_idt_ists();
+    API void setup_idt();
+    API void load_idt(idt_entry* idt, size_t entry_count);
+    API void set_idt_ists();
 }

@@ -8,6 +8,7 @@
 #include "aex/proc/process.hpp"
 #include "aex/proc/thread.hpp"
 #include "aex/proc/types.hpp"
+#include "aex/utility.hpp"
 
 namespace AEX::Proc {
     /**
@@ -17,7 +18,7 @@ namespace AEX::Proc {
      * @returns The created thread.
      **/
     template <typename Func, typename... Args>
-    [[nodiscard]] Thread* threaded_call(Func func, Args... args) {
+    [[nodiscard]] API Thread* threaded_call(Func func, Args... args) {
         auto thread_try = Thread::create(1, (void*) func, Thread::KERNEL_STACK_SIZE, nullptr);
         if (!thread_try)
             return nullptr;

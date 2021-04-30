@@ -3,11 +3,12 @@
 #include "aex/dev/input/code.hpp"
 #include "aex/dev/input/event.hpp"
 #include "aex/mem/circularbuffer.hpp"
+#include "aex/utility.hpp"
 
 #include <stdint.h>
 
 namespace AEX::Dev::Input {
-    class Handle {
+    class API Handle {
         public:
         Handle() = delete;
         ~Handle();

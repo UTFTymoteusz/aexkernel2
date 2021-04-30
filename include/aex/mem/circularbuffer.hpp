@@ -2,18 +2,20 @@
 
 #include "aex/ipc/event.hpp"
 #include "aex/spinlock.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Mem {
-    class CircularBuffer {
+    class API CircularBuffer {
         public:
         CircularBuffer(int size);
         ~CircularBuffer();
 
-        int read(void* buffer, int len);
+        int read(void* buffer, int len, int quota = -1);
         int write(const void* buffer, int len);
+        int writeAtomic(const void* buffer, int len);
 
         int readAvailable();
         int writeAvailable();

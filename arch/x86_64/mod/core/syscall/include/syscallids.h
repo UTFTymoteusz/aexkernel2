@@ -51,6 +51,11 @@ enum syscall_id_t {
     SYS_TDETACH = 75,
     SYS_TKILL   = 76,
 
+    SYS_GETHOSTNAME = 80,
+    SYS_SETHOSTNAME = 81,
+    SYS_GETENV      = 82,
+    SYS_SETENV      = 83,
+
     SYS_GETEGID  = 90,
     SYS_GETEUID  = 91,
     SYS_GETGID   = 92,

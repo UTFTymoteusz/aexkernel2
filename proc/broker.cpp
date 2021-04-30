@@ -1,6 +1,7 @@
 #include "aex/proc/broker.hpp"
 
 #include "aex/ipc/messagequeue.hpp"
+#include "aex/kpanic.hpp"
 #include "aex/proc/thread.hpp"
 
 #include "proc/broker.hpp"
@@ -13,6 +14,7 @@ namespace AEX::Proc {
 
     IPC::MessageQueue broker_queue;
     Thread*           broker_thread;
+    broker_request    broker_current;
 
     void broker_loop();
 
@@ -23,6 +25,16 @@ namespace AEX::Proc {
         broker_thread->detach();
 
         new (&broker_queue) IPC::MessageQueue();
+
+        kpanic_hook.subscribe([]() {
+            int  delta;
+            auto name = Debug::addr2name((void*) broker_current.func, delta);
+            if (!name)
+                name = "unknown";
+
+            printk("broker: Currently executing 0x%p <%s+0x%x>\n", broker_current.func, name,
+                   delta);
+        });
     }
 
     void broker(void* (*func)(void* arg), void* arg) {
@@ -36,8 +48,9 @@ namespace AEX::Proc {
 
     void broker_loop() {
         while (true) {
-            auto request = broker_queue.readObject<broker_request>();
-            request.func(request.arg);
+            broker_current = broker_queue.readObject<broker_request>();
+            broker_current.func(broker_current.arg);
+            broker_current = {};
         }
     }
 }

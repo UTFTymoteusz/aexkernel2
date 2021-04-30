@@ -8,6 +8,7 @@
 #include "aex/proc.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/string.hpp"
+#include "aex/sys/pci/resolv.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -248,11 +249,15 @@ namespace AEX::Sys::PCI {
             if (get_vendor_id(bus, device, function) == 0xFFFF)
                 continue;
 
-            /*printk("pci: Found %93$%3i %3i %3i%$ - 0x%02x, 0x%02x\n", bus, device, function,
-                   get_class(bus, device, function), get_subclass(bus, device, function));**/
-
             char buffer[32];
             snprintf(buffer, sizeof(buffer), "%02x.%02x.%02x", bus, device, function);
+
+            auto _class    = get_class(bus, device, function);
+            auto _subclass = get_subclass(bus, device, function);
+            auto _prog_if  = get_prog_if(bus, device, function);
+
+            printk("pci: Found %93$%s%$ - 0x%02x, 0x%02x: %s\n", buffer, _class, _subclass,
+                   resolve(_class, _subclass, _prog_if));
 
             auto dev_device = new PCIDevice(buffer, pci_root);
 
@@ -263,9 +268,9 @@ namespace AEX::Sys::PCI {
             dev_device->device_id = get_device_id(bus, device, function);
             dev_device->vendor_id = get_vendor_id(bus, device, function);
 
-            dev_device->p_class  = get_class(bus, device, function);
-            dev_device->subclass = get_subclass(bus, device, function);
-            dev_device->prog_if  = get_prog_if(bus, device, function);
+            dev_device->p_class  = _class;
+            dev_device->subclass = _subclass;
+            dev_device->prog_if  = _prog_if;
 
             dev_device->interrupt_pin = 0;
 

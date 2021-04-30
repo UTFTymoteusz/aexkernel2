@@ -10,12 +10,14 @@ using namespace AEX::Mem;
 using namespace AEX::Sys;
 
 namespace AEX::Proc {
-    WEAK void schedule() {
+    void schedule() {
         auto cpu    = CPU::current();
         auto thread = Thread::current();
 
-        if (thread->isCritical())
+        if (thread->isCritical()) {
+            cpu->should_yield = true;
             return;
+        }
 
         if (thread->sched_counter >= 1000000) {
             thread->sched_counter -= 1000000;
@@ -37,11 +39,15 @@ namespace AEX::Proc {
 
         auto uptime = Time::uptime_raw();
         auto delta  = uptime - cpu->measurement_start_ns;
+        auto next   = thread->next;
 
         cpu->measurement_start_ns = uptime;
 
         thread->parent->usage.cpu_time_ns += delta;
         thread->lock.releaseRaw();
+
+        if (next == nullptr)
+            thread = thread_list_head;
 
         for (int i = 0; i <= thread_list_size; i++) {
             thread = thread->next;
@@ -82,7 +88,7 @@ namespace AEX::Proc {
                 continue;
 
             thread->sched_counter = counter - 1000000;
-            AEX_ASSERT(thread->sched_counter < 25000000);
+            AEX_ASSERT_PEDANTIC(thread->sched_counter < 25000000);
 
             cpu->current_thread  = thread;
             cpu->current_context = thread->context;
@@ -100,7 +106,7 @@ namespace AEX::Proc {
         if (thread == idle)
             thread = thread_list_head;
 
-        // We don't care, it's our private thread anyways
+        // We don't care either way, it's our private thread anyways
         idle->lock.tryAcquireRaw();
 
         cpu->current_thread  = idle;

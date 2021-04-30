@@ -1,12 +1,13 @@
 #pragma once
 
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::Proc {
-    struct affinity {
+    struct API affinity {
         public:
         affinity() {
             m_mask = 0x00000000;

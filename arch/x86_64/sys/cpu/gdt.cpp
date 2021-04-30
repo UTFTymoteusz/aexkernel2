@@ -1,11 +1,11 @@
-#include "sys/cpu/gdt.hpp"
+#include "aex/arch/sys/cpu/gdt.hpp"
 
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/arch/sys/cpu/tss.hpp"
 #include "aex/debug.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 
-#include "sys/cpu/tss.hpp"
 #include "sys/mcore.hpp"
 
 namespace AEX::Sys {
@@ -58,6 +58,7 @@ namespace AEX::Sys {
 
             m_tss->ist1 = (size_t) 0;
             m_tss->ist2 = (size_t) Mem::kernel_pagemap->alloc(16384) + 16384;
+            m_tss->ist3 = (size_t) Mem::kernel_pagemap->alloc(4096) + 4096;
 
             tsses[i / 2] = m_tss;
         }

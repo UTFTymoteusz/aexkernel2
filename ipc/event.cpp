@@ -28,8 +28,9 @@ namespace AEX::IPC {
         if (!is_on_queue)
             m_tiddies.push(current);
 
-        if (timeout == 0)
+        if (timeout == 0) {
             current->setStatus(TS_BLOCKED);
+        }
         else {
             current->setStatus(TS_SLEEPING);
             current->wakeup_at = Sys::Time::uptime() + (uint64_t) timeout * 1000000;
@@ -45,8 +46,11 @@ namespace AEX::IPC {
         m_lock.acquire();
 
         int total = m_tiddies.count();
-        for (int i = 0; i < total; i++)
+        for (int i = 0; i < total; i++) {
+            AEX_ASSERT(m_tiddies.at(i)->status != TS_DEAD);
+
             m_tiddies.at(i)->setStatus(TS_RUNNABLE);
+        }
 
         m_tiddies.clear();
         m_lock.release();
@@ -60,8 +64,11 @@ namespace AEX::IPC {
         m_defunct = true;
 
         int total = m_tiddies.count();
-        for (int i = 0; i < total; i++)
+        for (int i = 0; i < total; i++) {
+            AEX_ASSERT(m_tiddies.at(i)->status != TS_DEAD);
+
             m_tiddies.at(i)->setStatus(TS_RUNNABLE);
+        }
 
         m_tiddies.clear();
         m_lock.release();
@@ -84,8 +91,9 @@ namespace AEX::IPC {
 
         m_tiddie = current;
 
-        if (timeout == 0)
+        if (timeout == 0) {
             current->setStatus(TS_BLOCKED);
+        }
         else {
             current->setStatus(TS_SLEEPING);
             current->wakeup_at = Sys::Time::uptime() + (uint64_t) timeout * 1000000;

@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 namespace AEX::Sys::ACPI {
-    struct fadt {
+    struct API fadt {
         sdt_header header;
         uint32_t   firmware_ctrl;
         uint32_t   dsdt;

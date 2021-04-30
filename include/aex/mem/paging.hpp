@@ -1,35 +1,38 @@
 #pragma once
 
 #include "aex/spinlock.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
-extern const int m_page_present, m_page_write, m_page_user, m_page_through, m_page_nocache,
-    m_page_combine, m_page_global, m_page_nophys, m_page_exec, m_page_fixed, m_page_arbitrary;
+namespace AEX::Mem {
+    API extern const int m_page_present, m_page_write, m_page_user, m_page_through, m_page_nocache,
+        m_page_combine, m_page_global, m_page_nophys, m_page_exec, m_page_fixed, m_page_arbitrary;
+}
 
 // Specifies if a page is present.
-#define PAGE_PRESENT m_page_present
+#define PAGE_PRESENT AEX::Mem::m_page_present
 // Specifies if a page is writeable.
-#define PAGE_WRITE m_page_write
+#define PAGE_WRITE AEX::Mem::m_page_write
 // Specifies if a page is accessible by userspace code.
-#define PAGE_USER m_page_user
+#define PAGE_USER AEX::Mem::m_page_user
 // Write-through mode.
-#define PAGE_THROUGH m_page_through
+#define PAGE_THROUGH AEX::Mem::m_page_through
 // Disables caching for a page.
-#define PAGE_NOCACHE m_page_nocache
+#define PAGE_NOCACHE AEX::Mem::m_page_nocache
 // Write-combining mode.
-#define PAGE_COMBINE m_page_combine
+#define PAGE_COMBINE AEX::Mem::m_page_combine
 // Makes the page not get flushed on context switches.
-#define PAGE_GLOBAL m_page_global
+#define PAGE_GLOBAL AEX::Mem::m_page_global
 // Marks the page as not being the owner of a physical memory frame.
-#define PAGE_NOPHYS m_page_nophys
+#define PAGE_NOPHYS AEX::Mem::m_page_nophys
 // Puts the page in the executable space.
-#define PAGE_EXEC m_page_exec
+#define PAGE_EXEC AEX::Mem::m_page_exec
 // If set, the pages will be mapped at the source address.
-#define PAGE_FIXED m_page_fixed
+#define PAGE_FIXED AEX::Mem::m_page_fixed
 // If set, the pages will raise page faults.
-#define PAGE_ARBITRARY m_page_arbitrary
+#define PAGE_ARBITRARY AEX::Mem::m_page_arbitrary
 
 namespace AEX::Mem {
     typedef size_t phys_addr;
@@ -37,7 +40,7 @@ namespace AEX::Mem {
     /**
      * The pagemap class. Contains the methods required to allocate virtual memory.
      **/
-    class Pagemap {
+    class API Pagemap {
         public:
         void* vstart;
         void* vend;
@@ -50,6 +53,7 @@ namespace AEX::Mem {
         Pagemap();
         Pagemap(phys_addr pageRoot);
         Pagemap(size_t start, size_t end);
+        ~Pagemap();
 
         /**
          * Allocates enough pages to fit the specified size and zeroes them out.
@@ -135,14 +139,16 @@ namespace AEX::Mem {
         uint64_t* findTableEnsure(int pptr, uint64_t virt_addr);
 
         void* findContiguous(int pptr, size_t amount, bool executable = false);
+
+        phys_addr paddrof_internal(int pptr, void* vaddr);
+        size_t    rawof_internal(int pptr, void* vaddr);
     };
 
     /**
      * The pagemap that is used by the kernel exclusively.
      **/
-    extern Pagemap* kernel_pagemap;
+    API extern Pagemap* kernel_pagemap;
 
     void init();
-
-    void cleanup_bootstrap();
+    void cleanup();
 }

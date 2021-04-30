@@ -2,6 +2,7 @@
 
 #include "aex/mem/smartptr.hpp"
 #include "aex/mutex.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -9,7 +10,7 @@
 namespace AEX::Dev {
     class BlockDevice;
 
-    class BlockHandle {
+    class API BlockHandle {
         public:
         BlockHandle();
         BlockHandle(Mem::SmartPointer<BlockDevice> blkhndl);

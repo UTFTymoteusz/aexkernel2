@@ -7,6 +7,8 @@
 #include "aex/ipc/messagequeue.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
+#include "aex/proc/process.hpp"
+#include "aex/proc/thread.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/utility.hpp"
 
@@ -74,6 +76,24 @@ namespace AEX::Proc {
 
         kernel_process->threads.push(bsp_thread);
 
+        kpanic_hook.subscribe([]() {
+            printk("Stack trace:\n");
+            Debug::stack_trace(1);
+
+            printk("Threads:\n");
+            Proc::debug_print_threads();
+
+            printk("Idles:\n");
+            Proc::debug_print_idles();
+
+            printk("Processors:\n");
+            for (int i = 0; i < MCore::cpu_count; i++) {
+                auto cpu = Sys::MCore::CPUs[i];
+
+                printk("%3i. 0x%p\n", i, cpu->current_thread);
+            }
+        });
+
         broker_init();
 
         setup_idles();
@@ -89,6 +109,7 @@ namespace AEX::Proc {
     pid_t add_process(Process* process) {
         static pid_t counter = 0;
 
+        AEX_ASSERT(process);
         AEX_ASSERT(!processes_lock.tryAcquire());
 
         auto scope = sched_lock.scope();
@@ -118,6 +139,7 @@ namespace AEX::Proc {
     }
 
     void remove_process(Process* process) {
+        AEX_ASSERT(process);
         AEX_ASSERT(!processes_lock.tryAcquire());
 
         auto scope = sched_lock.scope();
@@ -170,6 +192,7 @@ namespace AEX::Proc {
     void remove_thread(Thread* thread) {
         auto scope = sched_lock.scope();
 
+        AEX_ASSERT(thread->held_mutexes == 0);
         AEX_ASSERT(thread_list_size > 0);
 
         for (int i = 0; i < MCore::cpu_count; i++)
@@ -186,6 +209,9 @@ namespace AEX::Proc {
 
         thread->next->prev = thread->prev;
         thread->prev->next = thread->next;
+
+        // TODO: Figure out a better solution
+        thread->next = nullptr;
     }
 
     void idle() {
@@ -225,7 +251,7 @@ namespace AEX::Proc {
         CPU::broadcast(CPU::IPP_RESHED);
 
         for (int i = 0; i < MCore::cpu_count; i++) {
-            while ((volatile Thread*) MCore::CPUs[i]->current_thread == void_threads[i])
+            while (MCore::CPUs[i]->current_thread == void_threads[i])
                 CPU::wait();
 
             delete void_threads[i];

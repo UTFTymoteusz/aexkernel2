@@ -22,7 +22,7 @@ VERSION := $(shell date -u '+%d.%m.%Y').$(shell printf "%05d" $(shell date -d "1
 ISO  = $(BIN)grubiso/
 SYS  = $(ISO)sys/
 
-GFLAGS = -O0 -Wall -Wextra -Werror -nostdlib -pipe -lgcc
+GFLAGS = -O3 -Wall -Wextra -Werror -nostdlib -pipe -lgcc
 
 INCLUDES := -I. -Iinclude/ -Iarch/$(ARCH)/ -Iarch/$(ARCH)/include/
 
@@ -39,6 +39,7 @@ CXXFLAGS := $(GFLAGS)		   \
 	-fno-stack-protector       \
 	-fno-omit-frame-pointer    \
 	-mno-red-zone		       \
+	-fvisibility=hidden		   \
 	-DARCH="\"$(ARCH)\""       \
 	-DVERSION="\"$(VERSION)\"" \
 	$(INCLUDES)
@@ -55,7 +56,7 @@ format:
 	clang-format -style=file -i ${CXXFILES} ${HXXFILES}
 
 all: $(OBJS)	
-	@$(MKDIR) $(ISO) $(SYS) $(SYS)core/ $(SYS)init/
+	@$(MKDIR) $(ISO) $(SYS)
 
 	cd mod/core && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../..
 	cd mod/init && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../..
@@ -63,9 +64,17 @@ all: $(OBJS)
 	cd arch/$(ARCH)/mod/init && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../../../..
 
 	@$(CXX) $(OBJS) $(LDFLAGS) -T linker.ld -o $(SYS)aexkrnl
+	# Yees, absolutely EVERY symbol to debug it all, for now
+	objcopy --extract-symbol $(SYS)aexkrnl $(SYS)aexkrnl.sf
+	#objcopy -S $(SYS)aexkrnl
+	
+	#objcopy --localize-hidden -K __dso_handle $(SYS)aexkrnl
+	#nm $(SYS)aexkrnl | grep -o 'W \w*$$' | sed 's/W /-L/g' | xargs objcopy $(SYS)aexkrnl
+	#objcopy -x -g -K __dso_handle $(SYS)aexkrnl
 
 copy:
-	@cp $(SYS)aexkrnl "$(ROOT_DIR)sys/"
+	@cp $(SYS)aexkrnl    "$(ROOT_DIR)sys/"
+	@cp $(SYS)aexkrnl.sf "$(ROOT_DIR)sys/sym/"
 
 include $(shell find $(DEP_DEST) -type f -name *.d)
 
@@ -87,15 +96,18 @@ $(OBJ_DEST)%.cpp.o : %.cpp
 $(OBJ_DEST)%.asm.o : %.asm
 	@$(MKDIR) ${@D}
 	$(AS) $(ASFLAGS) $< -o $@
+	objcopy --weaken $@
 
 $(OBJ_DEST)%.psf.o : %.psf
 	@$(MKDIR) ${@D}
-	@objcopy -B i386:x86-64 -O elf64-x86-64 -I binary $< $@
+	objcopy -B i386:x86-64 -O elf64-x86-64 -I binary $< $@
+	objcopy --weaken $@
 
 $(OBJ_DEST)%.asmr.o : %.asmr
 	@$(MKDIR) ${@D}
 	$(AS) -f bin -o $@ $<
-	@objcopy -B i386:x86-64 -O elf64-x86-64 -I binary $@ $@
+	objcopy -B i386:x86-64 -O elf64-x86-64 -I binary $@ $@
+	objcopy --weaken $@
 
 iso:
 	@$(MKDIR) $(ISO)bin/ $(ISO)dev/ $(ISO)mnt/
