@@ -11,7 +11,7 @@
 #include "fs/inodefile.hpp"
 
 namespace AEX::FS {
-    dir_entry::dir_entry(const char* name, int pos, int inode_id) {
+    dirent::dirent(const char* name, int pos, int inode_id) {
         strncpy(this->name, name, sizeof(this->name));
         this->inode_id = inode_id;
         this->pos      = pos;
@@ -117,7 +117,7 @@ namespace AEX::FS {
         return ESPIPE;
     }
 
-    optional<dir_entry> File::readdir() {
+    optional<dirent> File::readdir() {
         return ENOTDIR;
     }
 

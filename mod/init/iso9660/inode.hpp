@@ -22,7 +22,7 @@ namespace AEX::FS {
             hard_links = 1;
         }
 
-        optional<dir_entry> readDir(dir_context* ctx) {
+        optional<dirent> readDir(dir_context* ctx) {
             if (ctx->pos >= size)
                 return {};
 
@@ -81,7 +81,7 @@ namespace AEX::FS {
                     }
                 }
 
-                auto dentry_ret = dir_entry(name_buffer, ctx->pos - len, ldentry->data_lba.le);
+                auto dentry_ret = dirent(name_buffer, ctx->pos - len, ldentry->data_lba.le);
 
                 dentry_ret.type = ldentry->isDirectory() ? FT_DIRECTORY : FT_REGULAR;
 

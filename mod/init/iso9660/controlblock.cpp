@@ -10,7 +10,7 @@
 #include "types.hpp"
 
 namespace AEX::FS {
-    optional<INode_SP> ISO9660ControlBlock::getINode(INode_SP dir, dir_entry dentry, ino_t id) {
+    optional<INode_SP> ISO9660ControlBlock::getINode(INode_SP dir, dirent dentry, ino_t id) {
         if (id == root_inode_id)
             return INode_SP(new ISO9600DirectoryINode(m_root_dentry));
 

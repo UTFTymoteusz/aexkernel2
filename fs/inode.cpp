@@ -15,7 +15,7 @@ namespace AEX::FS {
         return ENOSYS;
     }
 
-    optional<dir_entry> INode::readDir(dir_context*) {
+    optional<dirent> INode::readDir(dir_context*) {
         return ENOSYS;
     }
 

@@ -8,15 +8,15 @@
 #include <stdint.h>
 
 namespace AEX::FS {
-    struct API dir_entry {
+    struct API dirent {
         ino_t inode_id;
         int   pos;
 
         char      name[MAX_FILENAME_LEN] = {};
         fs_type_t type                   = FT_UNKNOWN;
 
-        dir_entry(){};
-        dir_entry(const char* name, int pos, int inode_id);
+        dirent(){};
+        dirent(const char* name, int pos, int inode_id);
 
         bool is_regular() {
             return (type & FS::FT_REGULAR) == FS::FT_REGULAR;

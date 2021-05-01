@@ -60,8 +60,8 @@ namespace AEX {
             return;
         }
 
-        auto get_order = [](FS::dir_entry& dir_entry) {
-            auto name = (char*) &dir_entry.name;
+        auto get_order = [](FS::dirent& dirent) {
+            auto name = (char*) &dirent.name;
 
             while (*name && (*name != '.'))
                 name++;

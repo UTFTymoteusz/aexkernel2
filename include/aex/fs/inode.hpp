@@ -39,9 +39,9 @@ namespace AEX::FS {
 
         virtual error_t update();
 
-        virtual optional<dir_entry> readDir(dir_context* ctx);
-        virtual error_t             seekDir(dir_context* ctx, long pos);
-        virtual long                tellDir(dir_context* ctx);
+        virtual optional<dirent> readDir(dir_context* ctx);
+        virtual error_t          seekDir(dir_context* ctx, long pos);
+        virtual long             tellDir(dir_context* ctx);
 
         bool is_regular() {
             return (type & FT_REGULAR) == FT_REGULAR;

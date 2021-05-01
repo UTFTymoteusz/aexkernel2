@@ -59,9 +59,9 @@ namespace AEX::FS {
 
         virtual optional<off_t> seek(off_t offset, seek_mode mode = seek_mode::SEEK_SET);
 
-        virtual optional<dir_entry> readdir();
-        virtual error_t             seekdir(long pos);
-        virtual long                telldir();
+        virtual optional<dirent> readdir();
+        virtual error_t          seekdir(long pos);
+        virtual long             telldir();
 
         virtual optional<File_SP> dup();
 

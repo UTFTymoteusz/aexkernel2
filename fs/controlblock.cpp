@@ -8,12 +8,12 @@
 namespace AEX::FS {
     ControlBlock::~ControlBlock() {}
 
-    optional<INode_SP> ControlBlock::getINode(INode_SP, dir_entry, ino_t) {
+    optional<INode_SP> ControlBlock::getINode(INode_SP, dirent, ino_t) {
         return ENOSYS;
     }
 
     optional<INode_SP> ControlBlock::findINode(const char* lpath) {
-        auto inode_try = getINode(INode_SP::getNull(), dir_entry(), root_inode_id);
+        auto inode_try = getINode(INode_SP::getNull(), dirent(), root_inode_id);
         if (!inode_try)
             return inode_try.error_code;
 

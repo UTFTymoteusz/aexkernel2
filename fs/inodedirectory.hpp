@@ -15,7 +15,7 @@ namespace AEX::FS {
             m_inode = inode;
         }
 
-        optional<dir_entry> readdir() {
+        optional<dirent> readdir() {
             return m_inode->readDir(&m_dir_ctx);
         }
 

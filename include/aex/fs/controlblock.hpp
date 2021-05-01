@@ -22,7 +22,7 @@ namespace AEX::FS {
 
         virtual ~ControlBlock();
 
-        virtual optional<INode_SP> getINode(INode_SP dir, dir_entry dentry, ino_t id);
+        virtual optional<INode_SP> getINode(INode_SP dir, dirent dentry, ino_t id);
         optional<INode_SP>         findINode(const char* lpath);
 
         protected:

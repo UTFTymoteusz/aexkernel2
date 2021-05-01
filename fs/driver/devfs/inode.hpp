@@ -11,7 +11,7 @@ namespace AEX::FS {
             type = FT_DIRECTORY;
         }
 
-        optional<dir_entry> readDir(dir_context* ctx) {
+        optional<dirent> readDir(dir_context* ctx) {
             while ((int) ctx->pos < Dev::devices.count()) {
                 auto device = Dev::devices.get(ctx->pos);
                 if (!device)
@@ -19,7 +19,7 @@ namespace AEX::FS {
 
                 ctx->pos++;
 
-                auto dentry = dir_entry(device->name, ctx->pos - 1, ctx->pos + 1);
+                auto dentry = dirent(device->name, ctx->pos - 1, ctx->pos + 1);
 
                 switch (device->type) {
                 case Dev::DEV_BLOCK:

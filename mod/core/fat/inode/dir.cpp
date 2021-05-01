@@ -1,7 +1,7 @@
 #include "../inode.hpp"
 
 namespace AEX::FS {
-    optional<dir_entry> FATDirectoryINode::readDir(dir_context* ctx) {
+    optional<dirent> FATDirectoryINode::readDir(dir_context* ctx) {
         if (ctx->pos >= size)
             return {};
 
@@ -71,14 +71,14 @@ namespace AEX::FS {
             fat_block->m_mutex.release();
             m_mutex.release();
 
-            dir_entry aex_dir_entry;
+            dirent aex_dirent;
 
-            strncpy(aex_dir_entry.name, filename, sizeof(aex_dir_entry.name));
-            aex_dir_entry.type = fat_dirent.attributes & FAT_DIRECTORY ? FT_DIRECTORY : FT_REGULAR;
-            aex_dir_entry.inode_id = inode_id;
-            aex_dir_entry.pos      = ctx->pos;
+            strncpy(aex_dirent.name, filename, sizeof(aex_dirent.name));
+            aex_dirent.type     = fat_dirent.attributes & FAT_DIRECTORY ? FT_DIRECTORY : FT_REGULAR;
+            aex_dirent.inode_id = inode_id;
+            aex_dirent.pos      = ctx->pos;
 
-            return aex_dir_entry;
+            return aex_dirent;
         }
 
         return {};

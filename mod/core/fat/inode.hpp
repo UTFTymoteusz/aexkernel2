@@ -53,7 +53,7 @@ namespace AEX::FS {
             type = FT_DIRECTORY;
         }
 
-        optional<dir_entry> readDir(dir_context* ctx);
+        optional<dirent> readDir(dir_context* ctx);
 
         private:
         struct inode_assoc {
