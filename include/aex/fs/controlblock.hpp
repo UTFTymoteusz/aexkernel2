@@ -3,7 +3,9 @@
 #include "aex/dev/blockhandle.hpp"
 #include "aex/fs/directory.hpp"
 #include "aex/fs/types.hpp"
+#include "aex/mem/cache.hpp"
 #include "aex/mem/smartptr.hpp"
+#include "aex/mutex.hpp"
 #include "aex/optional.hpp"
 #include "aex/utility.hpp"
 
@@ -21,7 +23,14 @@ namespace AEX::FS {
         virtual ~ControlBlock();
 
         virtual optional<INode_SP> getINode(INode_SP dir, dir_entry dentry, ino_t id);
+        optional<INode_SP>         findINode(const char* lpath);
 
-        optional<INode_SP> findINode(const char* lpath);
+        protected:
+        Mutex                m_mutex;
+        Mem::Cache<INode_SP> m_cache;
+
+        ino_t m_inocurrent = 1;
+
+        ino_t nextINodeID();
     };
 }

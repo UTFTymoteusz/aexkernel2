@@ -12,8 +12,8 @@ namespace AEX::FS {
         ino_t inode_id;
         int   pos;
 
-        char          name[MAX_FILENAME_LEN] = {};
-        FS::fs_type_t type                   = FT_UNKNOWN;
+        char      name[MAX_FILENAME_LEN] = {};
+        fs_type_t type                   = FT_UNKNOWN;
 
         dir_entry(){};
         dir_entry(const char* name, int pos, int inode_id);

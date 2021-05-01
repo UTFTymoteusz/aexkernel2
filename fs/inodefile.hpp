@@ -26,6 +26,7 @@ namespace AEX::FS {
 
         optional<ssize_t> read(void* buffer, size_t count) {
             uint32_t requested_count = count;
+            error_t  error;
 
             count = min<size_t>(m_inode->size - m_pos, count);
             if (count == 0)
@@ -46,13 +47,18 @@ namespace AEX::FS {
             if (count == 0)
                 return requested_count;
 
-            readBlocks(buffer, m_pos, count);
+            error = readBlocks(buffer, m_pos, count);
+            if (error)
+                return error;
 
             m_pos += count;
 
             size_t last_block = (size_t) m_pos / m_block_size;
-            if (last_block != m_cached_block)
-                readBlocks(m_cache_buffer, last_block * m_block_size, m_block_size);
+            if (last_block != m_cached_block) {
+                error = readBlocks(m_cache_buffer, last_block * m_block_size, m_block_size);
+                if (error)
+                    return error;
+            }
 
             m_cached_block = last_block;
 
@@ -138,12 +144,13 @@ namespace AEX::FS {
 
         Mem::SmartPointer<INode> m_inode;
 
-        void readBlocks(void* buffer, uint64_t start, uint32_t len) {
+        error_t readBlocks(void* buffer, uint64_t start, uint32_t len) {
             bool combo = false;
 
             uint64_t combo_start = 0;
             uint32_t combo_count = 0;
 
+            error_t error;
             uint8_t m_overflow_buffer[m_block_size];
 
             while (len > 0) {
@@ -158,7 +165,10 @@ namespace AEX::FS {
                         combo = false;
                     }
 
-                    m_inode->readBlocks(m_overflow_buffer, start / m_block_size, 1);
+                    error = m_inode->readBlocks(m_overflow_buffer, start / m_block_size, 1);
+                    if (error)
+                        return error;
+
                     memcpy(buffer, m_overflow_buffer + offset, llen);
 
                     buffer = (void*) ((uint8_t*) buffer + llen);
@@ -178,8 +188,13 @@ namespace AEX::FS {
                 len -= llen;
             }
 
-            if (combo)
-                m_inode->readBlocks(buffer, combo_start, combo_count);
+            if (combo) {
+                error = m_inode->readBlocks(buffer, combo_start, combo_count);
+                if (error)
+                    return error;
+            }
+
+            return ENONE;
         }
 
         bool isPerfect(uint64_t start, uint32_t len) {

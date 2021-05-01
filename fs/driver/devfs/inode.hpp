@@ -19,7 +19,21 @@ namespace AEX::FS {
 
                 ctx->pos++;
 
-                return dir_entry(device->name, ctx->pos - 1, ctx->pos + 1);
+                auto dentry = dir_entry(device->name, ctx->pos - 1, ctx->pos + 1);
+
+                switch (device->type) {
+                case Dev::DEV_BLOCK:
+                    dentry.type = FT_BLOCK;
+                    break;
+                case Dev::DEV_CHAR:
+                    dentry.type = FT_CHAR;
+                    break;
+                case Dev::DEV_NET:
+                    dentry.type = FT_NET;
+                    break;
+                }
+
+                return dentry;
             }
 
             return {};

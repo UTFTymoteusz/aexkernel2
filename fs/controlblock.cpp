@@ -60,4 +60,8 @@ namespace AEX::FS {
 
         return inode;
     }
+
+    ino_t ControlBlock::nextINodeID() {
+        return Mem::atomic_fetch_add(&m_inocurrent, (ino_t) 1);
+    }
 }

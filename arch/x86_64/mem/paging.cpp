@@ -493,7 +493,7 @@ namespace AEX::Mem {
         m_lock.acquire();
 
         uint64_t paddr = paddrof_internal(pptr, addr);
-        
+
         m_lock.release();
         free_pptr(pptr);
 
