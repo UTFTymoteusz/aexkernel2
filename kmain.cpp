@@ -192,36 +192,6 @@ void exec_init() {
 void kmain_env() {
     using namespace AEX::Sys::Time;
 
-    optional<FS::dirent> bong;
-
-    auto file = FS::File::open("/dev/", 1);
-    while ((bong = file.value->readdir())) {
-        printk("%i %i %s\n", bong.value.inode_id, bong.value.type, bong.value.name);
-    }
-
-    file = FS::File::open("/mnt/", 1);
-    while ((bong = file.value->readdir())) {
-        printk("%i %i %s\n", bong.value.inode_id, bong.value.type, bong.value.name);
-    }
-
-    file = FS::File::open("/mnt/test/", 1);
-    while ((bong = file.value->readdir())) {
-        printk("%i %i %s\n", bong.value.inode_id, bong.value.type, bong.value.name);
-    }
-
-    auto asdf = FS::File::open("/mnt/funny.txt", 1);
-    printk("%s\n", strerror(asdf.error_code));
-
-    while (true) {
-        char buffer[129] = {};
-        auto ret         = asdf.value->read(buffer, 128);
-
-        printk("%s", buffer);
-
-        if (ret.value < 2)
-            break;
-    }
-
     exec_init();
 
     AEX_ASSERT(Sys::Power::poweroff());
