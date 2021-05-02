@@ -6,7 +6,6 @@
 namespace AEX::FS {
     optional<int> read_msdos(Dev::BlockHandle handle, partition* partitions, int limit) {
         msdos_mbr mbr;
-
         handle.read(&mbr, 0, sizeof(mbr));
 
         if (mbr.signature != 0xAA55)

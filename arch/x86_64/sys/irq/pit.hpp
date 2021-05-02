@@ -9,7 +9,6 @@ namespace AEX::Sys::IRQ {
         public:
         static void hz(int hz);
         static void interval(double ms);
-
         static void interrupt(double ms);
 
         private:

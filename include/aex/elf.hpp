@@ -284,7 +284,7 @@ namespace AEX {
 
             section_header_agn(const char* name, section_header32 header) {
                 this->name    = name;
-                this->bitness = bitness_t::BIT_32;
+                this->bitness = BIT_32;
 
                 type  = header.type;
                 flags = header.flags;
@@ -304,7 +304,7 @@ namespace AEX {
 
             section_header_agn(const char* name, section_header64 header) {
                 this->name    = name;
-                this->bitness = bitness_t::BIT_64;
+                this->bitness = BIT_64;
 
                 type  = header.type;
                 flags = header.flags;

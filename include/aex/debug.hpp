@@ -36,8 +36,6 @@ namespace AEX::Debug {
 
     API void dump_bytes(void* addr, size_t len);
 
-    void symbol_debug();
-
     void load_symbols(const char* elf_path);
     void load_symbols(void* addr);
 }

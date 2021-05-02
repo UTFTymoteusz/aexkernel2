@@ -42,7 +42,7 @@ namespace AEX::Sys::IRQ {
 
         vala &= ~(1 << 11);
 
-        valb &= ~(0xFF000000);
+        valb &= ~0xFF000000;
         valb |= destination << 24;
 
         write(0x10 + irq * 2, vala);

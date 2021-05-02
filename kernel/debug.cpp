@@ -79,18 +79,6 @@ namespace AEX::Debug {
         symbols_loaded = true;
     }
 
-    void symbol_debug() {
-        for (int i = 0; i < kernel_symbols.count(); i++) {
-            auto& symbol = kernel_symbols[i];
-
-            printk("%s - 0x%p\n", symbol.name, symbol.address);
-
-            if (strcmp(symbol.name, "_ZN3AEX8Spinlock7releaseEv") == 0 || i < 5)
-                for (volatile size_t i = 0; i < 1223422244; i++)
-                    ;
-        }
-    }
-
     const char* addr2name(void* addr, int& delta_ret, bool only_kernel) {
         if (kernel_symbols.count() == 0)
             return nullptr;

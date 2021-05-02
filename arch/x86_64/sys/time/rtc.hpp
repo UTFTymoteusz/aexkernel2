@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aex/spinlock.hpp"
+#include "aex/sys/time/types.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -10,7 +11,7 @@ namespace AEX::Sys::Time {
         public:
         static void init();
 
-        static int64_t epoch();
+        static time_t epoch();
 
         private:
         static Spinlock         m_lock;

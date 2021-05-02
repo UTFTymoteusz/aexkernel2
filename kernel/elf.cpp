@@ -12,7 +12,7 @@ namespace AEX {
         if (m_header.endianiness != endianiness_t::EN_LITTLE)
             return;
 
-        if (m_header.bitness == bitness_t::BIT_32) {
+        if (m_header.bitness == BIT_32) {
             int header_name_index = m_header.section_header_name_index32;
 
             section_header32 header_with_names;
@@ -45,7 +45,7 @@ namespace AEX {
             entry = (void*) (size_t) m_header.entry_position;
         }
 
-        if (m_header.bitness == bitness_t::BIT_32) {
+        if (m_header.bitness == BIT_32) {
             /*int count = m_header.program_header_entry_count32;
             file->seek(m_header.program_header_table_position32);
 
@@ -132,7 +132,7 @@ namespace AEX {
     }
 
     void ELF::loadSymbols() {
-        if (m_header.bitness == bitness_t::BIT_64)
+        if (m_header.bitness == BIT_64)
             loadSymbols64();
     }
 
@@ -186,7 +186,7 @@ namespace AEX {
     }
 
     void ELF::loadRelocations() {
-        if (m_header.bitness == bitness_t::BIT_64)
+        if (m_header.bitness == BIT_64)
             loadRelocations64();
     }
 
