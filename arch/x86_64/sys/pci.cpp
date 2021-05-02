@@ -103,7 +103,7 @@ namespace AEX::Sys::PCI {
         uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
                            ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
-        ScopeSpinlock scopeLock(lock);
+        SCOPE(lock);
 
         Sys::CPU::outd(CONFIG_ADDRESS, address);
         return Sys::CPU::ind(CONFIG_DATA);
@@ -113,7 +113,7 @@ namespace AEX::Sys::PCI {
         uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
                            ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
-        ScopeSpinlock scopeLock(lock);
+        SCOPE(lock);
 
         Sys::CPU::outd(CONFIG_ADDRESS, address);
         return (uint16_t)((Sys::CPU::ind(CONFIG_DATA) >> ((offset & 2) * 8)) & 0xFFFF);
@@ -123,7 +123,7 @@ namespace AEX::Sys::PCI {
         uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
                            ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
-        ScopeSpinlock scopeLock(lock);
+        SCOPE(lock);
 
         Sys::CPU::outd(CONFIG_ADDRESS, address);
         return (uint16_t)((Sys::CPU::ind(CONFIG_DATA) >> ((offset & 3) * 8)) & 0xFF);
@@ -133,7 +133,7 @@ namespace AEX::Sys::PCI {
         uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
                            ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
-        ScopeSpinlock scopeLock(lock);
+        SCOPE(lock);
 
         Sys::CPU::outd(CONFIG_ADDRESS, address);
 
@@ -148,7 +148,7 @@ namespace AEX::Sys::PCI {
         uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
                            ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
-        ScopeSpinlock scopeLock(lock);
+        SCOPE(lock);
 
         Sys::CPU::outd(CONFIG_ADDRESS, address);
 
@@ -163,7 +163,7 @@ namespace AEX::Sys::PCI {
         uint32_t address = (uint32_t)((uint32_t) bus << 16) | ((uint32_t) device << 11) |
                            ((uint32_t) function << 8) | (offset & 0xFC) | (1 << 31);
 
-        ScopeSpinlock scopeLock(lock);
+        SCOPE(lock);
 
         Sys::CPU::outd(CONFIG_ADDRESS, address);
         return Sys::CPU::outd(CONFIG_DATA, val);
@@ -177,7 +177,6 @@ namespace AEX::Sys::PCI {
 
     void fill_bars(uint8_t bus, uint8_t device, uint8_t function, PCIDevice* dev_device) {
         Mem::Phys::phys_addr bar0, bar1;
-
         Mem::Phys::phys_addr addr;
         size_t               len;
 

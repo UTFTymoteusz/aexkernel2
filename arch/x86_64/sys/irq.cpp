@@ -151,10 +151,7 @@ namespace AEX::Sys::IRQ {
         for (int i = 0; i < ioapics.count(); i++) {
             auto ioapic = ioapics.at(i);
 
-            if (ioapic->irq_base > irq)
-                continue;
-
-            if (ioapic->irq_base + ioapic->amount() < irq)
+            if (!inrange(irq, ioapic->irq_base, ioapic->irq_base + ioapic->amount()))
                 continue;
 
             return ioapic;

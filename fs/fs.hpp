@@ -6,17 +6,16 @@
 
 namespace AEX::FS {
     struct mount_info {
-        optional<Mem::SmartPointer<Mount>> mount;
+        Mem::SmartPointer<Mount> mount;
+        const char*              new_path;
 
-        const char* new_path;
-
-        mount_info(optional<Mem::SmartPointer<Mount>> mount, const char* new_path) {
+        mount_info() {}
+        mount_info(Mem::SmartPointer<Mount> mount, const char* new_path) {
             this->mount    = mount;
             this->new_path = new_path;
         }
     };
 
-    void init();
-
-    mount_info find_mount(const char* path);
+    void                 init();
+    optional<mount_info> find_mount(const char* path);
 }

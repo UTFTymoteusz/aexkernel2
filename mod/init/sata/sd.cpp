@@ -42,8 +42,7 @@ namespace AEX::Sys::SATA {
 
         void bind(Tree::Device* m_device) {
             auto device = (SATADevice*) m_device;
-
-            auto block = new SDBlock(device);
+            auto block  = new SDBlock(device);
             if (!block->registerDevice()) {
                 printk("sd: %s: Failed to register device\n", device->name);
                 delete block;

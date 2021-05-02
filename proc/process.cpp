@@ -98,7 +98,7 @@ namespace AEX::Proc {
     }
 
     void Process::set_cwd(const char* cwd) {
-        auto scope = lock.scope();
+        SCOPE(lock);
 
         int len = min(strlen(cwd), FS::MAX_PATH_LEN - 1);
 
@@ -107,7 +107,7 @@ namespace AEX::Proc {
     }
 
     const char* Process::get_cwd() {
-        auto scope = lock.scope();
+        SCOPE(lock);
         return m_cwd;
     }
 
@@ -329,7 +329,7 @@ namespace AEX::Proc {
     void Process::env(char* const envp[]) {
         clearEnv();
 
-        auto scope = lock.scope();
+        SCOPE(lock);
 
         for (int i = 0; i < 256; i++) {
             if (!envp[i])
@@ -346,7 +346,7 @@ namespace AEX::Proc {
     void Process::env(Mem::Vector<char*, 4>* env) {
         clearEnv();
 
-        auto scope = lock.scope();
+        SCOPE(lock);
         for (int i = 0; i < env->count(); i++) {
             char const* var   = env->at(i);
             char*       var_d = new char[strlen(var) + 1];
@@ -357,7 +357,7 @@ namespace AEX::Proc {
     }
 
     void Process::clearEnv() {
-        auto scope = lock.scope();
+        SCOPE(lock);
         for (int i = 0; i < m_environment.count(); i++)
             delete m_environment[i];
 

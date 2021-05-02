@@ -14,8 +14,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define BITMAP_TYPE uint32_t
-
 constexpr auto ALLOC_SIZE = 16;
 constexpr auto SANITY_XOR = 0x28AC829B1F5231EC;
 
@@ -36,6 +34,8 @@ namespace AEX::Mem::Heap {
     uint64_t heap_allocated = 0;
     uint64_t heap_free      = 0;
 
+    typedef uint32_t bitmap_t;
+
     class Slab {
         public:
         size_t pieces;
@@ -50,7 +50,7 @@ namespace AEX::Mem::Heap {
         }
 
         static auto createFromVMem(size_t size) {
-            size_t pieces      = int_floor<size_t>(size / ALLOC_SIZE, sizeof(BITMAP_TYPE) * 8);
+            size_t pieces      = int_floor<size_t>(size / ALLOC_SIZE, sizeof(bitmap_t) * 8);
             size_t data_offset = ceilToAllocSize(sizeof(Slab) + ceilToAllocSize(pieces / 8));
 
             size += data_offset;
@@ -154,24 +154,24 @@ namespace AEX::Mem::Heap {
 
         static_assert(sizeof(alloc_block) <= ALLOC_SIZE);
 
-        void*       data;
-        BITMAP_TYPE bitmap[];
+        void*    data;
+        bitmap_t bitmap[];
 
         void mark(uint32_t start, uint32_t amount) {
             if (amount == 0)
                 return;
 
-            uint32_t ii = start / (sizeof(BITMAP_TYPE) * 8);
-            uint32_t ib = start % (sizeof(BITMAP_TYPE) * 8);
+            uint32_t ii = start / (sizeof(bitmap_t) * 8);
+            uint32_t ib = start % (sizeof(bitmap_t) * 8);
 
-            BITMAP_TYPE buffer = bitmap[ii];
+            bitmap_t buffer = bitmap[ii];
 
             while (amount > 0) {
                 buffer |= 1 << ib;
 
                 ib++;
 
-                if (ib >= sizeof(BITMAP_TYPE) * 8) {
+                if (ib >= sizeof(bitmap_t) * 8) {
                     bitmap[ii] = buffer;
 
                     ii++;
@@ -190,17 +190,17 @@ namespace AEX::Mem::Heap {
             if (amount == 0)
                 return;
 
-            uint32_t ii = start / (sizeof(BITMAP_TYPE) * 8);
-            uint32_t ib = start % (sizeof(BITMAP_TYPE) * 8);
+            uint32_t ii = start / (sizeof(bitmap_t) * 8);
+            uint32_t ib = start % (sizeof(bitmap_t) * 8);
 
-            BITMAP_TYPE buffer = bitmap[ii];
+            bitmap_t buffer = bitmap[ii];
 
             while (amount > 0) {
                 buffer &= ~(1 << ib);
 
                 ib++;
 
-                if (ib >= sizeof(BITMAP_TYPE) * 8) {
+                if (ib >= sizeof(bitmap_t) * 8) {
                     bitmap[ii] = buffer;
 
                     ii++;
@@ -225,12 +225,12 @@ namespace AEX::Mem::Heap {
             uint32_t combo = 0;
             int64_t  start = -1;
 
-            BITMAP_TYPE buffer;
+            bitmap_t buffer;
 
             while (index <= pieces) {
                 buffer = bitmap[ii];
-                if (buffer == (BITMAP_TYPE) -1) {
-                    index += sizeof(BITMAP_TYPE) * 8;
+                if (buffer == (bitmap_t) -1) {
+                    index += sizeof(bitmap_t) * 8;
 
                     start = -1;
                     combo = 0;
@@ -239,7 +239,7 @@ namespace AEX::Mem::Heap {
                     continue;
                 }
 
-                size_t left = min<size_t>(pieces - index, sizeof(BITMAP_TYPE) * 8);
+                size_t left = min<size_t>(pieces - index, sizeof(bitmap_t) * 8);
 
                 for (size_t i = 0; i < left; i++) {
                     if (!(buffer & (1 << i))) {

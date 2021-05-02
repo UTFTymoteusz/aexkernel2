@@ -17,7 +17,7 @@ namespace AEX::Sys::Power {
     void sort(Mem::Vector<handler>& handlers);
 
     error_t poweroff() {
-        auto scope = action_mutex.scope();
+        SCOPE(action_mutex);
 
         printk(PRINTK_WARN "sys: power: Poweroff\n");
 
@@ -28,7 +28,7 @@ namespace AEX::Sys::Power {
     }
 
     void register_poweroff_handler(int order, error_t (*func)()) {
-        auto scope = action_mutex.scope();
+        SCOPE(action_mutex);
 
         poweroff_handlers.push(handler{.order = order, .func = func});
         sort(poweroff_handlers);

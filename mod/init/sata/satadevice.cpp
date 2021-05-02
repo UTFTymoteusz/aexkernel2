@@ -118,7 +118,7 @@ namespace AEX::Sys::SATA {
 
     int SATADevice::findSlot() {
         while (true) {
-            ScopeSpinlock scopeLock(m_lock);
+            SCOPE(m_lock);
 
             for (int i = 0; i < max_commands; i++)
                 if (!(m_command_slots & (1 << i))) {
@@ -129,7 +129,7 @@ namespace AEX::Sys::SATA {
     }
 
     void SATADevice::releaseSlot(int slot) {
-        ScopeSpinlock scopeLock(m_lock);
+        SCOPE(m_lock);
 
         m_command_slots &= ~(1 << slot);
     }

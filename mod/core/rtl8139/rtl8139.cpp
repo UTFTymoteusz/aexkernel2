@@ -149,7 +149,7 @@ class RTL8139 : public Dev::NetDevice {
         if (len < 16)
             return EINVAL; // change this later pls
 
-        ScopeSpinlock scopeLock(m_tx_lock);
+        SCOPE(m_tx_lock);
 
         len = min<size_t>(len, 1792);
 

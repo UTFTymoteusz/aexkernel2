@@ -20,8 +20,7 @@ namespace AEX::Sys::Time {
     constexpr auto ACPI_PM_TIMER_FREQUENCY = 3579545;
 
     Spinlock uptime_lock;
-
-    time_t ns_uptime = 0;
+    time_t   ns_uptime = 0;
 
     uint64_t acpi_pm_timer_ticks = 0;
     uint32_t acpi_pm_timer_addr  = 0;
@@ -30,17 +29,17 @@ namespace AEX::Sys::Time {
     void init() {
         RTC::init();
 
-        auto _fadt = (ACPI::fadt*) ACPI::find_table("FACP", 0);
+        auto fadt = (ACPI::fadt*) ACPI::find_table("FACP", 0);
 
-        acpi_pm_timer_addr                = _fadt->pm_timer_block;
-        acpi_pm_timer_overflow_correction = (_fadt->fixed_flags & (1 << 8)) ? 0xFFFFFFFF : 0xFFFFFF;
+        acpi_pm_timer_addr                = fadt->pm_timer_block;
+        acpi_pm_timer_overflow_correction = (fadt->fixed_flags & (1 << 8)) ? 0xFFFFFFFF : 0xFFFFFF;
     }
 
     time_t uptime() {
         if (Sys::CPU::current()->in_interrupt)
             return uptime_raw();
 
-        ScopeSpinlock scopeLock(uptime_lock);
+        SCOPE(uptime_lock);
 
         uint64_t delta;
         uint64_t ticks = Sys::CPU::ind(acpi_pm_timer_addr);

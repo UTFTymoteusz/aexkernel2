@@ -17,8 +17,7 @@ namespace AEX {
     };
 
     Spinlock printk_lock;
-
-    int faulted_cpu = -1;
+    int      faulted_cpu = -1;
 
     void printk(const char* format, ...) {
         va_list args;

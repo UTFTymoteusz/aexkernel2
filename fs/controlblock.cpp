@@ -13,11 +13,7 @@ namespace AEX::FS {
     }
 
     optional<INode_SP> ControlBlock::findINode(const char* lpath) {
-        auto inode_try = getINode(INode_SP::getNull(), dirent(), root_inode_id);
-        if (!inode_try)
-            return inode_try.error_code;
-
-        auto inode = inode_try.value;
+        auto inode = ENSURE_OPT(getINode(INode_SP::getNull(), dirent(), root_inode_id));
 
         inode->id            = root_inode_id;
         inode->control_block = this;
@@ -43,12 +39,8 @@ namespace AEX::FS {
                 if (!walker.isFinal() && !readd_try.value.is_directory())
                     return ENOENT;
 
-                inode_try = getINode(inode, readd_try.value, readd_try.value.inode_id);
-                if (!inode_try)
-                    return inode_try.error_code;
-
-                inode                = inode_try.value;
-                inode->id            = readd_try.value.inode_id;
+                inode     = ENSURE_OPT(getINode(inode, readd_try.value, readd_try.value.inode_id));
+                inode->id = readd_try.value.inode_id;
                 inode->control_block = this;
 
                 break;

@@ -22,11 +22,8 @@ namespace AEX::FS {
     }
 
     optional<File_SP> File::open(const char* path, int mode) {
-        auto mount_info = find_mount(path);
-        if (!mount_info.mount)
-            return mount_info.mount.error_code;
-
-        auto inode_try = mount_info.mount.value->control_block->findINode(mount_info.new_path);
+        auto mount_info = ENSURE_OPT(find_mount(path));
+        auto inode_try  = mount_info.mount->control_block->findINode(mount_info.new_path);
         if (!inode_try) {
             PRINTK_DEBUG3("%s, %i: no inode (%s)", path, mode, strerror(inode_try.error_code));
             return inode_try.error_code;
@@ -41,26 +38,18 @@ namespace AEX::FS {
         }
 
         if (inode->dev != -1) {
-            auto device = Dev::devices.get(inode->dev);
-            if (!device)
-                return ENOENT;
+            auto device = ENSURE_R(Dev::devices.get(inode->dev), ENOENT);
+            auto file   = ENSURE_OPT(DevFile::open(device, mode));
 
-            auto dev_try = DevFile::open(device, mode);
-            if (!dev_try)
-                return dev_try.error_code;
-
-            return File_SP(dev_try.value);
+            return File_SP(file);
         }
 
         return File_SP(new INodeFile(inode));
     }
 
     optional<file_info> File::info(const char* path, int) {
-        auto mount_info = find_mount(path);
-        if (!mount_info.mount)
-            return mount_info.mount.error_code;
-
-        auto inode_try = mount_info.mount.value->control_block->findINode(mount_info.new_path);
+        auto mount_info = ENSURE_OPT(find_mount(path));
+        auto inode_try  = mount_info.mount->control_block->findINode(mount_info.new_path);
         if (!inode_try)
             return inode_try.error_code;
 

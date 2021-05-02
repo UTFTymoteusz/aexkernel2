@@ -224,16 +224,13 @@ namespace AEX {
 
             AEX_ASSERT(section.link == symbol_table_id);
 
-            auto m_relocation = relocation();
-
-            m_relocation.addr      = relocation64.addr;
-            m_relocation.arch_info = relocation64.info;
-            m_relocation.addend    = relocation64.addend;
-
-            m_relocation.target_section_id = section.info;
-            m_relocation.symbol_id         = symbol_id;
-
-            relocations.push(m_relocation);
+            relocations.push({
+                .addr              = relocation64.addr,
+                .arch_info         = relocation64.info,
+                .addend            = relocation64.addend,
+                .target_section_id = section.info,
+                .symbol_id         = symbol_id,
+            });
         }
     }
 }

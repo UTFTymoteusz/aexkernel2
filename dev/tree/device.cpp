@@ -26,13 +26,13 @@ namespace AEX::Dev::Tree {
     }
 
     void Device::add(resource resource) {
-        ScopeSpinlock scopeLock(m_lock);
+        SCOPE(m_lock);
 
         m_resources.push(resource);
     }
 
     optional<resource> Device::getResource(int index) {
-        ScopeSpinlock scopeLock(m_lock);
+        SCOPE(m_lock);
 
         if (index < 0 || index >= m_resources.count())
             return {};

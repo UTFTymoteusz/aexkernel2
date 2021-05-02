@@ -175,7 +175,7 @@ namespace AEX::Proc {
     }
 
     void add_thread(Thread* thread) {
-        auto scope = sched_lock.scope();
+        SCOPE(sched_lock);
 
         AEX_ASSERT(thread_list_size > 0);
 
@@ -190,7 +190,7 @@ namespace AEX::Proc {
     }
 
     void remove_thread(Thread* thread) {
-        auto scope = sched_lock.scope();
+        SCOPE(sched_lock);
 
         AEX_ASSERT(thread->held_mutexes == 0);
         AEX_ASSERT(thread_list_size > 0);

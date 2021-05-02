@@ -10,13 +10,8 @@ namespace AEX::Net {
     optional<Socket_SP> Socket::create(socket_domain_t domain, socket_type_t type,
                                        iproto_t protocol) {
         switch (domain) {
-        case socket_domain_t::AF_INET: {
-            auto sock_try = inet_protocols[(uint8_t) protocol]->createSocket(type);
-            if (!sock_try)
-                return sock_try.error_code;
-
-            return sock_try.value;
-        }
+        case socket_domain_t::AF_INET:
+            return ENSURE_OPT(inet_protocols[(uint8_t) protocol]->createSocket(type));
         case socket_domain_t::AF_UNIX:
             return EINVAL;
         default:

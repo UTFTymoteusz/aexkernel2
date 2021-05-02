@@ -9,8 +9,7 @@
 namespace AEX::Sys::Time {
     class RTC {
         public:
-        static void init();
-
+        static void   init();
         static time_t epoch();
 
         private:

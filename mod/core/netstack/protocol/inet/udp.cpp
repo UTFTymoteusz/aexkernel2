@@ -120,7 +120,7 @@ namespace NetStack {
         uint32_t ii = port / (sizeof(uint32_t) * 8);
         uint16_t ib = port % (sizeof(uint32_t) * 8);
 
-        ScopeSpinlock scopeLock(m_ports_lock);
+        SCOPE(m_ports_lock);
 
         if (m_port_bitmap[ii] & (1 << ib))
             return false;
@@ -133,7 +133,7 @@ namespace NetStack {
         uint32_t ii = port / (sizeof(uint32_t) * 8);
         uint16_t ib = port % (sizeof(uint32_t) * 8);
 
-        ScopeSpinlock scopeLock(m_ports_lock);
+        SCOPE(m_ports_lock);
 
         m_port_bitmap[ii] &= ~(1 << ib);
     }

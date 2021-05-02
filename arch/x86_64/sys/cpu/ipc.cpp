@@ -19,7 +19,7 @@ namespace AEX::Sys {
     Spinlock ipp_lock;
 
     void CPU::broadcast(ipp_type type, void* data, bool ignore_self) {
-        ScopeSpinlock scopeLock(ipp_lock);
+        SCOPE(ipp_lock);
 
         for (int i = 0; i < MCore::cpu_count; i++) {
             if (i == CPU::currentID() && ignore_self)
@@ -34,7 +34,7 @@ namespace AEX::Sys {
     }
 
     void CPU::send(ipp_type type, void* data) {
-        ScopeSpinlock scopeLock(ipp_lock);
+        SCOPE(ipp_lock);
         _send(type, data);
     }
 

@@ -199,7 +199,7 @@ bool isatty(int fd) {
         return false;
     }
 
-    bool tty  = fd_try.value->isatty();
+    bool tty  = USR_ENSURE_OPT(get_file(fd))->isatty();
     USR_ERRNO = tty ? ENONE : ENOTTY;
 
     return tty;
@@ -236,9 +236,8 @@ int munmap(void* addr, size_t len) {
 }
 
 long readdir(int fd, dirent* uent) {
-    auto file   = USR_ENSURE_OPT(get_file(fd));
-    auto dentry = USR_ENSURE_OPT(file->readdir());
-
+    auto   file   = USR_ENSURE_OPT(get_file(fd));
+    auto   dentry = USR_ENSURE_OPT(file->readdir());
     dirent kent;
 
     kent.d_ino = dentry.inode_id;

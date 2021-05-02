@@ -122,12 +122,12 @@ namespace AEX {
     }
 
     bool RWMutex::acquired_read() {
-        auto scope = m_lock.scope();
+        SCOPE(m_lock);
         return Mem::atomic_read(&m_read);
     }
 
     bool RWMutex::acquired_write() {
-        auto scope = m_lock.scope();
+        SCOPE(m_lock);
         return Mem::atomic_read(&m_write);
     }
 }

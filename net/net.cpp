@@ -20,8 +20,8 @@ namespace AEX::Net {
         printk(PRINTK_INIT "net: Initializing\n");
 
         inet_protocols = new INetProtocol*[256];
+        null_protocol  = new INetProtocol();
 
-        null_protocol = new INetProtocol();
         for (size_t i = 0; i < 256; i++)
             inet_protocols[i] = null_protocol;
 
@@ -40,7 +40,7 @@ namespace AEX::Net {
     }
 
     optional<char*> get_hostname(char* buffer, size_t len) {
-        auto scope = hostname_lock.scope();
+        SCOPE(hostname_lock);
 
         if ((size_t) strlen(hostname) + 1 > len)
             return EINVAL;
@@ -49,8 +49,8 @@ namespace AEX::Net {
     }
 
     void set_hostname(const char* hostname_new) {
-        auto scope = hostname_lock.scope();
-        int  len   = min<int>(strlen(hostname_new), 255);
+        SCOPE(hostname_lock);
+        int len = min<int>(strlen(hostname_new), 255);
 
         hostname = Mem::Heap::realloc(hostname, len + 1);
         strncpy(hostname, hostname_new, len + 1);

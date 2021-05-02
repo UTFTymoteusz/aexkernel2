@@ -182,7 +182,7 @@ namespace AEX::Proc {
     }
 
     error_t Thread::join() {
-        auto scope = this->lock.scope();
+        SCOPE(this->lock);
 
         if (m_detached || m_joiner)
             return EINVAL;
@@ -236,7 +236,7 @@ namespace AEX::Proc {
     }
 
     error_t Thread::detach() {
-        auto scope = this->lock.scope();
+        SCOPE(this->lock);
 
         if (m_detached || m_joiner)
             return EINVAL;
@@ -249,7 +249,7 @@ namespace AEX::Proc {
     }
 
     error_t Thread::abort(bool force) {
-        auto scope = this->lock.scope();
+        SCOPE(this->lock);
 
         _abort(force);
 
@@ -289,7 +289,7 @@ namespace AEX::Proc {
     }
 
     void broker_cleanup(Thread* thread) {
-        auto scope = thread->parent->threads_lock.scope();
+        SCOPE(thread->parent->threads_lock);
         delete thread;
     }
 

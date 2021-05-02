@@ -42,9 +42,24 @@ namespace AEX {
     ({                      \
         if (!(cond))        \
             return err;     \
+                            \
+        cond;               \
+    })
+#define ENSURE_OPT(opt)            \
+    ({                             \
+        auto res = opt;            \
+        if (!res)                  \
+            return res.error_code; \
+                                   \
+        res.value;                 \
     })
 #define ENSURE(cond) ENSURE_R((cond), AEX::EINVAL)
 #define ENSURE_FL(flags, mask) ENSURE_R(!(flags & ~mask), AEX::EINVAL)
+
+#define CONCAT(a, b) a##b
+#define SCOPE(x) auto CONCAT(scope, __LINE__) = x.scope()
+
+#define using(lock) for (SCOPE(lock);;)
 
 namespace AEX {
     template <typename T>

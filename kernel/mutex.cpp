@@ -22,9 +22,7 @@ namespace AEX {
             count++;
             if (count > 12212222 * 50) {
                 int  delta = 0;
-                auto name  = Debug::addr2name((void*) this, delta);
-                if (!name)
-                    name = "no idea";
+                auto name  = Debug::addr2name((void*) this, delta) ?: "no idea";
 
                 Debug::stack_trace(0, (Debug::stack_frame*) ((Thread*) m_thread)->context->rsp);
 
@@ -34,9 +32,7 @@ namespace AEX {
 
             if (Thread::current()->isCritical() && count == 1) {
                 int  delta = 0;
-                auto name  = Debug::addr2name((void*) this, delta);
-                if (!name)
-                    name = "no idea";
+                auto name  = Debug::addr2name((void*) this, delta) ?: "no idea";
 
                 printk(PRINTK_WARN "Attempt to acquire 0x%p <%s+0x%x> while critical\n", this, name,
                        delta);

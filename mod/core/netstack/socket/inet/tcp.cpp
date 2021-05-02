@@ -188,7 +188,7 @@ namespace NetStack {
         if (!addr)
             return EINVAL;
 
-        ScopeSpinlock scopeLock(m_lock);
+        SCOPE(m_lock);
 
         // checks pls
         auto m_src_addr = (sockaddr_inet*) addr;
@@ -200,7 +200,7 @@ namespace NetStack {
     }
 
     error_t TCPSocket::listen(int backlog) {
-        ScopeSpinlock scopeLock(m_lock);
+        SCOPE(m_lock);
 
         if (m_block.state != TCP_CLOSED)
             return EISCONN;

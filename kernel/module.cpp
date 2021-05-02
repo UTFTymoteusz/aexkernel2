@@ -175,7 +175,7 @@ namespace AEX {
     }
 
     void register_dynamic_symbol(const char* name, void* addr) {
-        ScopeSpinlock scopeLock(symbol_lock);
+        SCOPE(symbol_lock);
 
         for (int i = 0; i < global_symbols.count(); i++) {
             if (strcmp(name, global_symbols[i].name) == 0) {
@@ -184,20 +184,14 @@ namespace AEX {
             }
         }
 
-        int  name_len = strlen(name);
-        auto symbol   = module_symbol();
-
-        char* m_name = new char[name_len + 1];
-        strncpy(m_name, name, name_len + 1);
-
-        symbol.name = name;
-        symbol.addr = addr;
-
-        global_symbols.push(symbol);
+        global_symbols.push({
+            .name = strpivot(name, strlen(name)),
+            .addr = addr,
+        });
     }
 
     void* get_dynamic_symbol(const char* name) {
-        ScopeSpinlock scopeLock(symbol_lock);
+        SCOPE(symbol_lock);
 
         for (int i = 0; i < global_symbols.count(); i++) {
             if (strcmp(name, global_symbols[i].name) == 0)

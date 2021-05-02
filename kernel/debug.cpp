@@ -160,6 +160,7 @@ namespace AEX::Debug {
             m_addr++;
             len--;
         }
+
         printk("\n");
     }
 

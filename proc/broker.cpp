@@ -28,9 +28,7 @@ namespace AEX::Proc {
 
         kpanic_hook.subscribe([]() {
             int  delta;
-            auto name = Debug::addr2name((void*) broker_current.func, delta);
-            if (!name)
-                name = "unknown";
+            auto name = Debug::addr2name((void*) broker_current.func, delta) ?: "unknown";
 
             printk("broker: Currently executing 0x%p <%s+0x%x>\n", broker_current.func, name,
                    delta);
@@ -38,12 +36,10 @@ namespace AEX::Proc {
     }
 
     void broker(void* (*func)(void* arg), void* arg) {
-        auto request = broker_request();
-
-        request.func = func;
-        request.arg  = arg;
-
-        broker_queue.writeObject(request);
+        broker_queue.writeObject(broker_request{
+            .func = func,
+            .arg  = arg,
+        });
     }
 
     void broker_loop() {

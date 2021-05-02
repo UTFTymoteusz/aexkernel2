@@ -142,7 +142,7 @@ namespace AEX::Proc {
     }
 
     void signal_exit(Thread* thread) {
-        auto scope = thread->lock.scope();
+        SCOPE(thread->lock);
 
         *thread->context = *thread->context_aux;
 

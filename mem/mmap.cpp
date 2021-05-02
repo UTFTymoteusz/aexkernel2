@@ -63,7 +63,7 @@ namespace AEX::Mem {
     }
 
     error_t FileBackedMMapRegion::read(void* dst, FS::off_t offset, size_t count) {
-        ScopeMutex scopeLock(m_lock);
+        SCOPE(m_lock);
 
         size_t id = offset / Sys::CPU::PAGE_SIZE;
 
@@ -151,20 +151,14 @@ namespace AEX::Mem {
             return region->start;
         }
 
-        auto dupd_try = file->dup();
-        if (!dupd_try)
-            return dupd_try.error_code;
-
-        auto dupd     = dupd_try.value;
-        auto mmap_try = dupd->mmap(process, addr, len, aflags, dupd, offset);
-        if (!mmap_try.has_value)
-            return mmap_try.error_code;
+        auto dupd = ENSURE_OPT(file->dup(););
+        auto mmap = ENSURE_OPT(dupd->mmap(process, addr, len, aflags, dupd, offset));
 
         process->lock.acquire();
-        process->mmap_regions.push(mmap_try.value);
+        process->mmap_regions.push(mmap);
         process->lock.release();
 
-        return mmap_try.value->start;
+        return mmap->start;
     }
 
     // TODO: Make len work properly

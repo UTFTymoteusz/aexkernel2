@@ -9,18 +9,18 @@ namespace AEX {
     class Hook {
         public:
         void subscribe(Func func) {
-            auto scope = m_mutex.scope();
+            SCOPE(m_mutex);
 
             m_funcs.push(func);
         }
 
         void unsubscribe(Func) {
-            auto scope = m_mutex.scope();
+            SCOPE(m_mutex);
         }
 
         template <typename... Args>
         void invoke(Args... args) {
-            auto scope = m_mutex.scope();
+            SCOPE(m_mutex);
 
             for (int i = 0; i < m_funcs.count(); i++)
                 m_funcs[i](args...);

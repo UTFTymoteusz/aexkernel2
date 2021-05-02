@@ -51,7 +51,6 @@ namespace AEX::Sys::SATA {
             auto  ahci = new AHCI(device, addr, index);
 
             index++;
-
             device->driver_data = ahci;
         }
 

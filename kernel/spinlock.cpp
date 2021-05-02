@@ -33,9 +33,7 @@ namespace AEX {
 
             if (count > 12212222 * 50) {
                 int  delta = 0;
-                auto name  = Debug::addr2name((void*) this, delta);
-                if (!name)
-                    name = "no idea";
+                auto name  = Debug::addr2name((void*) this, delta) ?: "no idea";
 
                 if (__sync_bool_compare_and_swap(&spinlock_faulted, false, true))
                     kpanic("spinlock 0x%p <%s+0x%x> hung (val: %i (held by thread 0x%p), cpu: %i)",
@@ -63,9 +61,7 @@ namespace AEX {
             printk_fault();
 
             int  delta = 0;
-            auto name  = Debug::addr2name((void*) &m_lock, delta);
-            if (!name)
-                name = "no idea";
+            auto name  = Debug::addr2name((void*) &m_lock, delta) ?: "no idea";
 
             printk("aaa (0x%p, <%s>+0x%x)\n", this, name, delta);
             Debug::stack_trace();
@@ -104,9 +100,7 @@ namespace AEX {
 
             if (count > 12212222 * 10) {
                 int  delta = 0;
-                auto name  = Debug::addr2name((void*) this, delta);
-                if (!name)
-                    name = "no idea";
+                auto name  = Debug::addr2name((void*) this, delta) ?: "no idea";
 
                 if (__sync_bool_compare_and_swap(&spinlock_faulted, false, true)) {
                     kpanic("spinlock 0x%p <%s+0x%x> hung (val: %i, cpu: %i) *RAW*", this, name,
@@ -129,9 +123,7 @@ namespace AEX {
             printk_fault();
 
             int  delta = 0;
-            auto name  = Debug::addr2name((void*) &m_lock, delta);
-            if (!name)
-                name = "no idea";
+            auto name  = Debug::addr2name((void*) &m_lock, delta) ?: "no idea";
 
             printk("bbb (0x%p, <%s>+0x%x), %i\n", this, name, delta, m_lock);
             Debug::stack_trace();

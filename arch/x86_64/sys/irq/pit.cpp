@@ -6,7 +6,7 @@ namespace AEX::Sys::IRQ {
     Spinlock PIT::m_lock;
 
     void PIT::hz(int hz) {
-        ScopeSpinlock scopeLock(m_lock);
+        SCOPE(m_lock);
 
         int divisor = 1193181.66666666 / hz;
 
@@ -20,7 +20,7 @@ namespace AEX::Sys::IRQ {
     }
 
     void PIT::interrupt(double ms) {
-        ScopeSpinlock scopeLock(m_lock);
+        SCOPE(m_lock);
 
         double hz      = 1000.0 / ms;
         int    divisor = 1193181.66666666 / hz;

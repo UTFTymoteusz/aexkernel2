@@ -25,7 +25,7 @@ namespace AEX::Dev {
     }
 
     error_t BlockDevice::initExt() {
-        ScopeMutex lock(m_init_lock);
+        SCOPE(m_init_lock);
 
         if (m_init_counter == 0) {
             m_init_counter++;
@@ -37,7 +37,7 @@ namespace AEX::Dev {
     }
 
     error_t BlockDevice::releaseExt() {
-        ScopeMutex lock(m_init_lock);
+        SCOPE(m_init_lock);
 
         m_init_counter--;
 

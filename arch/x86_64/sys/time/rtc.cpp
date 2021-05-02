@@ -19,7 +19,7 @@ namespace AEX::Sys::Time {
     volatile int64_t RTC::m_epoch = 0;
 
     void RTC::init() {
-        ScopeSpinlock scopeLock(m_lock);
+        SCOPE(m_lock);
 
         CMOS::write(CMOS::STATUS_B, CMOS::read(CMOS::STATUS_B) | CMOS::STATUS_B_UPDATE_ENDED_INT);
         CMOS::read(CMOS::STATUS_C);

@@ -6,9 +6,9 @@
 
 namespace AEX::FS {
     optional<INode_SP> FATControlBlock::getINode(INode_SP dir, dirent dirent, ino_t id) {
-        auto scope     = ScopeMutex(m_mutex);
-        auto cache_try = m_cache.get(id);
+        SCOPE(m_mutex);
 
+        auto cache_try = m_cache.get(id);
         if (cache_try.has_value)
             return cache_try.value;
 

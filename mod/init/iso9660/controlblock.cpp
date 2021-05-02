@@ -14,8 +14,7 @@ namespace AEX::FS {
         if (id == root_inode_id)
             return INode_SP(new ISO9600DirectoryINode(m_root_dentry));
 
-        auto m_dir = (Mem::SmartPointer<ISO9600DirectoryINode>) dir;
-
+        auto           m_dir      = (Mem::SmartPointer<ISO9600DirectoryINode>) dir;
         iso9660_dentry iso_dentry = {};
 
         // We can get away with doing it like this because we're read only

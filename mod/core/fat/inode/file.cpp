@@ -2,12 +2,10 @@
 
 namespace AEX::FS {
     error_t FATFileINode::readBlocks(void* buffer, uint64_t start, uint16_t count) {
-        m_mutex.acquire();
+        SCOPE(m_mutex);
 
         if (!m_filled && m_chain.count() > 0)
             fill();
-
-        m_mutex.release();
 
         auto fat_block = (FATControlBlock*) control_block;
         for (uint64_t i = start; i < start + count; i++)

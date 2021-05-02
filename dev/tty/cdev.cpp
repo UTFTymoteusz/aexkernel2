@@ -14,7 +14,7 @@ namespace AEX::Dev {
     }
 
     error_t TTYChar::open(CharHandle* handle, int) {
-        auto scope = m_mutex.scope();
+        SCOPE(m_mutex);
 
         // m_stack.push(handle); // i need an insert() method
         m_current = handle;
@@ -23,7 +23,7 @@ namespace AEX::Dev {
     }
 
     error_t TTYChar::close(CharHandle* handle) {
-        auto scope = m_mutex.scope();
+        SCOPE(m_mutex);
 
         if (m_closed)
             return EINVAL;

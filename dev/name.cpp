@@ -78,7 +78,7 @@ namespace AEX::Dev {
     Spinlock name_lock;
 
     void name_letter_increment(char* buffer, size_t buffer_len, const char* pattern) {
-        ScopeSpinlock scopeLock(name_lock);
+        SCOPE(name_lock);
 
         for (int i = 0; i < letter_incrementations.count(); i++) {
             auto incrementation = letter_incrementations[i];
@@ -96,7 +96,7 @@ namespace AEX::Dev {
     }
 
     void name_number_increment(char* buffer, size_t buffer_len, const char* pattern) {
-        ScopeSpinlock scopeLock(name_lock);
+        SCOPE(name_lock);
 
         for (int i = 0; i < number_incrementations.count(); i++) {
             auto incrementation = number_incrementations[i];

@@ -19,12 +19,8 @@ namespace AEX {
     bool relocate(const char* path, ELF& elf, Module* module, module_section* sections);
 
     error_t load_module(const char* path, bool block) {
-        auto file_try = FS::File::open(path, FS::O_RD);
-        if (!file_try)
-            return file_try.error_code;
-
-        auto    file = file_try.value;
-        int64_t size = file->seek(0, FS::File::SEEK_END).value;
+        auto    file = ENSURE_OPT(FS::File::open(path, FS::O_RD));
+        ssize_t size = file->seek(0, FS::File::SEEK_END).value;
 
         auto mmap_try = Mem::mmap(Proc::Process::kernel(), nullptr, size, Mem::PROT_READ,
                                   Mem::MAP_NONE, file, 0);
@@ -33,19 +29,19 @@ namespace AEX {
         if (!mmap_try)
             return mmap_try;
 
-        void* addr = mmap_try.value;
+        void* addr  = mmap_try.value;
+        auto  error = load_module(path, addr, size, block);
 
-        auto error = load_module(path, addr, size, block);
         Mem::munmap(Proc::Process::kernel(), addr, size);
 
         return error;
     }
 
     error_t load_module(const char* label, void* m_addr, size_t, bool block) {
-        AEX_ASSERT(Debug::symbols_loaded);
-
         static Mutex lock = Mutex();
-        ScopeMutex   scopeLock(lock);
+
+        AEX_ASSERT(Debug::symbols_loaded);
+        SCOPE(lock);
 
         uint8_t* addr = (uint8_t*) m_addr;
         auto     elf  = ELF(addr);
@@ -128,17 +124,13 @@ namespace AEX {
 
         for (int i = 0; i < elf.symbols.count(); i++) {
             auto symbol = elf.symbols[i];
-            if (!symbol.name)
+            if (!symbol.name || symbol.name[0] != '.')
                 continue;
 
-            if (symbol.name[0] != '.')
-                continue;
-
-            auto m_symbol = module_symbol();
-            m_symbol.name = symbol.name;
-            m_symbol.addr = (void*) ((size_t) sections[symbol.section_index].addr + symbol.address);
-
-            module->symbols.push(m_symbol);
+            module->symbols.push({
+                .name = symbol.name,
+                .addr = (void*) ((size_t) sections[symbol.section_index].addr + symbol.address),
+            });
         }
 
         elf.loadRelocations();

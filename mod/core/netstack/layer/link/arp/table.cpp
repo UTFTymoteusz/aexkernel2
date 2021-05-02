@@ -23,9 +23,9 @@ namespace NetStack {
     }
 
     AEX::optional<AEX::Net::mac_addr> ARPTable::get_mac(AEX::Net::ipv4_addr ipv4) {
-        AEX::ScopeSpinlock scopeLock(m_entries_lock);
-        uint64_t           time = AEX::Sys::Time::uptime();
+        SCOPE(m_entries_lock);
 
+        uint64_t time = AEX::Sys::Time::uptime();
 
         for (int i = 0; i < m_entries.count(); i++) {
             auto& entry = m_entries[i];
@@ -54,9 +54,7 @@ namespace NetStack {
 
     // need to make it actually look if we've been querying
     void ARPTable::set_mac(AEX::Net::ipv4_addr ipv4, AEX::Net::mac_addr mac) {
-        {
-            AEX::ScopeSpinlock scopeLock(m_queries_lock);
-
+        using(m_queries_lock) {
             for (int i = 0; i < m_queries.count(); i++) {
                 auto& query = m_queries[i];
 
@@ -72,7 +70,7 @@ namespace NetStack {
             }
         }
 
-        AEX::ScopeSpinlock scopeLock(m_entries_lock);
+        SCOPE(m_entries_lock);
 
         for (int i = 0; i < m_entries.count(); i++) {
             auto& entry = m_entries[i];

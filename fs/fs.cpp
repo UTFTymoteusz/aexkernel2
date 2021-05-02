@@ -50,9 +50,9 @@ namespace AEX::FS {
         return EINVAL;
     }
 
-    mount_info find_mount(const char* path) {
+    optional<mount_info> find_mount(const char* path) {
         if (!path || !is_valid(path))
-            return mount_info(optional<Mem::SmartPointer<Mount>>::error(EINVAL), nullptr);
+            return EINVAL;
 
         Mem::SmartPointer<Mount> ret;
 
@@ -80,14 +80,13 @@ namespace AEX::FS {
             found = true;
         }
 
-        if (found) {
-            const char* new_path = path + max_len;
-            if (new_path[0] == '\0')
-                new_path = "/";
+        if (!found)
+            return ENOENT;
 
-            return mount_info(ret, new_path);
-        }
+        const char* new_path = path + max_len;
+        if (new_path[0] == '\0')
+            new_path = "/";
 
-        return mount_info(optional<Mem::SmartPointer<Mount>>::error(ENOENT), nullptr);
+        return mount_info(ret, new_path);
     }
 }

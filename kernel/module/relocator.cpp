@@ -12,8 +12,7 @@ namespace AEX {
 
         for (int i = 0; i < elf.relocations.count(); i++) {
             auto relocation = elf.relocations[i];
-
-            auto symbol = elf.symbols[relocation.symbol_id];
+            auto symbol     = elf.symbols[relocation.symbol_id];
             if (!symbol.name)
                 continue;
 

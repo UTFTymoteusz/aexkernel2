@@ -88,4 +88,8 @@ namespace AEX {
 
         return 0;
     }
+
+    char* strpivot(const char* str, size_t len) {
+        return strncpy(new char[len + 1], str, len + 1);
+    }
 }

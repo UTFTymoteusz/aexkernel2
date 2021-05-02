@@ -12,13 +12,10 @@
 using namespace AEX;
 
 int pipe(usr_int* rp, usr_int* wp) {
-    auto current = Proc::Process::current();
-
     FS::File_SP rsp, wsp;
 
-    auto err = IPC::Pipe::create(rsp, wsp);
-    if (err != ENONE)
-        return err;
+    auto current = Proc::Process::current();
+    ENSURE(IPC::Pipe::create(rsp, wsp));
 
     current->descs_lock.acquire();
 

@@ -108,9 +108,7 @@ namespace AEX::Sys {
         }
 
         int  delta = 0;
-        auto name  = Debug::addr2name((void*) info->rip, delta);
-        if (!name)
-            name = "no idea";
+        auto name  = Debug::addr2name((void*) info->rip, delta) ?: "no idea";
 
         switch (info->int_no) {
         case EXC_DEBUG:
@@ -300,9 +298,7 @@ namespace AEX::Sys {
                info->r14, info->r15);
 
         int   delta;
-        auto* name = Debug::addr2name((void*) info->rip, delta);
-        if (!name)
-            name = "no idea";
+        auto* name = Debug::addr2name((void*) info->rip, delta) ?: "no idea";
 
         printk("RIP: 0x%p <%s+0x%x>\n", info->rip, name, delta);
         printk("RFLAGS: 0x%016lx  CS: 0x%04x  SS: 0x%04x\n", info->rflags, info->cs, info->ss);

@@ -56,9 +56,7 @@ namespace AEX::Proc {
                    thread->detached() ? "detached" : (thread->joiner() ? "joined by" : ""),
                    thread->joiner());*/
 
-            auto name = Debug::addr2name(thread->original_entry);
-            if (!name)
-                name = "unknown";
+            auto name = Debug::addr2name(thread->original_entry) ?: "no idea";
 
             printk("  0x%p %6i <%s> <%s> %s 0x%p %li [%i, %i] %i %s %s\n", thread,
                    thread->parent->pid, buffer, name,

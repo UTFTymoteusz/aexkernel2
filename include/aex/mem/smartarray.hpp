@@ -55,7 +55,7 @@ namespace AEX::Mem {
         };
 
         SmartPointer<T> get(int index) {
-            ScopeSpinlock scopeLock(m_lock);
+            SCOPE(m_lock);
 
             if (index < 0 || index >= m_element_count)
                 return SmartPointer<T>(nullptr, nullptr);
@@ -73,7 +73,7 @@ namespace AEX::Mem {
         }
 
         int addRef(T* ptr) {
-            ScopeSpinlock scopeLock(m_lock);
+            SCOPE(m_lock);
 
             int index = findSlotOrMakeSlot();
             if (index == -1)
@@ -85,7 +85,7 @@ namespace AEX::Mem {
         }
 
         int addRef(T* ptr, sp_shared* counter) {
-            ScopeSpinlock scopeLock(m_lock);
+            SCOPE(m_lock);
 
             int index = findSlotOrMakeSlot();
             if (index == -1)
@@ -97,7 +97,7 @@ namespace AEX::Mem {
         }
 
         void remove(int index) {
-            ScopeSpinlock scopeLock(m_lock);
+            SCOPE(m_lock);
 
             if (index < 0 || index >= m_element_count)
                 return;
