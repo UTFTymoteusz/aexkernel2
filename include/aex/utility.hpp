@@ -41,10 +41,10 @@ namespace AEX {
 #define ENSURE_R(cond, err) \
     ({                      \
         auto ret = cond;    \
-        if (!(res))         \
+        if (!(ret))         \
             return err;     \
                             \
-        res;                \
+        ret;                \
     })
 #define ENSURE_OPT(opt)            \
     ({                             \
