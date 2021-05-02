@@ -27,7 +27,6 @@ namespace AEX {
     API constexpr T clamp(T a, T minv, T maxv) {
         return max(min(a, maxv), minv);
     }
-
     template <typename T>
     API constexpr T int_floor(T val, T alignment) {
         return (val / alignment) * alignment;

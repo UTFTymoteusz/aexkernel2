@@ -9,6 +9,8 @@
 #include <stdint.h>
 
 namespace AEX::Mem::Phys {
+    typedef uint32_t bitmap_t;
+
     struct frame_piece {
         phys_addr start;
 
@@ -16,81 +18,103 @@ namespace AEX::Mem::Phys {
         uint32_t     frames_free;
         frame_piece* next;
 
+        bitmap_t m_bitmap[];
+
         frame_piece(phys_addr addr, uint32_t amnt) {
             init(addr, amnt);
         }
 
         void init(phys_addr addr, uint32_t amnt) {
-            start = addr;
-
+            start       = addr;
             size        = amnt;
             frames_free = amnt;
-
-            next = nullptr;
+            next        = nullptr;
 
             memset(m_bitmap, 0, amnt / 8);
         }
 
         void alloc(int32_t lid, uint32_t amount) {
-            uint32_t ii = lid / (sizeof(uint32_t) * 8);
-            uint16_t ib = lid % (sizeof(uint32_t) * 8);
+            uint32_t ii            = lid / (sizeof(bitmap_t) * 8);
+            uint16_t ib            = lid % (sizeof(bitmap_t) * 8);
+            uint32_t original_amnt = amount;
 
-            uint32_t tmp;
+            if (ib != 0) {
+                int bit_count = clamp(amount, 0u, 32u - ib);
+                for (int i = 0; i < bit_count; i++)
+                    m_bitmap[ii] |= 1 << ib++;
 
-            for (size_t i = 0; i < amount; i++) {
-                tmp = 1 << ib;
+                amount -= bit_count;
+                frames_free -= bit_count;
 
-                AEX_ASSERT(!(m_bitmap[ii] & tmp));
-
-                m_bitmap[ii] |= tmp;
-
-                ib++;
-                if (ib >= sizeof(uint32_t) * 8) {
-                    ii++;
-                    ib = 0;
-                }
+                ii++;
             }
-            frames_free -= amount;
+
+            for (size_t i = 0; i < amount / 32; i++)
+                m_bitmap[ii++] = 0xFFFFFFFF;
+
+            amount -= int_floor(amount, 32u);
+
+            for (size_t i = 0; i < amount; i++)
+                m_bitmap[ii] |= 1 << i;
+
+            frames_free -= original_amnt;
         }
 
         void free(int32_t lid, uint32_t amount) {
-            uint32_t ii = lid / (sizeof(uint32_t) * 8);
-            uint16_t ib = lid % (sizeof(uint32_t) * 8);
+            uint32_t ii            = lid / (sizeof(bitmap_t) * 8);
+            uint16_t ib            = lid % (sizeof(bitmap_t) * 8);
+            uint32_t original_amnt = amount;
+            uint32_t tmp           = 0x00;
 
-            uint32_t tmp;
+            if (ib != 0) {
+                int bit_count = clamp(amount, 0u, 32u - ib);
+                for (int i = 0; i < bit_count; i++)
+                    tmp |= 1 << ib++;
 
-            for (size_t i = 0; i < amount; i++) {
-                tmp = 1 << ib;
+                m_bitmap[ii++] &= ~tmp;
 
-                AEX_ASSERT(m_bitmap[ii] & tmp);
-
-                m_bitmap[ii] &= ~tmp;
-
-                ib++;
-                if (ib >= sizeof(uint32_t) * 8) {
-                    ii++;
-                    ib = 0;
-                }
+                amount -= bit_count;
+                frames_free -= bit_count;
             }
-            frames_free += amount;
+
+            for (size_t i = 0; i < amount / 32; i++)
+                m_bitmap[ii++] = 0x00000000;
+
+            amount -= int_floor(amount, 32u);
+            tmp = 0x00;
+
+            for (size_t i = 0; i < amount; i++)
+                tmp |= 1 << i;
+
+            m_bitmap[ii] &= ~tmp;
+            frames_free += original_amnt;
         }
 
         int32_t find(uint32_t amount) {
             if (amount == 0 || amount > frames_free)
                 return -1;
 
-            uint32_t ii = 0;
-            uint16_t ib = 0;
-
+            uint32_t ii    = 0;
+            uint16_t ib    = 0;
             uint32_t found = 0;
             int32_t  start = -1;
 
-            uint32_t tmp;
-
             for (size_t i = 0; i < size; i++) {
-                tmp = 1 << ib;
+                if (ib == 0 && m_bitmap[ii] == 0x00000000) {
+                    if (start == -1)
+                        start = i;
 
-                if (!(m_bitmap[ii] & tmp)) {
+                    found += 32;
+                    if (found >= amount)
+                        return start;
+
+                    ii++;
+                    i += 32;
+
+                    continue;
+                }
+
+                if (!(m_bitmap[ii] & (1 << ib))) {
                     if (start == -1)
                         start = i;
 
@@ -104,14 +128,12 @@ namespace AEX::Mem::Phys {
                 }
 
                 ib++;
-                if (ib >= sizeof(uint32_t) * 8) {
+                if (ib >= sizeof(bitmap_t) * 8) {
                     ii++;
                     ib = 0;
                 }
             }
             return -1;
         }
-
-        uint32_t m_bitmap[];
     };
 }

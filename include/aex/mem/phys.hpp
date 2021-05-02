@@ -37,4 +37,13 @@ namespace AEX::Mem::Phys {
      * @param amount Size in bytes.
      **/
     API void free(phys_addr addr, int32_t amount);
+
+    /**
+     * Masks away amount of frames required to fit the specified size starting at the specified
+     * address.
+     * @param addr   The physical address.
+     * @param amount Size in bytes.
+     * @returns Whether the masking was neccesary at all.
+     **/
+    API bool mask(phys_addr addr, int32_t amount);
 }

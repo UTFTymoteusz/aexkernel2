@@ -75,8 +75,6 @@ namespace AEX::Mem::Phys {
                 kpanic("Misaligned memory region encountered");
 
             int64_t frames = mmap_entry->len / Sys::CPU::PAGE_SIZE;
-
-            // Why bother with those?
             if (frames < 8)
                 continue;
 
@@ -107,30 +105,24 @@ namespace AEX::Mem::Phys {
         uint32_t     frames = ceiltopg(amount);
         frame_piece* piece  = first_piece;
 
-        lock.acquire();
+        SCOPE(lock);
 
         do {
-            if (piece->frames_free < frames) {
-                printk("alloc !free: %i < %i\n", piece->frames_free, frames);
+            if (piece->frames_free < frames)
                 continue;
-            }
 
             int32_t start = piece->find(frames);
             if (start == -1)
                 continue;
 
             frames_available -= frames;
-
             piece->alloc(start, frames);
-            lock.release();
 
             return piece->start + start * Sys::CPU::PAGE_SIZE;
         } while ((piece = piece->next) != nullptr);
 
         lock.release();
         kpanic("Failed to AEX::Mem::Phys::alloc()");
-
-        return 0;
     }
 
     void free(phys_addr addr, int32_t amount) {
@@ -140,7 +132,31 @@ namespace AEX::Mem::Phys {
         uint32_t     frames = ceiltopg(amount);
         frame_piece* piece  = first_piece;
 
-        lock.acquire();
+        SCOPE(lock);
+
+        do {
+            if (piece->start > addr)
+                continue;
+
+            addr -= piece->start;
+            frames_available += frames;
+
+            piece->free(addr / Sys::CPU::PAGE_SIZE, frames);
+            return;
+        } while ((piece = piece->next) != nullptr);
+
+        lock.release();
+        kpanic("Failed to AEX::Mem::Phys::free()");
+    }
+
+    bool mask(phys_addr addr, int32_t amount) {
+        if (addr < first_piece->start)
+            return false;
+
+        uint32_t     frames = ceiltopg(amount);
+        frame_piece* piece  = first_piece;
+
+        SCOPE(lock);
 
         do {
             if (piece->start > addr)
@@ -148,15 +164,10 @@ namespace AEX::Mem::Phys {
 
             addr -= piece->start;
 
-            frames_available += frames;
-
-            piece->free(addr / Sys::CPU::PAGE_SIZE, frames);
-            lock.release();
-
-            return;
+            piece->alloc(addr / Sys::CPU::PAGE_SIZE, frames);
+            return true;
         } while ((piece = piece->next) != nullptr);
 
-        lock.release();
-        kpanic("Failed to AEX::Mem::Phys::free()");
+        return false;
     }
 }

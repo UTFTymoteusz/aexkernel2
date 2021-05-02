@@ -52,22 +52,16 @@ namespace AEX::Sys::IRQ {
         SLAVE_PIC->init(40, true);
         SLAVE_PIC->mask(0b11111111);
 
-        size_t addr = 0xFEE00000;
-
         madt = (ACPI::madt*) ACPI::find_table("APIC", 0);
         AEX_ASSERT(madt);
-
-        addr = madt->apic_addr;
-
-        auto override =
-            madt->findEntry<ACPI::madt::addr_override*>(ACPI::madt::entry_type::LAPIC_ADDR, 0);
-        if (override)
-            addr = override->addr;
 
         for (int i = 0; i < 2137; i++) {
             auto ioapic = madt->findEntry<ACPI::madt::ioapic*>(ACPI::madt::entry_type::IOAPIC, i);
             if (!ioapic)
                 break;
+
+            // Just incase.
+            Mem::Phys::mask(ioapic->addr, CPU::PAGE_SIZE);
 
             void* mapped   = Mem::kernel_pagemap->map(sizeof(IOAPIC), ioapic->addr, PAGE_WRITE);
             auto  m_ioapic = new IOAPIC(mapped, ioapic->global_interrupt_base);
@@ -82,7 +76,9 @@ namespace AEX::Sys::IRQ {
 
         AEX_ASSERT(ioapics.count() > 0);
 
-        APIC::map(addr);
+        Mem::Phys::mask(0xFEE00000, CPU::PAGE_SIZE);
+
+        APIC::map(0xFEE00000);
         APIC::init();
 
         for (int j = 1; j < 24; j++) {

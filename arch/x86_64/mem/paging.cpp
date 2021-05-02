@@ -232,7 +232,8 @@ namespace AEX::Mem {
         size_t amount = ceiltopg(bytes);
         size_t vaddr  = (size_t)(
             (flags & PAGE_FIXED) ? source : findContiguous(pptr, amount, flags & PAGE_EXEC));
-        size_t start = vaddr;
+        size_t start       = vaddr;
+        size_t chunk_upper = clamp(amount / 512, (size_t) 1, (size_t) 1024);
 
         if (vaddr == 0) {
             kpanic("aa");
@@ -242,13 +243,19 @@ namespace AEX::Mem {
         flags |= gflags;
         flags &= 0xFFF;
 
-        for (size_t i = 0; i < amount; i++) {
-            phys_addr phys = AEX::Mem::Phys::alloc(Sys::CPU::PAGE_SIZE);
-            memset64(aim_pptr(pptr, phys), 0x0000, 512);
+        while (amount) {
+            int       chunk = clamp(amount, (size_t) 0, chunk_upper);
+            phys_addr phys  = Mem::Phys::alloc(Sys::CPU::PAGE_SIZE * chunk);
 
-            assign(pptr, (void*) vaddr, phys, flags);
+            for (int i = 0; i < chunk; i++) {
+                assign(pptr, (void*) vaddr, phys, flags);
+                memset64(aim_pptr(pptr, phys), 0x0000, 512);
 
-            vaddr += Sys::CPU::PAGE_SIZE;
+                vaddr += Sys::CPU::PAGE_SIZE;
+                phys += Sys::CPU::PAGE_SIZE;
+            }
+
+            amount -= chunk;
         }
 
         // proot->frames_used += amount;
@@ -270,7 +277,7 @@ namespace AEX::Mem {
         size_t amount = ceiltopg(bytes);
         size_t vaddr  = (size_t)(
             (flags & PAGE_FIXED) ? source : findContiguous(pptr, amount, flags & PAGE_EXEC));
-        size_t paddr = AEX::Mem::Phys::alloc(bytes);
+        size_t paddr = Mem::Phys::alloc(bytes);
         size_t start = vaddr;
 
         flags |= PAGE_PRESENT;
@@ -569,7 +576,7 @@ namespace AEX::Mem {
             index_shift -= 9;
 
             if (!(ptable[index] & PAGE_PRESENT)) {
-                phys_addr phys = AEX::Mem::Phys::alloc(Sys::CPU::PAGE_SIZE);
+                phys_addr phys = Mem::Phys::alloc(Sys::CPU::PAGE_SIZE);
 
                 ptable[index] = phys;
                 fresh         = true;
