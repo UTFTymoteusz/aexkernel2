@@ -18,8 +18,9 @@ namespace AEX::FS {
     }
 
     void FATFileINode::fill() {
-        auto fat_block = (FATControlBlock*) control_block;
-        fat_block->fillChain(m_chain.at(0), m_chain);
+        cluster_t first     = m_chain.at(0);
+        auto      fat_block = (FATControlBlock*) control_block;
+        fat_block->fillChain(first, m_chain);
 
         m_filled    = true;
         block_count = m_chain.count();

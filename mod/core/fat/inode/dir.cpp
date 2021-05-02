@@ -146,7 +146,7 @@ namespace AEX::FS {
 
     ino_t FATDirectoryINode::createAssoc(fat_dirent dirent) {
         auto     fat_block     = (FATControlBlock*) control_block;
-        uint32_t first_cluster = dirent.first_cluster_lo + (dirent.first_cluster_hi << 16);
+        uint32_t first_cluster = dirent.first_cluster_lo | (dirent.first_cluster_hi << 16);
         ino_t    inode_id      = fat_block->nextINodeID();
         INode_SP inode;
 
@@ -154,7 +154,7 @@ namespace AEX::FS {
             auto dir = new FATDirectoryINode();
 
             if (first_cluster) {
-                fat_block->fillChain(first_cluster - 2, dir->chain());
+                fat_block->fillChain(first_cluster, dir->chain());
                 dir->m_filled = true;
             }
 
@@ -168,7 +168,7 @@ namespace AEX::FS {
             auto file = new FATFileINode();
 
             if (first_cluster) {
-                file->chain().first(first_cluster - 2);
+                file->chain().first(first_cluster);
                 file->m_filled = false;
             }
 

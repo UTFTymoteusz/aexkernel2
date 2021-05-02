@@ -3,10 +3,12 @@
 #include "aex/mem/vector.hpp"
 #include "aex/types.hpp"
 
+#include "types.hpp"
+
 namespace AEX::FS {
     class Chain {
         public:
-        uint32_t at(int index) {
+        cluster_t at(int index) {
             return m_clusters[index];
         }
 
@@ -14,13 +16,13 @@ namespace AEX::FS {
             return m_clusters.count();
         }
 
-        void first(uint32_t first) {
+        void first(cluster_t first) {
             m_clusters.clear();
             m_clusters.push(first);
         }
 
         private:
-        Mem::Vector<uint32_t> m_clusters;
+        Mem::Vector<cluster_t> m_clusters;
 
         friend class FATControlBlock;
     };

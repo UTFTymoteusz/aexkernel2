@@ -85,7 +85,7 @@ namespace AEX::FS {
             info.fat_size           = bpb.ebpb32.fat_sector_count * info.sector_size;
             info.data_offset        = info.fat_start + info.fat_size * info.fat_count;
             info.cluster_count      = (sector_count - info.data_offset) / info.cluster_size;
-            info.root_first_cluster = bpb.ebpb32.root_cluster - 2;
+            info.root_first_cluster = bpb.ebpb32.root_cluster;
         }
 
         return info;

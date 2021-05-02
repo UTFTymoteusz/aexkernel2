@@ -6,6 +6,8 @@
 #include "aex/utility.hpp"
 
 namespace AEX::FS {
+    typedef uint32_t cluster_t;
+
     enum fat_type {
         FAT_FAT12 = 0,
         FAT_FAT16 = 1,
@@ -35,7 +37,7 @@ namespace AEX::FS {
         blksize_t cluster_size;
         uint32_t  cluster_count;
 
-        uint32_t root_first_cluster;
+        cluster_t root_first_cluster;
     };
 
     struct fat_ebpb16 {
@@ -48,19 +50,19 @@ namespace AEX::FS {
     } PACKED;
 
     struct fat_ebpb32 {
-        little_endian<uint32_t> fat_sector_count;
-        little_endian<uint16_t> flags;
-        little_endian<uint16_t> version;
-        little_endian<uint32_t> root_cluster;
-        little_endian<uint16_t> fsinfo_sector;
-        little_endian<uint16_t> backup_sector;
-        char                    zero[12];
-        uint8_t                 drive_number;
-        uint8_t                 nt_flags;
-        uint8_t                 signature;
-        little_endian<uint32_t> serial;
-        char                    label[11];
-        char                    system_identifier_string[8];
+        little_endian<uint32_t>  fat_sector_count;
+        little_endian<uint16_t>  flags;
+        little_endian<uint16_t>  version;
+        little_endian<cluster_t> root_cluster;
+        little_endian<uint16_t>  fsinfo_sector;
+        little_endian<uint16_t>  backup_sector;
+        char                     zero[12];
+        uint8_t                  drive_number;
+        uint8_t                  nt_flags;
+        uint8_t                  signature;
+        little_endian<uint32_t>  serial;
+        char                     label[11];
+        char                     system_identifier_string[8];
     } PACKED;
 
     struct fat_bpb {
