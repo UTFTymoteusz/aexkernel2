@@ -15,12 +15,12 @@ namespace AEX::Sys::SATA {
             m_device = device;
         }
 
-        int64_t readBlock(void* buffer, uint64_t sector, uint32_t sector_count) {
+        sctcnt_t readBlock(void* buffer, sct_t sector, sctcnt_t sector_count) {
             readWrite(buffer, sector, sector_count, false);
             return sector_count * SECTOR_SIZE;
         }
 
-        int64_t writeBlock(const void* buffer, uint64_t sector, uint32_t sector_count) {
+        sctcnt_t writeBlock(const void* buffer, sct_t sector, sctcnt_t sector_count) {
             readWrite((void*) buffer, sector, sector_count, true);
             return sector_count * SECTOR_SIZE;
         }
@@ -29,12 +29,12 @@ namespace AEX::Sys::SATA {
         static constexpr auto SECTOR_SIZE = 2048;
 
         SATADevice* m_device;
-        void        readWrite(void* buffer, uint32_t sector, uint32_t sector_count, bool write) {
+        void        readWrite(void* buffer, sct_t sector, sctcnt_t sector_count, bool write) {
             uint8_t packet[12] = {write ? AHCI::scsi_command::WRITE_12
                                                : AHCI::scsi_command::READ_12};
 
-            *((uint32_t*) &(packet[2])) = bswap(sector);
-            *((uint32_t*) &(packet[6])) = bswap(sector_count);
+            *((uint32_t*) &(packet[2])) = bswap((uint32_t) sector);
+            *((uint32_t*) &(packet[6])) = bswap((uint32_t) sector_count);
 
             m_device->scsiPacket(packet, buffer, sector_count * SECTOR_SIZE);
         }

@@ -18,9 +18,7 @@ namespace AEX::FS {
 
         protected:
         Chain m_chain;
-        Mutex m_mutex;
-
-        bool m_filled;
+        bool  m_filled;
 
         Chain& chain() {
             return m_chain;
@@ -39,7 +37,7 @@ namespace AEX::FS {
             type = FT_REGULAR;
         }
 
-        error_t readBlocks(void* buffer, uint64_t start, uint16_t count);
+        error_t readBlocks(void* buffer, blk_t start, blkcnt_t count);
 
         private:
         void fill();

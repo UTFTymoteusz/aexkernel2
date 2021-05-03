@@ -5,9 +5,8 @@ namespace AEX::FS {
         if (ctx->pos >= size)
             return {};
 
-        auto       fat_block = (FATControlBlock*) control_block;
-        fat_dirent fat_dirent;
-
+        auto           fat_block = (FATControlBlock*) control_block;
+        fat_dirent     fat_dirent;
         fat_dirent_lfn longs[16];
         int            long_count = 0;
 
@@ -15,9 +14,9 @@ namespace AEX::FS {
         int  filename_offset;
 
         while (ctx->pos < size) {
-            uint32_t lcluster = ctx->pos / fat_block->m_cluster_size;
-            uint32_t pcluster = m_chain.at(lcluster);
-            uint32_t offset   = ctx->pos - (lcluster * fat_block->m_cluster_size);
+            cluster_t lcluster = ctx->pos / fat_block->m_cluster_size;
+            cluster_t pcluster = m_chain.at(lcluster);
+            off_t     offset   = ctx->pos - (lcluster * fat_block->m_cluster_size);
 
             ctx->pos += sizeof(fat_dirent);
 
@@ -43,7 +42,7 @@ namespace AEX::FS {
 
             filename_offset = 0;
 
-            if (long_count != 0) {
+            if (long_count) {
                 for (int i = 0; i < long_count; i++) {
                     int len = readLFN(longs[i], filename + filename_offset,
                                       sizeof(filename) - filename_offset);
@@ -62,15 +61,8 @@ namespace AEX::FS {
             filename[filename_offset] = '\0';
             long_count                = 0;
 
-            m_mutex.acquire();
-            fat_block->m_mutex.acquire();
-
-            auto  assoc    = getAssoc(fat_dirent.filename);
-            ino_t inode_id = assoc ? assoc.value : createAssoc(fat_dirent);
-
-            fat_block->m_mutex.release();
-            m_mutex.release();
-
+            auto   assoc    = getAssoc(fat_dirent.filename);
+            ino_t  inode_id = assoc ? assoc.value : createAssoc(fat_dirent);
             dirent aex_dirent;
 
             strncpy(aex_dirent.name, filename, sizeof(aex_dirent.name));
@@ -124,8 +116,6 @@ namespace AEX::FS {
     }
 
     optional<ino_t> FATDirectoryINode::getAssoc(const char* filename) {
-        AEX_ASSERT(!m_mutex.tryAcquire());
-
         for (int i = 0; i < m_assocs.count(); i++)
             if (memcmp(filename, m_assocs[i].filename, 11) == 0)
                 return m_assocs[i].id;
@@ -134,8 +124,6 @@ namespace AEX::FS {
     }
 
     void FATDirectoryINode::pushAssoc(const char* filename, ino_t id) {
-        AEX_ASSERT(!m_mutex.tryAcquire());
-
         inode_assoc assoc;
 
         strncpy(assoc.filename, filename, 12);
@@ -145,7 +133,9 @@ namespace AEX::FS {
     }
 
     ino_t FATDirectoryINode::createAssoc(fat_dirent dirent) {
-        auto     fat_block     = (FATControlBlock*) control_block;
+        auto fat_block = (FATControlBlock*) control_block;
+        SCOPE(fat_block->m_mutex);
+
         uint32_t first_cluster = dirent.first_cluster_lo | (dirent.first_cluster_hi << 16);
         ino_t    inode_id      = fat_block->nextINodeID();
         INode_SP inode;

@@ -49,13 +49,12 @@ error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator
 
         size_t start = (size_t) section_header.address;
         size_t end   = start + section_header.size;
-
-        size_t fptr = section_header.file_offset;
+        size_t fptr  = section_header.file_offset;
 
         for (size_t ptr = start; ptr < end;) {
             size_t chk_size = min(Sys::CPU::PAGE_SIZE - (ptr & 0x0FFF), end - ptr);
 
-            Mem::phys_addr paddr = process->pagemap->paddrof((void*) ptr);
+            Mem::phys_t paddr = process->pagemap->paddrof((void*) ptr);
             if (!paddr) {
                 auto flags = PAGE_USER | PAGE_FIXED;
 

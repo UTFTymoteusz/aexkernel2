@@ -6,9 +6,12 @@
 #include "aex/sys/time/types.hpp"
 #include "aex/utility.hpp"
 
+using time_t = AEX::Sys::Time::time_t;
+
 namespace AEX::FS {
-    typedef int64_t blkcnt_t;
-    typedef int64_t blksize_t;
+    typedef uint64_t blk_t;
+    typedef int64_t  blkcnt_t;
+    typedef int64_t  blksize_t;
 
     typedef uint64_t fsblkcnt_t;
     typedef uint64_t fsfilcnt_t;
@@ -47,9 +50,9 @@ namespace AEX::FS {
 
         off_t total_size = 0;
 
-        Sys::Time::time_t access_time;
-        Sys::Time::time_t modify_time;
-        Sys::Time::time_t change_time;
+        time_t access_time;
+        time_t modify_time;
+        time_t change_time;
 
         blksize_t block_size;
         blkcnt_t  blocks;

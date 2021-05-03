@@ -12,7 +12,7 @@ namespace AEX::Mem::Phys {
     typedef uint32_t bitmap_t;
 
     struct frame_piece {
-        phys_addr start;
+        phys_t start;
 
         uint32_t     size;
         uint32_t     frames_free;
@@ -20,11 +20,11 @@ namespace AEX::Mem::Phys {
 
         bitmap_t m_bitmap[];
 
-        frame_piece(phys_addr addr, uint32_t amnt) {
+        frame_piece(phys_t addr, uint32_t amnt) {
             init(addr, amnt);
         }
 
-        void init(phys_addr addr, uint32_t amnt) {
+        void init(phys_t addr, uint32_t amnt) {
             start       = addr;
             size        = amnt;
             frames_free = amnt;

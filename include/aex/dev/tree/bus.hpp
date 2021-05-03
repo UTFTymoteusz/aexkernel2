@@ -35,6 +35,6 @@ namespace AEX::Dev::Tree {
         private:
         Spinlock m_lock;
 
-        static void bindDriver(Driver* driver, Device* device);
+        static void bind(Driver* driver, Device* device);
     };
 }

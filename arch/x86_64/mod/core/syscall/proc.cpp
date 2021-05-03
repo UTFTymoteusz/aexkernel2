@@ -94,7 +94,7 @@ pid_t fork() {
     thread->context->rax    = 0;
     thread->context->rdx    = 0;
     thread->context->r12    = 0;
-    thread->context->cr3    = child->pagemap->pageRoot;
+    thread->context->cr3    = child->pagemap->root;
 
     Mem::atomic_add(&child->thread_counter, 1);
 

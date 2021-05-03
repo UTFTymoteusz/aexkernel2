@@ -31,7 +31,7 @@ namespace AEX::Dev::Tree {
         m_resources.push(resource);
     }
 
-    optional<resource> Device::getResource(int index) {
+    optional<resource> Device::get(int index) {
         SCOPE(m_lock);
 
         if (index < 0 || index >= m_resources.count())

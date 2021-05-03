@@ -19,7 +19,7 @@ namespace AEX::Dev::Tree {
      * Tries to register a device in the specified bus.
      * @param bus_name The bus name.
      * @param device   The device.
-     * @returns True if succeeded.
+     * @returns True on success.
      **/
     API bool register_device(const char* bus_name, Device* device);
 
@@ -27,7 +27,7 @@ namespace AEX::Dev::Tree {
      * Tries to register a driver in the specified bus.
      * @param bus_name The bus name.
      * @param driver   The driver.
-     * @returns True if succeeded.
+     * @returns True on success.
      **/
     API bool register_driver(const char* bus_name, Driver* driver);
 

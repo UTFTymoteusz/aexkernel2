@@ -82,11 +82,11 @@ auto constexpr BUFFER_MASK = (BUFFER_SIZE - 0x10) - 4;
 class RTL8139 : public Dev::NetDevice {
     public:
     RTL8139(PCIDevice* device, const char* name) : NetDevice(name, Net::LINK_ETHERNET) {
-        m_tx_buffers = (uint8_t*) Mem::kernel_pagemap->allocContinuous(2048 * 4);
-        m_rx_buffer  = (uint8_t*) Mem::kernel_pagemap->allocContinuous(BUFFER_SIZE + 1500);
+        m_tx_buffers = (uint8_t*) Mem::kernel_pagemap->pcalloc(2048 * 4);
+        m_rx_buffer  = (uint8_t*) Mem::kernel_pagemap->pcalloc(BUFFER_SIZE + 1500);
 
         for (int i = 5; i >= 0; i--) {
-            auto resource = device->getResource(i);
+            auto resource = device->get(i);
             if (!resource)
                 continue;
 
@@ -116,10 +116,10 @@ class RTL8139 : public Dev::NetDevice {
         while (inb(CMD) & CMD_RST)
             Proc::Thread::yield();
 
-        Mem::phys_addr tx_paddr = Mem::kernel_pagemap->paddrof(m_tx_buffers);
+        Mem::phys_t tx_paddr = Mem::kernel_pagemap->paddrof(m_tx_buffers);
         AEX_ASSERT(tx_paddr <= 0xFFFFFFFF);
 
-        Mem::phys_addr rx_paddr = Mem::kernel_pagemap->paddrof(m_rx_buffer);
+        Mem::phys_t rx_paddr = Mem::kernel_pagemap->paddrof(m_rx_buffer);
         AEX_ASSERT(rx_paddr <= 0xFFFFFFFF);
 
         // Set transmit buffers addresses

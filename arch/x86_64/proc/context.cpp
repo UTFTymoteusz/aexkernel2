@@ -14,7 +14,7 @@ namespace AEX::Proc {
         rsp = (uint64_t) stack + stack_size;
         rbp = 0;
 
-        cr3 = (uint64_t) pagemap->pageRoot;
+        cr3 = (uint64_t) pagemap->root;
 
         if (on_exit) {
             rsp -= 8; // Gotta align it so SSE doesn't go boom boom (the thread will push rbp most

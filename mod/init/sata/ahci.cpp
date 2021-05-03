@@ -49,12 +49,12 @@ namespace AEX::Sys::SATA {
             return;
 
         int  max_cmd = command_slots;
-        auto headers = (hba_command_header*) Mem::kernel_pagemap->allocContinuous(
+        auto headers = (hba_command_header*) Mem::kernel_pagemap->pcalloc(
             sizeof(hba_command_header) * command_slots, PAGE_WRITE | PAGE_NOCACHE);
-        auto tables = (hba_command_table*) Mem::kernel_pagemap->allocContinuous(
-            8192 * command_slots, PAGE_WRITE | PAGE_NOCACHE);
-        auto fis = (hba_fis*) Mem::kernel_pagemap->allocContinuous(sizeof(hba_fis),
-                                                                   PAGE_WRITE | PAGE_NOCACHE);
+        auto tables = (hba_command_table*) Mem::kernel_pagemap->pcalloc(8192 * command_slots,
+                                                                        PAGE_WRITE | PAGE_NOCACHE);
+        auto fis =
+            (hba_fis*) Mem::kernel_pagemap->pcalloc(sizeof(hba_fis), PAGE_WRITE | PAGE_NOCACHE);
 
         memset(headers, '\0', sizeof(hba_command_header) * command_slots);
         memset(tables, '\0', 8192 * command_slots);

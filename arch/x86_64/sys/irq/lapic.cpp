@@ -7,7 +7,7 @@
 namespace AEX::Sys::IRQ {
     void* APIC::addr;
 
-    void APIC::map(Mem::Phys::phys_addr phys) {
+    void APIC::map(Mem::phys_t phys) {
         if (addr != nullptr)
             return;
 

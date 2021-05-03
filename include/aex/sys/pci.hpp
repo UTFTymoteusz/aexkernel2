@@ -13,7 +13,6 @@ namespace AEX::Sys::PCI {
         uint16_t device_id, vendor_id;
 
         uint8_t bus, device, function;
-
         uint8_t interrupt_pin;
 
         PCIDevice(const char* name, Dev::Tree::Device* parent) : Device(name, parent) {}

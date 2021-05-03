@@ -29,7 +29,7 @@ namespace AEX::FS {
         auto info = File::info(source);
         if (!info) {
             printk(PRINTK_WARN "fat: mount: Failed to get file info\n");
-            return info.error_code;
+            return info.error;
         }
 
         if (!info.value.is_block()) {

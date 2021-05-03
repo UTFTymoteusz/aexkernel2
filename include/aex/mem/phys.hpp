@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/mem/types.hpp"
 #include "aex/utility.hpp"
 
 #include <stddef.h>
@@ -10,8 +11,6 @@ struct multiboot_info;
 typedef struct multiboot_info multiboot_info_t;
 
 namespace AEX::Mem::Phys {
-    typedef size_t phys_addr;
-
     API extern size_t frames_available;
     API extern size_t frames_taken_by_kernel;
 
@@ -28,7 +27,7 @@ namespace AEX::Mem::Phys {
      * @param amount Requested size in bytes.
      * @returns The physical address of the allocated frame region.
      **/
-    API phys_addr alloc(int32_t amount);
+    API phys_t alloc(int32_t amount);
 
     /**
      * Frees the amount of frames required to fit the specified size starting at the specified
@@ -36,7 +35,7 @@ namespace AEX::Mem::Phys {
      * @param addr   The physical address.
      * @param amount Size in bytes.
      **/
-    API void free(phys_addr addr, int32_t amount);
+    API void free(phys_t addr, int32_t amount);
 
     /**
      * Masks away amount of frames required to fit the specified size starting at the specified
@@ -45,5 +44,5 @@ namespace AEX::Mem::Phys {
      * @param amount Size in bytes.
      * @returns Whether the masking was neccesary at all.
      **/
-    API bool mask(phys_addr addr, int32_t amount);
+    API bool mask(phys_t addr, int32_t amount);
 }

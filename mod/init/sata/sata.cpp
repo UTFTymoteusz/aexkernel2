@@ -36,10 +36,10 @@ namespace AEX::Sys::SATA {
             init();
             set_busmaster(device, true);
 
-            Mem::Phys::phys_addr paddr = 0;
+            Mem::phys_t paddr = 0;
 
             for (int i = 5; i >= 0; i--) {
-                auto resource = device->getResource(i);
+                auto resource = device->get(i);
                 if (!resource || resource.value.type != Tree::resource::RES_MEMORY)
                     continue;
 

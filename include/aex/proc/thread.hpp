@@ -72,10 +72,10 @@ namespace AEX::Proc {
         size_t fault_stack;
         size_t aux_stack;
 
-        int user_stack_size;
-        int kernel_stack_size;
-        int fault_stack_size;
-        int aux_stack_size;
+        size_t user_stack_size;
+        size_t kernel_stack_size;
+        size_t fault_stack_size;
+        size_t aux_stack_size;
 
         bool faulting;
         bool in_signal;

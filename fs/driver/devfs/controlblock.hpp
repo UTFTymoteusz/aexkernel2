@@ -8,6 +8,6 @@
 namespace AEX::FS {
     class DevFSControlBlock : public ControlBlock {
         public:
-        optional<INode_SP> getINode(INode_SP dir, dirent dentry, ino_t id);
+        optional<INode_SP> get(INode_SP dir, dirent dentry, ino_t id);
     };
 }

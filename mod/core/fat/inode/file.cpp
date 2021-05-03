@@ -1,9 +1,7 @@
 #include "../inode.hpp"
 
 namespace AEX::FS {
-    error_t FATFileINode::readBlocks(void* buffer, uint64_t start, uint16_t count) {
-        SCOPE(m_mutex);
-
+    error_t FATFileINode::readBlocks(void* buffer, blk_t start, blkcnt_t count) {
         if (!m_filled && m_chain.count() > 0)
             fill();
 

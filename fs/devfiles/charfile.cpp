@@ -21,8 +21,8 @@ namespace AEX::FS {
         return m_handle->ioctl(rq, val);
     }
 
-    optional<Mem::MMapRegion*> CharFile::mmap(Proc::Process* process, void* addr, size_t len,
-                                              int flags, FS::File_SP file, FS::off_t offset) {
+    optional<Mem::Region*> CharFile::mmap(Proc::Process* process, void* addr, size_t len, int flags,
+                                          FS::File_SP file, FS::off_t offset) {
         return m_handle->mmap(process, addr, len, flags, file, offset);
     }
 

@@ -9,7 +9,7 @@
 #include "aex/utility.hpp"
 
 namespace AEX::Mem {
-    class MMapRegion;
+    class Region;
 }
 
 namespace AEX::FS {
@@ -43,31 +43,24 @@ namespace AEX::FS {
 
         virtual ~File();
 
-        static optional<File_SP> open(const char* path, int mode);
-
-        static optional<file_info> info(const char* path, int flags = 0);
-
-        virtual optional<ssize_t> read(void* buf, size_t count);
-        virtual optional<ssize_t> write(void* buf, size_t count);
-        virtual optional<int>     ioctl(int rq, uint64_t val);
-
-        virtual optional<Mem::MMapRegion*> mmap(Proc::Process* process, void*, size_t len,
-                                                int flags, FS::File_SP file, FS::off_t offset);
-
+        static optional<File_SP>    open(const char* path, int mode);
+        virtual optional<ssize_t>   read(void* buf, size_t count);
+        virtual optional<ssize_t>   write(void* buf, size_t count);
+        virtual error_t             close();
+        virtual optional<off_t>     seek(off_t offset, seek_mode mode = seek_mode::SEEK_SET);
+        static optional<file_info>  info(const char* path, int flags = 0);
         virtual optional<file_info> finfo();
         virtual error_t             fchmod(mode_t mode);
+        virtual optional<File_SP>   dup();
 
-        virtual optional<off_t> seek(off_t offset, seek_mode mode = seek_mode::SEEK_SET);
+        virtual optional<Mem::Region*> mmap(Proc::Process* process, void*, size_t len, int flags,
+                                            FS::File_SP file, FS::off_t offset);
+        virtual optional<int>          ioctl(int rq, uint64_t val);
+        virtual bool                   isatty();
 
         virtual optional<dirent> readdir();
         virtual error_t          seekdir(long pos);
         virtual long             telldir();
-
-        virtual optional<File_SP> dup();
-
-        virtual error_t close();
-
-        virtual bool isatty();
 
         int  get_flags();
         void set_flags(int);

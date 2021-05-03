@@ -49,9 +49,7 @@ namespace AEX::Sys::MCore {
                      : "r"(finalize), "r"(stack), "r"(id), "r"(ap_wait)
                      : "memory");
 
-        void* dst = (void*) TRAMPOLINE_ADDR;
-
-        memcpy(dst, (void*) trampoline, CPU::PAGE_SIZE);
+        memcpy((void*) TRAMPOLINE_ADDR, (void*) trampoline, CPU::PAGE_SIZE);
     }
 
     void init() {

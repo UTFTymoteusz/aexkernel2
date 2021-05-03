@@ -14,10 +14,10 @@
 namespace AEX::Dev::Tree {
     class API Device {
         public:
+        char name[32];
+
         Device*                 parent = nullptr;
         Mem::SmartArray<Device> children;
-
-        char name[32];
 
         void* driver_data;
 
@@ -25,7 +25,7 @@ namespace AEX::Dev::Tree {
         virtual ~Device();
 
         void               add(resource resource);
-        optional<resource> getResource(int index);
+        optional<resource> get(int index);
 
         virtual void registerDevice(Device* device);
 

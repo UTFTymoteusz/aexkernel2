@@ -49,7 +49,7 @@ ssize_t read(int fd, usr_void* usr_buf, size_t count) {
         USR_ENSURE(k2u_memcpy(&usr_buf_c[i], buffer, len));
 
         read += read_try.value;
-        if (read_try.error_code != EINTR)
+        if (read_try.error != EINTR)
             break;
     }
 
@@ -195,7 +195,7 @@ int access(const usr_char* usr_path, int mode) {
 bool isatty(int fd) {
     auto fd_try = get_file(fd);
     if (!fd_try) {
-        USR_ERRNO = fd_try.error_code;
+        USR_ERRNO = fd_try.error;
         return false;
     }
 
@@ -211,14 +211,14 @@ void* mmap(void* addr, size_t length, int prot, int flags, int fd, FS::off_t off
 
     auto fd_try = get_file(fd);
     if (!fd_try && !(flags & Mem::MAP_ANONYMOUS)) {
-        USR_ERRNO = fd_try.error_code;
+        USR_ERRNO = fd_try.error;
         return nullptr;
     }
 
     auto mmap_try =
         Mem::mmap(Proc::Process::current(), addr, length, prot, flags, fd_try.value, offset);
     if (!mmap_try) {
-        USR_ERRNO = mmap_try.error_code;
+        USR_ERRNO = mmap_try.error;
         return nullptr;
     }
 
@@ -257,7 +257,7 @@ long seek(int fd, long pos, int mode) {
 void seekdir(int fd, long pos) {
     auto fd_try = get_file(fd);
     if (!fd_try) {
-        USR_ERRNO = fd_try.error_code;
+        USR_ERRNO = fd_try.error;
         return;
     }
 

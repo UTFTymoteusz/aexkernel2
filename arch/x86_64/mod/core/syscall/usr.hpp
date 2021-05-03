@@ -93,14 +93,14 @@ bool copy_and_canonize(char buffer[AEX::FS::MAX_PATH_LEN], const usr_char* usr_p
         }                       \
         res;                    \
     })
-#define USR_ENSURE_OPT(opt)             \
-    ({                                  \
-        auto res = opt;                 \
-        if (!res) {                     \
-            USR_ERRNO = res.error_code; \
-            return -1;                  \
-        }                               \
-        res.value;                      \
+#define USR_ENSURE_OPT(opt)        \
+    ({                             \
+        auto res = opt;            \
+        if (!res) {                \
+            USR_ERRNO = res.error; \
+            return -1;             \
+        }                          \
+        res.value;                 \
     })
 #define USR_ENSURE_ENONE(exp)    \
     ({                           \

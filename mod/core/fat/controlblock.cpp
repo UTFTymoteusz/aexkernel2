@@ -5,7 +5,7 @@
 #include "inode.hpp"
 
 namespace AEX::FS {
-    optional<INode_SP> FATControlBlock::getINode(INode_SP dir, dirent dirent, ino_t id) {
+    optional<INode_SP> FATControlBlock::get(INode_SP, dirent, ino_t id) {
         SCOPE(m_mutex);
 
         auto cache_try = m_cache.get(id);

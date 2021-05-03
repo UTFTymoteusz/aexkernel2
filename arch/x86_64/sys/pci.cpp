@@ -2,7 +2,7 @@
 
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/dev/tree.hpp"
-#include "aex/mem.hpp"
+#include "aex/mem/types.hpp"
 #include "aex/module.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
@@ -176,9 +176,9 @@ namespace AEX::Sys::PCI {
     }
 
     void fill_bars(uint8_t bus, uint8_t device, uint8_t function, PCIDevice* dev_device) {
-        Mem::Phys::phys_addr bar0, bar1;
-        Mem::Phys::phys_addr addr;
-        size_t               len;
+        Mem::phys_t bar0, bar1;
+        Mem::phys_t addr;
+        size_t      len;
 
         uint32_t offset = 16;
         uint32_t mask   = 0;

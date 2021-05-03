@@ -14,7 +14,7 @@ namespace AEX::FS {
     }
 
     const char* Walker::next() {
-        if (!m_path[m_index] || m_too_long)
+        if (!m_path[m_index] || m_overflow)
             return nullptr;
 
         while (m_path[m_index] == '/')
@@ -24,7 +24,7 @@ namespace AEX::FS {
 
         while (m_path[m_index] && m_path[m_index] != '/') {
             if (chars_this_piece >= MAX_FILENAME_LEN - 1) {
-                m_too_long = true;
+                m_overflow = true;
                 return nullptr;
             }
 
@@ -48,11 +48,11 @@ namespace AEX::FS {
         return m_level;
     }
 
-    bool Walker::isPieceTooLong() {
-        return m_too_long;
+    bool Walker::overflow() {
+        return m_overflow;
     }
 
-    bool Walker::isFinal() {
+    bool Walker::final() {
         return m_level == m_levels;
     }
 
@@ -71,9 +71,7 @@ namespace AEX::FS {
                 last = i + 1;
         }
 
-        strncpy(buffer, &((char*) path)[last], min((int) num, len - last + 1));
-
-        return buffer;
+        return strncpy(buffer, &((char*) path)[last], min((int) num, len - last + 1));
     }
 
     bool check_length(const char* path) {
@@ -143,8 +141,9 @@ namespace AEX::FS {
         }
 
         for (auto walker = FS::Walker(path); auto piece = walker.next();) {
-            if (strcmp(piece, ".") == 0)
+            if (strcmp(piece, ".") == 0) {
                 continue;
+            }
             else if (strcmp(piece, "..") == 0) {
                 while (index > 0 && buffer[index] != '/')
                     index--;
@@ -153,7 +152,6 @@ namespace AEX::FS {
                     continue;
 
                 buffer[index] = '\0';
-
                 continue;
             }
 

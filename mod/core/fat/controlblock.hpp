@@ -34,7 +34,7 @@ namespace AEX::FS {
 
         Dev::BlockHandle block_handle;
 
-        optional<INode_SP> getINode(INode_SP dir, dirent dirent, ino_t id);
+        optional<INode_SP> get(INode_SP dir, dirent dirent, ino_t id);
 
         private:
         fat_type m_type;

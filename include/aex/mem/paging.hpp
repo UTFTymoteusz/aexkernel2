@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aex/mem/types.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/utility.hpp"
 
@@ -35,24 +36,22 @@ namespace AEX::Mem {
 #define PAGE_ARBITRARY AEX::Mem::m_page_arbitrary
 
 namespace AEX::Mem {
-    typedef size_t phys_addr;
-
     /**
      * The pagemap class. Contains the methods required to allocate virtual memory.
      **/
     class API Pagemap {
         public:
-        void* vstart;
-        void* vend;
+        virt_t vstart;
+        virt_t vend;
 
-        phys_addr pageRoot;
+        phys_t root;
 
         // Flags that will be applied to every mapping under this pagemap;
         uint32_t gflags;
 
         Pagemap();
-        Pagemap(phys_addr pageRoot);
-        Pagemap(size_t start, size_t end);
+        Pagemap(phys_t root);
+        Pagemap(virt_t start, virt_t end);
         ~Pagemap();
 
         /**
@@ -79,8 +78,8 @@ namespace AEX::Mem {
          * @param bytes Requested size in bytes.
          * @returns Virtual address or nullptr on failure.
          **/
-        void* allocContinuous(size_t bytes) {
-            return allocContinuous(bytes, 0);
+        void* pcalloc(size_t bytes) {
+            return pcalloc(bytes, 0);
         }
 
         /**
@@ -91,7 +90,7 @@ namespace AEX::Mem {
          * @param source Optional source address.
          * @returns Virtual address or nullptr on failure.
          **/
-        void* allocContinuous(size_t bytes, uint32_t flags, void* source = nullptr);
+        void* pcalloc(size_t bytes, uint32_t flags, void* source = nullptr);
 
         /**
          * Maps the specified size to a physical address.
@@ -101,7 +100,7 @@ namespace AEX::Mem {
          * @param source If PAGE_FIXED is used, source will be the virtual address.
          * @returns Virtual address or nullptr on failure.
          **/
-        void* map(size_t bytes, phys_addr paddr, uint16_t flags, void* source = nullptr);
+        void* map(size_t bytes, phys_t paddr, uint16_t flags, void* source = nullptr);
 
         /**
          * Frees the specified size from the address space. Automatically frees physical memory.
@@ -115,8 +114,7 @@ namespace AEX::Mem {
          * @param vaddr The virtual address.
          * @returns The physical address or 0 on failure.
          **/
-        phys_addr paddrof(void* vaddr);
-
+        phys_t paddrof(void* vaddr);
         size_t rawof(void* vaddr);
 
         Pagemap* fork();
@@ -125,23 +123,23 @@ namespace AEX::Mem {
         private:
         Spinlock m_lock;
 
-        void      assign(int pptr, void* virt, phys_addr phys, uint16_t flags);
-        phys_addr unassign(int pptr, void* virt);
+        void   assign(int pptr, virt_t virt, phys_t phys, uint16_t flags);
+        phys_t unassign(int pptr, virt_t virt);
 
-        void recache(void* virt, size_t bytes);
+        void recache(virt_t virt, size_t bytes);
 
-        uint64_t* findTable(int pptr, uint64_t virt_addr) {
+        uint64_t* findTable(int pptr, virt_t virt_addr) {
             uint64_t skip_by;
             return findTable(pptr, virt_addr, &skip_by);
         }
-        uint64_t* findTable(int pptr, uint64_t virt_addr, uint64_t* skip_by);
 
-        uint64_t* findTableEnsure(int pptr, uint64_t virt_addr);
+        uint64_t* findTable(int pptr, virt_t virt_addr, uint64_t* skip_by);
+        uint64_t* findTableEnsure(int pptr, virt_t virt_addr);
 
         void* findContiguous(int pptr, size_t amount, bool executable = false);
 
-        phys_addr paddrof_internal(int pptr, void* vaddr);
-        size_t    rawof_internal(int pptr, void* vaddr);
+        phys_t paddrof_internal(int pptr, virt_t vaddr);
+        size_t rawof_internal(int pptr, virt_t vaddr);
     };
 
     /**

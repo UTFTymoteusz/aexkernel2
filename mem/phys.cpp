@@ -17,7 +17,7 @@
 #include <stdint.h>
 
 namespace AEX::Mem::Phys {
-    typedef size_t phys_addr;
+    typedef size_t phys_t;
 
     uint8_t      root_piece_memory[8192];
     frame_piece* first_piece;
@@ -34,7 +34,7 @@ namespace AEX::Mem::Phys {
             int amnt = min<int>((sizeof(root_piece_memory) - sizeof(frame_piece)) * 8, frames);
             frames -= amnt;
 
-            first_piece->init((phys_addr) addr, amnt);
+            first_piece->init((phys_t) addr, amnt);
 
             frames_taken_by_kernel = ceiltopg((uint64_t) &_end_bss - (uint64_t) &_start_text);
 
@@ -50,7 +50,7 @@ namespace AEX::Mem::Phys {
 
         frame_piece* new_piece = (frame_piece*) (alloc(frp_size) + (size_t) &KERNEL_EXEC_VMA);
 
-        new_piece->init((phys_addr) addr, frames);
+        new_piece->init((phys_t) addr, frames);
 
         current_piece->next = new_piece;
         current_piece       = new_piece;
@@ -101,7 +101,7 @@ namespace AEX::Mem::Phys {
         printk(PRINTK_OK "Memory enumerated\n");
     }
 
-    phys_addr alloc(int32_t amount) {
+    phys_t alloc(int32_t amount) {
         uint32_t     frames = ceiltopg(amount);
         frame_piece* piece  = first_piece;
 
@@ -125,7 +125,7 @@ namespace AEX::Mem::Phys {
         kpanic("Failed to AEX::Mem::Phys::alloc()");
     }
 
-    void free(phys_addr addr, int32_t amount) {
+    void free(phys_t addr, int32_t amount) {
         if (addr < first_piece->start)
             return;
 
@@ -149,7 +149,7 @@ namespace AEX::Mem::Phys {
         kpanic("Failed to AEX::Mem::Phys::free()");
     }
 
-    bool mask(phys_addr addr, int32_t amount) {
+    bool mask(phys_t addr, int32_t amount) {
         if (addr < first_piece->start)
             return false;
 

@@ -27,8 +27,8 @@ namespace AEX::Proc {
         new (&broker_queue) IPC::MessageQueue();
 
         kpanic_hook.subscribe([]() {
-            int  delta;
-            auto name = Debug::addr2name((void*) broker_current.func, delta) ?: "unknown";
+            int  delta = 0;
+            auto name  = Debug::addr2name((void*) broker_current.func, delta) ?: "unknown";
 
             printk("broker: Currently executing 0x%p <%s+0x%x>\n", broker_current.func, name,
                    delta);

@@ -40,8 +40,8 @@ namespace AEX::Proc {
         Mutex                           descs_lock;
         Mem::LazyVector<FS::Descriptor> descs;
 
-        Mem::Pagemap*                     pagemap;
-        Mem::LazyVector<Mem::MMapRegion*> mmap_regions;
+        Mem::Pagemap*                 pagemap;
+        Mem::LazyVector<Mem::Region*> mmap_regions;
 
         Sys::syscall_t* syscall_table;
 

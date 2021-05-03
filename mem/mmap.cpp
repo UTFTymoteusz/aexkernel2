@@ -9,7 +9,7 @@
 namespace AEX::Mem {
     void remove_region(Proc::Process* process, void* addr);
 
-    MMapRegion::MMapRegion(Pagemap* pagemap, void* addr, size_t len) {
+    Region::Region(Pagemap* pagemap, void* addr, size_t len) {
         this->start = addr;
         this->len   = len;
 
@@ -17,8 +17,7 @@ namespace AEX::Mem {
         this->m_pagemap = pagemap;
     }
 
-    MMapRegion::MMapRegion(Pagemap* pagemap, void* addr, size_t len, FS::File_SP file,
-                           int64_t offset) {
+    Region::Region(Pagemap* pagemap, void* addr, size_t len, FS::File_SP file, int64_t offset) {
         this->start = addr;
         this->len   = len;
 
@@ -27,20 +26,19 @@ namespace AEX::Mem {
         this->m_pagemap = pagemap;
     }
 
+    Region::~Region() {}
 
-    MMapRegion::~MMapRegion() {}
-
-    error_t MMapRegion::read(void* addr, FS::off_t offset, size_t count) {
-        kpanic("Default MMapRegion::read(0x%p, %li, %i) called", addr, offset, count);
+    error_t Region::read(void* addr, FS::off_t offset, size_t count) {
+        kpanic("Default Region::read(0x%p, %li, %i) called", addr, offset, count);
     }
 
-    optional<MMapRegion*> MMapRegion::fork(Pagemap* dst) {
-        return new MMapRegion(dst, start, len);
+    optional<Region*> Region::fork(Pagemap* dst) {
+        return new Region(dst, start, len);
     }
 
-    FileBackedMMapRegion::FileBackedMMapRegion(Pagemap* pagemap, void* addr, size_t len,
-                                               FS::File_SP file, int64_t offset)
-        : MMapRegion(pagemap, addr, len) {
+    FileBackedRegion::FileBackedRegion(Pagemap* pagemap, void* addr, size_t len, FS::File_SP file,
+                                       int64_t offset)
+        : Region(pagemap, addr, len) {
         this->m_file   = file;
         this->m_offset = offset;
 
@@ -48,7 +46,7 @@ namespace AEX::Mem {
             cache[i].buffer = (uint8_t*) kernel_pagemap->alloc(Sys::CPU::PAGE_SIZE, PAGE_WRITE);
     }
 
-    FileBackedMMapRegion::~FileBackedMMapRegion() {
+    FileBackedRegion::~FileBackedRegion() {
         m_lock.acquire();
 
         if (m_file)
@@ -62,7 +60,7 @@ namespace AEX::Mem {
         m_lock.release();
     }
 
-    error_t FileBackedMMapRegion::read(void* dst, FS::off_t offset, size_t count) {
+    error_t FileBackedRegion::read(void* dst, FS::off_t offset, size_t count) {
         SCOPE(m_lock);
 
         size_t id = offset / Sys::CPU::PAGE_SIZE;
@@ -93,11 +91,11 @@ namespace AEX::Mem {
         return ENONE;
     }
 
-    optional<MMapRegion*> FileBackedMMapRegion::fork(Pagemap* dst) {
-        kpanic("FileBackedMMapRegion::fork(0x%p) called", dst);
+    optional<Region*> FileBackedRegion::fork(Pagemap* dst) {
+        kpanic("FileBackedRegion::fork(0x%p) called", dst);
     }
 
-    int FileBackedMMapRegion::findSlot(int32_t id) {
+    int FileBackedRegion::findSlot(int32_t id) {
         int32_t prev_id = id - 1;
         if (id == 0)
             prev_id = 0;
@@ -137,12 +135,10 @@ namespace AEX::Mem {
         if (prot & PROT_WRITE)
             aflags |= PAGE_WRITE;
 
-        MMapRegion* region;
+        Region* region;
 
         if (flags & MAP_ANONYMOUS) {
-            void* alloc_addr = process->pagemap->alloc(len, aflags);
-
-            region = new MMapRegion(process->pagemap, alloc_addr, len);
+            region = new Region(process->pagemap, process->pagemap->alloc(len, aflags), len);
 
             process->lock.acquire();
             process->mmap_regions.push(region);
@@ -168,7 +164,7 @@ namespace AEX::Mem {
         return ENONE;
     }
 
-    Mem::MMapRegion* find_mmap_region(Proc::Process* process, void* addr) {
+    Region* find_mmap_region(Proc::Process* process, void* addr) {
         size_t addr_n = (size_t) addr;
 
         process->lock.acquire();
@@ -194,8 +190,8 @@ namespace AEX::Mem {
     }
 
     void remove_region(Proc::Process* process, void* addr) {
-        MMapRegion* region = nullptr;
-        size_t      addr_n = (size_t) addr;
+        Region* region = nullptr;
+        size_t  addr_n = (size_t) addr;
 
         process->lock.acquire();
 

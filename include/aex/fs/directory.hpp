@@ -9,9 +9,8 @@
 
 namespace AEX::FS {
     struct API dirent {
-        ino_t inode_id;
-        int   pos;
-
+        ino_t     inode_id;
+        int       pos;
         char      name[MAX_FILENAME_LEN] = {};
         fs_type_t type                   = FT_UNKNOWN;
 
@@ -32,6 +31,6 @@ namespace AEX::FS {
     };
 
     struct API dir_context {
-        uint64_t pos = 0;
+        off_t pos = 0;
     };
 }

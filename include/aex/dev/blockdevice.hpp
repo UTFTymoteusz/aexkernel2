@@ -2,6 +2,7 @@
 
 #include "aex/dev/blockhandle.hpp"
 #include "aex/dev/device.hpp"
+#include "aex/dev/types.hpp"
 #include "aex/errno.hpp"
 #include "aex/mem.hpp"
 #include "aex/optional.hpp"
@@ -13,35 +14,35 @@
 namespace AEX::Dev {
     class API BlockDevice : public Device {
         public:
-        BlockDevice(const char* name, uint16_t sector_size, uint64_t sector_count,
-                    uint16_t max_sectors_at_once);
+        BlockDevice(const char* name, sctsize_t sector_size, sctcnt_t sector_count,
+                    sctcnt_t max_sectors_at_once);
 
         virtual ~BlockDevice();
+
+        virtual error_t  initBlock();
+        virtual sctcnt_t readBlock(void* buffer, sct_t sector, sctcnt_t sector_count)        = 0;
+        virtual sctcnt_t writeBlock(const void* buffer, sct_t sector, sctcnt_t sector_count) = 0;
+        virtual error_t  releaseBlock();
 
         error_t initExt();
         error_t releaseExt();
 
-        virtual error_t initBlock();
-        virtual int64_t readBlock(void* buffer, uint64_t sector, uint32_t sector_count)        = 0;
-        virtual int64_t writeBlock(const void* buffer, uint64_t sector, uint32_t sector_count) = 0;
-        virtual error_t releaseBlock();
-
-        uint64_t sectorCount() {
-            return m_sector_count;
-        }
-
-        uint16_t sectorSize() {
+        sctsize_t sectorSize() {
             return m_sector_size;
         }
 
-        uint16_t maxCombo() {
+        sctcnt_t sectorCount() {
+            return m_sector_count;
+        }
+
+        sctcnt_t maxCombo() {
             return m_max_combo;
         }
 
         private:
-        uint16_t m_sector_size  = 512;
-        uint64_t m_sector_count = 0;
-        uint16_t m_max_combo    = 16;
+        sctsize_t m_sector_size  = 512;
+        sctcnt_t  m_sector_count = 0;
+        sctcnt_t  m_max_combo    = 16;
 
         int32_t m_init_counter = 0;
         Mutex   m_init_lock;

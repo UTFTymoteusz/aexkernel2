@@ -7,8 +7,7 @@ namespace AEX::Proc {
     extern Thread* thread_list_tail;
 
     char* debug_serialize_flags(char* buffer, int flags) {
-        int ptr = 0;
-
+        int         ptr     = 0;
         const char* bongs[] = {"run", "slp", "blk", "unk", "unk", "unk", "unk", "ded"};
 
         for (int i = 0; i < 8; i++) {
@@ -31,13 +30,12 @@ namespace AEX::Proc {
         for (int i = 0; i < Sys::MCore::cpu_count; i++) {
             auto cpu = Sys::MCore::CPUs[i];
 
-            void* addr = (void*) cpu->current_thread->context->rip;
-
+            void*       addr  = (void*) cpu->current_thread->context->rip;
             int         delta = 0;
-            const char* name  = Debug::addr2name(addr, delta);
+            const char* name  = Debug::addr2name(addr, delta) ?: "no idea";
 
             printk("cpu%i: PID %8i, TID %8i @ 0x%p <%s+0x%x> (b%i, c%i, i%i)\n", i,
-                   cpu->current_thread->parent->pid, cpu->unused, addr, name ?: "no idea", delta,
+                   cpu->current_thread->parent->pid, cpu->unused, addr, name, delta,
                    cpu->current_thread->getBusy(), cpu->current_thread->getCritical(),
                    cpu->in_interrupt);
         }

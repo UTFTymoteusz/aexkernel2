@@ -128,7 +128,7 @@ namespace AEX::FS {
             hard_links = 1;
         }
 
-        error_t readBlocks(void* buffer, uint64_t block, uint16_t count) {
+        error_t readBlocks(void* buffer, blk_t block, blkcnt_t count) {
             uint16_t block_size = control_block->block_size;
 
             ((ISO9660ControlBlock*) control_block)
@@ -138,7 +138,7 @@ namespace AEX::FS {
             return ENONE;
         }
 
-        error_t writeBlocks(const void*, uint64_t, uint16_t) {
+        error_t writeBlocks(const void*, uint64_t, blkcnt_t) {
             return EROFS;
         }
 

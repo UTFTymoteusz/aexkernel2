@@ -15,21 +15,19 @@
 namespace AEX::FS {
     class API ControlBlock {
         public:
-        char label[64];
-
+        char      label[64];
         ino_t     root_inode_id;
         blksize_t block_size;
 
         virtual ~ControlBlock();
 
-        virtual optional<INode_SP> getINode(INode_SP dir, dirent dentry, ino_t id);
-        optional<INode_SP>         findINode(const char* lpath);
+        virtual optional<INode_SP> get(INode_SP dir, dirent dentry, ino_t id);
+        optional<INode_SP>         find(const char* lpath);
 
         protected:
         Mutex                m_mutex;
         Mem::Cache<INode_SP> m_cache;
-
-        ino_t m_inocurrent = 1;
+        ino_t                m_inocurrent = 1;
 
         ino_t nextINodeID();
     };

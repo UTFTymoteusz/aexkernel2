@@ -26,8 +26,8 @@ namespace AEX::Dev {
         return m_dev->ioctl(this, rq, val);
     }
 
-    optional<Mem::MMapRegion*> CharHandle::mmap(Proc::Process* process, void* addr, size_t len,
-                                                int flags, FS::File_SP file, FS::off_t offset) {
+    optional<Mem::Region*> CharHandle::mmap(Proc::Process* process, void* addr, size_t len,
+                                            int flags, FS::File_SP file, FS::off_t offset) {
         return m_dev->mmap(process, addr, len, flags, file, offset);
     }
 

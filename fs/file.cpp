@@ -23,10 +23,10 @@ namespace AEX::FS {
 
     optional<File_SP> File::open(const char* path, int mode) {
         auto mount_info = ENSURE_OPT(find_mount(path));
-        auto inode_try  = mount_info.mount->control_block->findINode(mount_info.new_path);
+        auto inode_try  = mount_info.mount->control_block->find(mount_info.new_path);
         if (!inode_try) {
-            PRINTK_DEBUG3("%s, %i: no inode (%s)", path, mode, strerror(inode_try.error_code));
-            return inode_try.error_code;
+            PRINTK_DEBUG3("%s, %i: no inode (%s)", path, mode, strerror(inode_try.error));
+            return inode_try.error;
         }
 
         auto inode = inode_try.value;
@@ -49,9 +49,9 @@ namespace AEX::FS {
 
     optional<file_info> File::info(const char* path, int) {
         auto mount_info = ENSURE_OPT(find_mount(path));
-        auto inode_try  = mount_info.mount->control_block->findINode(mount_info.new_path);
+        auto inode_try  = mount_info.mount->control_block->find(mount_info.new_path);
         if (!inode_try)
-            return inode_try.error_code;
+            return inode_try.error;
 
         auto inode = inode_try.value;
         auto finfo = file_info();
@@ -89,8 +89,7 @@ namespace AEX::FS {
         return ENOSYS;
     }
 
-    optional<Mem::MMapRegion*> File::mmap(Proc::Process*, void*, size_t, int, FS::File_SP,
-                                          FS::off_t) {
+    optional<Mem::Region*> File::mmap(Proc::Process*, void*, size_t, int, FS::File_SP, FS::off_t) {
         return ENOSYS;
     }
 

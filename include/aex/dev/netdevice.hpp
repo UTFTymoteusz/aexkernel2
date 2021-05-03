@@ -29,10 +29,8 @@ namespace AEX::Dev {
     class API NetDevice : public Device {
         public:
         Net::link_type_t link_type;
-
-        netdev_info info;
-
-        int metric;
+        netdev_info      info;
+        int              metric;
 
         NetDevice(const char* name, Net::link_type_t link_type);
 

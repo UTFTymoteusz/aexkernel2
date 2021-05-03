@@ -10,10 +10,8 @@ namespace AEX::Dev::Tree {
     extern void register_base_drivers();
 
     Mem::SmartArray<Bus> buses;
-
-    Tree::Device* root_device = nullptr;
-
-    Spinlock lock;
+    Tree::Device*        root_device = nullptr;
+    Spinlock             lock;
 
     void init() {
         Tree::register_base_drivers();
@@ -27,7 +25,6 @@ namespace AEX::Dev::Tree {
                 continue;
 
             bus->registerDevice(device);
-
             return true;
         }
 

@@ -29,8 +29,7 @@ namespace AEX::Debug {
 
     API const char* addr2name(void* addr, int& delta, bool only_kernel = false);
     API const char* addr2name(void* addr, bool only_kernel = false);
-
-    API void* name2addr(const char* name);
+    API void*       name2addr(const char* name);
 
     API char* demangle_name(const char* symbol, char* buffer, size_t buffer_len);
 

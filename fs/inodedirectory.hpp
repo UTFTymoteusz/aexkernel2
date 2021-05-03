@@ -16,20 +16,24 @@ namespace AEX::FS {
         }
 
         optional<dirent> readdir() {
+            SCOPE(m_inode->mutex);
             return m_inode->readDir(&m_dir_ctx);
         }
 
         error_t seekdir(long pos) {
+            SCOPE(m_inode->mutex);
             return m_inode->seekDir(&m_dir_ctx, pos);
         }
 
         long telldir() {
+            SCOPE(m_inode->mutex);
             return m_inode->tellDir(&m_dir_ctx);
         }
 
         optional<File_SP> dup() {
-            auto dupd = new INodeDirectory(m_inode);
+            SCOPE(m_inode->mutex);
 
+            auto dupd       = new INodeDirectory(m_inode);
             dupd->m_dir_ctx = m_dir_ctx;
 
             return File_SP(dupd);

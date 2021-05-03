@@ -9,15 +9,9 @@
 namespace AEX {
     template <typename T>
     struct API optional {
-        bool    has_value  = false;
-        error_t error_code = ENONE;
+        bool    has_value = false;
+        error_t error     = ENONE;
         T       value;
-
-        static optional error(error_t code) {
-            auto opt       = optional();
-            opt.error_code = code;
-            return opt;
-        }
 
         optional() {}
 
@@ -25,13 +19,13 @@ namespace AEX {
             has_value = true;
         }
 
-        optional(error_t error) {
-            error_code = error;
+        optional(error_t a_error) {
+            error = a_error;
         }
 
-        optional(T value, error_t error) : value(value) {
-            has_value  = true;
-            error_code = error;
+        optional(T value, error_t a_error) : value(value) {
+            has_value = true;
+            error     = a_error;
         }
 
         operator bool() {
@@ -39,7 +33,7 @@ namespace AEX {
         }
 
         operator error_t() {
-            return error_code;
+            return error;
         }
 
         // idk

@@ -15,20 +15,18 @@ namespace AEX::FS {
         Walker(const char* path);
 
         const char* next();
-
-        int  level();
-        bool isPieceTooLong();
-        bool isFinal();
+        int         level();
+        bool        overflow();
+        bool        final();
 
         private:
         char m_buffer[MAX_FILENAME_LEN];
 
         int         m_index = 0;
         const char* m_path;
-        bool        m_too_long = false;
-
-        int m_level  = 0;
-        int m_levels = 0;
+        bool        m_overflow = false;
+        int         m_level    = 0;
+        int         m_levels   = 0;
     };
 
     /**
@@ -36,13 +34,13 @@ namespace AEX::FS {
      * @param buffer Destination buffer.
      * @param path   Path.
      * @param num    Size of destination buffer.
-     * @returns Pointer to destination buffer.
+     * @returns Pointer to the destination buffer.
      **/
     API char* get_filename(char* buffer, const char* path, size_t num);
 
     /**
-     * Checks if a path fits in MAX_PATH_LEN.
-     * @returns True if the specified path fits, false otherwies.
+     * Checks if a path fits within MAX_PATH_LEN.
+     * @returns True if the specified path fits, false otherwise.
      **/
     API bool check_length(const char* path);
 

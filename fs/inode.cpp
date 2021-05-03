@@ -3,11 +3,11 @@
 namespace AEX::FS {
     INode::~INode() {}
 
-    error_t INode::readBlocks(void*, uint64_t, uint16_t) {
+    error_t INode::readBlocks(void*, blk_t, blkcnt_t) {
         return ENOSYS;
     }
 
-    error_t INode::writeBlocks(const void*, uint64_t, uint16_t) {
+    error_t INode::writeBlocks(const void*, blk_t, blkcnt_t) {
         return ENOSYS;
     }
 

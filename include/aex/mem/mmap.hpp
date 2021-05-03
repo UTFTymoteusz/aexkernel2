@@ -31,17 +31,17 @@ namespace AEX::Mem {
         MAP_ANONYMOUS = 0x10,
     };
 
-    class MMapRegion {
+    class Region {
         public:
         void*  start;
         size_t len;
 
-        MMapRegion(Pagemap* pagemap, void* addr, size_t len);
-        MMapRegion(Pagemap* pagemap, void* addr, size_t len, FS::File_SP file, int64_t offset);
-        virtual ~MMapRegion();
+        Region(Pagemap* pagemap, void* addr, size_t len);
+        Region(Pagemap* pagemap, void* addr, size_t len, FS::File_SP file, int64_t offset);
+        virtual ~Region();
 
-        virtual error_t               read(void* dst, FS::off_t offset, size_t count);
-        virtual optional<MMapRegion*> fork(Pagemap* dst_pagemap);
+        virtual error_t           read(void* dst, FS::off_t offset, size_t count);
+        virtual optional<Region*> fork(Pagemap* dst_pagemap);
 
         protected:
         optional<FS::File_SP> m_file;
@@ -49,14 +49,14 @@ namespace AEX::Mem {
         Pagemap*              m_pagemap;
     };
 
-    class FileBackedMMapRegion : public MMapRegion {
+    class FileBackedRegion : public Region {
         public:
-        FileBackedMMapRegion(Pagemap* pagemap, void* addr, size_t len, FS::File_SP file,
-                             FS::off_t offset);
-        ~FileBackedMMapRegion();
+        FileBackedRegion(Pagemap* pagemap, void* addr, size_t len, FS::File_SP file,
+                         FS::off_t offset);
+        ~FileBackedRegion();
 
-        error_t               read(void* dst, FS::off_t offset, size_t count);
-        optional<MMapRegion*> fork(Pagemap* dst_pagemap);
+        error_t           read(void* dst, FS::off_t offset, size_t count);
+        optional<Region*> fork(Pagemap* dst_pagemap);
 
         private:
         struct cache_slot {
@@ -79,5 +79,5 @@ namespace AEX::Mem {
                              FS::File_SP file = FS::File_SP::getNull(), FS::off_t offset = 0);
     API error_t         munmap(Proc::Process* process, void* addr, size_t len);
 
-    Mem::MMapRegion* find_mmap_region(Proc::Process* process, void* addr);
+    Region* find_mmap_region(Proc::Process* process, void* addr);
 }

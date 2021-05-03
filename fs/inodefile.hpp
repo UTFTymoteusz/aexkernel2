@@ -21,12 +21,14 @@ namespace AEX::FS {
         }
 
         ~INodeFile() {
-            delete m_cache_buffer;
+            delete[] m_cache_buffer;
         }
 
         optional<ssize_t> read(void* buffer, size_t count) {
-            uint32_t requested_count = count;
-            error_t  error;
+            SCOPE(m_inode->mutex);
+
+            size_t  requested_count = count;
+            error_t error;
 
             count = min<size_t>(m_inode->size - m_pos, count);
             if (count == 0)
@@ -66,16 +68,18 @@ namespace AEX::FS {
         }
 
         optional<off_t> seek(off_t offset, seek_mode mode) {
+            SCOPE(m_inode->mutex);
+
             off_t new_pos = 0;
 
             switch (mode) {
-            case seek_mode::SEEK_SET:
+            case SEEK_SET:
                 new_pos = offset;
                 break;
-            case seek_mode::SEEK_CURRENT:
+            case SEEK_CURRENT:
                 new_pos = m_pos + offset;
                 break;
-            case seek_mode::SEEK_END:
+            case SEEK_END:
                 new_pos = m_inode->size + offset;
                 break;
             default:
@@ -90,10 +94,13 @@ namespace AEX::FS {
         }
 
         error_t close() {
+            SCOPE(m_inode->mutex);
             return ENONE;
         }
 
         optional<File_SP> dup() {
+            SCOPE(m_inode->mutex);
+
             auto dupd = new INodeFile(m_inode);
 
             dupd->m_pos          = m_pos;
@@ -105,6 +112,8 @@ namespace AEX::FS {
         }
 
         optional<file_info> finfo() {
+            SCOPE(m_inode->mutex);
+
             file_info finfo;
 
             finfo.containing_dev_id = 0;
@@ -128,34 +137,35 @@ namespace AEX::FS {
             return finfo;
         }
 
-        optional<Mem::MMapRegion*> mmap(Proc::Process* process, void*, size_t len, int flags,
-                                        FS::File_SP file, FS::off_t offset) {
+        optional<Mem::Region*> mmap(Proc::Process* process, void*, size_t len, int flags,
+                                    FS::File_SP file, FS::off_t offset) {
+            SCOPE(m_inode->mutex);
+
             void* alloc_addr = process->pagemap->map(len, 0, PAGE_ARBITRARY | flags);
-            return new Mem::FileBackedMMapRegion(process->pagemap, alloc_addr, len, file, offset);
+            return new Mem::FileBackedRegion(process->pagemap, alloc_addr, len, file, offset);
         }
 
         private:
-        int64_t m_pos = 0;
-
-        uint16_t m_block_size = 512;
-
-        uint64_t m_cached_block = 0xFFFFFFFFFFFFFFFF;
-        uint8_t* m_cache_buffer = nullptr;
-
         Mem::SmartPointer<INode> m_inode;
 
-        error_t readBlocks(void* buffer, uint64_t start, uint32_t len) {
+        off_t     m_pos        = 0;
+        blksize_t m_block_size = 512;
+
+        blk_t    m_cached_block = 0xFFFFFFFFFFFFFFFF;
+        uint8_t* m_cache_buffer = nullptr;
+
+        error_t readBlocks(void* buffer, off_t start, size_t len) {
             bool combo = false;
 
-            uint64_t combo_start = 0;
-            uint32_t combo_count = 0;
+            blk_t    combo_start = 0;
+            blkcnt_t combo_count = 0;
 
             error_t error;
             uint8_t m_overflow_buffer[m_block_size];
 
             while (len > 0) {
                 uint32_t offset = start - int_floor<uint64_t>(start, m_block_size);
-                uint32_t llen   = min(m_block_size - offset, len);
+                size_t   llen   = min<size_t>(m_block_size - offset, len);
 
                 if (!isPerfect(start, llen)) {
                     if (combo) {
@@ -197,7 +207,7 @@ namespace AEX::FS {
             return ENONE;
         }
 
-        bool isPerfect(uint64_t start, uint32_t len) {
+        bool isPerfect(off_t start, size_t len) {
             if (start % m_block_size != 0)
                 return false;
 

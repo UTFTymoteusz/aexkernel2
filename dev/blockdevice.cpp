@@ -12,8 +12,8 @@
 #include "aex/types.hpp"
 
 namespace AEX::Dev {
-    BlockDevice::BlockDevice(const char* name, uint16_t sector_size, uint64_t sector_count,
-                             uint16_t max_sectors_at_once)
+    BlockDevice::BlockDevice(const char* name, sctsize_t sector_size, sctcnt_t sector_count,
+                             sctcnt_t max_sectors_at_once)
         : Device(name, DEV_BLOCK) {
         m_sector_size  = sector_size;
         m_sector_count = sector_count;
@@ -52,11 +52,11 @@ namespace AEX::Dev {
         return ENONE;
     }
 
-    int64_t BlockDevice::readBlock(void*, uint64_t, uint32_t) {
+    sctcnt_t BlockDevice::readBlock(void*, sct_t, sctcnt_t) {
         return -1;
     }
 
-    int64_t BlockDevice::writeBlock(const void*, uint64_t, uint32_t) {
+    sctcnt_t BlockDevice::writeBlock(const void*, sct_t, sctcnt_t) {
         return -1;
     }
 

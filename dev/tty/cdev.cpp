@@ -92,8 +92,8 @@ namespace AEX::Dev {
         }
     }
 
-    optional<Mem::MMapRegion*> TTYChar::mmap(Proc::Process* process, void*, size_t len, int flags,
-                                             FS::File_SP file, FS::off_t offset) {
+    optional<Mem::Region*> TTYChar::mmap(Proc::Process* process, void*, size_t len, int flags,
+                                         FS::File_SP file, FS::off_t offset) {
         if (!Mem::pagealigned(offset))
             return EINVAL;
 
@@ -106,7 +106,7 @@ namespace AEX::Dev {
         auto addr =
             process->pagemap->map(len, Mem::kernel_pagemap->paddrof(m_tty->output()), flags);
 
-        return new Mem::MMapRegion(process->pagemap, addr, len, file, offset);
+        return new Mem::Region(process->pagemap, addr, len, file, offset);
     }
 
     bool TTYChar::isatty() {

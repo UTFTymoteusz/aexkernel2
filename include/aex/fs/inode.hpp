@@ -10,6 +10,8 @@
 namespace AEX::FS {
     class API INode {
         public:
+        Mutex mutex;
+
         ino_t id;
 
         fs_type_t type = FT_UNKNOWN;
@@ -34,9 +36,8 @@ namespace AEX::FS {
 
         virtual ~INode();
 
-        virtual error_t readBlocks(void* buffer, uint64_t start, uint16_t count);
-        virtual error_t writeBlocks(const void* buffer, uint64_t start, uint16_t count);
-
+        virtual error_t readBlocks(void* buffer, blk_t start, blkcnt_t count);
+        virtual error_t writeBlocks(const void* buffer, blk_t start, blkcnt_t count);
         virtual error_t update();
 
         virtual optional<dirent> readDir(dir_context* ctx);

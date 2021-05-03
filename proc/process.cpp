@@ -273,9 +273,9 @@ namespace AEX::Proc {
             processes_lock.acquire();
             auto val = try_get(Process::current()->pid);
 
-            if (!val && val.error_code == ECHILD) {
+            if (!val && val.error == ECHILD) {
                 processes_lock.release();
-                return val.error_code;
+                return val.error;
             }
 
             if (val) {
