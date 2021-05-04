@@ -108,10 +108,6 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
 
     load_core_modules();
 
-    auto res = FS::mount("/dev/sda1", "/mnt/", nullptr);
-    if (res != ENONE)
-        kpanic("Failed to mount fat32: %s", strerror((error_t) res));
-
     // Let's get to it
     kmain_env();
 }
