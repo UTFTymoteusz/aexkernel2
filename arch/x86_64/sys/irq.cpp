@@ -209,28 +209,25 @@ namespace AEX::Sys::IRQ {
     }
 
     size_t find_apic_tps() {
-        bool ints = CPU::checkInterrupts();
+        uint32_t ticks;
 
-        CPU::nointerrupts();
+        interruptible(false) {
+            set_vector(0, 0x20 + 31);
+            set_mask(0, false);
+            set_destination(0, 0);
 
-        set_vector(0, 0x20 + 31);
-        set_mask(0, false);
-        set_destination(0, 0);
+            IRQ::irq_mark = false;
 
-        IRQ::irq_mark = false;
+            PIT::interrupt(50);
+            APIC::timer(0x20 + 0);
 
-        PIT::interrupt(50);
-        APIC::timer(0x20 + 0);
+            interruptible(true) {
+                while (!IRQ::irq_mark)
+                    CPU::wait();
 
-        CPU::interrupts();
-
-        while (!IRQ::irq_mark)
-            CPU::wait();
-
-        uint32_t ticks = -APIC::counter() * 20;
-
-        if (!ints)
-            CPU::nointerrupts();
+                ticks = -APIC::counter() * 20;
+            }
+        }
 
         // Now we don't need the PIT anymore, mask it to hell
         set_vector(0, 0x20 + 30);

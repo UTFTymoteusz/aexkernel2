@@ -208,24 +208,14 @@ namespace AEX {
     }
 
     void printk_fault() {
-        bool ints = Sys::CPU::checkInterrupts();
-
-        Sys::CPU::nointerrupts();
-
-        faulted_cpu = Sys::CPU::currentID();
-
-        if (ints)
-            Sys::CPU::interrupts();
+        interruptible(false) {
+            faulted_cpu = Sys::CPU::currentID();
+        }
     }
 
     void printk_nofault() {
-        bool ints = Sys::CPU::checkInterrupts();
-
-        Sys::CPU::nointerrupts();
-
-        faulted_cpu = -1;
-
-        if (ints)
-            Sys::CPU::interrupts();
+        interruptible(false) {
+            faulted_cpu = -1;
+        }
     }
 }

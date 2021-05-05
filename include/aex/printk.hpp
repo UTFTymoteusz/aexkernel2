@@ -9,7 +9,7 @@
 #define PRINTK_WARN "^2"
 #define PRINTK_FAIL "^3"
 
-//#define NOBONG
+#define NOBONG
 
 #ifndef NOBONG
 #define PRINTK_DEBUG(msg) printk("%s:%i: %s\n", __FILE__, __LINE__, msg)

@@ -112,12 +112,10 @@ namespace AEX::Proc {
             Debug::stack_trace();
         }
 
-        CPU::nointerrupts();
-        CPU::current()->should_yield = false;
-
-        proc_reshed();
-
-        CPU::interrupts();
+        interruptible(false) {
+            CPU::current()->should_yield = false;
+            proc_reshed();
+        }
     }
 
     void Thread::sleep(uint64_t ms) {
@@ -330,28 +328,27 @@ namespace AEX::Proc {
         if (busy)
             return;
 
-        bool ints = CPU::checkInterrupts();
-        CPU::interrupts();
-
-        if (this == Thread::current() && aborting())
-            Thread::exit();
+        if (this == Thread::current() && aborting()) {
+            interruptible(true) {
+                Thread::exit();
+            }
+        }
 
         addCritical();
 
         if (m_pending_signals.count() != 0) {
-            int            last = m_pending_signals.count() - 1;
-            IPC::siginfo_t info = m_pending_signals[last];
+            interruptible(true) {
+                int            last = m_pending_signals.count() - 1;
+                IPC::siginfo_t info = m_pending_signals[last];
 
-            m_pending_signals.erase(last);
+                m_pending_signals.erase(last);
 
-            subCritical();
-            handleSignal(info);
+                subCritical();
+                handleSignal(info);
+            }
         }
         else
             subCritical();
-
-        if (!ints)
-            CPU::nointerrupts();
     }
 
     void Thread::addCritical() {

@@ -46,12 +46,9 @@ namespace AEX::Sys {
         m_ipi_packet.ack  = false;
 
         if (CPU::currentID() == this->id) {
-            bool ints = checkInterrupts();
-            nointerrupts();
-            handleIPP();
-
-            if (ints)
-                interrupts();
+            interruptible(false) {
+                handleIPP();
+            }
 
             m_ipi_lock.release();
             return;

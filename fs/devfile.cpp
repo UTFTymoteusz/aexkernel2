@@ -9,8 +9,10 @@ namespace AEX::FS {
         switch (dev->type) {
         case Dev::DEV_BLOCK:
             return EBOTHER;
-        case Dev::DEV_CHAR:
-            return new CharFile(ENSURE_OPT(Dev::open_char_handle(dev->id, mode)));
+        case Dev::DEV_CHAR: {
+            auto file = ENSURE_OPT(Dev::open_char_handle(dev->id, mode));
+            return new CharFile(file);
+        }
         default:
             return ENOSYS;
         }

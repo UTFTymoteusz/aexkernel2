@@ -60,11 +60,42 @@ namespace AEX {
 #define CONCAT(a, b) a##b
 #define SCOPE(x) auto CONCAT(scope, __LINE__) = x.scope()
 
-#define using(lock)      \
-    if (({               \
-            SCOPE(lock); \
-            true;        \
-        }))
+#define using(lock)          \
+    for (int scbong = ({     \
+             lock.acquire(); \
+             0;              \
+         });                 \
+         scbong < 1; ({      \
+             lock.release(); \
+             scbong++;       \
+         }))
+
+struct scopebong {
+    int  i;
+    bool state;
+};
+
+#define interruptible(int)                                  \
+    for (scopebong intbong = ({                             \
+             bool state = AEX::Sys::CPU::checkInterrupts(); \
+             if (int)                                       \
+                 AEX::Sys::CPU::interrupts();               \
+             else                                           \
+                 AEX::Sys::CPU::nointerrupts();             \
+                                                            \
+             scopebong{                                     \
+                 .i     = 0,                                \
+                 .state = state,                            \
+             };                                             \
+         });                                                \
+         intbong.i < 1; ({                                  \
+             if (!intbong.state)                            \
+                 AEX::Sys::CPU::nointerrupts();             \
+             else                                           \
+                 AEX::Sys::CPU::interrupts();               \
+                                                            \
+             intbong.i++;                                   \
+         }))
 
 namespace AEX {
     template <typename T>
