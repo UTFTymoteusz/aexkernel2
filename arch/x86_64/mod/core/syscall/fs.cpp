@@ -295,6 +295,30 @@ int fcntl(int fd, int cmd, int val) {
     }
 }
 
+long mount(const usr_char* source, const usr_char* target, const usr_char* type, unsigned long,
+           const usr_void*) {
+    char source_buffer[FS::MAX_PATH_LEN];
+    char target_buffer[FS::MAX_PATH_LEN];
+    char type_buffer[32];
+
+    USR_ENSURE(copy_and_canonize(source_buffer, source));
+    USR_ENSURE(copy_and_canonize(target_buffer, target));
+
+    if (type) {
+        int strlen = USR_ENSURE_OPT(usr_strlen(type));
+        if (strlen > 31) {
+            USR_ERRNO = EINVAL;
+            return -1;
+        }
+
+        type_buffer[31] = '\0';
+
+        USR_ENSURE_OPT(u2k_memcpy(type_buffer, type, sizeof(type_buffer) - 1));
+    }
+
+    return USR_ENSURE_ENONE(FS::mount(source_buffer, target_buffer, type ? type_buffer : nullptr));
+}
+
 void register_fs() {
     auto table = Sys::default_table();
 
@@ -317,6 +341,7 @@ void register_fs() {
     table[SYS_READDIR] = (void*) readdir;
     table[SYS_SEEKDIR] = (void*) seekdir;
     table[SYS_FCNTL]   = (void*) fcntl;
+    table[SYS_MOUNT]   = (void*) mount;
 }
 
 optional<FS::File_SP> get_file(int fd) {

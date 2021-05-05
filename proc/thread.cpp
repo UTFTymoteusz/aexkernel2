@@ -330,6 +330,9 @@ namespace AEX::Proc {
         if (busy)
             return;
 
+        bool ints = CPU::checkInterrupts();
+        CPU::interrupts();
+
         if (this == Thread::current() && aborting())
             Thread::exit();
 
@@ -346,6 +349,9 @@ namespace AEX::Proc {
         }
         else
             subCritical();
+
+        if (!ints)
+            CPU::nointerrupts();
     }
 
     void Thread::addCritical() {

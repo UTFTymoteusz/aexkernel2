@@ -73,11 +73,14 @@ namespace AEX::Sys {
         AEX_ASSERT_PEDANTIC(!CPU::checkInterrupts());
 
         if (thread->faulting) {
-            printk("recursive fault @ 0x%p\n", info->rip);
+            int  delta = 0;
+            auto name  = Debug::addr2name((void*) info->rip, delta) ?: "no idea";
+
+            printk("recursive fault @ 0x%016lx <%s+0x%x>\n", info->rip, name, delta);
             Debug::stack_trace();
 
             CPU::broadcast(CPU::IPP_HALT);
-            CPU::wait();
+            CPU::halt();
         }
 
         thread->faulting = true;

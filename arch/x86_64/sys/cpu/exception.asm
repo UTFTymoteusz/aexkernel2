@@ -6,13 +6,13 @@ extern common_fault_handler
 
 SECTION .text
 %macro pusha 0
+    push rbp
     push rax
     push rbx
     push rcx
     push rdx
     push rsi
     push rdi
-    push rbp
     push r8
     push r9
     push r10
@@ -32,13 +32,13 @@ SECTION .text
     pop r10
     pop r9
     pop r8
-    pop rbp
     pop rdi
     pop rsi
     pop rdx
     pop rcx
     pop rbx
     pop rax
+    pop rbp
 %endmacro
 
 %macro exc_err 1
@@ -102,6 +102,7 @@ exc_noerr 31
 
 exc_common:
     pusha
+    mov rbp, rsp
 
     sub rsp, 512
     fxsave [rsp]

@@ -125,7 +125,9 @@ namespace AEX::Proc {
             if (!process->threads.present(i))
                 continue;
 
+            process->threads_lock.release();
             process->threads.at(i)->abort(true);
+            process->threads_lock.acquire();
         }
         process->threads_lock.release();
 
