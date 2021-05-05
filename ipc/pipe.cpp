@@ -13,7 +13,7 @@ namespace AEX::IPC {
 
     PipeWriter::PipeWriter(Mem::SmartPointer<Pipe> pipe) : _pipe(pipe) {}
 
-    optional<ssize_t> PipeWriter::write(void* buf, size_t count) {
+    optional<ssize_t> PipeWriter::write(const void* buf, size_t count) {
         if (count <= PIPE_BUF)
             return _pipe->buffer.writeAtomic(buf, count);
 

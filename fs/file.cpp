@@ -1,14 +1,15 @@
 #include "aex/fs/file.hpp"
 
+#include "aex/dev.hpp"
 #include "aex/fs/inode.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/printk.hpp"
 #include "aex/string.hpp"
 
 #include "fs/devfile.hpp"
+#include "fs/file/inodedirectory.hpp"
+#include "fs/file/inodefile.hpp"
 #include "fs/fs.hpp"
-#include "fs/inodedirectory.hpp"
-#include "fs/inodefile.hpp"
 
 namespace AEX::FS {
     dirent::dirent(const char* name, int pos, int inode_id) {
@@ -44,7 +45,7 @@ namespace AEX::FS {
             return File_SP(file);
         }
 
-        return File_SP(new INodeFile(inode));
+        return File_SP(new INodeFile(inode, mode));
     }
 
     optional<file_info> File::info(const char* path, int) {
@@ -81,7 +82,7 @@ namespace AEX::FS {
         return ENOSYS;
     }
 
-    optional<ssize_t> File::write(void*, size_t) {
+    optional<ssize_t> File::write(const void*, size_t) {
         return ENOSYS;
     }
 

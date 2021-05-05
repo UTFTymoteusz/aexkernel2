@@ -12,7 +12,7 @@ namespace AEX::FS {
             return m_clusters[index];
         }
 
-        int count() {
+        size_t count() {
             return m_clusters.count();
         }
 

@@ -2,7 +2,7 @@
 
 #include "aex/dev/chardevice.hpp"
 
-#include "fs/devfiles/charfile.hpp"
+#include "fs/file/charfile.hpp"
 
 namespace AEX::FS {
     optional<File*> DevFile::open(Mem::SmartPointer<Dev::Device> dev, int mode) {

@@ -14,9 +14,11 @@ namespace AEX::Mem {
 
 namespace AEX::FS {
     enum file_mode_t {
-        O_RD   = 0x01,
-        O_WR   = 0x02,
-        O_RDWR = O_RD | O_WR,
+        O_RD        = 0x01,
+        O_WR        = 0x02,
+        O_APPEND    = 0x04,
+        O_DIRECTORY = 0x08,
+        O_RDWR      = O_RD | O_WR,
     };
 
     enum at_t {
@@ -45,7 +47,7 @@ namespace AEX::FS {
 
         static optional<File_SP>    open(const char* path, int mode);
         virtual optional<ssize_t>   read(void* buf, size_t count);
-        virtual optional<ssize_t>   write(void* buf, size_t count);
+        virtual optional<ssize_t>   write(const void* buf, size_t count);
         virtual error_t             close();
         virtual optional<off_t>     seek(off_t offset, seek_mode mode = seek_mode::SEEK_SET);
         static optional<file_info>  info(const char* path, int flags = 0);

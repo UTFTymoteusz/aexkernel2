@@ -38,6 +38,7 @@ namespace AEX::FS {
         }
 
         error_t readBlocks(void* buffer, blk_t start, blkcnt_t count);
+        error_t writeBlocks(const void* buffer, blk_t start, blkcnt_t count);
 
         private:
         void fill();

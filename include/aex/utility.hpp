@@ -60,7 +60,11 @@ namespace AEX {
 #define CONCAT(a, b) a##b
 #define SCOPE(x) auto CONCAT(scope, __LINE__) = x.scope()
 
-#define using(lock) for (SCOPE(lock);;)
+#define using(lock)      \
+    if (({               \
+            SCOPE(lock); \
+            true;        \
+        }))
 
 namespace AEX {
     template <typename T>

@@ -1,4 +1,4 @@
-#include "fs/devfiles/charfile.hpp"
+#include "charfile.hpp"
 
 #include "aex/printk.hpp"
 
@@ -13,7 +13,7 @@ namespace AEX::FS {
         return m_handle->read(buf, count);
     }
 
-    optional<ssize_t> CharFile::write(void* buf, size_t count) {
+    optional<ssize_t> CharFile::write(const void* buf, size_t count) {
         return m_handle->write(buf, count);
     }
 

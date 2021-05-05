@@ -10,33 +10,22 @@
 #include "aex/printk.hpp"
 
 #include "chain.hpp"
+#include "table.hpp"
 #include "types.hpp"
 
 namespace AEX::FS {
     class FATControlBlock : public ControlBlock {
         public:
-        FATControlBlock(Dev::BlockHandle& handle, fat_info info) : block_handle(handle) {
-            block_size = info.cluster_size;
-
-            m_type = info.type;
-
-            m_fat_start = info.fat_start;
-            m_fat_size  = info.fat_size;
-            m_fat_count = info.fat_count;
-
-            m_data_offset   = info.data_offset;
-            m_cluster_size  = info.cluster_size;
-            m_cluster_count = info.cluster_count;
-
-            m_root_cluster = info.root_first_cluster;
-            root_inode_id  = nextINodeID();
-        }
-
         Dev::BlockHandle block_handle;
+
+        FATControlBlock(Dev::BlockHandle& handle, fat_info info);
+        ~FATControlBlock();
 
         optional<INode_SP> get(INode_SP dir, dirent dirent, ino_t id);
 
         private:
+        Table* m_table;
+
         fat_type m_type;
 
         off_t    m_fat_start;

@@ -25,7 +25,7 @@ namespace AEX::IPC {
 
         optional<Mem::SmartPointer<FS::File>> open(const char* path) = delete;
 
-        optional<ssize_t>     write(void* buf, size_t count);
+        optional<ssize_t>     write(const void* buf, size_t count);
         optional<FS::File_SP> dup();
 
         private:

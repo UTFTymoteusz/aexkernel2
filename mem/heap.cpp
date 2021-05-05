@@ -31,10 +31,10 @@ namespace AEX::Mem::Heap {
         return int_ceil<T>(val, ALLOC_SIZE) / ALLOC_SIZE;
     }
 
+    typedef uint32_t bitmap_t;
+
     uint64_t heap_allocated = 0;
     uint64_t heap_free      = 0;
-
-    typedef uint32_t bitmap_t;
 
     class Slab {
         public:

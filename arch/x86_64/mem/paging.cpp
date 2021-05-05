@@ -404,7 +404,7 @@ namespace AEX::Mem {
 
         uint64_t* table = findTable(pptr, vaddr);
         if (!table) {
-            m_lock.release();
+            // m_lock.release();
             free_pptr(pptr);
 
             return 0;

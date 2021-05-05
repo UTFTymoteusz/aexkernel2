@@ -1,7 +1,7 @@
 #pragma once
 
-#include "aex/dev.hpp"
-#include "aex/mem.hpp"
+#include "aex/fs/file.hpp"
+#include "aex/types.hpp"
 
 namespace AEX::FS {
     class DevFile : public File {

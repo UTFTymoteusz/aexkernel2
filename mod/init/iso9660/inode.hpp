@@ -16,8 +16,9 @@ namespace AEX::FS {
         ISO9600DirectoryINode(iso9660_dentry dentry) {
             m_dentry = dentry;
 
-            size = dentry.data_len.le;
-            type = FT_DIRECTORY;
+            size       = dentry.data_len.le;
+            type       = FT_DIRECTORY;
+            block_size = BLOCK_SIZE;
 
             hard_links = 1;
         }
@@ -122,15 +123,14 @@ namespace AEX::FS {
         ISO9600FileINode(iso9660_dentry dentry) {
             m_dentry = dentry;
 
-            size = dentry.data_len.le;
-            type = FT_REGULAR;
+            size       = dentry.data_len.le;
+            type       = FT_REGULAR;
+            block_size = BLOCK_SIZE;
 
             hard_links = 1;
         }
 
         error_t readBlocks(void* buffer, blk_t block, blkcnt_t count) {
-            uint16_t block_size = control_block->block_size;
-
             ((ISO9660ControlBlock*) control_block)
                 ->block_handle.read(buffer, m_dentry.data_lba.le * block_size + block * block_size,
                                     count * block_size);

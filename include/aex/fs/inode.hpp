@@ -10,6 +10,13 @@
 namespace AEX::FS {
     class API INode {
         public:
+        struct cache_entry {
+            File* file;
+
+            blk_t    id;
+            uint8_t* data;
+        };
+
         Mutex mutex;
 
         ino_t id;
@@ -44,6 +51,10 @@ namespace AEX::FS {
         virtual error_t          seekDir(dir_context* ctx, long pos);
         virtual long             tellDir(dir_context* ctx);
 
+        cache_entry* getCacheEntry(File* file);
+        cache_entry* getCacheEntry(blk_t id);
+        void         evictCacheEntry(File* file);
+
         bool is_regular() {
             return (type & FT_REGULAR) == FT_REGULAR;
         }
@@ -55,5 +66,8 @@ namespace AEX::FS {
         bool is_block() {
             return (type & FT_BLOCK) == FT_BLOCK;
         }
+
+        private:
+        Mem::Vector<cache_entry*> m_cache;
     };
 }

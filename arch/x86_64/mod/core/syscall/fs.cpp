@@ -19,7 +19,7 @@ optional<int>         get_flags(int fd);
 
 bool copy_and_canonize(char* buffer, const usr_char* usr_path);
 
-int open(const usr_char* usr_path, int mode) {
+long open(const usr_char* usr_path, int mode) {
     auto current = Proc::Process::current();
     char path_buffer[FS::MAX_PATH_LEN];
 
@@ -28,7 +28,7 @@ int open(const usr_char* usr_path, int mode) {
     auto file = USR_ENSURE_OPT(FS::File::open(path_buffer, mode));
 
     current->descs_lock.acquire();
-    int fd = current->descs.push(file);
+    long fd = current->descs.push(file);
     current->descs_lock.release();
 
     return fd;
@@ -45,8 +45,8 @@ ssize_t read(int fd, usr_void* usr_buf, size_t count) {
         int  len      = min<size_t>(count - i, sizeof(buffer));
         auto read_try = file->read(buffer, len);
 
-        USR_ENSURE(read_try);
-        USR_ENSURE(k2u_memcpy(&usr_buf_c[i], buffer, len));
+        USR_ERRNO = read_try.error;
+        USR_ENSURE_OPT(k2u_memcpy(&usr_buf_c[i], buffer, len));
 
         read += read_try.value;
         if (read_try.error != EINTR)
@@ -65,9 +65,14 @@ ssize_t write(int fd, const usr_void* usr_buf, size_t count) {
 
     for (size_t i = 0; i < count; i += sizeof(buffer)) {
         int len = min<size_t>(count - i, sizeof(buffer));
-        USR_ENSURE(u2k_memcpy(buffer, &usr_buf_c[i], len));
+        USR_ENSURE_OPT(u2k_memcpy(buffer, &usr_buf_c[i], len));
 
-        written += USR_ENSURE_OPT(file->write(buffer, len));
+        auto write_try = file->write(buffer, len);
+        USR_ERRNO      = write_try.error;
+
+        written += write_try.value;
+        if (write_try.error != EINTR)
+            break;
     }
 
     return written;
