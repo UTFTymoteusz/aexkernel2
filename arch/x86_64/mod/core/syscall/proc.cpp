@@ -40,7 +40,7 @@ pid_t fork() {
             continue;
 
         auto desc = parent->descs.at(i);
-        child->descs.set(i, {desc.file->dup().value, desc.flags});
+        child->descs.set(i, {desc.file, desc.flags});
     }
 
     for (int i = 0; i < parent->mmap_regions.count(); i++) {
@@ -49,7 +49,7 @@ pid_t fork() {
 
         auto fork_try = parent->mmap_regions.at(i)->fork(child->pagemap);
         if (!fork_try.has_value)
-            kpanic("it's broken");
+            BROKEN;
 
         child->mmap_regions.push(fork_try.value);
     }

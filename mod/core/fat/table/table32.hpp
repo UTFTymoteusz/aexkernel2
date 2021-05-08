@@ -10,7 +10,10 @@ namespace AEX::FS {
         ~Table32();
 
         cluster_t next(cluster_t cluster);
+        void      link(cluster_t cluster, cluster_t next);
+        cluster_t find();
 
         private:
+        cluster_t _next(cluster_t cluster);
     };
 }

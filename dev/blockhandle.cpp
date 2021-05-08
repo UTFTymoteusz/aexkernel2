@@ -126,17 +126,101 @@ namespace AEX::Dev {
         return 0;
     }
 
-    int64_t BlockHandle::write(const void*, uint64_t, uint32_t) {
+    int64_t BlockHandle::write(const void* buffer, uint64_t start, uint32_t len) {
         AEX_ASSERT(m_dev.isValid());
+        AEX_ASSERT(m_shared);
 
-        kpanic("Block::write is unimplemented, I'm too lazy atm");
+        auto current_usage = &Proc::Thread::current()->getProcess()->usage;
+
+        // this needs to be checked properly
+        while (!isAligned(buffer)) {
+            uint8_t misaligned_sector[m_sector_size];
+            m_dev->readBlock(misaligned_sector, start / m_sector_size, 1);
+
+            current_usage->block_bytes_read += m_sector_size;
+
+            uint16_t misaligned_len = min<uint64_t>(start & (m_sector_size - 1), len);
+            if (misaligned_len == 0) // If this is the case, we're aligned sector-wise
+                misaligned_len = min<uint16_t>(len, m_sector_size);
+
+            memcpy(misaligned_sector, buffer, misaligned_len);
+
+            m_dev->writeBlock(misaligned_sector, start / m_sector_size, 1);
+
+            buffer = (void*) ((uint8_t*) buffer + misaligned_len);
+            start += misaligned_len;
+            len -= misaligned_len;
+
+            if (len == 0)
+                return 0;
+        }
+
+        bool combo = false;
+
+        uint64_t combo_start = 0;
+        uint32_t combo_count = 0;
+
+        while (len > 0) {
+            uint32_t offset = start - int_floor<uint64_t>(start, m_sector_size);
+            uint32_t llen   = min(m_sector_size - offset, len);
+
+            if (combo && combo_count == m_dev->maxCombo()) {
+                m_dev->writeBlock(buffer, combo_start, combo_count);
+
+                current_usage->block_bytes_read += combo_count * m_sector_size;
+
+                buffer = (void*) ((uint8_t*) buffer + combo_count * m_sector_size);
+                combo  = false;
+            }
+
+            if (!isPerfect(start, llen)) {
+                if (combo) {
+                    m_dev->writeBlock(buffer, combo_start, combo_count);
+
+                    buffer = (void*) ((uint8_t*) buffer + combo_count * m_sector_size);
+                    combo  = false;
+                }
+
+                m_shared->m_mutex.acquire();
+
+                m_dev->readBlock(m_shared->m_buffer, start / m_sector_size, 1);
+                memcpy(m_shared->m_buffer + offset, buffer, llen);
+                m_dev->writeBlock(m_shared->m_buffer, start / m_sector_size, 1);
+
+                m_shared->m_mutex.release();
+
+                current_usage->block_bytes_read += m_sector_size;
+
+                buffer = (void*) ((uint8_t*) buffer + llen);
+            }
+            else {
+                if (!combo) {
+                    combo = true;
+
+                    combo_start = start / m_sector_size;
+                    combo_count = 0;
+                }
+
+                combo_count++;
+            }
+
+            start += llen;
+            len -= llen;
+        }
+
+        if (combo) {
+            m_dev->writeBlock(buffer, combo_start, combo_count);
+            current_usage->block_bytes_read += combo_count * m_sector_size;
+        }
+
+        return 0;
     }
 
     Mem::SmartPointer<BlockDevice> BlockHandle::getDev() {
         return m_dev;
     }
 
-    bool BlockHandle::isAligned(void* addr) {
+    bool BlockHandle::isAligned(const void* addr) {
         return ((size_t) addr & 0x01) == 0;
     }
 

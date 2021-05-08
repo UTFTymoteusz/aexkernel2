@@ -12,7 +12,7 @@ namespace AEX::Dev::Tree {
         Driver(const char* name);
         virtual ~Driver();
 
-        virtual bool check(Device* device);
-        virtual void bind(Device* device);
+        virtual bool check(Device* device) = 0;
+        virtual void bind(Device* device)  = 0;
     };
 }

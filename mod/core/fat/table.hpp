@@ -13,8 +13,12 @@ namespace AEX::FS {
         virtual ~Table();
 
         virtual cluster_t next(cluster_t cluster);
+        virtual void      link(cluster_t cluster, cluster_t next);
+        virtual cluster_t find();
+        virtual void      flush();
 
         protected:
+        Mutex                m_mutex;
         Mem::Cache<uint8_t*> m_cache;
         Dev::BlockHandle     m_handle;
 

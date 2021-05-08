@@ -18,7 +18,16 @@ namespace AEX::FS {
 
     INodeFile::~INodeFile() {
         using(m_inode->mutex) {
-            m_inode->evictCacheEntry(this);
+            auto entry = m_inode->getCacheEntry(this);
+            if (entry) {
+                m_inode->writeCheck(entry);
+                m_inode->evictCacheEntry(this);
+            }
+
+            if (m_inode->truncate_cached) {
+                m_inode->truncate(m_inode->size);
+                m_inode->truncate_cached = false;
+            }
         }
     }
 
@@ -43,7 +52,7 @@ namespace AEX::FS {
         return count;
     }
 
-    optional<ssize_t> INodeFile::write(const void*, size_t count) {
+    optional<ssize_t> INodeFile::write(const void* buffer, size_t count) {
         if (!(m_mode & O_RD))
             return EBADF;
 
@@ -55,8 +64,18 @@ namespace AEX::FS {
         if (m_mode & O_APPEND)
             m_pos = m_inode->size;
 
-        NOT_IMPLEMENTED;
+        if (m_pos + count > (size_t) m_inode->size) {
+            error_t error            = m_inode->truncate(m_pos + count, true);
+            m_inode->truncate_cached = true;
+            if (error)
+                return error;
+        }
 
+        error_t error = writeBlocks(buffer, m_pos, count);
+        if (error)
+            return error;
+
+        m_pos += count;
         return count;
     }
 
@@ -89,17 +108,6 @@ namespace AEX::FS {
     error_t INodeFile::close() {
         SCOPE(m_inode->mutex);
         return ENONE;
-    }
-
-    optional<File_SP> INodeFile::dup() {
-        SCOPE(m_inode->mutex);
-
-        auto dupd = new INodeFile(m_inode, m_mode);
-
-        // TODO: Add cache copying
-        dupd->m_pos = m_pos;
-
-        return File_SP(dupd);
     }
 
     optional<file_info> INodeFile::finfo() {
@@ -144,7 +152,7 @@ namespace AEX::FS {
         while (len > 0) {
             off_t  loffset = start - int_floor<uint64_t>(start, m_inode->block_size);
             size_t llen    = min<size_t>(m_inode->block_size - loffset, len);
-            auto   entry   = m_inode->getCacheEntry(m_pos / m_inode->block_size);
+            auto   entry   = m_inode->getCacheEntry(start / m_inode->block_size);
 
             if (!isPerfect(start, llen) || entry) {
                 if (entry) {
@@ -152,7 +160,7 @@ namespace AEX::FS {
                 }
 
                 if (combo_count != 0) {
-                    auto error = m_inode->readBlocks(bytes, combo_start, combo_count);
+                    auto error = m_inode->read(bytes, combo_start, combo_count);
                     if (error)
                         return error;
 
@@ -160,10 +168,12 @@ namespace AEX::FS {
                     combo_count = 0;
                 }
 
-                entry     = m_inode->getCacheEntry(this);
+                entry = m_inode->getCacheEntry(this);
+                m_inode->writeCheck(entry);
+
                 entry->id = start / m_inode->block_size;
 
-                auto error = m_inode->readBlocks(entry->data, start / m_inode->block_size, 1);
+                auto error = m_inode->read(entry->data, start / m_inode->block_size, 1);
                 if (error) {
                     entry->id = 0xFFFFFFFFFFFFFFFF;
                     return error;
@@ -184,15 +194,73 @@ namespace AEX::FS {
         }
 
         if (combo_count) {
-            auto error = m_inode->readBlocks(bytes, combo_start, combo_count);
+            auto error = m_inode->read(bytes, combo_start, combo_count);
             if (error)
                 return error;
 
             auto entry = m_inode->getCacheEntry(this);
-            entry->id  = combo_start + combo_count - 1;
+            m_inode->writeCheck(entry);
+
+            entry->id = combo_start + combo_count - 1;
 
             memcpy(entry->data, bytes + (combo_count - 1) * m_inode->block_size,
                    m_inode->block_size);
+        }
+
+        return ENONE;
+    }
+
+    error_t INodeFile::writeBlocks(const void* buffer, off_t start, size_t len) {
+        const uint8_t* bytes       = (const uint8_t*) buffer;
+        blk_t          combo_start = 0;
+        blkcnt_t       combo_count = 0;
+
+        while (len > 0) {
+            off_t  loffset = start - int_floor<uint64_t>(start, m_inode->block_size);
+            size_t llen    = min<size_t>(m_inode->block_size - loffset, len);
+            auto   entry   = m_inode->getCacheEntry(start / m_inode->block_size);
+
+            if (!isPerfect(start, llen) || entry) {
+                if (entry) {
+                    memcpy(entry->data + loffset, bytes + combo_count * m_inode->block_size, llen);
+                    entry->changed = true;
+                }
+
+                if (combo_count != 0) {
+                    auto error = m_inode->write(bytes, combo_start, combo_count);
+                    if (error)
+                        return error;
+
+                    bytes += combo_count * m_inode->block_size;
+                    combo_count = 0;
+                }
+
+                if (!entry) {
+                    entry = m_inode->getCacheEntry(this);
+                    m_inode->writeCheck(entry);
+
+                    entry->id = start / m_inode->block_size;
+                    m_inode->read(entry->data, start / m_inode->block_size, 1);
+
+                    memcpy(entry->data + loffset, bytes, llen);
+                    entry->changed = true;
+                }
+            }
+            else {
+                if (combo_count == 0)
+                    combo_start = start / m_inode->block_size;
+
+                combo_count++;
+            }
+
+            start += llen;
+            len -= llen;
+        }
+
+        if (combo_count) {
+            auto error = m_inode->write(bytes, combo_start, combo_count);
+            if (error)
+                return error;
         }
 
         return ENONE;

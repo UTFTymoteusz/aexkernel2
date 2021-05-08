@@ -147,8 +147,7 @@ namespace AEX::Mem {
             return region->start;
         }
 
-        auto dupd = ENSURE_OPT(file->dup(););
-        auto mmap = ENSURE_OPT(dupd->mmap(process, addr, len, aflags, dupd, offset));
+        auto mmap = ENSURE_OPT(file->mmap(process, addr, len, aflags, file, offset));
 
         process->lock.acquire();
         process->mmap_regions.push(mmap);

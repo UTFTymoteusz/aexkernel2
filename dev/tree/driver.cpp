@@ -10,14 +10,5 @@ namespace AEX::Dev::Tree {
 
     Driver::~Driver() {}
 
-    bool Driver::check(Device*) {
-        printk(PRINTK_WARN "dev: Driver '%s' has not implemented the check method\n", name);
-        return false;
-    }
-
-    void Driver::bind(Device*) {
-        printk(PRINTK_WARN "dev: Driver '%s' has not implemented the bind method\n", name);
-    }
-
     void register_base_drivers() {}
 }

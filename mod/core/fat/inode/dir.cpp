@@ -76,6 +76,46 @@ namespace AEX::FS {
         return {};
     }
 
+    void FATDirectoryINode::resize(INode* inode, uint32_t size) {
+        auto assoc_try = getAssoc(inode->id);
+        if (!assoc_try)
+            BROKEN;
+
+        auto       fat_block = (FATControlBlock*) control_block;
+        fat_dirent fat_dirent;
+        int        pos = 0;
+
+        while (pos < this->size) {
+            cluster_t lcluster = pos / fat_block->m_cluster_size;
+            cluster_t pcluster = m_chain.at(lcluster);
+            off_t     offset   = pos - (lcluster * fat_block->m_cluster_size);
+
+            pos += sizeof(fat_dirent);
+
+            fat_block->block_handle.read(&fat_dirent, fat_block->getOffset(pcluster, offset),
+                                         sizeof(fat_dirent));
+            if (fat_dirent.attributes == FAT_LFN)
+                continue;
+
+            if (fat_dirent.filename[0] == '\0')
+                break;
+
+            if (memcmp(fat_dirent.filename, assoc_try.value.filename, 11))
+                continue;
+
+            PRINTK_DEBUG4("resizing %i (%s) from %i to %i\n", inode->id, assoc_try.value.filename,
+                          fat_dirent.size, size);
+
+            fat_dirent.size = size;
+
+            fat_block->block_handle.write(&fat_dirent, fat_block->getOffset(pcluster, offset),
+                                          sizeof(fat_dirent));
+            return;
+        }
+
+        BROKEN;
+    }
+
     int FATDirectoryINode::readLFN(fat_dirent_lfn& lfn, char* buffer, int remaining) {
         char charbuffer[8];
         int  count    = 0;
@@ -123,6 +163,14 @@ namespace AEX::FS {
         return {};
     }
 
+    optional<FATDirectoryINode::inode_assoc> FATDirectoryINode::getAssoc(ino_t id) {
+        for (int i = 0; i < m_assocs.count(); i++)
+            if (m_assocs[i].id == id)
+                return m_assocs[i];
+
+        return {};
+    }
+
     void FATDirectoryINode::pushAssoc(const char* filename, ino_t id) {
         inode_assoc assoc;
 
@@ -148,6 +196,8 @@ namespace AEX::FS {
                 dir->m_filled = true;
             }
 
+            // strncpy(dir->m_name, dirent.filename, 12);
+
             dir->size        = dir->chain().count() * fat_block->block_size;
             dir->block_count = dir->chain().count();
             dir->block_size  = fat_block->block_size;
@@ -161,6 +211,8 @@ namespace AEX::FS {
                 file->chain().first(first_cluster);
                 file->m_filled = false;
             }
+
+            // strncpy(file->m_name, dirent.filename, 12);
 
             file->size       = dirent.size;
             file->block_size = fat_block->block_size;

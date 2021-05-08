@@ -154,7 +154,7 @@ void exec_init() {
     auto tty_wr = FS::File::open("/dev/tty0", FS::O_WR);
     AEX_ASSERT(tty_wr);
 
-    auto tty_wre = tty_wr.value->dup();
+    auto tty_wre = FS::File::open("/dev/tty0", FS::O_WR);
     AEX_ASSERT(tty_wre);
 
     FS::File_SP rp, wp;

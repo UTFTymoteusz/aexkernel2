@@ -8,9 +8,10 @@ namespace AEX::FS {
 
         auto entry = new cache_entry();
 
-        entry->file = file;
-        entry->id   = 0xFFFFFFFFFFFFFFFF;
-        entry->data = new uint8_t[block_size];
+        entry->file    = file;
+        entry->id      = 0xFFFFFFFFFFFFFFFF;
+        entry->data    = new uint8_t[block_size];
+        entry->changed = false;
 
         m_cache.push(entry);
 
@@ -36,5 +37,13 @@ namespace AEX::FS {
             m_cache.erase(i);
             return;
         }
+    }
+
+    void INode::writeCheck(cache_entry* entry) {
+        if (!entry->changed)
+            return;
+
+        write(entry->data, entry->id, 1);
+        entry->changed = false;
     }
 }

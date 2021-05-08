@@ -31,12 +31,14 @@ namespace AEX::FS {
         delete m_table;
     }
 
-    optional<INode_SP> FATControlBlock::get(INode_SP, dirent, ino_t id) {
+    optional<INode_SP> FATControlBlock::get(INode_SP prev, dirent, ino_t id) {
         SCOPE(m_mutex);
 
         auto cache_try = m_cache.get(id);
-        if (cache_try.has_value)
+        if (cache_try.has_value) {
+            ((FATINode*) cache_try.value.get())->m_parent = prev;
             return cache_try.value;
+        }
 
         if (id == root_inode_id)
             return createRoot();

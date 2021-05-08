@@ -36,7 +36,10 @@ namespace AEX {
     [[noreturn]] API void kpanic(const char* format, ...);
 }
 
-#define NOT_IMPLEMENTED kpanic("%s:%i: %s\n", __FILE__, __LINE__, "Not implemented")
+#define NOT_IMPLEMENTED kpanic("%s:%i: Not implemented\n", __FILE__, __LINE__)
+#define BROKEN kpanic("%s:%i: %s() is broken\n", __FILE__, __LINE__, __func__)
+#define FUNC_NOT_IMPLEMENTED \
+    { kpanic("%s:%i: %s(): Not implemented\n", __FILE__, __LINE__, __func__); }
 
 #define ENSURE_R(cond, err) \
     ({                      \

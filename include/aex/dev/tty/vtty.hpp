@@ -44,18 +44,18 @@ namespace AEX::Dev::TTY {
          * Sets the foreground or background color.
          * @param ansi An ANSI color code.
          **/
-        virtual VTTY& color(ansi_color_t ansi);
+        virtual VTTY& color(ansi_color_t ansi) = 0;
 
         /**
          * Scrolls down the virtual terminal.
          * @param amnt Amount of lines to scroll down by.
          **/
-        virtual VTTY& scroll(int amnt);
+        virtual VTTY& scroll(int amnt) = 0;
 
         /**
          * Clears the virtual terminal with the current background clor;
          **/
-        virtual VTTY& clear();
+        virtual VTTY& clear() = 0;
 
         /**
          * Sets the keymap of the virtual terminal.
@@ -63,11 +63,11 @@ namespace AEX::Dev::TTY {
          **/
         void set_keymap(Dev::Input::keymap* m_keymap);
 
-        virtual bool text();
-        virtual bool graphics();
+        virtual bool text()     = 0;
+        virtual bool graphics() = 0;
 
-        virtual tty_info info();
-        virtual void*    output();
+        virtual tty_info info()   = 0;
+        virtual void*    output() = 0;
 
         int getCursorX() {
             return m_cursorx;
@@ -106,6 +106,6 @@ namespace AEX::Dev::TTY {
 
         Spinlock m_lock;
 
-        virtual void _write(char c);
+        virtual void _write(char c) = 0;
     };
 }

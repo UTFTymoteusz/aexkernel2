@@ -36,7 +36,7 @@ namespace AEX::Dev {
         Mem::SmartPointer<BlockDevice> m_dev;
         uint16_t                       m_sector_size;
 
-        bool isAligned(void* addr);
+        bool isAligned(const void* addr);
         bool isPerfect(uint64_t start, uint32_t len);
     };
 }

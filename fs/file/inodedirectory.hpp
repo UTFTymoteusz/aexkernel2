@@ -12,11 +12,10 @@ namespace AEX::FS {
         public:
         INodeDirectory(INode_SP inode);
 
-        optional<dirent>  readdir();
-        error_t           seekdir(long pos);
-        long              telldir();
-        optional<File_SP> dup();
-        error_t           close();
+        optional<dirent> readdir();
+        error_t          seekdir(long pos);
+        long             telldir();
+        error_t          close();
 
         private:
         dir_context m_dir_ctx = dir_context();

@@ -13,11 +13,12 @@ namespace AEX::Mem {
 }
 
 namespace AEX::FS {
-    enum file_mode_t {
+    enum o_flags_t {
         O_RD        = 0x01,
         O_WR        = 0x02,
         O_APPEND    = 0x04,
         O_DIRECTORY = 0x08,
+        O_NONBLOCK  = 0x10,
         O_RDWR      = O_RD | O_WR,
     };
 
@@ -29,10 +30,6 @@ namespace AEX::FS {
 
     enum fd_t {
         FD_CLOEXEC = 0x0001,
-    };
-
-    enum o_t {
-        O_NONBLOCK = 0x0001,
     };
 
     class API File {
@@ -53,7 +50,6 @@ namespace AEX::FS {
         static optional<file_info>  info(const char* path, int flags = 0);
         virtual optional<file_info> finfo();
         virtual error_t             fchmod(mode_t mode);
-        virtual optional<File_SP>   dup();
 
         virtual optional<Mem::Region*> mmap(Proc::Process* process, void*, size_t len, int flags,
                                             FS::File_SP file, FS::off_t offset);
@@ -64,8 +60,8 @@ namespace AEX::FS {
         virtual error_t          seekdir(long pos);
         virtual long             telldir();
 
-        int  get_flags();
-        void set_flags(int);
+        int  getFlags();
+        void setFlags(int);
 
         protected:
         int m_flags;

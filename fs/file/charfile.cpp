@@ -26,14 +26,6 @@ namespace AEX::FS {
         return m_handle->mmap(process, addr, len, flags, file, offset);
     }
 
-    optional<File_SP> CharFile::dup() {
-        auto dfile = new CharFile(m_handle);
-
-        // Make this proper pls
-
-        return File_SP(dfile);
-    }
-
     bool CharFile::isatty() {
         return m_handle->isatty();
     }

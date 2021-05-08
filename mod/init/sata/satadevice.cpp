@@ -160,8 +160,8 @@ namespace AEX::Sys::SATA {
         auto table  = getTable(slot);
 
         header->fis_length = sizeof(AHCI::fis_reg_h2d) / sizeof(uint32_t);
-        header->write      = false;
-        header->atapi      = true;
+        header->write      = write;
+        header->atapi      = false;
 
         header->phys_region_table_transferred = 0;
 
@@ -169,7 +169,7 @@ namespace AEX::Sys::SATA {
 
         auto fis = &table->fis_reg_h2d_data;
 
-        fis->command         = AHCI::ata_command::READ_DMA_EXT;
+        fis->command = write ? AHCI::ata_command::WRITE_DMA_EXT : AHCI::ata_command::READ_DMA_EXT;
         fis->command_control = true;
         fis->fis_type        = AHCI::fis_type::REG_H2D;
 

@@ -33,7 +33,7 @@ namespace AEX::Debug {
         AEX_ASSERT(file_try);
 
         auto    file = file_try.value;
-        int64_t size = file->seek(0, FS::File::SEEK_END).value;
+        ssize_t size = file->seek(0, FS::File::SEEK_END).value;
 
         auto mmap_try = Mem::mmap(Proc::Process::kernel(), nullptr, size, Mem::PROT_READ,
                                   Mem::MAP_NONE, file, 0);

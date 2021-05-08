@@ -90,7 +90,7 @@ namespace AEX::Sys::SATA {
 
         switch (port->signature) {
         case SATA_SIG_ATAPI:
-            printk("ahci%i: port%i: Found SATAPI\n", index, port_index);
+            printk("ahci%i: port%i: Found a SATAPI device\n", index, port_index);
 
             name_letter_increment(name_buffer, sizeof(name_buffer), "sr%");
 
@@ -112,13 +112,13 @@ namespace AEX::Sys::SATA {
             Tree::register_device("sata", sata_device);
             break;
         case SATA_SIG_SEMB:
-            printk("ahci%i: port%i: Found SEMB\n", index, port_index);
+            printk("ahci%i: port%i: Found a SEMB device\n", index, port_index);
             break;
         case SATA_SIG_PM:
-            printk("ahci%i: port%i: Found PM\n", index, port_index);
+            printk("ahci%i: port%i: Found a PM device\n", index, port_index);
             break;
         default:
-            printk("ahci%i: port%i: Found SATA\n", index, port_index);
+            printk("ahci%i: port%i: Found a SATA device\n", index, port_index);
 
             name_letter_increment(name_buffer, sizeof(name_buffer), "sd%");
 

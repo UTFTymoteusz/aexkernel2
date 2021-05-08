@@ -16,6 +16,7 @@
 #define PRINTK_DEBUG1(fmt, a) printk("%s:%i: " fmt "\n", __FILE__, __LINE__, a)
 #define PRINTK_DEBUG2(fmt, a, b) printk("%s:%i: " fmt "\n", __FILE__, __LINE__, a, b)
 #define PRINTK_DEBUG3(fmt, a, b, c) printk("%s:%i: " fmt "\n", __FILE__, __LINE__, a, b, c)
+#define PRINTK_DEBUG4(fmt, a, b, c, d) printk("%s:%i: " fmt "\n", __FILE__, __LINE__, a, b, c, d)
 
 #define PRINTK_DEBUG_WARN(msg) printk(PRINTK_WARN "%s:%i: %s\n", __FILE__, __LINE__, msg)
 #define PRINTK_DEBUG_WARN1(fmt, a) printk(PRINTK_WARN "%s:%i: " fmt "\n", __FILE__, __LINE__, a)
@@ -23,16 +24,20 @@
     printk(PRINTK_WARN "%s:%i: " fmt "\n", __FILE__, __LINE__, a, b)
 #define PRINTK_DEBUG_WARN3(fmt, a, b, c) \
     printk(PRINTK_WARN "%s:%i: " fmt "\n", __FILE__, __LINE__, a, b, c)
+#define PRINTK_DEBUG_WARN4(fmt, a, b, c, d) \
+    printk(PRINTK_WARN "%s:%i: " fmt "\n", __FILE__, __LINE__, a, b, c, d)
 #else
 #define PRINTK_DEBUG(msg) ;
 #define PRINTK_DEBUG1(fmt, a) ;
 #define PRINTK_DEBUG2(fmt, a, b) ;
 #define PRINTK_DEBUG3(fmt, a, b, c) ;
+#define PRINTK_DEBUG4(fmt, a, b, c, d) ;
 
 #define PRINTK_DEBUG_WARN(msg) ;
 #define PRINTK_DEBUG_WARN1(fmt, a) ;
 #define PRINTK_DEBUG_WARN2(fmt, a, b) ;
 #define PRINTK_DEBUG_WARN3(fmt, a, b, c) ;
+#define PRINTK_DEBUG_WARN4(fmt, a, b, c, d) ;
 #endif
 
 namespace AEX {

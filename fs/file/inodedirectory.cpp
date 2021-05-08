@@ -28,15 +28,6 @@ namespace AEX::FS {
         return m_inode->tellDir(&m_dir_ctx);
     }
 
-    optional<File_SP> INodeDirectory::dup() {
-        SCOPE(m_inode->mutex);
-
-        auto dupd       = new INodeDirectory(m_inode);
-        dupd->m_dir_ctx = m_dir_ctx;
-
-        return File_SP(dupd);
-    }
-
     error_t INodeDirectory::close() {
         return ENONE;
     }

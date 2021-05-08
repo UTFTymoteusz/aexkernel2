@@ -15,6 +15,7 @@ namespace AEX::FS {
 
             blk_t    id;
             uint8_t* data;
+            bool     changed;
         };
 
         Mutex mutex;
@@ -38,13 +39,15 @@ namespace AEX::FS {
         blksize_t block_size;
 
         off_t size;
+        bool  truncate_cached;
 
         ControlBlock* control_block;
 
         virtual ~INode();
 
-        virtual error_t readBlocks(void* buffer, blk_t start, blkcnt_t count);
-        virtual error_t writeBlocks(const void* buffer, blk_t start, blkcnt_t count);
+        virtual error_t read(void* buffer, blk_t start, blkcnt_t count);
+        virtual error_t write(const void* buffer, blk_t start, blkcnt_t count);
+        virtual error_t truncate(size_t newsize, bool cache = false);
         virtual error_t update();
 
         virtual optional<dirent> readDir(dir_context* ctx);
@@ -54,6 +57,7 @@ namespace AEX::FS {
         cache_entry* getCacheEntry(File* file);
         cache_entry* getCacheEntry(blk_t id);
         void         evictCacheEntry(File* file);
+        void         writeCheck(cache_entry* entry);
 
         bool is_regular() {
             return (type & FT_REGULAR) == FT_REGULAR;

@@ -13,7 +13,6 @@ namespace AEX::FS {
         optional<ssize_t>      write(const void* buf, size_t count);
         optional<off_t>        seek(off_t offset, seek_mode mode);
         error_t                close();
-        optional<File_SP>      dup();
         optional<file_info>    finfo();
         optional<Mem::Region*> mmap(Proc::Process* process, void*, size_t len, int flags,
                                     FS::File_SP file, FS::off_t offset);
@@ -25,6 +24,7 @@ namespace AEX::FS {
         off_t m_pos = 0;
 
         error_t readBlocks(void* buffer, off_t start, size_t len);
+        error_t writeBlocks(const void* buffer, off_t start, size_t len);
         bool    isPerfect(off_t start, size_t len);
     };
 }

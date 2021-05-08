@@ -15,4 +15,12 @@ namespace AEX::FS {
     cluster_t Table::next(cluster_t) {
         return 0xFFFFFFFF;
     }
+
+    void Table::link(cluster_t, cluster_t) {}
+
+    cluster_t Table::find() {
+        return 0xFFFFFFFF;
+    }
+
+    void Table::flush() {}
 }

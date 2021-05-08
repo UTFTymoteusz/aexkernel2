@@ -17,8 +17,6 @@ namespace AEX::FS {
                                     FS::File_SP file, FS::off_t offset);
 
 
-        optional<File_SP> dup();
-
         bool isatty();
 
         private:

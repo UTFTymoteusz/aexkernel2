@@ -17,8 +17,9 @@ namespace AEX::FS {
         }
 
         protected:
-        Chain m_chain;
-        bool  m_filled;
+        INode_SP m_parent;
+        Chain    m_chain;
+        bool     m_filled;
 
         Chain& chain() {
             return m_chain;
@@ -37,8 +38,9 @@ namespace AEX::FS {
             type = FT_REGULAR;
         }
 
-        error_t readBlocks(void* buffer, blk_t start, blkcnt_t count);
-        error_t writeBlocks(const void* buffer, blk_t start, blkcnt_t count);
+        error_t read(void* buffer, blk_t start, blkcnt_t count);
+        error_t write(const void* buffer, blk_t start, blkcnt_t count);
+        error_t truncate(size_t newsize, bool cache);
 
         private:
         void fill();
@@ -53,6 +55,7 @@ namespace AEX::FS {
         }
 
         optional<dirent> readDir(dir_context* ctx);
+        void             resize(INode* inode, uint32_t size);
 
         private:
         struct inode_assoc {
@@ -64,8 +67,9 @@ namespace AEX::FS {
 
         int readLFN(fat_dirent_lfn& lfn, char* buffer, int remaining);
 
-        optional<ino_t> getAssoc(const char* filename);
-        void            pushAssoc(const char* filename, ino_t id);
-        ino_t           createAssoc(fat_dirent dirent);
+        optional<ino_t>       getAssoc(const char* filename);
+        optional<inode_assoc> getAssoc(ino_t id);
+        void                  pushAssoc(const char* filename, ino_t id);
+        ino_t                 createAssoc(fat_dirent dirent);
     };
 }

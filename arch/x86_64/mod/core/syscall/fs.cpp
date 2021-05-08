@@ -12,10 +12,12 @@
 using namespace AEX;
 using namespace AEX::Proc;
 
-optional<FS::File_SP> get_file(int fd);
-optional<FS::File_SP> pop_file(int fd);
-void                  set_flags(int fd, int flags);
-optional<int>         get_flags(int fd);
+optional<FS::Descriptor> get_desc(int fd);
+optional<FS::Descriptor> pop_desc(int fd);
+optional<FS::File_SP>    get_file(int fd);
+optional<FS::File_SP>    pop_file(int fd);
+void                     set_flags(int fd, int flags);
+optional<int>            get_flags(int fd);
 
 bool copy_and_canonize(char* buffer, const usr_char* usr_path);
 
@@ -79,7 +81,8 @@ ssize_t write(int fd, const usr_void* usr_buf, size_t count) {
 }
 
 int close(int fd) {
-    return USR_ENSURE_ENONE(USR_ENSURE_OPT(get_file(fd))->close());
+    USR_ENSURE_OPT(pop_file(fd));
+    return 0;
 }
 
 int ioctl(int fd, int rq, uint64_t val) {
@@ -88,11 +91,10 @@ int ioctl(int fd, int rq, uint64_t val) {
 
 int dup(int fd) {
     auto current = Proc::Process::current();
-    auto file    = USR_ENSURE_OPT(get_file(fd));
-    auto dupd    = USR_ENSURE_OPT(file->dup());
+    auto desc    = USR_ENSURE_OPT(get_desc(fd));
 
     current->descs_lock.acquire();
-    int fd2 = current->descs.push(dupd);
+    int fd2 = current->descs.push({desc.file, desc.flags & ~FS::FD_CLOEXEC});
     current->descs_lock.release();
 
     return fd2;
@@ -100,14 +102,24 @@ int dup(int fd) {
 
 int dup2(int srcfd, int dstfd) {
     auto current = Proc::Process::current();
-    auto file    = USR_ENSURE_OPT(get_file(srcfd));
-    auto dupd    = USR_ENSURE_OPT(file->dup());
+    auto desc    = USR_ENSURE_OPT(get_desc(srcfd));
 
     current->descs_lock.acquire();
-    current->descs.set(dstfd, dupd);
+    current->descs.set(dstfd, {desc.file, desc.flags & ~FS::FD_CLOEXEC});
     current->descs_lock.release();
 
     return dstfd;
+}
+
+int dupP(int fd) {
+    auto current = Proc::Process::current();
+    auto desc    = USR_ENSURE_OPT(get_desc(fd));
+
+    current->descs_lock.acquire();
+    int fd2 = current->descs.push({desc.file, desc.flags | FS::FD_CLOEXEC});
+    current->descs_lock.release();
+
+    return fd2;
 }
 
 // this needs path verification
@@ -252,10 +264,10 @@ long readdir(int fd, dirent* uent) {
     return 0;
 }
 
-long seek(int fd, long pos, int mode) {
+FS::off_t seek(int fd, long pos, int mode) {
     auto file = USR_ENSURE_OPT(get_file(fd));
 
-    USR_ENSURE(mode >= FS::File::SEEK_SET && mode <= FS::File::SEEK_END);
+    USR_ENSURE(inrange(mode, FS::File::SEEK_SET, FS::File::SEEK_END));
     return USR_ENSURE_OPT(file->seek(pos, (FS::File::seek_mode) mode));
 }
 
@@ -275,20 +287,18 @@ long telldir(int fd) {
 }
 
 int fcntl(int fd, int cmd, int val) {
-    auto file  = USR_ENSURE_OPT(get_file(fd));
-    auto flags = USR_ENSURE_OPT(get_flags(fd));
+    auto file = USR_ENSURE_OPT(get_file(fd));
 
     switch (cmd) {
     case F_DUPFD:
         return dup(fd);
-    case F_GETFL:
-        return file->get_flags() & 0xFFFF | flags << 16;
-    case F_SETFL:
-        USR_ENSURE_FL(val, 0x00010001);
-
-        set_flags(fd, val >> 16);
-        file->set_flags(file->get_flags() | (val & 0xFFFF));
-
+    case F_DUPFD_CLOEXEC:
+        return dupP(fd);
+    case F_GETFD:
+        return USR_ENSURE_OPT(get_flags(fd));
+    case F_SETFD:
+        USR_ENSURE_FL(val, 0x0001);
+        set_flags(fd, val & 0x0001);
         return 0;
     default:
         return -1;
@@ -344,31 +354,39 @@ void register_fs() {
     table[SYS_MOUNT]   = (void*) mount;
 }
 
-optional<FS::File_SP> get_file(int fd) {
+optional<FS::Descriptor> get_desc(int fd) {
     auto current = Proc::Process::current();
     auto scope   = current->descs_lock.scope();
 
     if (!current->descs.present(fd)) {
-        // PRINTK_DEBUG_WARN1("ebadf (%i)", fd);
+        PRINTK_DEBUG_WARN1("ebadf (%i)", fd);
         return EBADF;
     }
 
-    return current->descs[fd].file;
+    return current->descs[fd];
 }
 
-optional<FS::File_SP> pop_file(int fd) {
+optional<FS::Descriptor> pop_desc(int fd) {
     auto current = Proc::Process::current();
     auto scope   = current->descs_lock.scope();
 
     if (!current->descs.present(fd)) {
-        // PRINTK_DEBUG_WARN1("ebadf (%i)", fd);
+        PRINTK_DEBUG_WARN1("ebadf (%i)", fd);
         return EBADF;
     }
 
     auto desc = current->descs[fd];
     current->descs.erase(fd);
 
-    return desc.file;
+    return desc;
+}
+
+optional<FS::File_SP> get_file(int fd) {
+    return ENSURE_OPT(get_desc(fd)).file;
+}
+
+optional<FS::File_SP> pop_file(int fd) {
+    return ENSURE_OPT(pop_desc(fd)).file;
 }
 
 optional<int> get_flags(int fd) {
@@ -376,7 +394,7 @@ optional<int> get_flags(int fd) {
     auto scope   = current->descs_lock.scope();
 
     if (!current->descs.present(fd)) {
-        // PRINTK_DEBUG_WARN1("ebadf (%i)", fd);
+        PRINTK_DEBUG_WARN1("ebadf (%i)", fd);
         return EBADF;
     }
 

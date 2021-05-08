@@ -20,17 +20,9 @@ namespace AEX::IPC {
         return _pipe->buffer.write(buf, count);
     }
 
-    optional<FS::File_SP> PipeWriter::dup() {
-        return FS::File_SP(new PipeWriter(_pipe));
-    }
-
     PipeReader::PipeReader(Mem::SmartPointer<Pipe> pipe) : _pipe(pipe) {}
 
     optional<ssize_t> PipeReader::read(void* buf, size_t count) {
         return _pipe->buffer.read(buf, count, 1);
-    }
-
-    optional<FS::File_SP> PipeReader::dup() {
-        return FS::File_SP(new PipeReader(_pipe));
     }
 }

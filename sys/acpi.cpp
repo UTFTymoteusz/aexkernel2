@@ -40,7 +40,7 @@ namespace AEX::Sys::ACPI {
 
         auto xsdp = find_xsdp();
         if (xsdp != nullptr) {
-            printk("acpi: Found the xdsp\n");
+            printk("acpi: Found the XDSP\n");
 
             auto _xsdt = (xsdt*) Mem::kernel_pagemap->map(xsdp->length, xsdp->xsdt_address, 0);
 

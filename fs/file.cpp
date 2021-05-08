@@ -38,6 +38,9 @@ namespace AEX::FS {
             return File_SP(new INodeDirectory(inode));
         }
 
+        if (mode & O_DIRECTORY)
+            return ENOTDIR;
+
         if (inode->dev != -1) {
             auto device = ENSURE_R(Dev::devices.get(inode->dev), ENOENT);
             auto file   = ENSURE_OPT(DevFile::open(device, mode));
@@ -102,7 +105,7 @@ namespace AEX::FS {
         kpanic("Attempt to call the default fchmod()");
     }
 
-    optional<int64_t> File::seek(int64_t, seek_mode) {
+    optional<FS::off_t> File::seek(off_t, seek_mode) {
         return ESPIPE;
     }
 
@@ -118,10 +121,6 @@ namespace AEX::FS {
         return -1;
     }
 
-    optional<File_SP> File::dup() {
-        kpanic("Attempt to call the default dup()");
-    }
-
     error_t File::close() {
         return ENONE;
     }
@@ -130,11 +129,11 @@ namespace AEX::FS {
         return false;
     }
 
-    int File::get_flags() {
+    int File::getFlags() {
         return m_flags;
     }
 
-    void File::set_flags(int flags) {
+    void File::setFlags(int flags) {
         m_flags = flags;
     }
 }

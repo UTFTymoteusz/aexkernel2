@@ -130,7 +130,7 @@ namespace AEX::FS {
             hard_links = 1;
         }
 
-        error_t readBlocks(void* buffer, blk_t block, blkcnt_t count) {
+        error_t read(void* buffer, blk_t block, blkcnt_t count) {
             ((ISO9660ControlBlock*) control_block)
                 ->block_handle.read(buffer, m_dentry.data_lba.le * block_size + block * block_size,
                                     count * block_size);
@@ -138,7 +138,7 @@ namespace AEX::FS {
             return ENONE;
         }
 
-        error_t writeBlocks(const void*, uint64_t, blkcnt_t) {
+        error_t write(const void*, uint64_t, blkcnt_t) {
             return EROFS;
         }
 
