@@ -89,6 +89,11 @@ namespace AEX::Debug {
                 return ret;
         }
 
+        if (addr < (void*) 0xFFF8000000000000) {
+            delta_ret = 0;
+            return "userspace";
+        }
+
         uint64_t m_addr = (uint64_t) addr;
         uint64_t delta  = 0x63756e74;
 
