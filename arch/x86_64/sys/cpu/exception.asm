@@ -102,18 +102,26 @@ exc_noerr 31
 
 exc_common:
     pusha
-    mov rbp, rsp
 
     sub rsp, 512
     fxsave [rsp]
+
+    ; Fake stack frame so the stack trace works properly
+    mov rax, qword [rsp + 512 + 17 * 8]
+    push rax
+    push rbp
+    mov rbp, rsp
     
     mov rax, 0x0002
     push rax
     popfq
 
     mov rdi, rsp
-    add rdi, 512
+    add rdi, 512 + 16
     call common_fault_handler
+
+    pop rbp
+    pop rax
 
     fxrstor [rsp]
     add rsp, 512
