@@ -76,7 +76,7 @@ namespace AEX::FS {
         return {};
     }
 
-    void FATDirectoryINode::resize(INode* inode, uint32_t size) {
+    void FATDirectoryINode::resize(INode* inode, cluster_t first, uint32_t size) {
         auto assoc_try = getAssoc(inode->id);
         if (!assoc_try)
             BROKEN;
@@ -106,7 +106,9 @@ namespace AEX::FS {
             PRINTK_DEBUG4("resizing %i (%s) from %i to %i\n", inode->id, assoc_try.value.filename,
                           fat_dirent.size, size);
 
-            fat_dirent.size = size;
+            fat_dirent.size             = size;
+            fat_dirent.first_cluster_hi = (first >> 16) & 0xFFFF;
+            fat_dirent.first_cluster_lo = first & 0xFFFF;
 
             fat_block->block_handle.write(&fat_dirent, fat_block->getOffset(pcluster, offset),
                                           sizeof(fat_dirent));

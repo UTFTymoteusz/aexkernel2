@@ -55,7 +55,7 @@ namespace AEX::FS {
         }
 
         optional<dirent> readDir(dir_context* ctx);
-        void             resize(INode* inode, uint32_t size);
+        void             resize(INode* inode, cluster_t first, uint32_t size);
 
         private:
         struct inode_assoc {

@@ -57,6 +57,11 @@ namespace AEX::FS {
                 if (found == 0xFFFFFFFF)
                     return ENOSPC;
 
+                if (m_chain.count() == 0) {
+                    m_chain.push(found);
+                    continue;
+                }
+
                 fat_block->m_table->link(m_chain.last(), found);
                 m_chain.push(found);
             }
@@ -65,7 +70,8 @@ namespace AEX::FS {
                 fat_block->m_table->link(m_chain.erase(), 0x00000000);
             }
 
-            fat_block->m_table->link(m_chain.last(), 0x0FFFFFF8);
+            if (m_chain.count() > 0)
+                fat_block->m_table->link(m_chain.last(), 0x0FFFFFF8);
 
             if (!cache)
                 fat_block->m_table->flush();
@@ -74,7 +80,7 @@ namespace AEX::FS {
         if (!cache) {
             auto dir = (FATDirectoryINode*) m_parent.get();
             using(dir->mutex) {
-                dir->resize(this, newsize);
+                dir->resize(this, m_chain.count() > 0 ? m_chain.first() : 0, newsize);
             }
         }
 
