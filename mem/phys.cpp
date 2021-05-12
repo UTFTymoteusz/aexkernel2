@@ -57,7 +57,7 @@ namespace AEX::Mem::Phys {
     }
 
     void init(const multiboot_info_t* mbinfo) {
-        printk(PRINTK_INIT "Enumerating memory\n");
+        printk(INIT "Enumerating memory\n");
 
         auto*    mmap = (multiboot_memory_map_t*) (size_t) mbinfo->mmap_addr;
         uint32_t amnt = mbinfo->mmap_length / sizeof(multiboot_memory_map_t);
@@ -98,7 +98,7 @@ namespace AEX::Mem::Phys {
         printk("Kernel memory   : %i KiB\n", frames_taken_by_kernel * Sys::CPU::PAGE_SIZE / 1024);
         printk("Memory pieces   : %i\n", pieceCount);
 
-        printk(PRINTK_OK "Memory enumerated\n");
+        printk(OK "Memory enumerated\n");
     }
 
     phys_t alloc(int32_t amount) {

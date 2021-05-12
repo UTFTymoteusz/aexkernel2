@@ -130,8 +130,8 @@ namespace AEX::FS {
     } PACKED;
 
     struct fat_dirent_lfn {
-        uint8_t  order : 4;
-        uint8_t  info : 4;
+        uint8_t  order : 5;
+        uint8_t  info : 3;
         uint8_t  chars0[10];
         uint8_t  attribute;
         uint8_t  long_entry_type;

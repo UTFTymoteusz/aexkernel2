@@ -56,7 +56,7 @@ namespace AEX::FS {
         return m_level == m_levels;
     }
 
-    char* get_filename(char* buffer, const char* path, size_t num) {
+    char* get_filename(char* buffer, const char* path, size_t num, bool noext) {
         int len = strlen(path);
         if (len <= 1)
             return (char*) path;
@@ -69,6 +69,38 @@ namespace AEX::FS {
         for (int i = 0; i < len; i++) {
             if (path[i] == '/')
                 last = i + 1;
+        }
+
+        if (noext) {
+            int newlen = 0;
+            for (int i = 0; i < len; i++) {
+                if (path[i] == '.' || path[i] == '\0')
+                    break;
+
+                newlen++;
+            }
+
+            len = newlen;
+        }
+
+        return strncpy(buffer, &((char*) path)[last], min((int) num, len - last + 1));
+    }
+
+    char* get_extension(char* buffer, const char* path, size_t num) {
+        int len = strlen(path);
+        if (len <= 1)
+            return (char*) path;
+
+        int last = -1;
+
+        for (int i = 0; i < len; i++) {
+            if (path[i] == '.')
+                last = i + 1;
+        }
+
+        if (last == -1) {
+            buffer[0] = '\0';
+            return buffer;
         }
 
         return strncpy(buffer, &((char*) path)[last], min((int) num, len - last + 1));

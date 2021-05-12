@@ -12,8 +12,7 @@ namespace AEX::FS {
     class FATINode : public INode {
         public:
         FATINode() {
-            hard_links = 1;
-            mode       = 0x0777;
+            mode = 0x0777;
         }
 
         protected:
@@ -29,33 +28,40 @@ namespace AEX::FS {
             size = m_chain.count() * control_block->block_size;
         }
 
+        friend class FATDirectory;
         friend class FATControlBlock;
     };
 
-    class FATFileINode : public FATINode {
+    class FATFile : public FATINode {
         public:
-        FATFileINode() : FATINode() {
-            type = FT_REGULAR;
+        FATFile() : FATINode() {
+            type       = FT_REGULAR;
+            hard_links = 1;
         }
 
         error_t read(void* buffer, blk_t start, blkcnt_t count);
         error_t write(const void* buffer, blk_t start, blkcnt_t count);
         error_t truncate(size_t newsize, bool cache);
+        error_t purge();
 
         private:
         void fill();
 
-        friend class FATDirectoryINode;
+        friend class FATDirectory;
     };
 
-    class FATDirectoryINode : public FATINode {
+    class FATDirectory : public FATINode {
         public:
-        FATDirectoryINode() : FATINode() {
-            type = FT_DIRECTORY;
+        FATDirectory() : FATINode() {
+            type       = FT_DIRECTORY;
+            hard_links = 2;
         }
 
-        optional<dirent> readDir(dir_context* ctx);
-        void             resize(INode* inode, cluster_t first, uint32_t size);
+        optional<INode_SP> creat(const char* filename, mode_t mode, fs_type_t type);
+        optional<dirent>   readdir(dir_context* ctx);
+        void               resize(INode* inode, cluster_t first, uint32_t size);
+        error_t            remove(const char* filename);
+        error_t            purge();
 
         private:
         struct inode_assoc {
@@ -65,7 +71,17 @@ namespace AEX::FS {
 
         Mem::Vector<inode_assoc> m_assocs;
 
-        int readLFN(fat_dirent_lfn& lfn, char* buffer, int remaining);
+        int  readLFN(fat_dirent_lfn& lfn, char* buffer, int remaining);
+        void writeLFN(fat_dirent_lfn& lfn, const char* buffer, int remaining);
+
+        fat_dirent read(int pos);
+        void       write(int pos, fat_dirent& ent);
+        void       write(int pos, fat_dirent& ent, const char* filename);
+
+        optional<int> space(int count);
+        error_t       expand();
+        void          prepare(cluster_t cluster, cluster_t parent);
+        void          prepare(cluster_t cluster);
 
         optional<ino_t>       getAssoc(const char* filename);
         optional<inode_assoc> getAssoc(ino_t id);

@@ -14,12 +14,15 @@ namespace AEX::Mem {
 
 namespace AEX::FS {
     enum o_flags_t {
-        O_RD        = 0x01,
-        O_WR        = 0x02,
+        O_RDONLY    = 0x01,
+        O_WRONLY    = 0x02,
         O_APPEND    = 0x04,
         O_DIRECTORY = 0x08,
         O_NONBLOCK  = 0x10,
-        O_RDWR      = O_RD | O_WR,
+        O_CREAT     = 0x20,
+        O_EXCL      = 0x40,
+        O_ACCMODE   = 0xFFFF0000,
+        O_RDWR      = O_RDONLY | O_WRONLY,
     };
 
     enum at_t {
@@ -42,7 +45,12 @@ namespace AEX::FS {
 
         virtual ~File();
 
-        static optional<File_SP>    open(const char* path, int mode);
+        static optional<File_SP> open(const char* path, int flags);
+        static optional<File_SP> mkdir(const char* path, int flags);
+        static error_t           rename(const char* path, const char* newpath);
+        static error_t           unlink(const char* path);
+        static error_t           rmdir(const char* path);
+
         virtual optional<ssize_t>   read(void* buf, size_t count);
         virtual optional<ssize_t>   write(const void* buf, size_t count);
         virtual error_t             close();

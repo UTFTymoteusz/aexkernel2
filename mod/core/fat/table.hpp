@@ -8,6 +8,8 @@
 namespace AEX::FS {
     class Table {
         public:
+        Mutex mutex;
+
         Table(Dev::BlockHandle handle, blksize_t sector_size, off_t start, uint16_t count,
               uint32_t cluster_count);
         virtual ~Table();
@@ -18,7 +20,6 @@ namespace AEX::FS {
         virtual void      flush();
 
         protected:
-        Mutex                m_mutex;
         Mem::Cache<uint8_t*> m_cache;
         Dev::BlockHandle     m_handle;
 

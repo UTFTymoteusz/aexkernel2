@@ -14,7 +14,7 @@ void test_threads();
 void test_processes();
 
 void module_enter() {
-    printk(PRINTK_WARN "testmod: Loaded\n");
+    printk(WARN "testmod: Loaded\n");
 
     test_mmap();
     test_paging();
@@ -26,5 +26,5 @@ void module_enter() {
 }
 
 void module_exit() {
-    printk(PRINTK_WARN "testmod: Exiting\n");
+    printk(WARN "testmod: Exiting\n");
 }

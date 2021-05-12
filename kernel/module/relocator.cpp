@@ -20,7 +20,7 @@ namespace AEX {
 
             // Gotta make weaklings work properly
             // if ((symbol.info >> 4) == 2)
-            //    printk(PRINTK_WARN "module: %s: Weak\n", symbol.name);
+            //    printk(WARN "module: %s: Weak\n", symbol.name);
 
             if (!S)
                 for (int i = 0; i < elf.section_headers.count(); i++) {
@@ -65,7 +65,7 @@ namespace AEX {
             }
 
             if (!S) {
-                printk(PRINTK_WARN "module: %s: Unresolved symbol: %s\n", label, symbol.name);
+                printk(WARN "module: %s: Unresolved symbol: %s\n", label, symbol.name);
                 success = false;
 
                 continue;

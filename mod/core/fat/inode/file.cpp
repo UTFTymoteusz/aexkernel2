@@ -3,7 +3,7 @@
 #include "../inode.hpp"
 
 namespace AEX::FS {
-    error_t FATFileINode::read(void* buffer, blk_t start, blkcnt_t count) {
+    error_t FATFile::read(void* buffer, blk_t start, blkcnt_t count) {
         if (!m_filled && m_chain.count() > 0)
             fill();
 
@@ -18,7 +18,7 @@ namespace AEX::FS {
         return ENONE;
     }
 
-    error_t FATFileINode::write(const void* buffer, blk_t start, blkcnt_t count) {
+    error_t FATFile::write(const void* buffer, blk_t start, blkcnt_t count) {
         if (!m_filled && m_chain.count() > 0)
             fill();
 
@@ -33,7 +33,7 @@ namespace AEX::FS {
         return ENONE;
     }
 
-    error_t FATFileINode::truncate(size_t newsize, bool cache) {
+    error_t FATFile::truncate(size_t newsize, bool cache) {
         if (newsize > 0xFFFFFFFF)
             return ENOTSUP;
 
@@ -50,7 +50,7 @@ namespace AEX::FS {
         size = newsize;
 
         if (m_chain.count() != (size_t) count) {
-            printk("truncate %i to %i\n", m_chain.count(), count);
+            SCOPE(fat_block->m_table->mutex);
 
             while (m_chain.count() < (size_t) count) {
                 cluster_t found = fat_block->m_table->find();
@@ -78,7 +78,7 @@ namespace AEX::FS {
         }
 
         if (!cache) {
-            auto dir = (FATDirectoryINode*) m_parent.get();
+            auto dir = (FATDirectory*) m_parent.get();
             using(dir->mutex) {
                 dir->resize(this, m_chain.count() > 0 ? m_chain.first() : 0, newsize);
             }
@@ -87,7 +87,26 @@ namespace AEX::FS {
         return ENONE;
     }
 
-    void FATFileINode::fill() {
+    error_t FATFile::purge() {
+        printkd(FS_DEBUG, "fat: %s: Purging file inode %i (%i clusters)\n", control_block->path, id,
+                m_chain.count());
+
+        auto fat_block = (FATControlBlock*) control_block;
+
+        if (!m_filled && m_chain.count() > 0)
+            fill();
+
+        SCOPE(fat_block->m_table->mutex);
+
+        for (size_t i = 0; i < m_chain.count(); i++)
+            fat_block->m_table->link(m_chain.at(i), 0x00000000);
+
+        fat_block->m_table->flush();
+
+        return ENONE;
+    }
+
+    void FATFile::fill() {
         cluster_t first     = m_chain.at(0);
         auto      fat_block = (FATControlBlock*) control_block;
         fat_block->fillChain(first, m_chain);

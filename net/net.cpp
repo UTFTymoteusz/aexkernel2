@@ -17,7 +17,7 @@ namespace AEX::Net {
     void read_hostname();
 
     void init() {
-        printk(PRINTK_INIT "net: Initializing\n");
+        printk(INIT "net: Initializing\n");
 
         inet_protocols = new INetProtocol*[256];
         null_protocol  = new INetProtocol();
@@ -30,7 +30,7 @@ namespace AEX::Net {
         char buffer[256];
 
         printk("net: Hostname: %s\n", get_hostname(buffer, sizeof(buffer)).value);
-        printk(PRINTK_OK "net: Initialized\n");
+        printk(OK "net: Initialized\n");
     }
 
     error_t register_inet_protocol(iproto_t id, INetProtocol* protocol) {
@@ -57,7 +57,7 @@ namespace AEX::Net {
     }
 
     void read_hostname() {
-        auto hostname_try = FS::File::open("/etc/hostname", FS::O_RD);
+        auto hostname_try = FS::File::open("/etc/hostname", FS::O_RDONLY);
         if (!hostname_try) {
             set_hostname("default");
         }

@@ -4,7 +4,7 @@
 
 namespace AEX::Dev {
     CharHandle::CharHandle() {
-        m_dev = CharDevice_SP::getNull();
+        m_dev = CharDevice_SP::null();
     }
 
     CharHandle::CharHandle(CharDevice_SP chrdev) : m_dev(chrdev) {}

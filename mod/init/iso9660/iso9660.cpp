@@ -26,24 +26,24 @@ namespace AEX::FS {
         printk("iso9660: Mount attempt from %s\n", source);
 
         if (!source) {
-            printk(PRINTK_WARN "iso9660: mount: Source not set\n");
+            printk(WARN "iso9660: mount: Source not set\n");
             return EINVAL;
         }
 
         auto info = File::info(source);
         if (!info) {
-            printk(PRINTK_WARN "iso9660: mount: Failed to get file info\n");
+            printk(WARN "iso9660: mount: Failed to get file info\n");
             return info.error;
         }
 
         if (!info.value.is_block()) {
-            printk(PRINTK_WARN "iso9660: mount: Source is not a block device\n");
+            printk(WARN "iso9660: mount: Source is not a block device\n");
             return ENOTBLK;
         }
 
         auto handle_try = Dev::open_block_handle(info.value.dev);
         if (!handle_try) {
-            printk(PRINTK_WARN "iso9660: mount: Failed to open the block device\n");
+            printk(WARN "iso9660: mount: Failed to open the block device\n");
             return ENOENT;
         }
 
@@ -54,7 +54,7 @@ namespace AEX::FS {
 
         for (int i = 0; i <= 64; i++) {
             if (i == 64) {
-                printk(PRINTK_WARN "iso9660: Too many volume descriptors\n");
+                printk(WARN "iso9660: Too many volume descriptors\n");
                 return EINVAL;
             }
 
@@ -62,7 +62,7 @@ namespace AEX::FS {
 
             auto header = (iso9660_vd_header*) buffer;
             if (memcmp(header->identifier, IDENTIFIER, 5) != 0) {
-                printk(PRINTK_WARN "iso9660: mount: Identifier mismatch\n");
+                printk(WARN "iso9660: mount: Identifier mismatch\n");
                 return EINVAL;
             }
 

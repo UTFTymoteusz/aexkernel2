@@ -166,11 +166,10 @@ void apple() {
     auto sock     = sock_try.value;
 
     auto error = sock->connect(Net::ipv4_addr(192, 168, 0, 20), 17267);
-    if (error) {
-        kpanic("aaa");
-    }
+    if (error)
+        BROKEN;
 
-    auto tty_wr = FS::File::open("/dev/tty0", FS::O_WR);
+    auto tty_wr = FS::File::open("/dev/tty0", FS::O_WRONLY);
     AEX_ASSERT(tty_wr);
 
     char buffer[2048];

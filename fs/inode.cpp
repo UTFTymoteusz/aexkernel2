@@ -19,15 +19,27 @@ namespace AEX::FS {
         return ENOSYS;
     }
 
-    optional<dirent> INode::readDir(dir_context*) {
+    error_t INode::purge() {
         return ENOSYS;
     }
 
-    error_t INode::seekDir(dir_context*, long) {
+    optional<INode_SP> INode::creat(const char*, mode_t, fs_type_t) {
         return ENOSYS;
     }
 
-    long INode::tellDir(dir_context*) {
+    optional<dirent> INode::readdir(dir_context*) {
+        return ENOSYS;
+    }
+
+    error_t INode::seekdir(dir_context*, long) {
+        return ENOSYS;
+    }
+
+    long INode::telldir(dir_context*) {
         return -1;
+    }
+
+    error_t INode::remove(const char*) {
+        return ENOSYS;
     }
 }

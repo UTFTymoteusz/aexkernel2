@@ -29,7 +29,7 @@ namespace AEX::Debug {
     char*                      kernel_image_strings = nullptr;
 
     void load_symbols(const char* elf_path) {
-        auto file_try = FS::File::open(elf_path, FS::O_RD);
+        auto file_try = FS::File::open(elf_path, FS::O_RDONLY);
         AEX_ASSERT(file_try);
 
         auto    file = file_try.value;
@@ -89,7 +89,7 @@ namespace AEX::Debug {
                 return ret;
         }
 
-        if (addr < (void*) 0xFFF8000000000000) {
+        if (addr < (void*) 0xFFFF800000000000) {
             delta_ret = 0;
             return "userspace";
         }

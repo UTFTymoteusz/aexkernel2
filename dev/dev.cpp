@@ -21,13 +21,13 @@ namespace AEX::Dev {
     extern void arch_drivers_init();
 
     void init() {
-        printk(PRINTK_INIT "dev: Initializing\n");
+        printk(INIT "dev: Initializing\n");
 
         Tree::init();
         mainbus_init();
         arch_drivers_init();
         TTY::create_tty_devs();
 
-        printk(PRINTK_OK "dev: Initialized\n");
+        printk(OK "dev: Initialized\n");
     }
 }

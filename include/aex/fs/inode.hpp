@@ -40,6 +40,7 @@ namespace AEX::FS {
 
         off_t size;
         bool  truncate_cached;
+        int   opened;
 
         ControlBlock* control_block;
 
@@ -49,10 +50,13 @@ namespace AEX::FS {
         virtual error_t write(const void* buffer, blk_t start, blkcnt_t count);
         virtual error_t truncate(size_t newsize, bool cache = false);
         virtual error_t update();
+        virtual error_t purge();
 
-        virtual optional<dirent> readDir(dir_context* ctx);
-        virtual error_t          seekDir(dir_context* ctx, long pos);
-        virtual long             tellDir(dir_context* ctx);
+        virtual optional<INode_SP> creat(const char* filename, mode_t mode, fs_type_t type);
+        virtual optional<dirent>   readdir(dir_context* ctx);
+        virtual error_t            seekdir(dir_context* ctx, long pos);
+        virtual long               telldir(dir_context* ctx);
+        virtual error_t            remove(const char* filename);
 
         cache_entry* getCacheEntry(File* file);
         cache_entry* getCacheEntry(blk_t id);

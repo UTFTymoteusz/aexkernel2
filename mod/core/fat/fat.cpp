@@ -2,6 +2,7 @@
 
 #include "aex/debug.hpp"
 #include "aex/dev.hpp"
+#include "aex/fs.hpp"
 #include "aex/printk.hpp"
 
 #include "controlblock.hpp"
@@ -22,24 +23,24 @@ namespace AEX::FS {
         printk("fat: Mount attempt from %s\n", source);
 
         if (!source) {
-            printk(PRINTK_WARN "fat: mount: Source not set\n");
+            printk(WARN "fat: mount: Source not set\n");
             return EINVAL;
         }
 
         auto info = File::info(source);
         if (!info) {
-            printk(PRINTK_WARN "fat: mount: Failed to get file info\n");
+            printk(WARN "fat: mount: Failed to get file info\n");
             return info.error;
         }
 
         if (!info.value.is_block()) {
-            printk(PRINTK_WARN "fat: mount: Source is not a block device\n");
+            printk(WARN "fat: mount: Source is not a block device\n");
             return ENOTBLK;
         }
 
         auto handle_try = Dev::open_block_handle(info.value.dev);
         if (!handle_try) {
-            printk(PRINTK_WARN "fat: mount: Failed to open the block device\n");
+            printk(WARN "fat: mount: Failed to open the block device\n");
             return ENOENT;
         }
 
@@ -89,5 +90,67 @@ namespace AEX::FS {
         }
 
         return info;
+    }
+
+    void filename2shortname(char shortname[12], const char* filename) {
+        get_filename(shortname, filename, 9, true);
+        get_extension(shortname + 8, filename, 4);
+
+        for (int i = 0; i < 11; i++) {
+            if (shortname[i] == '\0')
+                shortname[i] = ' ';
+
+            shortname[i] = toupper(shortname[i]);
+        }
+    }
+
+    // void shortname2filename(char* filename, const char shortname[12]) {
+    //    shortname
+    //}
+
+    void increment(char shortname[12]) {
+        int tilde = 0;
+        int end   = 7;
+
+        for (int i = 0; i < 8; i++) {
+            if (shortname[i] == '~') {
+                tilde = i;
+            }
+            else if (shortname[i] == ' ') {
+                end = i;
+                break;
+            }
+        }
+
+        if (!tilde) {
+            if (end < 1)
+                end = 1;
+
+            shortname[end - 1] = '~';
+            shortname[end - 0] = '1';
+            return;
+        }
+
+        char numbuff[16] = {};
+        for (int i = 0; i + tilde < end; i++)
+            numbuff[i] = shortname[i + tilde + 1];
+
+        itos(stoi<int>(10, numbuff) + 1, 10, numbuff);
+        int numlen = strlen(numbuff);
+
+        if (numlen > 7)
+            BROKEN;
+
+        memcpy(shortname + 8 - numlen, numbuff, numlen);
+        shortname[7 - numlen] = '~';
+    }
+
+    uint8_t lfn_checksum(const uint8_t* shortname) {
+        uint8_t sum = 0;
+
+        for (int i = 11; i > 0; i--)
+            sum = ((sum & 0x01) << 7) + (sum >> 1) + *shortname++;
+
+        return sum;
     }
 }

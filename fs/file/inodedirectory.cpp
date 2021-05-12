@@ -15,17 +15,17 @@ namespace AEX::FS {
 
     optional<dirent> INodeDirectory::readdir() {
         SCOPE(m_inode->mutex);
-        return m_inode->readDir(&m_dir_ctx);
+        return m_inode->readdir(&m_dir_ctx);
     }
 
     error_t INodeDirectory::seekdir(long pos) {
         SCOPE(m_inode->mutex);
-        return m_inode->seekDir(&m_dir_ctx, pos);
+        return m_inode->seekdir(&m_dir_ctx, pos);
     }
 
     long INodeDirectory::telldir() {
         SCOPE(m_inode->mutex);
-        return m_inode->tellDir(&m_dir_ctx);
+        return m_inode->telldir(&m_dir_ctx);
     }
 
     error_t INodeDirectory::close() {

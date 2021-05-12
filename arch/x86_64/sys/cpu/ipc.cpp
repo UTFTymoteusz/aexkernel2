@@ -152,8 +152,8 @@ namespace AEX::Sys {
             return;
         default:
             m_ipi_packet.ack = true;
-            printk(PRINTK_WARN "cpu%i: Received an IPP with an unknown type (%i)\n",
-                   CPU::currentID(), m_ipi_packet.type);
+            printk(WARN "cpu%i: Received an IPP with an unknown type (%i)\n", CPU::currentID(),
+                   m_ipi_packet.type);
 
             break;
         }

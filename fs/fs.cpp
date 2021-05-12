@@ -11,15 +11,18 @@
 #include "fs/fs.hpp"
 
 namespace AEX::FS {
+    char* zero;
+
     Mem::SmartArray<Filesystem> filesystems;
     Mem::SmartArray<Mount>      mounts;
 
     void init() {
-        printk(PRINTK_INIT "fs: Initializing\n");
+        printk(INIT "fs: Initializing\n");
+        zero = new char[8192];
 
         DevFS::init();
 
-        printk(PRINTK_OK "fs: Initialized\n");
+        printk(OK "fs: Initialized\n");
     }
 
     error_t mount(const char* source, const char* path, const char* type) {
@@ -39,9 +42,10 @@ namespace AEX::FS {
 
             auto mount = new Mount();
 
-            printk(PRINTK_OK "fs: Mounted '%s' at %s\n", fs->name, path);
+            printk(OK "fs: Mounted '%s' at %s\n", fs->name, path);
             strncpy(mount->path, path, sizeof(mount->path));
-            mount->control_block = res.value;
+            mount->control_block       = res.value;
+            mount->control_block->path = mount->path;
 
             mounts.addRef(mount);
             return ENONE;

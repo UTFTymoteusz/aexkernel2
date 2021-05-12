@@ -34,9 +34,19 @@ namespace AEX::FS {
      * @param buffer Destination buffer.
      * @param path   Path.
      * @param num    Size of destination buffer.
+     * @param noext  Whether to strip the extension.
      * @returns Pointer to the destination buffer.
      **/
-    API char* get_filename(char* buffer, const char* path, size_t num);
+    API char* get_filename(char* buffer, const char* path, size_t num, bool noext = false);
+
+    /**
+     * Gets the extension in a path. Omits the dot.
+     * @param buffer Destination buffer.
+     * @param path   Path.
+     * @param num    Size of destination buffer.
+     * @returns Pointer to the destination buffer.
+     **/
+    API char* get_extension(char* buffer, const char* path, size_t num);
 
     /**
      * Checks if a path fits within MAX_PATH_LEN.

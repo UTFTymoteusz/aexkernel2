@@ -49,33 +49,7 @@ namespace AEX {
 
         if (newline) {
             newline = false;
-
-            if (format[0] == '^') {
-                switch (format[1]) {
-                case '0':
-                    *rootTTY << ANSI_FG_DARK_GRAY << " [ " << ANSI_FG_LIGHT_BLUE << "INIT"
-                             << ANSI_FG_DARK_GRAY << " ] " << ANSI_FG_WHITE;
-                    break;
-                case '1':
-                    *rootTTY << ANSI_FG_DARK_GRAY << " [  " << ANSI_FG_LIGHT_GREEN << "OK"
-                             << ANSI_FG_DARK_GRAY << "  ] " << ANSI_FG_WHITE;
-                    break;
-                case '2':
-                    *rootTTY << ANSI_FG_DARK_GRAY << " [ " << ANSI_FG_YELLOW << "WARN"
-                             << ANSI_FG_DARK_GRAY << " ] " << ANSI_FG_WHITE;
-                    break;
-                case '3':
-                    *rootTTY << ANSI_FG_DARK_GRAY << " [ " << ANSI_FG_LIGHT_RED << "FAIL"
-                             << ANSI_FG_DARK_GRAY << " ] " << ANSI_FG_WHITE;
-                    break;
-                default:
-                    break;
-                }
-
-                format += 2;
-            }
-            else
-                *rootTTY << "  ";
+            *rootTTY << "  ";
         }
 
         char buffer[72];
@@ -126,6 +100,30 @@ namespace AEX {
                         padlen = 97;
 
                     rootTTY->color((ansi_color_t) padlen);
+                    break;
+                case '^':
+                    *rootTTY << "\b\b";
+
+                    switch (padlen) {
+                    case 0:
+                        *rootTTY << ANSI_FG_DARK_GRAY << " [ " << ANSI_FG_LIGHT_BLUE << "INIT"
+                                 << ANSI_FG_DARK_GRAY << " ] " << ANSI_FG_WHITE;
+                        break;
+                    case 1:
+                        *rootTTY << ANSI_FG_DARK_GRAY << " [  " << ANSI_FG_LIGHT_GREEN << "OK"
+                                 << ANSI_FG_DARK_GRAY << "  ] " << ANSI_FG_WHITE;
+                        break;
+                    case 2:
+                        *rootTTY << ANSI_FG_DARK_GRAY << " [ " << ANSI_FG_YELLOW << "WARN"
+                                 << ANSI_FG_DARK_GRAY << " ] " << ANSI_FG_WHITE;
+                        break;
+                    case 3:
+                        *rootTTY << ANSI_FG_DARK_GRAY << " [ " << ANSI_FG_LIGHT_RED << "FAIL"
+                                 << ANSI_FG_DARK_GRAY << " ] " << ANSI_FG_WHITE;
+                        break;
+                    default:
+                        break;
+                    }
                     break;
                 case 's':
                     printk_common(padchar, padlen, va_arg(args, char*));

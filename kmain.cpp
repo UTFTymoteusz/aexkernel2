@@ -57,7 +57,7 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
 
     Dev::TTY::init(mbinfo);
     Init::print_header();
-    printk(PRINTK_INIT "Booting AEX/2 on " ARCH ", build " VERSION "\n\n");
+    printk(INIT "Booting AEX/2 on " ARCH ", build " VERSION "\n\n");
 
     AEX_ASSERT(mbinfo->flags & MULTIBOOT_INFO_MODS);
 
@@ -148,13 +148,13 @@ void mount_fs() {
 }
 
 void exec_init() {
-    auto tty_rd = FS::File::open("/dev/tty0", FS::O_RD);
+    auto tty_rd = FS::File::open("/dev/tty0", FS::O_RDONLY);
     AEX_ASSERT(tty_rd);
 
-    auto tty_wr = FS::File::open("/dev/tty0", FS::O_WR);
+    auto tty_wr = FS::File::open("/dev/tty0", FS::O_WRONLY);
     AEX_ASSERT(tty_wr);
 
-    auto tty_wre = FS::File::open("/dev/tty0", FS::O_WR);
+    auto tty_wre = FS::File::open("/dev/tty0", FS::O_WRONLY);
     AEX_ASSERT(tty_wre);
 
     FS::File_SP rp, wp;
@@ -192,7 +192,7 @@ void kmain_env() {
 
     AEX_ASSERT(Sys::Power::poweroff());
 
-    printk(PRINTK_OK "mm it works\n");
+    printk(OK "mm it works\n");
     Proc::Thread::sleep(100);
 
     Proc::processes_lock.acquire();

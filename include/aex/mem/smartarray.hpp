@@ -51,7 +51,7 @@ namespace AEX::Mem {
             Spinlock*      m_lock;
             SmartArray<T>* m_base;
 
-            SmartPointer<T> m_current = SmartPointer<T>::getNull();
+            SmartPointer<T> m_current = SmartPointer<T>::null();
         };
 
         SmartPointer<T> get(int index) {

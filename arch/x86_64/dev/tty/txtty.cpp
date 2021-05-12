@@ -85,6 +85,9 @@ namespace AEX::Dev::TTY {
         case '\r':
             m_cursorx = 0;
             break;
+        case '\b':
+            m_cursorx = m_cursorx ? m_cursorx - 1 : 0;
+            break;
         default:
             m_output[m_cursorx + m_cursory * width].ascii = c;
             m_output[m_cursorx + m_cursory * width].bg    = m_bg;

@@ -9,7 +9,7 @@ namespace AEX::FS {
         strncpy(this->name, name, sizeof(this->name));
 
         filesystems.addRef(this);
-        printk(PRINTK_OK "fs: Registered filesystem '%s'\n", this->name);
+        printk(OK "fs: Registered filesystem '%s'\n", this->name);
     }
 
     Filesystem::~Filesystem() {}

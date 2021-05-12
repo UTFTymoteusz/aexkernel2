@@ -22,6 +22,7 @@ namespace AEX::FS {
         ~FATControlBlock();
 
         optional<INode_SP> get(INode_SP dir, dirent dirent, ino_t id);
+        void               unlink(ino_t);
 
         private:
         Table* m_table;
@@ -42,7 +43,8 @@ namespace AEX::FS {
         void     fillChain(uint32_t start, Chain& chain);
         INode_SP createRoot();
 
-        friend class FATDirectoryINode;
-        friend class FATFileINode;
+        friend class FATINode;
+        friend class FATDirectory;
+        friend class FATFile;
     };
 }

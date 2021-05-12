@@ -12,7 +12,7 @@ error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator
                             char* const argv[], char* const envp[]) {
     printk("elf64exec: Got a request for %s\n", path);
 
-    auto    file = ENSURE_OPT(FS::File::open(path, FS::O_RD));
+    auto    file = ENSURE_OPT(FS::File::open(path, FS::O_RDONLY));
     ssize_t size = file->seek(0, FS::File::SEEK_END).value;
 
     auto mmap_try =

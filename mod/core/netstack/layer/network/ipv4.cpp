@@ -62,7 +62,7 @@ namespace NetStack {
 
         uint32_t total = sum_bytes(header, header_len);
         if (to_checksum(total) != 0x0000) {
-            AEX::printk(PRINTK_WARN "ipv4: Got a packet with an invalid checksum\n");
+            AEX::printk(WARN "ipv4: Got a packet with an invalid checksum\n");
             return;
         }
 

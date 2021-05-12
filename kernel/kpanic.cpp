@@ -61,7 +61,7 @@ namespace AEX {
         printk("\rTechnical information:\n\n");
 #endif
 
-        printk(PRINTK_FAIL "Kernel Panic (cpu%i, pid%i, th0x%p)\n", CPU::currentID(),
+        printk(FAIL "Kernel Panic (cpu%i, pid%i, th0x%p)\n", CPU::currentID(),
                CPU::current()->current_thread->parent->pid, CPU::current()->current_thread);
         printk("%s", buffer);
         printk("\n");
@@ -88,7 +88,7 @@ namespace AEX {
 
         printk_fault();
 
-        printk(PRINTK_OK "Kernel Calmness (cpu%i, pid%i, th0x%p)\n", CPU::currentID(),
+        printk(OK "Kernel Calmness (cpu%i, pid%i, th0x%p)\n", CPU::currentID(),
                CPU::current()->current_thread->parent->pid, CPU::current()->current_thread);
         printk(format, args);
         printk("\n");

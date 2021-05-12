@@ -108,7 +108,7 @@ namespace AEX::Proc {
         AEX_ASSERT(CPU::checkInterrupts());
 
         if (thread->status == TS_BLOCKED && thread->held_mutexes > 0 && process_list_size > 2) {
-            printk(PRINTK_WARN "Thread yielded in state TS_BLOCKED whilst holding a mutex\n");
+            printk(WARN "Thread yielded in state TS_BLOCKED whilst holding a mutex\n");
             Debug::stack_trace();
         }
 

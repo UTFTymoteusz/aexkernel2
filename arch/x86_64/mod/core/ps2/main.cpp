@@ -30,7 +30,7 @@ class PS2 : public Tree::Driver {
     }
 
     void bind(Tree::Device*) {
-        printk(PRINTK_INIT "ps2: Initializing\n");
+        printk(INIT "ps2: Initializing\n");
 
         sendCommand(PS2_CTRL_CMD_DISABLE_PORT0);
         sendCommand(PS2_CTRL_CMD_DISABLE_PORT1);
@@ -55,7 +55,7 @@ class PS2 : public Tree::Driver {
 
         sendCommand(PS2_CTRL_CMD_WRITE_CFG_BYTE, byte);
 
-        printk(PRINTK_OK "ps2: Initialized\n");
+        printk(OK "ps2: Initialized\n");
     }
 
     private:
@@ -93,7 +93,7 @@ void module_enter() {
     driver = new PS2();
 
     if (!Tree::register_driver("main", driver)) {
-        printk(PRINTK_WARN "ps2: Failed to register the driver\n");
+        printk(WARN "ps2: Failed to register the driver\n");
 
         delete driver;
         return;

@@ -63,7 +63,7 @@ namespace AEX::Sys {
         cpuid(0x0001, &idc, &idc, &idc, &edx);
 
         if (!(edx & CPUID_FEAT_PAT)) {
-            printk(PRINTK_WARN "cpu%i: PAT not supported\n", id);
+            printk(WARN "cpu%i: PAT not supported\n", id);
             return;
         }
 
@@ -81,7 +81,7 @@ namespace AEX::Sys {
     }
 
     void CPU::halt() {
-        printk(PRINTK_WARN "cpu%i: Halted\n", CPU::currentID());
+        printk(WARN "cpu%i: Halted\n", CPU::currentID());
 
         CPU::current()->halted = true;
 

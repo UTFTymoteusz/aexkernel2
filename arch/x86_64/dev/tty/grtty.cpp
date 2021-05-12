@@ -127,6 +127,9 @@ namespace AEX::Dev::TTY {
         case '\r':
             m_cursorx = 0;
             break;
+        case '\b':
+            m_cursorx = m_cursorx ? m_cursorx - 1 : 0;
+            break;
         default:
             if (m_text)
                 put(c, m_cursorx, m_cursory, m_fg, m_bg);

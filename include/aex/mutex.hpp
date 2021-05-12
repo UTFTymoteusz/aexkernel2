@@ -34,4 +34,23 @@ namespace AEX {
         private:
         Mutex* m_lock;
     };
+
+    class API ReleaseScopeMutex {
+        public:
+        ReleaseScopeMutex() {
+            m_lock = nullptr;
+        }
+
+        ReleaseScopeMutex(Mutex& lock) {
+            m_lock = &lock;
+        }
+
+        ~ReleaseScopeMutex() {
+            if (m_lock)
+                m_lock->release();
+        }
+
+        private:
+        Mutex* m_lock;
+    };
 }

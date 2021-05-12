@@ -19,7 +19,7 @@ namespace AEX::Sys::Power {
     error_t poweroff() {
         SCOPE(action_mutex);
 
-        printk(PRINTK_WARN "sys: power: Poweroff\n");
+        printk(WARN "sys: power: Poweroff\n");
 
         for (int i = 0; i < poweroff_handlers.count(); i++)
             poweroff_handlers[i].func();

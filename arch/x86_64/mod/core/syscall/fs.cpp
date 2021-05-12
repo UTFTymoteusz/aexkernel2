@@ -21,13 +21,13 @@ optional<int>            get_flags(int fd);
 
 bool copy_and_canonize(char* buffer, const usr_char* usr_path);
 
-long open(const usr_char* usr_path, int mode) {
+long open(const usr_char* usr_path, int flags) {
     auto current = Proc::Process::current();
     char path_buffer[FS::MAX_PATH_LEN];
 
     USR_ENSURE(copy_and_canonize(path_buffer, usr_path));
 
-    auto file = USR_ENSURE_OPT(FS::File::open(path_buffer, mode));
+    auto file = USR_ENSURE_OPT(FS::File::open(path_buffer, flags));
 
     current->descs_lock.acquire();
     long fd = current->descs.push(file);
@@ -252,6 +252,21 @@ int munmap(void* addr, size_t len) {
     return 0;
 }
 
+long mkdir(const usr_char* usr_path, int flags) {
+    auto current = Proc::Process::current();
+    char path_buffer[FS::MAX_PATH_LEN];
+
+    USR_ENSURE(copy_and_canonize(path_buffer, usr_path));
+
+    auto file = USR_ENSURE_OPT(FS::File::mkdir(path_buffer, flags));
+
+    current->descs_lock.acquire();
+    long fd = current->descs.push(file);
+    current->descs_lock.release();
+
+    return fd;
+}
+
 long readdir(int fd, dirent* uent) {
     auto   file   = USR_ENSURE_OPT(get_file(fd));
     auto   dentry = USR_ENSURE_OPT(file->readdir());
@@ -329,6 +344,14 @@ long mount(const usr_char* source, const usr_char* target, const usr_char* type,
     return USR_ENSURE_ENONE(FS::mount(source_buffer, target_buffer, type ? type_buffer : nullptr));
 }
 
+int unlink(const usr_char* usr_path, int flags) {
+    auto current = Proc::Process::current();
+    char path_buffer[FS::MAX_PATH_LEN];
+
+    USR_ENSURE(copy_and_canonize(path_buffer, usr_path));
+    return USR_ENSURE_ENONE(FS::File::unlink(path_buffer));
+}
+
 void register_fs() {
     auto table = Sys::default_table();
 
@@ -348,10 +371,12 @@ void register_fs() {
     table[SYS_STATAT]  = (void*) statat;
     table[SYS_MMAP]    = (void*) mmap;
     table[SYS_MUNMAP]  = (void*) munmap;
+    table[SYS_MKDIR]   = (void*) mkdir;
     table[SYS_READDIR] = (void*) readdir;
     table[SYS_SEEKDIR] = (void*) seekdir;
     table[SYS_FCNTL]   = (void*) fcntl;
     table[SYS_MOUNT]   = (void*) mount;
+    table[SYS_UNLINK]  = (void*) unlink;
 }
 
 optional<FS::Descriptor> get_desc(int fd) {
@@ -359,7 +384,7 @@ optional<FS::Descriptor> get_desc(int fd) {
     auto scope   = current->descs_lock.scope();
 
     if (!current->descs.present(fd)) {
-        PRINTK_DEBUG_WARN1("ebadf (%i)", fd);
+        printkd(PTK_DEBUG, WARN "syscall: pid%i: ebadf (%i)\n", current->pid, fd);
         return EBADF;
     }
 
@@ -371,7 +396,7 @@ optional<FS::Descriptor> pop_desc(int fd) {
     auto scope   = current->descs_lock.scope();
 
     if (!current->descs.present(fd)) {
-        PRINTK_DEBUG_WARN1("ebadf (%i)", fd);
+        printkd(PTK_DEBUG, WARN "syscall: pid%i: ebadf (%i)\n", current->pid, fd);
         return EBADF;
     }
 
@@ -394,7 +419,7 @@ optional<int> get_flags(int fd) {
     auto scope   = current->descs_lock.scope();
 
     if (!current->descs.present(fd)) {
-        PRINTK_DEBUG_WARN1("ebadf (%i)", fd);
+        printkd(PTK_DEBUG, WARN "syscall: pid%i: ebadf (%i)\n", current->pid, fd);
         return EBADF;
     }
 

@@ -33,7 +33,7 @@ namespace NetStack {
 
         uint32_t total = sum_bytes(&fake_header, sizeof(fake_header)) + sum_bytes(buffer, len);
         if (to_checksum(total) != 0x0000) {
-            AEX::printk(PRINTK_WARN "tcp: Got a packet with an invalid checksum (0x%04x)\n",
+            AEX::printk(WARN "tcp: Got a packet with an invalid checksum (0x%04x)\n",
                         to_checksum(total));
             return;
         }

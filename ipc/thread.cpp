@@ -51,7 +51,7 @@ namespace AEX::Proc {
             return ENONE;
         }
 
-        // PRINTK_DEBUG2("th0x%p: Signal %i", this, id);
+        printkd(PTK_DEBUG, "ipc: th0x%p: Signal %i", this, info.si_signo);
         handleSignal(info);
 
         return ENONE;
@@ -63,12 +63,12 @@ namespace AEX::Proc {
 
         switch (handler.action) {
         case SIG_CORE:
-            PRINTK_DEBUG1("pid%i: Core dump", process->pid);
+            printkd(PTK_DEBUG, WARN "ipc: pid%i: Core dump\n", process->pid);
 
             process->exit(info.si_signo | 0x80);
             break;
         case SIG_TERM:
-            PRINTK_DEBUG1("pid%i: Termination", process->pid);
+            printkd(PTK_DEBUG, WARN "ipc: pid%i: Termination\n", process->pid);
 
             process->exit(info.si_signo);
             break;

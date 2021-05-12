@@ -34,7 +34,7 @@ namespace AEX::Sys::IRQ {
         Sys::setup_idt();
         Sys::load_idt(Sys::idt, 256);
 
-        printk(PRINTK_INIT "irq: Initializing\n");
+        printk(INIT "irq: Initializing\n");
 
         uint32_t eax, ebx, ecx, edx;
 
@@ -91,14 +91,14 @@ namespace AEX::Sys::IRQ {
         set_mask(0, true);
         set_destination(0, 0);
 
-        printk(PRINTK_OK "irq: Initialized\n");
+        printk(OK "irq: Initialized\n");
     }
 
     void init_timer() {
         if (apic_tps == 0) {
             apic_tps = find_apic_tps();
 
-            printk(PRINTK_OK "apic: Timer calibrated\n");
+            printk(OK "apic: Timer calibrated\n");
         }
 
         APIC::write(0x320, 1 << 16);

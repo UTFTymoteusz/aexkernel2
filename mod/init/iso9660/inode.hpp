@@ -23,7 +23,7 @@ namespace AEX::FS {
             hard_links = 1;
         }
 
-        optional<dirent> readDir(dir_context* ctx) {
+        optional<dirent> readdir(dir_context* ctx) {
             if (ctx->pos >= size)
                 return {};
 
@@ -93,7 +93,7 @@ namespace AEX::FS {
         }
 
         // TODO: checks
-        error_t seekDir(dir_context* ctx, long pos) {
+        error_t seekdir(dir_context* ctx, long pos) {
             if (ctx->pos >= size)
                 return ERANGE;
 
@@ -101,7 +101,7 @@ namespace AEX::FS {
             return ENONE;
         }
 
-        long tellDir(dir_context* ctx) {
+        long telldir(dir_context* ctx) {
             return ctx->pos;
         }
 

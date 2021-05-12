@@ -100,11 +100,14 @@ extern "C" void syscall_prepare() {
     Proc::Thread::current()->addBusy();
 }
 
-extern "C" void syscall_done() {
+extern "C" void syscall_done(int syscall) {
     Proc::Thread::current()->subBusy();
 
-    if (Proc::Thread::current()->getBusy() > 64)
-        printk(PRINTK_WARN "thread's busy is %i? wuzz\n", Proc::Thread::current()->getBusy());
+    if (Proc::Thread::current()->getBusy() > 0) {
+        printk(WARN "thread's busy is %i? wuzz (syscall %i)\n", Proc::Thread::current()->getBusy(),
+               syscall);
+        printk(WARN "mutexes held: %i\n", Proc::Thread::current()->held_mutexes);
+    }
 
     AEX_ASSERT(!Proc::Thread::current()->isBusy());
     AEX_ASSERT(!Proc::Thread::current()->isCritical());

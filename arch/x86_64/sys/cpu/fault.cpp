@@ -116,8 +116,8 @@ namespace AEX::Sys {
         switch (info->int_no) {
         case EXC_DEBUG:
         case EXC_NMI:
-            printk(PRINTK_WARN "cpu%i: %93$%s%$ Exception (%i) (%93$%i%$)\nRIP: 0x%016lx <%s+0x%x> "
-                               "(cpu%i, pid%i, th0x%p)\n",
+            printk(WARN "cpu%i: %93$%s%$ Exception (%i) (%93$%i%$)\nRIP: 0x%016lx <%s+0x%x> "
+                        "(cpu%i, pid%i, th0x%p)\n",
                    CPU::currentID(), exception_names[info->int_no], info->int_no, info->err,
                    info->rip, name, delta, CPU::currentID(),
                    CPU::current()->current_thread->parent->pid, CPU::current()->current_thread);
@@ -141,8 +141,7 @@ namespace AEX::Sys {
 
             return;
         default:
-            printk(PRINTK_FAIL
-                   "cpu%i: %93$%s%$ Exception (%i) (%91$%i%$)\nRIP: 0x%016lx <%s+0x%x>\n",
+            printk(FAIL "cpu%i: %93$%s%$ Exception (%i) (%91$%i%$)\nRIP: 0x%016lx <%s+0x%x>\n",
                    CPU::currentID(), exception_names[info->int_no], info->int_no, info->err,
                    info->rip, name, delta);
 

@@ -732,7 +732,7 @@ namespace AEX::Mem {
 
         Sys::CPU::broadcast(Sys::CPU::IPP_PG_FLUSH, nullptr);
 
-        printk(PRINTK_OK "vmem: Bootstrap necessities cleaned\n");
+        printk(OK "vmem: Bootstrap necessities cleaned\n");
     }
 
     void create_first_levels() {

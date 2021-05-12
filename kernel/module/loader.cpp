@@ -19,7 +19,7 @@ namespace AEX {
     bool relocate(const char* path, ELF& elf, Module* module, module_section* sections);
 
     error_t load_module(const char* path, bool block) {
-        auto    file = ENSURE_OPT(FS::File::open(path, FS::O_RD));
+        auto    file = ENSURE_OPT(FS::File::open(path, FS::O_RDONLY));
         ssize_t size = file->seek(0, FS::File::SEEK_END).value;
 
         auto mmap_try = Mem::mmap(Proc::Process::kernel(), nullptr, size, Mem::PROT_READ,
@@ -152,7 +152,7 @@ namespace AEX {
             if (strcmp(module->name, m_module->name) != 0)
                 continue;
 
-            printk(PRINTK_WARN "Not loading module '%s' as it's already loaded\n", module->name);
+            printk(WARN "Not loading module '%s' as it's already loaded\n", module->name);
 
             delete module;
             delete[] sections;
@@ -189,7 +189,7 @@ namespace AEX {
 
         modules.addRef(module);
 
-        printk(PRINTK_OK "Loaded module '%s'\n", module->name);
+        printk(OK "Loaded module '%s'\n", module->name);
 
         for (int i = 0; i < module->references.count(); i++)
             printk("module: %s references %s\n", module->name, module->references[i]->name);

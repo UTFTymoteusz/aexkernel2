@@ -53,7 +53,7 @@ namespace AEX::Sys::MCore {
     }
 
     void init() {
-        printk(PRINTK_INIT "mcore: Initializing\n");
+        printk(INIT "mcore: Initializing\n");
 
         // We can assume it exists because the IRQ phase would panic the kernel otherwise
         auto _madt = (madt*) ACPI::find_table("APIC", 0);
@@ -83,7 +83,7 @@ namespace AEX::Sys::MCore {
                 break;
 
             if (!entry->canStart()) {
-                printk(PRINTK_WARN "mcore: Found disabled CPU r:%i with APIC id of %i\n", entry->id,
+                printk(WARN "mcore: Found disabled CPU r:%i with APIC id of %i\n", entry->id,
                        entry->apic_id);
                 continue;
             }
@@ -96,7 +96,7 @@ namespace AEX::Sys::MCore {
             printk("mcore: Found cpu%i (r:%i) with APIC id of %i\n", id, entry->id, entry->apic_id);
 
             if (!start(id, entry->apic_id))
-                printk(PRINTK_WARN "mcore: Failed to start cpu%i\n", id);
+                printk(WARN "mcore: Failed to start cpu%i\n", id);
         }
 
         for (int i = 0; i < 24; i++)
@@ -117,7 +117,7 @@ namespace AEX::Sys::MCore {
                 CPUs[i]->printFmsgs();
         });
 
-        printk(PRINTK_OK "mcore: Initialized\n");
+        printk(OK "mcore: Initialized\n");
     }
 
     bool start(int id, int apic_id) {
@@ -154,7 +154,7 @@ namespace AEX::Sys::MCore {
 
         CPUs[id] = cpu;
 
-        printk(PRINTK_OK "mcore: cpu%i: Ready\n", CPU::currentID());
+        printk(OK "mcore: cpu%i: Ready\n", CPU::currentID());
     }
 
     void ap_wait() {

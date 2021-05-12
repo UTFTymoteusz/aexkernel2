@@ -4,40 +4,25 @@
 
 #include <stdarg.h>
 
-#define PRINTK_INIT "^0"
-#define PRINTK_OK "^1"
-#define PRINTK_WARN "^2"
-#define PRINTK_FAIL "^3"
+#define INIT "%0^"
+#define OK "%1^"
+#define WARN "%2^"
+#define FAIL "%3^"
 
-#define NOBONG
+#define printkd(cond, format, args...) \
+    ({                                 \
+        if (cond)                      \
+            printk(format, ##args);    \
+    })
+
+//#define NOBONG
 
 #ifndef NOBONG
-#define PRINTK_DEBUG(msg) printk("%s:%i: %s\n", __FILE__, __LINE__, msg)
-#define PRINTK_DEBUG1(fmt, a) printk("%s:%i: " fmt "\n", __FILE__, __LINE__, a)
-#define PRINTK_DEBUG2(fmt, a, b) printk("%s:%i: " fmt "\n", __FILE__, __LINE__, a, b)
-#define PRINTK_DEBUG3(fmt, a, b, c) printk("%s:%i: " fmt "\n", __FILE__, __LINE__, a, b, c)
-#define PRINTK_DEBUG4(fmt, a, b, c, d) printk("%s:%i: " fmt "\n", __FILE__, __LINE__, a, b, c, d)
-
-#define PRINTK_DEBUG_WARN(msg) printk(PRINTK_WARN "%s:%i: %s\n", __FILE__, __LINE__, msg)
-#define PRINTK_DEBUG_WARN1(fmt, a) printk(PRINTK_WARN "%s:%i: " fmt "\n", __FILE__, __LINE__, a)
-#define PRINTK_DEBUG_WARN2(fmt, a, b) \
-    printk(PRINTK_WARN "%s:%i: " fmt "\n", __FILE__, __LINE__, a, b)
-#define PRINTK_DEBUG_WARN3(fmt, a, b, c) \
-    printk(PRINTK_WARN "%s:%i: " fmt "\n", __FILE__, __LINE__, a, b, c)
-#define PRINTK_DEBUG_WARN4(fmt, a, b, c, d) \
-    printk(PRINTK_WARN "%s:%i: " fmt "\n", __FILE__, __LINE__, a, b, c, d)
+#define PTK_DEBUG true
+#define FS_DEBUG true
 #else
-#define PRINTK_DEBUG(msg) ;
-#define PRINTK_DEBUG1(fmt, a) ;
-#define PRINTK_DEBUG2(fmt, a, b) ;
-#define PRINTK_DEBUG3(fmt, a, b, c) ;
-#define PRINTK_DEBUG4(fmt, a, b, c, d) ;
-
-#define PRINTK_DEBUG_WARN(msg) ;
-#define PRINTK_DEBUG_WARN1(fmt, a) ;
-#define PRINTK_DEBUG_WARN2(fmt, a, b) ;
-#define PRINTK_DEBUG_WARN3(fmt, a, b, c) ;
-#define PRINTK_DEBUG_WARN4(fmt, a, b, c, d) ;
+#define PTK_DEBUG false
+#define FS_DEBUG false
 #endif
 
 namespace AEX {

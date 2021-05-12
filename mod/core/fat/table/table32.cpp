@@ -8,12 +8,12 @@ namespace AEX::FS {
         : Table(handle, sector_size, start, count, cluster_count) {}
 
     Table32::~Table32() {
-        SCOPE(m_mutex);
+        SCOPE(mutex);
     }
 
     cluster_t Table32::next(cluster_t cluster) {
         AEX_ASSERT(cluster <= m_cluster_count);
-        SCOPE(m_mutex);
+        AEX_ASSERT(!mutex.tryAcquire());
 
         cluster_t next = _next(cluster) & 0x0FFFFFFF;
         if (next >= 0x0FFFFFF7)
@@ -24,7 +24,7 @@ namespace AEX::FS {
 
     void Table32::link(cluster_t cluster, cluster_t next) {
         AEX_ASSERT(cluster <= m_cluster_count);
-        SCOPE(m_mutex);
+        AEX_ASSERT(!mutex.tryAcquire());
 
         next |= _next(cluster) & 0xF0000000;
 
@@ -33,7 +33,7 @@ namespace AEX::FS {
     }
 
     cluster_t Table32::find() {
-        SCOPE(m_mutex);
+        AEX_ASSERT(!mutex.tryAcquire());
 
         for (cluster_t i = 0; i < m_cluster_count; i++) {
             if ((_next(i) & 0x0FFFFFFF) == 0x00000000)

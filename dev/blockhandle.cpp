@@ -7,7 +7,7 @@
 
 namespace AEX::Dev {
     BlockHandle::BlockHandle() {
-        m_dev = BlockDevice_SP::getNull();
+        m_dev = BlockDevice_SP::null();
     }
 
     BlockHandle::BlockHandle(BlockDevice_SP blkdev) : m_dev(blkdev) {

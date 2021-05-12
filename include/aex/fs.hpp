@@ -15,6 +15,8 @@ namespace AEX::Dev {
 namespace AEX::FS {
     enum fs_type_t;
 
+    extern char* zero;
+
     API extern Mem::SmartArray<Filesystem> filesystems;
     API extern Mem::SmartArray<Mount>      mounts;
 

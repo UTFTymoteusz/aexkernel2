@@ -31,7 +31,7 @@ void kb_irq(void*);
 void kb_init() {
     device = new PS2Keyboard();
     if (!device->registerDevice()) {
-        printk(PRINTK_WARN "ps2: Failed to register the keyboard device\n");
+        printk(WARN "ps2: Failed to register the keyboard device\n");
 
         delete device;
         return;

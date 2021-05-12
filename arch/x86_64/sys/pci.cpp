@@ -37,12 +37,12 @@ namespace AEX::Sys::PCI {
         }
 
         void bind(Tree::Device* device) {
-            printk(PRINTK_INIT "pci: Initializing\n");
+            printk(INIT "pci: Initializing\n");
 
             dev_bus = new Tree::Bus("pci");
             scan_all_buses(device);
 
-            printk(PRINTK_OK "pci: Initialized\n");
+            printk(OK "pci: Initialized\n");
         }
     };
 

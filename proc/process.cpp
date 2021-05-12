@@ -154,7 +154,7 @@ namespace AEX::Proc {
             if (!process->descs.present(i))
                 continue;
 
-            process->descs.at(i).file->close();
+            process->descs.erase(i);
         }
 
         process->descs_lock.release();
@@ -176,7 +176,7 @@ namespace AEX::Proc {
         parent->child_event.raise();
         parent->lock.release();
 
-        // PRINTK_DEBUG1("pid%i: full exit", process->pid);
+        printkd(PTK_DEBUG, "proc: pid%i: Full exit\n", process->pid);
 
         processes_lock.release();
     }
@@ -192,7 +192,7 @@ namespace AEX::Proc {
         lock.acquire();
 
         if (m_exiting) {
-            PRINTK_DEBUG_WARN("exit() while already exitting");
+            printkd(PTK_DEBUG, WARN "proc: pid%i: exit(%i) while already exitting\n", pid, status);
             lock.release();
             return;
         }
@@ -200,7 +200,7 @@ namespace AEX::Proc {
         m_exiting = true;
         ret_code  = status;
 
-        PRINTK_DEBUG2("pid%i: exit(%i)", pid, status);
+        printkd(PTK_DEBUG, "proc: pid%i: exit(%i)\n", pid, status);
 
         broker(exit_threaded_broker, this);
 
@@ -214,10 +214,7 @@ namespace AEX::Proc {
     error_t Process::kill(pid_t pid, int sig) {
         auto scope   = processes_lock.scope();
         auto process = get_process(pid);
-        if (!process)
-            return ESRCH;
-
-        if (process->status == TS_FRESH)
+        if (!process || process->status == TS_FRESH)
             return ESRCH;
 
         IPC::siginfo_t info;
@@ -281,7 +278,8 @@ namespace AEX::Proc {
             }
 
             if (val) {
-                // PRINTK_DEBUG2("pid%i: cleaned up pid%i", Process::current()->pid, val.value.pid);
+                printkd(PTK_DEBUG, "proc: pid%i: Cleaned up pid%i\n", Process::current()->pid,
+                        val.value.pid);
 
                 status = val.value.code;
                 processes_lock.release();

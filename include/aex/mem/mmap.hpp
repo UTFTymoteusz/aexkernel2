@@ -76,7 +76,7 @@ namespace AEX::Mem {
     };
 
     API optional<void*> mmap(Proc::Process* process, void* addr, size_t len, int prot, int flags,
-                             FS::File_SP file = FS::File_SP::getNull(), FS::off_t offset = 0);
+                             FS::File_SP file = FS::File_SP::null(), FS::off_t offset = 0);
     API error_t         munmap(Proc::Process* process, void* addr, size_t len);
 
     Region* find_mmap_region(Proc::Process* process, void* addr);

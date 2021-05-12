@@ -17,6 +17,9 @@ handler:
 
     and r12, 0xFF
 
+    push r12
+    push r12
+
     mov rax, r12
     mov cx, 8
     mul cx
@@ -47,14 +50,23 @@ handler:
 
     call [r11]
 
+    pop r12
+    pop r12
+
     push rax
     push rdx
+    push rdi
+    push rsi
+
+    mov rdi, r12
 
     call syscall_done
 
     mov rax, qword [gs:0x10]
     mov r12d, dword [rax + 0x20]
 
+    pop rsi
+    pop rdi
     pop rdx
     pop rax
 

@@ -35,7 +35,7 @@ namespace AEX::FS {
         SCOPE(m_mutex);
 
         auto cache_try = m_cache.get(id);
-        if (cache_try.has_value) {
+        if (cache_try) {
             ((FATINode*) cache_try.value.get())->m_parent = prev;
             return cache_try.value;
         }
@@ -46,11 +46,28 @@ namespace AEX::FS {
         return {};
     }
 
+    void FATControlBlock::unlink(ino_t id) {
+        SCOPE(m_mutex);
+
+        auto cache_try = m_cache.get(id);
+        if (!cache_try)
+            BROKEN;
+
+        auto inode = cache_try.value;
+
+        if (!inode->opened && inode->hard_links == 0) {
+            inode->purge();
+            m_cache.erase(id);
+        }
+    }
+
     uint64_t FATControlBlock::getOffset(cluster_t cluster, uint16_t local_offset) {
         return m_data_offset + (cluster - 2) * m_cluster_size + local_offset;
     }
 
     void FATControlBlock::fillChain(cluster_t start, Chain& chain) {
+        SCOPE(m_table->mutex);
+
         cluster_t cluster = start;
         chain.m_clusters.clear();
 
@@ -64,7 +81,7 @@ namespace AEX::FS {
     }
 
     INode_SP FATControlBlock::createRoot() {
-        auto root = new FATDirectoryINode();
+        auto root = new FATDirectory();
         auto sptr = INode_SP(root);
 
         root->control_block = this;

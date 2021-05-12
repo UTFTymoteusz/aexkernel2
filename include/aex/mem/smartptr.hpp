@@ -99,7 +99,7 @@ namespace AEX::Mem {
             return *this;
         }
 
-        static auto getNull() {
+        static auto null() {
             return SmartPointer<T>(nullptr, nullptr);
         }
 

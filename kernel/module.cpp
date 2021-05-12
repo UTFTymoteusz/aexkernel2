@@ -54,9 +54,9 @@ namespace AEX {
             int  order = 99999;
         };
 
-        auto dir_try = FS::File::open("/sys/mod/core/", FS::O_RD);
+        auto dir_try = FS::File::open("/sys/mod/core/", FS::O_RDONLY);
         if (!dir_try) {
-            printk(PRINTK_WARN "module: Failed to open /sys/mod/core/: %s\n", strerror(dir_try));
+            printk(WARN "module: Failed to open /sys/mod/core/: %s\n", strerror(dir_try));
             return;
         }
 

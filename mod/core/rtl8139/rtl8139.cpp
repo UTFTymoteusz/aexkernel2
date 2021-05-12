@@ -142,7 +142,7 @@ class RTL8139 : public Dev::NetDevice {
         // IMR time
         outw(IMR, IMR_ROK | IMR_ROV | IMR_FOV);
 
-        printk(PRINTK_OK "rtl8139: %s: Ready\n", name);
+        printk(OK "rtl8139: %s: Ready\n", name);
     }
 
     error_t send(const void* buffer, size_t len, Net::net_type_t type) {
@@ -355,7 +355,7 @@ class RTL8139Driver : public Tree::Driver {
         device->driver_data = rtl;
 
         if (!rtl->registerDevice())
-            printk(PRINTK_WARN "rtl8139: %s: Failed to register\n", rtl->name);
+            printk(WARN "rtl8139: %s: Failed to register\n", rtl->name);
 
         rtl->setIPv4Address(Net::ipv4_addr(192, 168, 0, 23));
         rtl->setIPv4Mask(Net::ipv4_addr(255, 255, 255, 0));
@@ -372,7 +372,7 @@ void module_enter() {
     driver = new RTL8139Driver();
 
     if (!Tree::register_driver("pci", driver)) {
-        printk(PRINTK_WARN "rtl8139: Failed to register the driver\n");
+        printk(WARN "rtl8139: Failed to register the driver\n");
 
         delete driver;
         return;

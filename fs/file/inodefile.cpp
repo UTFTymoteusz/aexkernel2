@@ -13,26 +13,36 @@ namespace AEX::FS {
         m_inode = inode;
         m_mode  = mode;
 
+        SCOPE(m_inode->mutex);
+
         AEX_ASSERT(m_inode->block_size);
+        m_inode->opened++;
     }
 
     INodeFile::~INodeFile() {
-        using(m_inode->mutex) {
-            auto entry = m_inode->getCacheEntry(this);
-            if (entry) {
-                m_inode->writeCheck(entry);
-                m_inode->evictCacheEntry(this);
-            }
+        SCOPE(m_inode->mutex);
 
-            if (m_inode->truncate_cached) {
-                m_inode->truncate(m_inode->size);
-                m_inode->truncate_cached = false;
-            }
+        auto entry = m_inode->getCacheEntry(this);
+        if (entry) {
+            m_inode->writeCheck(entry);
+            m_inode->evictCacheEntry(this);
         }
+
+        if (m_inode->truncate_cached) {
+            m_inode->truncate(m_inode->size);
+            m_inode->truncate_cached = false;
+        }
+
+        m_inode->opened--;
+
+        printk("fs: Closed inode %i (%i, %i)\n", m_inode->id, m_inode->opened, m_inode->hard_links);
+
+        if (!m_inode->opened && m_inode->hard_links == 0)
+            m_inode->purge();
     }
 
     optional<ssize_t> INodeFile::read(void* buffer, size_t count) {
-        if (!(m_mode & O_RD))
+        if (!(m_mode & O_RDONLY))
             return EBADF;
 
         SCOPE(m_inode->mutex);
@@ -53,7 +63,7 @@ namespace AEX::FS {
     }
 
     optional<ssize_t> INodeFile::write(const void* buffer, size_t count) {
-        if (!(m_mode & O_RD))
+        if (!(m_mode & O_RDONLY))
             return EBADF;
 
         if (count == 0)

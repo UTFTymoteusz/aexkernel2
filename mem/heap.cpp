@@ -277,7 +277,7 @@ namespace AEX::Mem::Heap {
             return nullptr;
 
         if (size > 67108864) {
-            printk(PRINTK_WARN "heap: Tried to malloc(%li)\n", size);
+            printk(WARN "heap: Tried to malloc(%li)\n", size);
             return nullptr;
         }
 

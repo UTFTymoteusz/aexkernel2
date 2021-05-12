@@ -22,7 +22,7 @@ namespace AEX::Sys::ACPI {
         memcpy((void*) buffer, (void*) header->signature, 4);
 
         if (!validate_table(table, header->length)) {
-            printk(PRINTK_WARN "acpi: Found table %s, but its checksum wasn't right\n", buffer);
+            printk(WARN "acpi: Found table %s, but its checksum wasn't right\n", buffer);
             return false;
         }
 
@@ -36,7 +36,7 @@ namespace AEX::Sys::ACPI {
     void facp_init();
 
     void init() {
-        printk(PRINTK_INIT "acpi: Initializing\n");
+        printk(INIT "acpi: Initializing\n");
 
         auto xsdp = find_xsdp();
         if (xsdp != nullptr) {
@@ -64,7 +64,7 @@ namespace AEX::Sys::ACPI {
 
             facp_init();
 
-            printk(PRINTK_OK "acpi: Initialized\n");
+            printk(OK "acpi: Initialized\n");
             return;
         }
 
@@ -90,7 +90,7 @@ namespace AEX::Sys::ACPI {
 
             facp_init();
 
-            printk(PRINTK_OK "acpi: Initialized\n");
+            printk(OK "acpi: Initialized\n");
             return;
         }
 
