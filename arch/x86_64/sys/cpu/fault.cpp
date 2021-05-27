@@ -152,7 +152,7 @@ namespace AEX::Sys {
                cpu->in_interrupt);
 
         if (info->int_no == EXC_PAGE_FAULT) {
-            size_t cr2;
+            size_t cr2 = 0;
 
             asm volatile("mov rax, cr2; mov %0, rax;" : : "m"(cr2) : "memory");
 
@@ -203,7 +203,7 @@ namespace AEX::Sys {
     bool handle_page_fault(UNUSED CPU::fault_info* info, CPU* cpu, Proc::Thread* thread) {
         auto state = out(thread, cpu);
 
-        size_t cr2, cr3;
+        size_t cr2 = 0, cr3 = 0;
 
         asm volatile("mov rax, cr2; mov %0, rax;" : : "m"(cr2) : "memory");
         asm volatile("mov rax, cr3; mov %0, rax;" : : "m"(cr3) : "memory");
@@ -305,7 +305,7 @@ namespace AEX::Sys {
         printk("RIP: 0x%p <%s+0x%x>\n", info->rip, name, delta);
         printk("RFLAGS: 0x%016lx  CS: 0x%04x  SS: 0x%04x\n", info->rflags, info->cs, info->ss);
 
-        size_t cr0, cr2, cr3, cr4;
+        size_t cr0 = 0, cr2 = 0, cr3 = 0, cr4 = 0;
 
         asm volatile("mov rax, cr0; mov %0, rax;" : : "m"(cr0) : "memory");
         asm volatile("mov rax, cr2; mov %0, rax;" : : "m"(cr2) : "memory");

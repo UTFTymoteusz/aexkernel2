@@ -38,9 +38,10 @@ namespace AEX::FS {
             if (!(mode & O_CREAT))
                 return ENOENT;
 
-            char filename[FS::MAX_FILENAME_LEN];
-            inode = ENSURE_OPT(
-                parent->creat(get_filename(filename, path, sizeof(filename)), 0x0777, FT_REGULAR));
+            char name[FS::NAME_MAX];
+            get_filename(name, path, sizeof(name));
+
+            inode = ENSURE_OPT(parent->creat(name, 0x0777, FT_REGULAR));
         }
 
         if (inode->is_directory()) {
@@ -78,21 +79,20 @@ namespace AEX::FS {
         if (inode)
             return EEXIST;
 
-        char filename[FS::MAX_FILENAME_LEN];
-        inode = ENSURE_OPT(
-            parent->creat(get_filename(filename, path, sizeof(filename)), 0x0777, FT_DIRECTORY));
+        char name[FS::NAME_MAX];
+        get_filename(name, path, sizeof(name));
+
+        inode = ENSURE_OPT(parent->creat(name, 0x0777, FT_DIRECTORY));
 
         return File_SP(new INodeDirectory(inode));
     }
 
     optional<file_info> File::info(const char* path, int) {
         auto mount_info = ENSURE_OPT(find_mount(path));
-        auto inode_try  = mount_info.mount->control_block->find(mount_info.new_path);
-        if (!inode_try)
-            return inode_try.error;
+        auto find_try   = ENSURE_OPT(mount_info.mount->control_block->find(mount_info.new_path));
 
-        auto parent = inode_try.value.parent;
-        auto inode  = inode_try.value.inode;
+        auto parent = find_try.parent;
+        auto inode  = find_try.inode;
         auto rscope = parent ? ReleaseScopeMutex(parent->mutex) : ReleaseScopeMutex();
         auto finfo  = file_info();
 
@@ -170,8 +170,54 @@ namespace AEX::FS {
         return false;
     }
 
-    error_t File::rename(const char*, const char*) {
-        NOT_IMPLEMENTED;
+    error_t File::rename(const char* oldpath, const char* newpath) {
+        auto find_old = ENSURE_OPT(get(oldpath));
+        if (!find_old.parent)
+            return EINVAL;
+
+        find_old.parent->mutex.release();
+
+        auto find_new = ENSURE_OPT(get(newpath, true));
+        if (!find_new.parent)
+            return EINVAL;
+
+        if (!find_new.parent->is_related(find_old.parent))
+            NOT_IMPLEMENTED;
+
+        {
+            auto scope = ReleaseScopeMutex(find_new.parent->mutex);
+
+            char newname[FS::NAME_MAX];
+            get_filename(newname, newpath, sizeof(newname));
+
+            if (find_new.inode) {
+                // It's better if we purge AFTER we're done with the rename (why should we block the
+                // entire directory while we're purging the inode?)
+                using(find_new.inode->mutex) {
+                    find_new.inode->opened++;
+                }
+
+                ENSURE_NERR(find_new.parent->unlink(newname));
+            }
+
+            ENSURE_NERR(find_new.parent->link(newname, find_old.inode));
+        }
+
+        using(find_old.parent->mutex) {
+            char oldname[FS::NAME_MAX];
+            get_filename(oldname, oldpath, sizeof(oldname));
+
+            ENSURE_NERR(find_old.parent->unlink(oldname));
+        }
+
+        using(find_new.inode->mutex) {
+            find_new.inode->opened--;
+
+            if (!find_new.inode->opened && find_new.inode->hard_links == 0)
+                find_new.inode->purge();
+        }
+
+        return ENONE;
     }
 
     error_t File::unlink(const char* path) {
@@ -182,7 +228,8 @@ namespace AEX::FS {
             return inode_try.error;
         }
 
-        char filename[FS::MAX_FILENAME_LEN];
+        char name[FS::NAME_MAX];
+        get_filename(name, path, sizeof(name));
 
         auto parent = inode_try.value.parent;
         auto inode  = inode_try.value.inode;
@@ -194,7 +241,7 @@ namespace AEX::FS {
                 return ENOENT;
         }
 
-        auto error = parent->remove(get_filename(filename, path, sizeof(filename)));
+        auto error = parent->unlink(name);
         if (error)
             return error;
 
@@ -213,7 +260,8 @@ namespace AEX::FS {
         if (!inode_try.value.parent)
             return EINVAL;
 
-        char filename[FS::MAX_FILENAME_LEN];
+        char name[FS::NAME_MAX];
+        get_filename(name, path, sizeof(name));
 
         auto parent = inode_try.value.parent;
         auto inode  = inode_try.value.inode;
@@ -230,7 +278,7 @@ namespace AEX::FS {
                 return ENOTEMPTY;
         }
 
-        auto error = parent->remove(get_filename(filename, path, sizeof(filename)));
+        auto error = parent->unlink(name);
         if (error)
             return error;
 
@@ -244,5 +292,17 @@ namespace AEX::FS {
 
     void File::setFlags(int flags) {
         m_flags = flags;
+    }
+
+    optional<find_result> File::get(const char* path, bool allow_incomplete) {
+        auto mount_info = ENSURE_OPT(find_mount(path));
+        auto inode_try =
+            mount_info.mount->control_block->find(mount_info.new_path, allow_incomplete);
+        if (!inode_try) {
+            printkd(FS_DEBUG, "fs: %s: no inode (%s)\n", path, strerror(inode_try.error));
+            return inode_try.error;
+        }
+
+        return inode_try;
     }
 }

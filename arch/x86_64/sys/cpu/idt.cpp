@@ -3,10 +3,10 @@
 #include "aex/string.hpp"
 
 namespace AEX::Sys {
-    extern "C" char exc_array;
-    extern "C" char irq_array;
+    extern "C" size_t exc_array[];
+    extern "C" size_t irq_array[];
 
-    extern "C" char irq_spurious;
+    extern "C" size_t irq_spurious;
 
     idt_entry idt[256];
 
@@ -53,19 +53,17 @@ namespace AEX::Sys {
 
         memset(idt, 0, sizeof(idt));
 
-        size_t* m_exc_array = (size_t*) &exc_array;
         for (int i = 0; i < 32; i++)
             idt[i]
-                .setOffset(m_exc_array[i])
+                .setOffset(exc_array[i])
                 .setSelector(0x08)
                 .setType(0x0E)
                 .setIST(0)
                 .setPresent(true);
 
-        size_t* m_irq_array = (size_t*) &irq_array;
         for (int i = 0; i < 32; i++)
             idt[i + 32]
-                .setOffset(m_irq_array[i])
+                .setOffset(irq_array[i])
                 .setSelector(0x08)
                 .setType(0x0E)
                 .setIST(0)
@@ -74,14 +72,12 @@ namespace AEX::Sys {
         for (int i = 64; i < 255; i++)
             idt[i].setSelector(0x08).setType(0x0E).setIST(0).setPresent(false);
 
-        // clang-format off
         idt[255]
-            .setOffset((size_t) &irq_spurious)
+            .setOffset(&irq_spurious)
             .setSelector(0x08)
             .setType(0x0E)
             .setIST(0)
             .setPresent(true);
-        // clang-format on
     }
 
     void set_idt_ists() {

@@ -28,7 +28,7 @@ namespace AEX::FS {
                 auto partition = new Partition(name, handle.getDev().get(), partitions[i].start,
                                                partitions[i].count);
                 if (!partition->registerDevice()) {
-                    printk("part: %s: Failed to register device\n", name);
+                    printk(WARN "part: %s: Failed to register device\n", name);
                     delete partition;
                 }
             }

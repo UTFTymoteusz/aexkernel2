@@ -23,7 +23,7 @@ bool copy_and_canonize(char* buffer, const usr_char* usr_path);
 
 long open(const usr_char* usr_path, int flags) {
     auto current = Proc::Process::current();
-    char path_buffer[FS::MAX_PATH_LEN];
+    char path_buffer[FS::PATH_MAX];
 
     USR_ENSURE(copy_and_canonize(path_buffer, usr_path));
 
@@ -124,7 +124,7 @@ int dupP(int fd) {
 
 // this needs path verification
 int chdir(const usr_char* path) {
-    char path_buffer[FS::MAX_PATH_LEN];
+    char path_buffer[FS::PATH_MAX];
 
     int strlen = USR_ENSURE_OPT(usr_strlen(path));
     int len    = min<int>(strlen, sizeof(path_buffer) - 1);
@@ -150,7 +150,7 @@ char* getcwd(char* buffer, size_t buffer_len) {
 }
 
 int statat(const usr_char* usr_path, stat* usr_statbuf, int flags) {
-    char path_buffer[FS::MAX_PATH_LEN];
+    char path_buffer[FS::PATH_MAX];
     USR_ENSURE(copy_and_canonize(path_buffer, usr_path));
 
     stat ker_statbuf;
@@ -199,7 +199,7 @@ int fstat(int fd, stat* usr_statbuf) {
 }
 
 int access(const usr_char* usr_path, int mode) {
-    char path_buffer[FS::MAX_PATH_LEN];
+    char path_buffer[FS::PATH_MAX];
 
     USR_ENSURE(copy_and_canonize(path_buffer, usr_path));
     USR_ENSURE_OPT(FS::File::info(path_buffer));
@@ -254,7 +254,7 @@ int munmap(void* addr, size_t len) {
 
 long mkdir(const usr_char* usr_path, int flags) {
     auto current = Proc::Process::current();
-    char path_buffer[FS::MAX_PATH_LEN];
+    char path_buffer[FS::PATH_MAX];
 
     USR_ENSURE(copy_and_canonize(path_buffer, usr_path));
 
@@ -322,8 +322,8 @@ int fcntl(int fd, int cmd, int val) {
 
 long mount(const usr_char* source, const usr_char* target, const usr_char* type, unsigned long,
            const usr_void*) {
-    char source_buffer[FS::MAX_PATH_LEN];
-    char target_buffer[FS::MAX_PATH_LEN];
+    char source_buffer[FS::PATH_MAX];
+    char target_buffer[FS::PATH_MAX];
     char type_buffer[32];
 
     USR_ENSURE(copy_and_canonize(source_buffer, source));
@@ -346,10 +346,20 @@ long mount(const usr_char* source, const usr_char* target, const usr_char* type,
 
 int unlink(const usr_char* usr_path, int flags) {
     auto current = Proc::Process::current();
-    char path_buffer[FS::MAX_PATH_LEN];
+    char path_buffer[FS::PATH_MAX];
 
     USR_ENSURE(copy_and_canonize(path_buffer, usr_path));
     return USR_ENSURE_ENONE(FS::File::unlink(path_buffer));
+}
+
+int rename(const usr_char* from, const usr_char* to) {
+    char from_buffer[FS::PATH_MAX];
+    char to_buffer[FS::PATH_MAX];
+
+    USR_ENSURE(copy_and_canonize(from_buffer, from));
+    USR_ENSURE(copy_and_canonize(to_buffer, to));
+
+    return USR_ENSURE_ENONE(FS::File::rename(from_buffer, to_buffer));
 }
 
 void register_fs() {
@@ -377,6 +387,7 @@ void register_fs() {
     table[SYS_FCNTL]   = (void*) fcntl;
     table[SYS_MOUNT]   = (void*) mount;
     table[SYS_UNLINK]  = (void*) unlink;
+    table[SYS_RENAME]  = (void*) rename;
 }
 
 optional<FS::Descriptor> get_desc(int fd) {

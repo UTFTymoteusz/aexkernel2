@@ -39,7 +39,11 @@ namespace AEX::FS {
         return -1;
     }
 
-    error_t INode::remove(const char*) {
+    error_t INode::link(const char*, INode_SP) {
+        return ENOSYS;
+    }
+
+    error_t INode::unlink(const char*) {
         return ENOSYS;
     }
 }

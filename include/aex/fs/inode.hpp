@@ -56,7 +56,8 @@ namespace AEX::FS {
         virtual optional<dirent>   readdir(dir_context* ctx);
         virtual error_t            seekdir(dir_context* ctx, long pos);
         virtual long               telldir(dir_context* ctx);
-        virtual error_t            remove(const char* filename);
+        virtual error_t            link(const char* filename, INode_SP inode);
+        virtual error_t            unlink(const char* filename);
 
         cache_entry* getCacheEntry(File* file);
         cache_entry* getCacheEntry(blk_t id);
@@ -73,6 +74,10 @@ namespace AEX::FS {
 
         bool is_block() {
             return (type & FT_BLOCK) == FT_BLOCK;
+        }
+
+        bool is_related(INode_SP inode) {
+            return this->control_block == inode->control_block;
         }
 
         private:

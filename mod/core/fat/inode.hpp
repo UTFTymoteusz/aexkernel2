@@ -60,7 +60,8 @@ namespace AEX::FS {
         optional<INode_SP> creat(const char* filename, mode_t mode, fs_type_t type);
         optional<dirent>   readdir(dir_context* ctx);
         void               resize(INode* inode, cluster_t first, uint32_t size);
-        error_t            remove(const char* filename);
+        error_t            link(const char* filename, INode_SP inode);
+        error_t            unlink(const char* filename);
         error_t            purge();
 
         private:
@@ -86,6 +87,7 @@ namespace AEX::FS {
         optional<ino_t>       getAssoc(const char* filename);
         optional<inode_assoc> getAssoc(ino_t id);
         void                  pushAssoc(const char* filename, ino_t id);
+        void                  eraseAssoc(const char* filename);
         ino_t                 createAssoc(fat_dirent dirent);
     };
 }

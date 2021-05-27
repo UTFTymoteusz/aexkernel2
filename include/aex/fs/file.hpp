@@ -35,6 +35,8 @@ namespace AEX::FS {
         FD_CLOEXEC = 0x0001,
     };
 
+    struct find_result;
+
     class API File {
         public:
         enum seek_mode {
@@ -45,17 +47,17 @@ namespace AEX::FS {
 
         virtual ~File();
 
-        static optional<File_SP> open(const char* path, int flags);
-        static optional<File_SP> mkdir(const char* path, int flags);
-        static error_t           rename(const char* path, const char* newpath);
-        static error_t           unlink(const char* path);
-        static error_t           rmdir(const char* path);
+        static optional<File_SP>   open(const char* path, int flags);
+        static optional<File_SP>   mkdir(const char* path, int flags);
+        static error_t             rename(const char* oldpath, const char* newpath);
+        static error_t             unlink(const char* path);
+        static error_t             rmdir(const char* path);
+        static optional<file_info> info(const char* path, int flags = 0);
 
         virtual optional<ssize_t>   read(void* buf, size_t count);
         virtual optional<ssize_t>   write(const void* buf, size_t count);
         virtual error_t             close();
         virtual optional<off_t>     seek(off_t offset, seek_mode mode = seek_mode::SEEK_SET);
-        static optional<file_info>  info(const char* path, int flags = 0);
         virtual optional<file_info> finfo();
         virtual error_t             fchmod(mode_t mode);
 
@@ -73,5 +75,8 @@ namespace AEX::FS {
 
         protected:
         int m_flags;
+
+        private:
+        static optional<find_result> get(const char* path, bool allow_incomplete = false);
     };
 }

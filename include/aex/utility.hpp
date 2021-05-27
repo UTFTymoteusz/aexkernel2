@@ -57,6 +57,14 @@ namespace AEX {
                               \
         res.value;            \
     })
+#define ENSURE_NERR(cond) \
+    ({                    \
+        auto res = cond;  \
+        if (res)          \
+            return res;   \
+                          \
+        res;              \
+    })
 #define ENSURE(cond) ENSURE_R((cond), AEX::EINVAL)
 #define ENSURE_FL(flags, mask) ENSURE_R(!(flags & ~mask), AEX::EINVAL)
 
@@ -72,6 +80,13 @@ namespace AEX {
              lock.release(); \
              scbong++;       \
          }))
+
+#define finally(code) \
+    while (({         \
+        (code);       \
+        false;        \
+    }))               \
+        ;
 
 struct scopebong {
     int  i;

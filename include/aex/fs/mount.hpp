@@ -11,7 +11,7 @@
 namespace AEX::FS {
     class API Mount {
         public:
-        char path[MAX_PATH_LEN];
+        char path[PATH_MAX];
 
         virtual ~Mount();
 

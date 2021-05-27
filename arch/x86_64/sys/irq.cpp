@@ -102,6 +102,7 @@ namespace AEX::Sys::IRQ {
         }
 
         APIC::write(0x320, 1 << 16);
+        APIC::write(0x3E0, 0x03);
     }
 
     void setup_timer(double hz) {

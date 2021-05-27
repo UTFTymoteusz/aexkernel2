@@ -80,7 +80,7 @@ namespace AEX::FS {
         fat_dirent_lfn longs[32];
         int            long_count = 0;
 
-        char filename[MAX_FILENAME_LEN];
+        char filename[NAME_MAX];
         int  filename_offset;
 
         while (ctx->pos < size) {
@@ -123,7 +123,8 @@ namespace AEX::FS {
                 if (strcmp(filename, ".          ") == 0 || strcmp(filename, "..         ") == 0)
                     continue;
 
-                NOT_IMPLEMENTED;
+                shortname2filename(filename, fat_dirent.filename);
+                filename_offset = 12;
             }
 
             filename[filename_offset] = '\0';
@@ -144,13 +145,65 @@ namespace AEX::FS {
         return {};
     }
 
-    error_t FATDirectory::remove(const char* filename) {
+    error_t FATDirectory::link(const char* filename, INode_SP inode) {
+        AEX_ASSERT(!mutex.tryAcquire());
+
+        int  lfn_count = (strlen(filename) + 1) / 13 + 1;
+        int  pos       = 0;
+        auto fat_block = (FATControlBlock*) control_block;
+
+        char shortname[12] = {};
+        filename2shortname(shortname, filename);
+
+        if (strlen(filename) > 8)
+            increment(shortname);
+
+        while (pos < size) {
+            auto fat_dirent = read(pos);
+            pos += sizeof(fat_dirent);
+
+            if (fat_dirent.filename[0] == '\x05')
+                fat_dirent.filename[0] = '\xE5';
+
+            if (memcmp(shortname, fat_dirent.filename, 11) == 0) {
+                increment(shortname);
+                pos = 0;
+                continue;
+            }
+        }
+
+        pushAssoc(shortname, inode->id);
+
+        using(fat_block->m_mutex) {
+            using(inode->mutex) {
+                ((FATINode*) inode.get())->m_parent = fat_block->m_cache.get(this->id).value;
+
+                fat_dirent entry = {};
+                cluster_t  start = ((FATINode*) inode.get())->m_chain.first();
+
+                memcpy(entry.filename, shortname, 11);
+                entry.attributes       = inode->type == FT_DIRECTORY ? FAT_DIRECTORY : 0x00;
+                entry.first_cluster_lo = start & 0xFFFF;
+                entry.first_cluster_hi = (start >> 16) & 0xFFFF;
+                entry.size             = inode->size;
+
+                pos = ENSURE_OPT(space(lfn_count + 1));
+                write(pos, entry, filename);
+
+                inode->hard_links++;
+            }
+        }
+
+        return ENONE;
+    }
+
+    error_t FATDirectory::unlink(const char* filename) {
         AEX_ASSERT(!mutex.tryAcquire());
 
         fat_dirent_lfn longs[32];
         int            long_count = 0;
 
-        char filenameB[MAX_FILENAME_LEN];
+        char filenameB[NAME_MAX];
         int  filenameB_offset;
         int  pos       = 0;
         auto fat_block = (FATControlBlock*) control_block;
@@ -195,7 +248,8 @@ namespace AEX::FS {
                 if (strcmp(filenameB, ".          ") == 0 || strcmp(filenameB, "..         ") == 0)
                     continue;
 
-                NOT_IMPLEMENTED;
+                shortname2filename(filenameB, fat_dirent.filename);
+                filenameB_offset = 12;
             }
 
             filenameB[filenameB_offset] = '\0';
@@ -218,13 +272,21 @@ namespace AEX::FS {
                 using(inode->mutex) {
                     inode->hard_links--;
 
-                    printkd(FS_DEBUG, "fat: %s: Unlinked inode %i\n", control_block->path,
-                            inode->id);
+                    printkd(FS_DEBUG, "fat: %s: Unlinked inode %i (hard %i, open %i)\n",
+                            control_block->path, inode->id, inode->hard_links, inode->opened);
 
-                    if (inode->opened == 0)
-                        inode->purge();
+                    if (inode->is_directory()) {
+                        if (inode->opened == 0 && inode->hard_links == 1)
+                            inode->purge();
+                    }
+                    else {
+                        if (inode->opened == 0 && inode->hard_links == 0)
+                            inode->purge();
+                    }
                 }
             }
+
+            eraseAssoc(fat_dirent.filename);
 
             fat_dirent.filename[0] = 0xE5;
 
@@ -274,8 +336,9 @@ namespace AEX::FS {
             if (memcmp(fat_dirent.filename, assoc_try.value.filename, 11))
                 continue;
 
-            printkd(FS_DEBUG, "fat: %s: Resizing inode %i (./%s) from %i to %i\n", inode->id,
-                    control_block->path, assoc_try.value.filename, fat_dirent.size, size);
+            printkd(FS_DEBUG, "fat: %s: Resizing inode %i (./%s) from %i to %i\n",
+                    control_block->path, inode->id, assoc_try.value.filename, fat_dirent.size,
+                    size);
 
             fat_dirent.size             = size;
             fat_dirent.first_cluster_hi = (first >> 16) & 0xFFFF;
@@ -516,6 +579,12 @@ namespace AEX::FS {
         assoc.id = id;
 
         m_assocs.push(assoc);
+    }
+
+    void FATDirectory::eraseAssoc(const char* filename) {
+        for (int i = 0; i < m_assocs.count(); i++)
+            if (memcmp(filename, m_assocs[i].filename, 11) == 0)
+                m_assocs.erase(i--);
     }
 
     ino_t FATDirectory::createAssoc(fat_dirent dirent) {

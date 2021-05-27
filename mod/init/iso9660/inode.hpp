@@ -27,8 +27,8 @@ namespace AEX::FS {
             if (ctx->pos >= size)
                 return {};
 
-            char name_buffer[MAX_FILENAME_LEN];
-            name_buffer[MAX_FILENAME_LEN - 1] = '\0';
+            char name_buffer[NAME_MAX];
+            name_buffer[NAME_MAX - 1] = '\0';
 
             uint8_t buffer[256];
 
@@ -109,7 +109,7 @@ namespace AEX::FS {
         iso9660_dentry m_dentry;
 
         void clean_name(char* buffer) {
-            for (int i = 0; i < MAX_FILENAME_LEN; i++) {
+            for (int i = 0; i < NAME_MAX; i++) {
                 if (buffer[i] == ';')
                     buffer[i] = '\0';
             }

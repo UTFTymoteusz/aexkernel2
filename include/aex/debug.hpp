@@ -26,6 +26,7 @@ namespace AEX::Debug {
     extern bool flag;
 
     API void stack_trace(int skip = 0, stack_frame* frame = nullptr);
+    API void stack_check();
 
     API const char* addr2name(void* addr, int& delta, bool only_kernel = false);
     API const char* addr2name(void* addr, bool only_kernel = false);

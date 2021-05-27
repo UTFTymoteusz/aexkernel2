@@ -20,7 +20,8 @@ namespace AEX::FS {
         fat_info gatherInfo(Dev::BlockHandle handle);
     };
 
-    void    filename2shortname(char buffer[12], const char* filename);
+    void    filename2shortname(char buffer[12], const char filename[NAME_MAX]);
+    void    shortname2filename(char filename[NAME_MAX], const char buffer[12]);
     void    increment(char shortname[12]);
     uint8_t lfn_checksum(const uint8_t* shortname);
 }

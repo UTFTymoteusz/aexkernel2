@@ -64,6 +64,8 @@ namespace AEX::FS {
             }
 
             if (!found) {
+                inode = INode_SP::null();
+
                 if (walker.final() && allow_incomplete)
                     return find_result{inode, parent};
 

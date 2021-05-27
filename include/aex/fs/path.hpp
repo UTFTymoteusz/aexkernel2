@@ -6,9 +6,9 @@
 #include <stdint.h>
 
 namespace AEX::FS {
-    constexpr auto MAX_PATH_LEN     = 2048;
-    constexpr auto MAX_FILENAME_LEN = 256;
-    constexpr auto MAX_DEPTH        = 256;
+    constexpr auto PATH_MAX  = 2048;
+    constexpr auto NAME_MAX  = 256;
+    constexpr auto DEPTH_MAX = 256;
 
     class API Walker {
         public:
@@ -20,7 +20,7 @@ namespace AEX::FS {
         bool        final();
 
         private:
-        char m_buffer[MAX_FILENAME_LEN];
+        char m_buffer[NAME_MAX];
 
         int         m_index = 0;
         const char* m_path;

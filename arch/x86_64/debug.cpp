@@ -62,4 +62,13 @@ namespace AEX::Debug {
             //    return;
         }
     }
+
+    void stack_check() {
+        size_t rbp = 0;
+
+        asm volatile("mov %0, rbp" : "=r"(rbp));
+
+        if (rbp <= 0x0000777FFFFFFFFF)
+            kpanic("asdf\n");
+    }
 }

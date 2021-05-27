@@ -23,7 +23,7 @@ namespace AEX::FS {
         int chars_this_piece = 0;
 
         while (m_path[m_index] && m_path[m_index] != '/') {
-            if (chars_this_piece >= MAX_FILENAME_LEN - 1) {
+            if (chars_this_piece >= NAME_MAX - 1) {
                 m_overflow = true;
                 return nullptr;
             }
@@ -107,7 +107,7 @@ namespace AEX::FS {
     }
 
     bool check_length(const char* path) {
-        return strlen(path) + 1 < MAX_PATH_LEN;
+        return strlen(path) + 1 < PATH_MAX;
     }
 
     bool ends_with_slash(const char* path) {
@@ -130,7 +130,7 @@ namespace AEX::FS {
 
         while (path[index]) {
             while (path[index] && path[index] != '/') {
-                if (chars_this_piece >= MAX_FILENAME_LEN - 1)
+                if (chars_this_piece >= NAME_MAX - 1)
                     return false;
 
                 chars_this_piece++;
@@ -194,7 +194,7 @@ namespace AEX::FS {
 
             buffer[index] = '/';
             index++;
-            strncpy(&buffer[index], piece, MAX_PATH_LEN);
+            strncpy(&buffer[index], piece, PATH_MAX);
 
             index += piece_len;
             buffer[index] = '\0';

@@ -157,7 +157,7 @@ void usr_finalize_tbl(tmp_array<char>* argv_buff, int argc, char** table) {
 }
 
 int execve(const usr_char* path, usr_char* const usr_argv[], usr_char* const usr_envp[]) {
-    char path_buffer[FS::MAX_PATH_LEN];
+    char path_buffer[FS::PATH_MAX];
     USR_ENSURE(copy_and_canonize(path_buffer, path));
 
     int argc = USR_ENSURE(usr_get_tblc(usr_argv));

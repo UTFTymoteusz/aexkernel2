@@ -100,7 +100,7 @@ namespace AEX::Proc {
     void Process::set_cwd(const char* cwd) {
         SCOPE(lock);
 
-        int len = min(strlen(cwd), FS::MAX_PATH_LEN - 1);
+        int len = min(strlen(cwd), FS::PATH_MAX - 1);
 
         m_cwd = Mem::Heap::realloc(m_cwd, len + 1);
         strncpy(m_cwd, cwd, len + 1);

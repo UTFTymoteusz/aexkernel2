@@ -34,7 +34,7 @@ namespace AEX::Dev::TTY {
             new (&tx_init_vtty) TxTTY((void*) 0xFFFFFFFF800B8000);
         }
         else {
-            memset64(buffer, '\0', sizeof(buffer) / sizeof(uint64_t));
+            memset(buffer, '\0', sizeof(buffer));
             new (&tx_init_vtty) TxTTY((void*) &buffer);
         }
 

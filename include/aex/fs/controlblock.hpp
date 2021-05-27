@@ -29,7 +29,8 @@ namespace AEX::FS {
 
         virtual optional<INode_SP> get(INode_SP dir, dirent dentry, ino_t id);
         virtual void               unlink(ino_t id);
-        optional<find_result>      find(const char* lpath, bool allow_incomplete = false);
+
+        optional<find_result> find(const char* lpath, bool allow_incomplete = false);
 
         protected:
         Mutex                m_mutex;

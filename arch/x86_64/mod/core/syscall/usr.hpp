@@ -82,7 +82,7 @@ class tmp_array {
     T* array = nullptr;
 };
 
-bool copy_and_canonize(char buffer[AEX::FS::MAX_PATH_LEN], const usr_char* usr_path);
+bool copy_and_canonize(char buffer[AEX::FS::PATH_MAX], const usr_char* usr_path);
 
 #define USR_ENSURE_R(cond, err) \
     ({                          \
