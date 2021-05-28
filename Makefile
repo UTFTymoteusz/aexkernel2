@@ -73,8 +73,8 @@ all: $(OBJS)
 	#objcopy -x -g -K __dso_handle $(SYS)aexkrnl
 
 copy:
-	@cp $(SYS)aexkrnl    "$(ROOT_DIR)sys/"
-	@cp $(SYS)aexkrnl.sf "$(ROOT_DIR)sys/sym/"
+	@cp -u $(SYS)aexkrnl    "$(ROOT_DIR)sys/"
+	@cp -u $(SYS)aexkrnl.sf "$(ROOT_DIR)sys/sym/"
 
 include $(shell find $(DEP_DEST) -type f -name *.d)
 
