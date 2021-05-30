@@ -12,8 +12,8 @@ AEX::optional<size_t> k2u_memcpy(usr_void* dst, const void* src, size_t len) {
     return len;
 }
 
-AEX::optional<int> usr_strlen(const usr_char* str) {
-    int len = 0;
+AEX::optional<size_t> usr_strlen(const usr_char* str) {
+    size_t len = 0;
 
     while (true) {
         auto read_try = usr_read<char>(str++);

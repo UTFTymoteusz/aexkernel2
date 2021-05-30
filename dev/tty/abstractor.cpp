@@ -15,9 +15,9 @@ namespace AEX::Dev::TTY {
     }
 
     TTY& Abstractor::write(const char* str) {
-        int len = strlen(str);
+        size_t len = strlen(str);
 
-        for (int i = 0; i < len; i++)
+        for (size_t i = 0; i < len; i++)
             _write(str[i]);
 
         return *this;

@@ -100,7 +100,7 @@ namespace AEX::Proc {
     void Process::set_cwd(const char* cwd) {
         SCOPE(lock);
 
-        int len = min(strlen(cwd), FS::PATH_MAX - 1);
+        size_t len = min<size_t>(strlen(cwd), FS::PATH_MAX - 1);
 
         m_cwd = Mem::Heap::realloc(m_cwd, len + 1);
         strncpy(m_cwd, cwd, len + 1);
@@ -339,7 +339,7 @@ namespace AEX::Proc {
             char*       var_d = new char[strlen(var) + 1];
 
             m_environment.push(var_d);
-            strncpy(var_d, var, (size_t) strlen(var) + 1);
+            strncpy(var_d, var, strlen(var) + 1);
         }
     }
 
@@ -352,7 +352,7 @@ namespace AEX::Proc {
             char*       var_d = new char[strlen(var) + 1];
 
             m_environment.push(var_d);
-            strncpy(var_d, var, (size_t) strlen(var) + 1);
+            strncpy(var_d, var, strlen(var) + 1);
         }
     }
 
@@ -377,8 +377,8 @@ namespace AEX::Proc {
         AEX_ASSERT(lock.isAcquired());
 
         if (index == -1) {
-            int   len    = strlen(val);
-            char* buffer = new char[len + 1];
+            size_t len    = strlen(val);
+            char*  buffer = new char[len + 1];
 
             m_environment.push(buffer);
             strncpy(buffer, val, len + 1);
@@ -389,7 +389,7 @@ namespace AEX::Proc {
         if (index < 0 || index >= m_environment.count())
             return EINVAL;
 
-        int len = strlen(val);
+        size_t len = strlen(val);
 
         m_environment[index] = (char*) Mem::Heap::realloc(m_environment[index], len + 1);
         strncpy(m_environment[index], val, len + 1);

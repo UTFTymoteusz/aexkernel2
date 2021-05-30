@@ -33,7 +33,7 @@ typedef size_t usr_size_t;
 AEX::optional<size_t> u2k_memcpy(void* dst, const usr_void* src, size_t len);
 AEX::optional<size_t> k2u_memcpy(usr_void* dst, const void* src, size_t len);
 
-AEX::optional<int> usr_strlen(const usr_char* str);
+AEX::optional<size_t> usr_strlen(const usr_char* str);
 
 template <typename T>
 AEX::optional<T> usr_read(const usr_void* src) {

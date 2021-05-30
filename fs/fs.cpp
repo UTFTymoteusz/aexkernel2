@@ -60,14 +60,14 @@ namespace AEX::FS {
 
         Mem::SmartPointer<Mount> ret;
 
-        bool found   = false;
-        int  max_len = 0;
+        bool   found   = false;
+        size_t max_len = 0;
 
         for (auto iterator = mounts.getIterator(); iterator.next();) {
             auto mount = iterator.get_ptr();
 
-            int mnt_len  = strlen(mount->path) - 1;
-            int path_len = max(strlen(path) - (ends_with_slash(path) ? 1 : 0), 1);
+            size_t mnt_len  = strlen(mount->path) - 1;
+            size_t path_len = max<size_t>(strlen(path) - (ends_with_slash(path) ? 1 : 0), 1);
 
             if (path_len < mnt_len)
                 continue;

@@ -10,7 +10,7 @@ bool copy_and_canonize(char buffer[FS::PATH_MAX], const usr_char* usr_path) {
     if (!strlen_try)
         return false;
 
-    int len = min<int>(strlen_try.value + 1, FS::PATH_MAX);
+    size_t len = min<size_t>(strlen_try.value + 1, FS::PATH_MAX);
     if (!u2k_memcpy(buffer, usr_path, len + 1))
         return false;
 

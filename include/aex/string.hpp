@@ -62,9 +62,9 @@ namespace AEX {
         return sign * res;
     }
 
-    API int   strlen(const char* str);
-    API int   strcmp(const char* a, const char* b);
-    API char* strncpy(char* dst, const char* src, size_t num);
+    API size_t strlen(const char* str);
+    API int    strcmp(const char* a, const char* b);
+    API char*  strncpy(char* dst, const char* src, size_t num);
 
     API void memset(void* mem, char c, size_t len);
     API void memset16(void* mem, uint16_t val, size_t count);

@@ -173,7 +173,7 @@ namespace AEX {
             auto&       symbol = module->symbols[i];
             const char* ptr    = module->strings + str_ptr;
 
-            int sym_name_len = strlen(symbol.name);
+            size_t sym_name_len = strlen(symbol.name);
 
             memcpy(module->strings + str_ptr, module->name, module->name_len + 1);
             str_ptr += module->name_len;

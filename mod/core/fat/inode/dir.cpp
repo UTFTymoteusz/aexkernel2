@@ -365,7 +365,7 @@ namespace AEX::FS {
             }
 
             int len = strlen(charbuffer);
-            if (len < 0 || len > remaining)
+            if (len > remaining)
                 return;
 
             buffer[count] = charbuffer[0];

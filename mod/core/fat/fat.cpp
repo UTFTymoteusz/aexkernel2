@@ -155,7 +155,7 @@ namespace AEX::FS {
             numbuff[i] = shortname[i + tilde + 1];
 
         itos(stoi<int>(10, numbuff) + 1, 10, numbuff);
-        int numlen = strlen(numbuff);
+        size_t numlen = strlen(numbuff);
 
         if (numlen > 7)
             BROKEN;

@@ -7,8 +7,8 @@
 #include <stdint.h>
 
 namespace AEX {
-    int strlen(const char* str) {
-        int len = 0;
+    size_t strlen(const char* str) {
+        size_t len = 0;
 
         while (*str++ != '\0')
             len++;
@@ -28,11 +28,11 @@ namespace AEX {
     }
 
     char* strncpy(char* dst, const char* src, size_t num) {
-        int len = min((size_t) strlen(src), num - 1);
-        if (len < 0)
+        if (num == 0)
             return dst;
 
-        for (int i = 0; i < len; i++)
+        size_t len = min(strlen(src), num - 1);
+        for (size_t i = 0; i < len; i++)
             dst[i] = src[i];
 
         dst[len] = '\0';

@@ -57,23 +57,23 @@ namespace AEX::FS {
     }
 
     char* get_filename(char* buffer, const char* path, size_t num, bool noext) {
-        int len = strlen(path);
+        size_t len = strlen(path);
         if (len <= 1)
             return (char*) path;
 
         if (path[len - 1] == '/')
             len--;
 
-        int last = 0;
+        size_t last = 0;
 
-        for (int i = 0; i < len; i++) {
+        for (size_t i = 0; i < len; i++) {
             if (path[i] == '/')
                 last = i + 1;
         }
 
         if (noext) {
-            int newlen = 0;
-            for (int i = 0; i < len; i++) {
+            size_t newlen = 0;
+            for (size_t i = 0; i < len; i++) {
                 if (path[i] == '.' || path[i] == '\0')
                     break;
 
@@ -83,27 +83,27 @@ namespace AEX::FS {
             len = newlen;
         }
 
-        return strncpy(buffer, &((char*) path)[last], min((int) num, len - last + 1));
+        return strncpy(buffer, &((char*) path)[last], min(num, len - last + 1));
     }
 
     char* get_extension(char* buffer, const char* path, size_t num) {
-        int len = strlen(path);
+        size_t len = strlen(path);
         if (len <= 1)
             return (char*) path;
 
-        int last = -1;
+        size_t last = 0;
 
-        for (int i = 0; i < len; i++) {
+        for (size_t i = 0; i < len; i++) {
             if (path[i] == '.')
                 last = i + 1;
         }
 
-        if (last == -1) {
+        if (last == 0) {
             buffer[0] = '\0';
             return buffer;
         }
 
-        return strncpy(buffer, &((char*) path)[last], min((int) num, len - last + 1));
+        return strncpy(buffer, &((char*) path)[last], min(num, len - last + 1));
     }
 
     bool check_length(const char* path) {
@@ -187,7 +187,7 @@ namespace AEX::FS {
                 continue;
             }
 
-            int piece_len = strlen(piece);
+            size_t piece_len = strlen(piece);
 
             if (index + piece_len >= buffer_len)
                 return nullptr;

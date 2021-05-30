@@ -126,8 +126,8 @@ int dupP(int fd) {
 int chdir(const usr_char* path) {
     char path_buffer[FS::PATH_MAX];
 
-    int strlen = USR_ENSURE_OPT(usr_strlen(path));
-    int len    = min<int>(strlen, sizeof(path_buffer) - 1);
+    size_t strlen = USR_ENSURE_OPT(usr_strlen(path));
+    size_t len    = min(strlen, sizeof(path_buffer) - 1);
 
     USR_ENSURE_OPT(u2k_memcpy(path_buffer, path, len));
     path_buffer[len] = '\0';
@@ -138,7 +138,7 @@ int chdir(const usr_char* path) {
 
 char* getcwd(char* buffer, size_t buffer_len) {
     const char* cwd = Proc::Process::current()->get_cwd();
-    int         len = strlen(cwd);
+    size_t      len = strlen(cwd);
 
     if (len + 1 > buffer_len) {
         USR_ERRNO = ERANGE;
@@ -330,7 +330,7 @@ long mount(const usr_char* source, const usr_char* target, const usr_char* type,
     USR_ENSURE(copy_and_canonize(target_buffer, target));
 
     if (type) {
-        int strlen = USR_ENSURE_OPT(usr_strlen(type));
+        size_t strlen = USR_ENSURE_OPT(usr_strlen(type));
         if (strlen > 31) {
             USR_ERRNO = EINVAL;
             return -1;

@@ -32,7 +32,7 @@ namespace AEX {
             if (len == 0)
                 return;
 
-            size_t pad_len = min((size_t) max(padlen - strlen(str), 0), len);
+            size_t pad_len = min((size_t) max<int>(padlen - strlen(str), 0), len);
             len -= pad_len;
 
             for (size_t i = 0; i < pad_len; i++) {
@@ -43,7 +43,7 @@ namespace AEX {
             if (len == 0)
                 return;
 
-            size_t total_len = min((size_t) strlen(str), len);
+            size_t total_len = min(strlen(str), len);
             if (total_len == 0)
                 return;
 

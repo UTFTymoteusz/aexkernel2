@@ -165,8 +165,8 @@ void Elf64Executor::setup_argv(Proc::Process* process, char* const argv[], int& 
     while (argc < 32 && argv[argc])
         argc++;
 
-    int arg_size      = int_ceil<int>((argc + 1) * sizeof(char*), 16);
-    int string_offset = arg_size;
+    size_t arg_size      = int_ceil<size_t>((argc + 1) * sizeof(char*), 16);
+    size_t string_offset = arg_size;
 
     for (int i = 0; i < argc; i++)
         arg_size += int_ceil(strlen(argv[i]) + 1, 16);
@@ -178,7 +178,7 @@ void Elf64Executor::setup_argv(Proc::Process* process, char* const argv[], int& 
     char** argv_vectors = (char**) arg_krn;
 
     for (int i = 0; i < argc; i++) {
-        int len = strlen(argv[i]) + 1;
+        size_t len = strlen(argv[i]) + 1;
         memcpy((char*) ((size_t) arg_krn + string_offset), argv[i], len);
 
         argv_vectors[i] = (char*) ((size_t) arg_usr + string_offset);

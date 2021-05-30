@@ -130,9 +130,9 @@ optional<int> usr_get_tblc(usr_char* const argv[]) {
 }
 
 bool usr_get_tbl(usr_char* const argv[], int argc, tmp_array<char>* argv_buff) {
-    int arg_len = 0;
+    size_t arg_len = 0;
 
-    for (size_t i = 0; i < argc; i++) {
+    for (int i = 0; i < argc; i++) {
         auto strlen_try = usr_strlen(argv[i]);
         if (!strlen_try)
             return false;

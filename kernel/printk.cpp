@@ -38,8 +38,8 @@ namespace AEX {
 
         auto rootTTY = TTYs[ROOT_TTY];
 
-        auto printk_common = [rootTTY](char padchar, int padlen, char* buffer) {
-            for (int i = strlen(buffer); i < padlen; i++)
+        auto printk_common = [rootTTY](char padchar, size_t padlen, char* buffer) {
+            for (size_t i = strlen(buffer); i < padlen; i++)
                 *rootTTY << padchar;
 
             *rootTTY << buffer;
@@ -58,8 +58,8 @@ namespace AEX {
             char c = *format;
 
             if (c == '%') {
-                int  padlen  = 0;
-                char padchar = ' ';
+                size_t padlen  = 0;
+                char   padchar = ' ';
 
                 c        = *++format;
                 int size = SIZE_INT;
