@@ -4,6 +4,7 @@
 #include "aex/arch/sys/cpu/tss.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
+#include "aex/sec/random.hpp"
 #include "aex/string.hpp"
 
 #include "sys/irq/apic.hpp"
@@ -249,6 +250,10 @@ namespace AEX::Sys {
         wrmsr(MSR_FSBase, (size_t) thread->tls);
 
         AEX_ASSERT(thread->parent);
+
+        Sec::feed_random(thread->context->rsp);
+        Sec::feed_random(thread->context_aux->rsp);
+        Sec::feed_random(IRQ::APIC::counter());
     }
 
     void CPU::pushFmsg(const char* msg) {

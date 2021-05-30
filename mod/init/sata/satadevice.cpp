@@ -5,6 +5,7 @@
 #include "aex/math.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
+#include "aex/sec/random.hpp"
 
 using namespace AEX::Dev;
 
@@ -102,6 +103,8 @@ namespace AEX::Sys::SATA {
 
         while (true) {
             hba_port->command_issue |= (1 << slot);
+
+            Sec::feed_random(counter * 11);
 
             if (counter++ > 100000000)
                 kpanic("sata: issueCMD() stuck");

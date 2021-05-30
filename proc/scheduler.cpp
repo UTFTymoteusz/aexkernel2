@@ -1,5 +1,6 @@
 #include "aex/assert.hpp"
 #include "aex/proc.hpp"
+#include "aex/sec/random.hpp"
 #include "aex/sys/time.hpp"
 #include "aex/utility.hpp"
 
@@ -46,6 +47,8 @@ namespace AEX::Proc {
         thread->parent->usage.cpu_time_ns += delta;
         thread->lock.releaseRaw();
 
+        Sec::feed_random(uptime);
+
         if (next == nullptr)
             thread = thread_list_head;
 
@@ -61,6 +64,8 @@ namespace AEX::Proc {
 
                 break;
             case TS_SLEEPING:
+                Sec::feed_random(thread->wakeup_at);
+
                 if (uptime < thread->wakeup_at && !thread->interrupted())
                     continue;
 

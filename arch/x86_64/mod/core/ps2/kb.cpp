@@ -3,7 +3,9 @@
 #include "aex/dev/inputdevice.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
+#include "aex/sec/random.hpp"
 #include "aex/sys/irq.hpp"
+#include "aex/sys/time.hpp"
 
 #include "common.hpp"
 #include "translation.hpp"
@@ -50,6 +52,8 @@ void kb_irq(void*) {
     static bool extra    = false;
 
     uint8_t byte = CPU::inb(PS2_IO_DATA);
+
+    Sec::feed_random(byte * 97 * Sys::Time::uptime());
 
     if (byte == 0xE0) {
         extra = true;

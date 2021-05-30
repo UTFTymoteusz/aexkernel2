@@ -4,6 +4,7 @@
 #include "aex/assert.hpp"
 #include "aex/mem.hpp"
 #include "aex/proc.hpp"
+#include "aex/sec/random.hpp"
 #include "aex/spinlock.hpp"
 
 #include "sys/irq.hpp"
@@ -61,6 +62,8 @@ namespace AEX::Sys::IRQ {
     Spinlock handler_lock;
 
     void handle(uint8_t irq) {
+        Sec::feed_random(irq * 73);
+
         AEX_ASSERT(irq < 32);
 
         // We need to steal the state of thread so nothing messes with us

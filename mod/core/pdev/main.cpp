@@ -1,5 +1,6 @@
 #include "dev/full.hpp"
 #include "dev/null.hpp"
+#include "dev/random.hpp"
 #include "dev/zero.hpp"
 
 const char* MODULE_NAME = "pdev";
@@ -20,7 +21,13 @@ void module_enter() {
     auto full = new Full();
     if (!full->registerDevice()) {
         printk(WARN "pdev: Failed to register /dev/full\n");
-        delete zero;
+        delete full;
+    }
+
+    auto random = new Random();
+    if (!random->registerDevice()) {
+        printk(WARN "pdev: Failed to register /dev/random\n");
+        delete random;
     }
 }
 
