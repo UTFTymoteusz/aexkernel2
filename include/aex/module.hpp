@@ -20,7 +20,7 @@ namespace AEX {
     class API Module {
         public:
         const char* name     = nullptr;
-        int         name_len = 0;
+        size_t      name_len = 0;
 
         char* strings = nullptr;
 

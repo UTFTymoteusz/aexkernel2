@@ -2,7 +2,7 @@
 
 namespace AEX {
     const char* error_names[128] = {
-        [ENONE]           = "None",
+        [ENONE]           = "Success",
         [E2BIG]           = "Argument list too long",
         [EACCES]          = "Permission denied",
         [EADDRINUSE]      = "Address already in use",

@@ -4,7 +4,7 @@
 
 namespace AEX {
     enum error_t {
-        ENONE = 0,       // None
+        ENONE = 0,       // Success
         E2BIG,           // Argument list too long
         EACCES,          // Permission denied
         EADDRINUSE,      // Address already in use

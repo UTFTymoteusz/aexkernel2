@@ -218,9 +218,9 @@ namespace AEX::Sys {
                 return false;
             }
 
-            // AEX::printk("cpu%i: Page fault @ 0x%lx (0x%lx)\n"
-            //            "    RIP: 0x%016lx\n",
-            //            cpu->id, cr2, cr3, info->rip);
+            AEX::printk("cpu%i: pid%i: Page fault @ 0x%lx (0x%lx)\n"
+                        "    RIP: 0x%016lx\n",
+                        cpu->id, cpu->current_thread->getProcess()->pid, cr2, cr3, info->rip);
 
             IPC::siginfo_t sinfo = {};
 
@@ -251,9 +251,14 @@ namespace AEX::Sys {
             return false;
         }
 
-        // AEX::printk("cpu%i: Invalid opcode @ 0x%lx (0x%lx)\n"
-        //            "    RIP: 0x%016lx\n",
-        //            cpu->id, cr2, cr3, info->rip);
+        size_t cr2 = 0, cr3 = 0;
+
+        asm volatile("mov rax, cr2; mov %0, rax;" : : "m"(cr2) : "memory");
+        asm volatile("mov rax, cr3; mov %0, rax;" : : "m"(cr3) : "memory");
+
+        AEX::printk("cpu%i: pid%i: Invalid opcode @ 0x%lx (0x%lx)\n"
+                    "    RIP: 0x%016lx\n",
+                    cpu->id, cpu->current_thread->getProcess()->pid, cr2, cr3, info->rip);
 
         IPC::siginfo_t sinfo = {};
 

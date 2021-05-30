@@ -58,8 +58,8 @@ namespace AEX::Debug {
             }
 
             frame = frame->rbp;
-            // if (!Mem::kernel_pagemap->paddrof(frame))
-            //    return;
+            if (!Mem::kernel_pagemap->paddrof(frame))
+                return;
         }
     }
 

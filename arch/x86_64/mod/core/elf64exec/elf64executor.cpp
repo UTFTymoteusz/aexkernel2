@@ -72,7 +72,9 @@ error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator
             if (section_header.type != ELF::sc_type_t::SC_NO_DATA)
                 memcpy(kaddr, (uint8_t*) addr + fptr, chk_size);
             else
-                memset64(kaddr, 0x0000, 512);
+                // AAAASDSADSA I was going over the page boundary
+                // memset64(kaddr, 0x0000, 512);
+                memset(kaddr, '\0', chk_size);
 
             Mem::kernel_pagemap->free(kaddr, chk_size);
 
