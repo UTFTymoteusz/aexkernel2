@@ -5,7 +5,7 @@
 
 namespace AEX::Dev::Tree {
     Driver::Driver(const char* name) {
-        strncpy(this->name, name, sizeof(this->name));
+        strlcpy(this->name, name, sizeof(this->name));
     }
 
     Driver::~Driver() {}

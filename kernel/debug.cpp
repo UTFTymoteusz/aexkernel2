@@ -194,7 +194,7 @@ namespace AEX::Debug {
         printk("in: %s\n", symbol);
 
         if (symbol[0] != '_' && symbol[1] != 'Z') {
-            strncpy(buffer, symbol, buffer_len);
+            strlcpy(buffer, symbol, buffer_len);
             printk("unchanged: %s\n", buffer);
 
             return buffer;

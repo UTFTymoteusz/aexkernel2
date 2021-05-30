@@ -43,7 +43,7 @@ namespace AEX::FS {
             auto mount = new Mount();
 
             printk(OK "fs: Mounted '%s' at %s\n", fs->name, path);
-            strncpy(mount->path, path, sizeof(mount->path));
+            strlcpy(mount->path, path, sizeof(mount->path));
             mount->control_block       = res.value;
             mount->control_block->path = mount->path;
 

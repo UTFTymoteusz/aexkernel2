@@ -83,7 +83,8 @@ namespace AEX::FS {
             len = newlen;
         }
 
-        return strncpy(buffer, &((char*) path)[last], min(num, len - last + 1));
+        strlcpy(buffer, &((char*) path)[last], min(num, len - last + 1));
+        return buffer;
     }
 
     char* get_extension(char* buffer, const char* path, size_t num) {
@@ -103,7 +104,8 @@ namespace AEX::FS {
             return buffer;
         }
 
-        return strncpy(buffer, &((char*) path)[last], min(num, len - last + 1));
+        strlcpy(buffer, &((char*) path)[last], min(num, len - last + 1));
+        return buffer;
     }
 
     bool check_length(const char* path) {
@@ -194,7 +196,7 @@ namespace AEX::FS {
 
             buffer[index] = '/';
             index++;
-            strncpy(&buffer[index], piece, PATH_MAX);
+            strlcpy(&buffer[index], piece, PATH_MAX);
 
             index += piece_len;
             buffer[index] = '\0';

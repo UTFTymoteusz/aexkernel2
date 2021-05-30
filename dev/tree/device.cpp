@@ -7,7 +7,7 @@
 
 namespace AEX::Dev::Tree {
     Device::Device(const char* name, Device* parent) {
-        strncpy(this->name, name, sizeof(this->name));
+        strlcpy(this->name, name, sizeof(this->name));
 
         if (!parent && root_device)
             parent = root_device;

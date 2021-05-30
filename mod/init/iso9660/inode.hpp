@@ -77,7 +77,7 @@ namespace AEX::FS {
                     if (memcmp(&buffer[susp_pos], "CE", 2) == 0)
                         kpanic("iso9660: CE encountered");
                     else if (memcmp(&buffer[susp_pos], "NM", 2) == 0) {
-                        strncpy(name_buffer, (const char*) &buffer[susp_pos + 5],
+                        strlcpy(name_buffer, (const char*) &buffer[susp_pos + 5],
                                 min(buffer[susp_pos + 2] - 5 + 1, 255));
                     }
                 }

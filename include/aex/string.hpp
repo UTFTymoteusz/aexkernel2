@@ -64,7 +64,7 @@ namespace AEX {
 
     API size_t strlen(const char* str);
     API int    strcmp(const char* a, const char* b);
-    API char*  strncpy(char* dst, const char* src, size_t num);
+    API size_t strlcpy(char* dst, const char* src, size_t num);
     API char*  strndup(const char* str, size_t len);
 
     API void memset(void* mem, char c, size_t len);

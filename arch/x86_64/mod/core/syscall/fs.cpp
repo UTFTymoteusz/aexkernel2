@@ -273,7 +273,7 @@ long readdir(int fd, dirent* uent) {
     dirent kent;
 
     kent.d_ino = dentry.inode_id;
-    strncpy(kent.d_name, dentry.name, sizeof(kent.d_name));
+    strlcpy(kent.d_name, dentry.name, sizeof(kent.d_name));
 
     USR_ENSURE_OPT(u2k_memcpy(uent, &kent, sizeof(kent)));
     return 0;

@@ -13,7 +13,7 @@
 
 namespace AEX::FS {
     dirent::dirent(const char* name, int pos, int inode_id) {
-        strncpy(this->name, name, sizeof(this->name));
+        strlcpy(this->name, name, sizeof(this->name));
         this->inode_id = inode_id;
         this->pos      = pos;
     }

@@ -119,7 +119,7 @@ namespace AEX::FS {
                 }
             }
             else {
-                strncpy(filename, fat_dirent.filename, 12);
+                strlcpy(filename, fat_dirent.filename, 12);
                 if (strcmp(filename, ".          ") == 0 || strcmp(filename, "..         ") == 0)
                     continue;
 
@@ -134,7 +134,7 @@ namespace AEX::FS {
             ino_t  inode_id = assoc ? assoc.value : createAssoc(fat_dirent);
             dirent aex_dirent;
 
-            strncpy(aex_dirent.name, filename, sizeof(aex_dirent.name));
+            strlcpy(aex_dirent.name, filename, sizeof(aex_dirent.name));
             aex_dirent.type     = fat_dirent.attributes & FAT_DIRECTORY ? FT_DIRECTORY : FT_REGULAR;
             aex_dirent.inode_id = inode_id;
             aex_dirent.pos      = ctx->pos;
@@ -244,7 +244,7 @@ namespace AEX::FS {
                 }
             }
             else {
-                strncpy(filenameB, fat_dirent.filename, 12);
+                strlcpy(filenameB, fat_dirent.filename, 12);
                 if (strcmp(filenameB, ".          ") == 0 || strcmp(filenameB, "..         ") == 0)
                     continue;
 
@@ -353,7 +353,7 @@ namespace AEX::FS {
         char charbuffer[8];
         int  count    = 0;
         auto readChar = [&charbuffer, &remaining, &count, &buffer](uint8_t* ptr) {
-            strncpy(charbuffer, (char*) ptr, sizeof(charbuffer));
+            strlcpy(charbuffer, (char*) ptr, sizeof(charbuffer));
             if (charbuffer[0] == '\0') {
                 remaining = 0;
                 return;
@@ -575,7 +575,7 @@ namespace AEX::FS {
     void FATDirectory::pushAssoc(const char* filename, ino_t id) {
         inode_assoc assoc;
 
-        strncpy(assoc.filename, filename, 12);
+        strlcpy(assoc.filename, filename, 12);
         assoc.id = id;
 
         m_assocs.push(assoc);
@@ -603,7 +603,7 @@ namespace AEX::FS {
                 dir->m_filled = true;
             }
 
-            // strncpy(dir->m_name, dirent.filename, 12);
+            // strlcpy(dir->m_name, dirent.filename, 12);
 
             dir->size          = dir->chain().count() * fat_block->block_size;
             dir->block_count   = dir->chain().count();
@@ -620,7 +620,7 @@ namespace AEX::FS {
                 file->m_filled = false;
             }
 
-            // strncpy(file->m_name, dirent.filename, 12);
+            // strlcpy(file->m_name, dirent.filename, 12);
 
             file->size          = dirent.size;
             file->block_size    = fat_block->block_size;

@@ -97,7 +97,7 @@ namespace AEX {
 
             auto entry = module_entry();
 
-            strncpy(entry.name, entry_try.value.name, sizeof(entry.name));
+            strlcpy(entry.name, entry_try.value.name, sizeof(entry.name));
             entry.order = get_order(entry_try.value);
 
             list.push(entry);

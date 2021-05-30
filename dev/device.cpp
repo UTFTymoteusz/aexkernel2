@@ -6,7 +6,7 @@
 
 namespace AEX::Dev {
     Device::Device(const char* name, dev_type_t type) : type(type) {
-        strncpy(this->name, name, sizeof(this->name));
+        strlcpy(this->name, name, sizeof(this->name));
     }
 
     bool Device::registerDevice() {

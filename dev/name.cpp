@@ -13,8 +13,8 @@ namespace AEX::Dev {
         letter_incrementation(const char* pattern) {
             memset(this->current, '\0', sizeof(this->current));
 
-            strncpy(this->pattern, pattern, sizeof(this->pattern));
-            strncpy(this->current, pattern, sizeof(this->current));
+            strlcpy(this->pattern, pattern, sizeof(this->pattern));
+            strlcpy(this->current, pattern, sizeof(this->current));
 
             for (size_t i = 0; i < sizeof(this->current); i++) {
                 if (this->current[i] == '\0')
@@ -30,7 +30,7 @@ namespace AEX::Dev {
         }
 
         void get(char* buffer, size_t len) {
-            strncpy(buffer, this->current, len);
+            strlcpy(buffer, this->current, len);
             buffer[len - 1] = '\0';
 
             for (size_t i = start; i < sizeof(this->current); i++) {
@@ -58,8 +58,8 @@ namespace AEX::Dev {
         int current = 0;
 
         number_incrementation(const char* pattern) {
-            strncpy(this->pattern, pattern, sizeof(this->pattern));
-            strncpy(this->base, pattern, sizeof(this->base));
+            strlcpy(this->pattern, pattern, sizeof(this->pattern));
+            strlcpy(this->base, pattern, sizeof(this->base));
 
             for (size_t i = 0; i < sizeof(this->base); i++)
                 if (this->base[i] == '%')

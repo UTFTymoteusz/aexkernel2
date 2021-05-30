@@ -45,7 +45,8 @@ namespace AEX::Net {
         if (strlen(hostname) + 1 > len)
             return EINVAL;
 
-        return strncpy(buffer, hostname, len + 1);
+        strlcpy(buffer, hostname, len + 1);
+        return buffer;
     }
 
     void set_hostname(const char* hostname_new) {
@@ -53,7 +54,7 @@ namespace AEX::Net {
         size_t len = min<size_t>(strlen(hostname_new), 255);
 
         hostname = Mem::Heap::realloc(hostname, len + 1);
-        strncpy(hostname, hostname_new, len + 1);
+        strlcpy(hostname, hostname_new, len + 1);
     }
 
     void read_hostname() {

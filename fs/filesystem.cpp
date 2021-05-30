@@ -6,7 +6,7 @@
 
 namespace AEX::FS {
     Filesystem::Filesystem(const char* name) {
-        strncpy(this->name, name, sizeof(this->name));
+        strlcpy(this->name, name, sizeof(this->name));
 
         filesystems.addRef(this);
         printk(OK "fs: Registered filesystem '%s'\n", this->name);

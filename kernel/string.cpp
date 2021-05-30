@@ -27,21 +27,23 @@ namespace AEX {
         return 0;
     }
 
-    char* strncpy(char* dst, const char* src, size_t num) {
-        if (num == 0)
-            return dst;
+    size_t strlcpy(char* dst, const char* src, size_t num) {
+        size_t src_len = strlen(src);
 
-        size_t len = min(strlen(src), num - 1);
-        for (size_t i = 0; i < len; i++)
-            dst[i] = src[i];
+        if (num == 0)
+            return src_len;
+
+        size_t len = min(src_len, num - 1);
+        memcpy(dst, src, len);
 
         dst[len] = '\0';
 
-        return dst;
+        return src_len;
     }
 
     char* strndup(const char* str, size_t len) {
-        return strncpy(new char[len + 1], str, len + 1);
+        strlcpy(new char[len + 1], str, len + 1);
+        return (char*) str;
     }
 
     void memset(void* mem, char c, size_t len) {

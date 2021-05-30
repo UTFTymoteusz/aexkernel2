@@ -8,7 +8,7 @@
 
 namespace AEX::Dev::Tree {
     Bus::Bus(const char* name) {
-        strncpy(this->name, name, sizeof(this->name));
+        strlcpy(this->name, name, sizeof(this->name));
 
         buses.addRef(this);
 

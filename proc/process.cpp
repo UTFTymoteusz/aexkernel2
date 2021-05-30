@@ -91,10 +91,10 @@ namespace AEX::Proc {
         if (name_n == nullptr)
             FS::get_filename(name, image_path_n, sizeof(name));
         else
-            strncpy(name, name_n, sizeof(name));
+            strlcpy(name, name_n, sizeof(name));
 
         image_path = Mem::Heap::realloc(image_path, strlen(image_path_n) + 1);
-        strncpy(image_path, image_path_n, strlen(image_path_n) + 1);
+        strlcpy(image_path, image_path_n, strlen(image_path_n) + 1);
     }
 
     void Process::set_cwd(const char* cwd) {
@@ -103,7 +103,7 @@ namespace AEX::Proc {
         size_t len = min<size_t>(strlen(cwd), FS::PATH_MAX - 1);
 
         m_cwd = Mem::Heap::realloc(m_cwd, len + 1);
-        strncpy(m_cwd, cwd, len + 1);
+        strlcpy(m_cwd, cwd, len + 1);
     }
 
     const char* Process::get_cwd() {
@@ -339,7 +339,7 @@ namespace AEX::Proc {
             char*       var_d = new char[strlen(var) + 1];
 
             m_environment.push(var_d);
-            strncpy(var_d, var, strlen(var) + 1);
+            strlcpy(var_d, var, strlen(var) + 1);
         }
     }
 
@@ -352,7 +352,7 @@ namespace AEX::Proc {
             char*       var_d = new char[strlen(var) + 1];
 
             m_environment.push(var_d);
-            strncpy(var_d, var, strlen(var) + 1);
+            strlcpy(var_d, var, strlen(var) + 1);
         }
     }
 
@@ -381,7 +381,7 @@ namespace AEX::Proc {
             char*  buffer = new char[len + 1];
 
             m_environment.push(buffer);
-            strncpy(buffer, val, len + 1);
+            strlcpy(buffer, val, len + 1);
 
             return ENONE;
         }
@@ -392,7 +392,7 @@ namespace AEX::Proc {
         size_t len = strlen(val);
 
         m_environment[index] = (char*) Mem::Heap::realloc(m_environment[index], len + 1);
-        strncpy(m_environment[index], val, len + 1);
+        strlcpy(m_environment[index], val, len + 1);
 
         return ENONE;
     }
