@@ -65,6 +65,7 @@ namespace AEX {
     API size_t strlen(const char* str);
     API int    strcmp(const char* a, const char* b);
     API char*  strncpy(char* dst, const char* src, size_t num);
+    API char*  strndup(const char* str, size_t len);
 
     API void memset(void* mem, char c, size_t len);
     API void memset16(void* mem, uint16_t val, size_t count);
@@ -80,8 +81,4 @@ namespace AEX {
     API inline char toupper(char c) {
         return inrange(c, 'a', 'z') ? c - 32 : c;
     }
-
-    // mallocs(), copies the given string over into the allocated buffer and returns it.
-    // automatically adds 1 to len to compensate for the null byte at the end.
-    API char* strpivot(const char* str, size_t len);
 }

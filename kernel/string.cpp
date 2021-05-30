@@ -40,6 +40,10 @@ namespace AEX {
         return dst;
     }
 
+    char* strndup(const char* str, size_t len) {
+        return strncpy(new char[len + 1], str, len + 1);
+    }
+
     void memset(void* mem, char c, size_t len) {
         char* m_mem = (char*) mem;
 
@@ -87,9 +91,5 @@ namespace AEX {
                 return 1;
 
         return 0;
-    }
-
-    char* strpivot(const char* str, size_t len) {
-        return strncpy(new char[len + 1], str, len + 1);
     }
 }

@@ -185,7 +185,7 @@ namespace AEX {
         }
 
         global_symbols.push({
-            .name = strpivot(name, strlen(name)),
+            .name = strndup(name, strlen(name)),
             .addr = addr,
         });
     }
