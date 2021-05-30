@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aex/dev/blockdevice.hpp"
+#include "aex/dev/chardevice.hpp"
 #include "aex/dev/device.hpp"
 #include "aex/dev/name.hpp"
 #include "aex/dev/netdevice.hpp"
