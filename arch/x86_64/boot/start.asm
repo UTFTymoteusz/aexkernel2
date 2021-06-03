@@ -75,6 +75,7 @@ bootstrap:
 	mov eax, cr0
 	or  eax, (1 << 31)     ; PG
 	and eax, ~0x60000000   ; clear CD and NW
+	or  eax, (1 << 18)     ; And let's enable alignment checking while at it
 	mov cr0, eax
 
 	pop edx

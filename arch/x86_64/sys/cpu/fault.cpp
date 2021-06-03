@@ -125,6 +125,8 @@ namespace AEX::Sys {
             print_info(info);
             printk(info->rflags & 0x0200 ? "Interrupts were on\n" : "Interrupts were off\n");
 
+            Proc::Process::kill(3, IPC::SIGKILL);
+
             for (int i = 0; i < 4; i++) {
                 for (int j = 0; j < 32; j++)
                     if (Sys::IRQ::APIC::read(0x100 + i * 0x10) & (1 << j))
@@ -251,14 +253,8 @@ namespace AEX::Sys {
             return false;
         }
 
-        size_t cr2 = 0, cr3 = 0;
-
-        asm volatile("mov rax, cr2; mov %0, rax;" : : "m"(cr2) : "memory");
-        asm volatile("mov rax, cr3; mov %0, rax;" : : "m"(cr3) : "memory");
-
-        AEX::printk("cpu%i: pid%i: Invalid opcode @ 0x%lx (0x%lx)\n"
-                    "    RIP: 0x%016lx\n",
-                    cpu->id, cpu->current_thread->getProcess()->pid, cr2, cr3, info->rip);
+        AEX::printk("cpu%i: pid%i: Invalid opcode @ 0x%lx\n", cpu->id,
+                    cpu->current_thread->getProcess()->pid, info->rip);
 
         IPC::siginfo_t sinfo = {};
 
