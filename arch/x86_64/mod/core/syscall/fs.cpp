@@ -51,7 +51,10 @@ ssize_t read(int fd, usr_void* usr_buf, size_t count) {
         USR_ENSURE_OPT(k2u_memcpy(&usr_buf_c[i], buffer, len));
 
         read += read_try.value;
-        if (read_try.error != EINTR)
+        if (read_try.error && read_try.error != EINTR)
+            break;
+
+        if (read_try.value < len)
             break;
     }
 

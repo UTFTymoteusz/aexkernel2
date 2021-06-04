@@ -26,7 +26,7 @@ namespace AEX::Dev::TTY {
          * Reads a character from the virtual terminal.
          * @returns A character.
          **/
-        char read();
+        int read();
 
         /**
          * Writes a character to the virtual terminal.
@@ -91,8 +91,8 @@ namespace AEX::Dev::TTY {
         int m_bg;
         int m_fg;
 
-        Mem::CircularBuffer* m_inputBuffer;
-        Dev::Input::keymap   m_keymap = Dev::Input::default_keymap;
+        Mem::CircularBuffer<int, true>* m_inputBuffer;
+        Dev::Input::keymap              m_keymap = Dev::Input::default_keymap;
 
         void inputReady();
         void keyPress(Dev::Input::event m_event);

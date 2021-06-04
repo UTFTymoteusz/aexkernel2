@@ -15,14 +15,14 @@ namespace AEX::IPC {
 
     optional<ssize_t> PipeWriter::write(const void* buf, size_t count) {
         if (count <= PIPE_BUF)
-            return _pipe->buffer.writeAtomic(buf, count);
+            return _pipe->buffer.write((const char*) buf, count, true);
 
-        return _pipe->buffer.write(buf, count);
+        return _pipe->buffer.write((const char*) buf, count);
     }
 
     PipeReader::PipeReader(Mem::SmartPointer<Pipe> pipe) : _pipe(pipe) {}
 
     optional<ssize_t> PipeReader::read(void* buf, size_t count) {
-        return _pipe->buffer.read(buf, count, 1);
+        return _pipe->buffer.read((char*) buf, count, 1);
     }
 }

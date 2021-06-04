@@ -13,18 +13,14 @@
 // pls consider making thread functions accept and return smartpointers
 // make the eventbong use an int or whatever
 
+namespace AEX::IPC {
+    class Event;
+}
+
 namespace AEX::Proc {
     class Process;
     class Event;
     class Context;
-
-    enum status_t : uint8_t {
-        TS_FRESH    = 0x00,
-        TS_RUNNABLE = 0x01,
-        TS_SLEEPING = 0x02,
-        TS_BLOCKED  = 0x04,
-        TS_DEAD     = 0x80,
-    };
 
     class API Thread {
         public:
@@ -35,6 +31,7 @@ namespace AEX::Proc {
 
         struct state {
             uint16_t busy;
+            uint16_t softcritical;
             uint16_t critical;
 
             status_t status;
@@ -61,9 +58,10 @@ namespace AEX::Proc {
             int64_t wakeup_at;
         };
 
-        Process* parent;
-        Thread*  next;
-        Thread*  prev;
+        Process*    parent;
+        Thread*     next;
+        Thread*     prev;
+        IPC::Event* event;
 
         void* original_entry;
 
@@ -174,20 +172,44 @@ namespace AEX::Proc {
         }
 
         /**
+         * Adds 1 to the thread's softcritical counter. If m_softcritical is greater than 0, the
+         * thread cannot be interrupted or killed.
+         **/
+        void addSoftCritical();
+
+        /**
+         * Subtracts 1 from the thread's softcritical counter. If m_softcritical is greater than 0,
+         * the thread cannot be interrupted or killed.
+         **/
+        void subSoftCritical();
+
+        inline bool isSoftCritical() {
+            return Mem::atomic_read(&m_softcritical) > 0;
+        }
+
+        inline uint16_t getSoftCritical() {
+            return Mem::atomic_read(&m_softcritical);
+        }
+
+        inline void setSoftCritical(uint16_t softcritical) {
+            m_softcritical = softcritical;
+        }
+
+        /**
          * Adds 1 to the thread's critical counter. If m_critical is greater than 0, the thread
-         * cannot be interrupted or killed.
+         * cannot be rescheduled or killed.
          **/
         void addCritical();
 
         /**
          * Subtracts 1 from the thread's critical counter. If m_critical is greater than 0, the
-         * thread cannot be interrupted or killed.
+         * thread cannot be rescheduled or killed.
          **/
         void subCritical();
 
         /**
          * Checks the thread's critical counter. If m_critical is greater than 0, the thread cannot
-         * be interrupted or killed.
+         * be rescheduled or killed.
          * @returns Whenever the thread is "critical".
          **/
         inline bool isCritical() {
@@ -214,8 +236,9 @@ namespace AEX::Proc {
         void  loadState(state& m_state);
 
         private:
-        uint16_t m_busy     = 0;
-        uint16_t m_critical = 0;
+        uint16_t m_busy         = 0;
+        uint16_t m_softcritical = 0;
+        uint16_t m_critical     = 0;
 
         bool m_detached = false;
         bool m_aborting = false;

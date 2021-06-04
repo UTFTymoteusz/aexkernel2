@@ -7,7 +7,5 @@ namespace AEX::Sys::Time {
 
     void init();
 
-    time_t uptime_raw();
-
     void lazy_sleep(uint64_t ms);
 }

@@ -76,8 +76,8 @@ namespace NetStack {
         return ENONE;
     }
 
-    optional<size_t> UDPSocket::sendTo(const void* buffer, size_t len, int flags,
-                                       const sockaddr* dst_addr) {
+    optional<ssize_t> UDPSocket::sendTo(const void* buffer, size_t len, int flags,
+                                        const sockaddr* dst_addr) {
         if (!buffer)
             return EINVAL;
 
@@ -130,8 +130,8 @@ namespace NetStack {
         return len;
     }
 
-    optional<size_t> UDPSocket::receiveFrom(void* buffer, size_t len, int flags,
-                                            sockaddr* src_addr) {
+    optional<ssize_t> UDPSocket::receiveFrom(void* buffer, size_t len, int flags,
+                                             sockaddr* src_addr) {
         m_lock.acquire();
 
         // Make nonblocking flag pls

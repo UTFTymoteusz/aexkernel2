@@ -19,17 +19,21 @@ namespace AEX::Dev::TTY {
     }
 
     void VTTY::inputReady() {
-        m_inputBuffer = new Mem::CircularBuffer(2048);
+        m_inputBuffer = new Mem::CircularBuffer<int, true>(256);
     }
 
     void VTTY::keyPress(event m_event) {
-        if (!m_inputBuffer->writeAvailable())
+        if (!m_inputBuffer->writeav())
             return;
 
         if (m_event.mod & KEYMOD_CTRL && m_event.keycode >= KEY_A && m_event.keycode <= KEY_Z) {
             char cc = 1 + (m_event.keycode - KEY_A);
-            m_inputBuffer->write(&cc, 1);
+            if (cc == 4) {
+                m_inputBuffer->write(-1);
+                return;
+            }
 
+            m_inputBuffer->write((int) cc);
             return;
         }
 
@@ -37,6 +41,6 @@ namespace AEX::Dev::TTY {
         if (!c)
             return;
 
-        m_inputBuffer->write(&c, 1);
+        m_inputBuffer->write((int) c);
     }
 }

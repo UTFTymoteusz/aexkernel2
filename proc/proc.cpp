@@ -4,7 +4,6 @@
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/assert.hpp"
 #include "aex/debug.hpp"
-#include "aex/ipc/messagequeue.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc/process.hpp"
@@ -37,6 +36,10 @@ namespace AEX::Proc {
     bool ready = false;
 
     Thread** void_threads;
+
+    const char* status_names[] = {
+        "TS_FRESH", "TS_RUNNABLE", "TS_SLEEPING", "TS_BLOCKED", "TS_DEAD",
+    };
 
     void setup_idles();
     void setup_cores(Thread* bsp_thread);
@@ -258,5 +261,9 @@ namespace AEX::Proc {
         }
 
         delete void_threads;
+    }
+
+    const char* strstatus(status_t status) {
+        return status_names[status];
     }
 }

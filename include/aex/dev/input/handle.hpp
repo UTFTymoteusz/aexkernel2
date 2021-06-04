@@ -20,8 +20,8 @@ namespace AEX::Dev::Input {
         event read();
 
         private:
-        Mem::CircularBuffer m_buffer;
-        bool                m_registered = false;
+        Mem::CircularBuffer<event, true> m_buffer;
+        bool                             m_registered = false;
 
         Handle(int buffer_size);
 

@@ -46,8 +46,13 @@ namespace AEX::Dev {
     optional<ssize_t> TTYChar::read(CharHandle*, void* ptr, size_t len) {
         auto cptr = (char*) ptr;
 
-        for (size_t i = 0; i < len; i++)
-            cptr[i] = m_tty->read();
+        for (size_t i = 0; i < len; i++) {
+            int v = m_tty->read();
+            if (v == -1)
+                return i;
+
+            cptr[i] = v;
+        }
 
         return len;
     }
@@ -100,7 +105,7 @@ namespace AEX::Dev {
         auto info = m_tty->info();
 
         len = Mem::pageceil(len);
-        if (len + offset > (size_t) Mem::pageceil(info.gr_bytes))
+        if (len + offset > Mem::pageceil<size_t>(info.gr_bytes))
             return ERANGE;
 
         auto addr =

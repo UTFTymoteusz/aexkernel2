@@ -9,7 +9,7 @@ namespace AEX::Dev::TTY {
         Abstractor();
         Abstractor(VTTY* vtty);
 
-        char read();
+        int read();
 
         TTY& write(char c);
         TTY& write(const char* str);

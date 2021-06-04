@@ -4,7 +4,7 @@
 #include "aex/utility.hpp"
 
 namespace AEX::Dev::TTY {
-    char TTY::read() {
+    int TTY::read() {
         kpanic("Default TTY::read() called");
     }
 

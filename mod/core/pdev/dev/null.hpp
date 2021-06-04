@@ -16,7 +16,7 @@ class Null : public CharDevice {
     }
 
     optional<ssize_t> read(CharHandle*, void*, size_t) {
-        NOT_IMPLEMENTED;
+        return 0;
     }
 
     optional<ssize_t> write(CharHandle*, const void*, size_t len) {

@@ -21,7 +21,7 @@ namespace NetStack {
 
     static constexpr auto TCP_RETRIES        = 5;
     static constexpr auto TCP_TX_BUFFER_SIZE = 4096;
-    static constexpr auto TCP_RX_BUFFER_SIZE = 8192 + 64;
+    static constexpr auto TCP_RX_BUFFER_SIZE = 8192 * 4 + 64;
     static constexpr auto TCP_MIN_MSS        = 256;
     static constexpr auto TCP_PROBE_SLACK    = 64;
 
@@ -118,10 +118,10 @@ namespace NetStack {
 
         AEX::optional<AEX::Net::Socket_SP> accept();
 
-        AEX::optional<size_t> sendTo(const void* buffer, size_t len, int flags,
-                                     const AEX::Net::sockaddr* dst_addr);
-        AEX::optional<size_t> receiveFrom(void* buffer, size_t len, int flags,
-                                          AEX::Net::sockaddr* src_addr);
+        AEX::optional<ssize_t> sendTo(const void* buffer, size_t len, int flags,
+                                      const AEX::Net::sockaddr* dst_addr);
+        AEX::optional<ssize_t> receiveFrom(void* buffer, size_t len, int flags,
+                                           AEX::Net::sockaddr* src_addr);
 
         AEX::error_t shutdown(int how);
         AEX::error_t close();
@@ -177,8 +177,10 @@ namespace NetStack {
         AEX::IPC::Event m_tx_event = {};
         AEX::IPC::Event m_rx_event = {};
 
-        AEX::Mem::CircularBuffer m_tx_buffer = AEX::Mem::CircularBuffer(TCP_TX_BUFFER_SIZE);
-        AEX::Mem::CircularBuffer m_rx_buffer = AEX::Mem::CircularBuffer(TCP_RX_BUFFER_SIZE);
+        AEX::Mem::CircularBuffer<uint8_t> m_tx_buffer =
+            AEX::Mem::CircularBuffer<uint8_t>(TCP_TX_BUFFER_SIZE);
+        AEX::Mem::CircularBuffer<uint8_t> m_rx_buffer =
+            AEX::Mem::CircularBuffer<uint8_t>(TCP_RX_BUFFER_SIZE);
 
         AEX::Mem::Vector<segment*, 16, 16>             m_retransmission_queue;
         AEX::Mem::Vector<tcp_listen_entry, 16, 16>*    m_listen_queue = nullptr;

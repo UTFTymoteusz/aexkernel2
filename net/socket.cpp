@@ -55,19 +55,19 @@ namespace AEX::Net {
         return ENOSYS;
     }
 
-    optional<size_t> Socket::sendTo(const void*, size_t, int, const sockaddr*) {
+    optional<ssize_t> Socket::sendTo(const void*, size_t, int, const sockaddr*) {
         return ENOSYS;
     }
 
-    optional<size_t> Socket::receiveFrom(void*, size_t, int, sockaddr*) {
+    optional<ssize_t> Socket::receiveFrom(void*, size_t, int, sockaddr*) {
         return ENOSYS;
     }
 
-    optional<size_t> Socket::send(const void* buffer, size_t len, int flags) {
+    optional<ssize_t> Socket::send(const void* buffer, size_t len, int flags) {
         return sendTo(buffer, len, flags, nullptr);
     }
 
-    optional<size_t> Socket::receive(void* buffer, size_t len, int flags) {
+    optional<ssize_t> Socket::receive(void* buffer, size_t len, int flags) {
         return receiveFrom(buffer, len, flags, nullptr);
     }
 

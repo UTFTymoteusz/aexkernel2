@@ -76,6 +76,25 @@ namespace AEX::IPC {
         return total;
     }
 
+    void Event::nevermind() {
+        m_lock.acquire();
+
+        if (m_defunct) {
+            m_lock.release();
+            return;
+        }
+
+        auto current = Thread::current();
+
+        for (int i = 0; i < m_tiddies.count(); i++)
+            if (m_tiddies[i] == current) {
+                m_tiddies.erase(i);
+                break;
+            }
+
+        m_lock.release();
+    }
+
     void SimpleEvent::wait(int timeout) {
         m_lock.acquire();
 

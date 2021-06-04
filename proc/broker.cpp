@@ -1,7 +1,8 @@
 #include "aex/proc/broker.hpp"
 
-#include "aex/ipc/messagequeue.hpp"
+#include "aex/debug.hpp"
 #include "aex/kpanic.hpp"
+#include "aex/mem/circularbuffer.hpp"
 #include "aex/proc/thread.hpp"
 
 #include "proc/broker.hpp"
@@ -12,9 +13,9 @@ namespace AEX::Proc {
         void* arg;
     };
 
-    IPC::MessageQueue broker_queue;
-    Thread*           broker_thread;
-    broker_request    broker_current;
+    Mem::CircularBuffer<broker_request>* broker_queue;
+    Thread*                              broker_thread;
+    broker_request                       broker_current;
 
     void broker_loop();
 
@@ -24,7 +25,7 @@ namespace AEX::Proc {
         broker_thread->start();
         broker_thread->detach();
 
-        new (&broker_queue) IPC::MessageQueue();
+        broker_queue = new Mem::CircularBuffer<broker_request>(64);
 
         kpanic_hook.subscribe([]() {
             int  delta = 0;
@@ -36,7 +37,7 @@ namespace AEX::Proc {
     }
 
     void broker(void* (*func)(void* arg), void* arg) {
-        broker_queue.writeObject(broker_request{
+        broker_queue->write({
             .func = func,
             .arg  = arg,
         });
@@ -44,7 +45,7 @@ namespace AEX::Proc {
 
     void broker_loop() {
         while (true) {
-            broker_current = broker_queue.readObject<broker_request>();
+            broker_current = broker_queue->read();
             broker_current.func(broker_current.arg);
             broker_current = {};
         }

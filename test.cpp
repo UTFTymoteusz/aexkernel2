@@ -172,10 +172,10 @@ void apple() {
     auto tty_wr = FS::File::open("/dev/tty0", FS::O_WRONLY);
     AEX_ASSERT(tty_wr);
 
-    char buffer[2048];
+    char buffer[4096];
 
     while (true) {
-        auto aaa = sock->receive(buffer, 2048, 0);
+        auto aaa = sock->receive(buffer, 4096, 0);
         tty_wr.value->write(buffer, aaa.value);
     }
 }

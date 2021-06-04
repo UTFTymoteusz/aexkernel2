@@ -23,10 +23,10 @@ namespace NetStack {
         AEX::error_t connect(const AEX::Net::sockaddr* addr);
         AEX::error_t bind(const AEX::Net::sockaddr* addr);
 
-        AEX::optional<size_t> sendTo(const void* buffer, size_t len, int flags,
-                                     const AEX::Net::sockaddr* dst_addr);
-        AEX::optional<size_t> receiveFrom(void* buffer, size_t len, int flags,
-                                          AEX::Net::sockaddr* src_addr);
+        AEX::optional<ssize_t> sendTo(const void* buffer, size_t len, int flags,
+                                      const AEX::Net::sockaddr* dst_addr);
+        AEX::optional<ssize_t> receiveFrom(void* buffer, size_t len, int flags,
+                                           AEX::Net::sockaddr* src_addr);
 
         private:
         struct datagram {

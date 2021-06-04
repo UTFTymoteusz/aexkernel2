@@ -252,8 +252,8 @@ namespace NetStack {
         return EINVAL;
     }
 
-    optional<size_t> TCPSocket::sendTo(const void* buffer, size_t len, int,
-                                       const sockaddr* dst_addr) {
+    optional<ssize_t> TCPSocket::sendTo(const void* buffer, size_t len, int,
+                                        const sockaddr* dst_addr) {
         if (!buffer || len == 0)
             return EINVAL;
 
@@ -278,7 +278,7 @@ namespace NetStack {
             if (m_block.send_shut)
                 break;
 
-            size_t av = m_tx_buffer.writeAvailable();
+            size_t av = m_tx_buffer.writeav();
             if (av == 0) {
                 m_tx_event.wait();
                 m_lock.release();
@@ -302,8 +302,8 @@ namespace NetStack {
         return req_len;
     }
 
-    optional<size_t> TCPSocket::receiveFrom(void* buffer, size_t len, int flags,
-                                            sockaddr* src_addr) {
+    optional<ssize_t> TCPSocket::receiveFrom(void* buffer, size_t len, int flags,
+                                             sockaddr* src_addr) {
         if (!buffer || len == 0)
             return EINVAL;
 
@@ -321,7 +321,7 @@ namespace NetStack {
         }
 
         while (len) {
-            size_t av = m_rx_buffer.readAvailable();
+            size_t av = m_rx_buffer.readav();
             if (av == 0) {
                 // This may still get stuck if you close() and connect() quickly8
                 if ((!(flags & MSG_WAITALL) && read > 0) || m_block.receive_shut)
@@ -504,7 +504,7 @@ namespace NetStack {
     }
 
     int TCPSocket::getWindow() {
-        int window = (TCP_RX_BUFFER_SIZE - 1) - m_rx_buffer.readAvailable();
+        int window = (TCP_RX_BUFFER_SIZE - 1) - m_rx_buffer.readav();
         window     = max(0, window - TCP_PROBE_SLACK);
 
         return window;
@@ -730,7 +730,7 @@ namespace NetStack {
         // I need reordering
         if (data_len) {
             if (seqn == expected_seqn) {
-                if (data_len > m_rx_buffer.writeAvailable()) {
+                if (data_len > m_rx_buffer.writeav()) {
                     bool send_rst = reset();
                     m_lock.release();
 
@@ -907,11 +907,10 @@ namespace NetStack {
 
         m_lock.acquire();
 
-        while (m_tx_buffer.readAvailable()) {
+        while (m_tx_buffer.readav()) {
             AEX_ASSERT(m_block.snd_wnd != 0);
 
-            int size =
-                min(m_tx_buffer.readAvailable(), (int) m_block.snd_wnd, (int) m_block.snd_mss);
+            int size = min(m_tx_buffer.readav(), (int) m_block.snd_wnd, (int) m_block.snd_mss);
 
             auto seg = new segment();
 
@@ -932,20 +931,21 @@ namespace NetStack {
             seg->ack_with = m_block.snd_nxt;
 
             m_retransmission_queue.push(seg);
+            m_block.sending_comp_ack = false;
 
             m_lock.release();
             sendSegment(seg);
             m_lock.acquire();
-
-            m_block.sending_comp_ack = false;
         }
 
+        bool     send_ack = m_block.sending_comp_ack;
+        uint32_t rcv_nxt  = m_block.rcv_nxt;
+
+        m_block.sending_comp_ack = false;
         m_lock.release();
 
-        if (m_block.sending_comp_ack) {
-            ack(m_block.rcv_nxt);
-            m_block.sending_comp_ack = false;
-        }
+        if (send_ack)
+            ack(rcv_nxt);
     }
 
     void TCPSocket::retransmit() {
@@ -1026,7 +1026,7 @@ namespace NetStack {
         if (how & SHUT_WR && !m_block.send_shut) {
             m_block.send_shut = true;
 
-            while (m_tx_buffer.readAvailable() || m_block.snd_una != m_block.snd_nxt) {
+            while (m_tx_buffer.readav() || m_block.snd_una != m_block.snd_nxt) {
                 m_tx_event.wait();
                 m_lock.release();
 

@@ -155,4 +155,6 @@ namespace AEX::IPC {
         sigset_t mask;
         int      flags;
     };
+
+    API const char* strsignal(signal_t signal);
 }

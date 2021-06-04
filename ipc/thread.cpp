@@ -46,12 +46,24 @@ namespace AEX::Proc {
         if (!inrange(info.si_signo, SIGHUP, SIGSYS))
             return EINVAL;
 
+        AEX_ASSERT(lock.isAcquired());
+        printkd(PTK_DEBUG, "ipc: th0x%p: Signal %s\n", this, strsignal((signal_t) info.si_signo));
+
         if (isBusy()) {
             m_pending_signals.push(info);
+
+            printkd(PTK_DEBUG, "ipc: th0x%p: Busy, status %s\n", this, strstatus(status));
+
+            if (status == TS_BLOCKED)
+                setStatus(TS_RUNNABLE);
+            else if (status == TS_SLEEPING)
+                setStatus(TS_RUNNABLE);
+
+            Debug::stack_trace(0, (Debug::stack_frame*) context->rbp);
+
             return ENONE;
         }
 
-        printkd(PTK_DEBUG, "ipc: th0x%p: Signal %i", this, info.si_signo);
         handleSignal(info);
 
         return ENONE;

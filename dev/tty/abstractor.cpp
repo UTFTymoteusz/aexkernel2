@@ -5,7 +5,7 @@ namespace AEX::Dev::TTY {
 
     Abstractor::Abstractor(VTTY* vtty) : m_vtty(vtty) {}
 
-    char Abstractor::read() {
+    int Abstractor::read() {
         return m_vtty->read();
     }
 

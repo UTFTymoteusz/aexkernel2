@@ -2,9 +2,10 @@
 #include "aex/dev/tty/vtty.hpp"
 
 namespace AEX::Dev::TTY {
-    char VTTY::read() {
-        char c;
-        m_inputBuffer->read(&c, 1);
+    int VTTY::read() {
+        int c;
+        if (m_inputBuffer->read(&c, 1) == 0)
+            return -1;
 
         return c;
     }

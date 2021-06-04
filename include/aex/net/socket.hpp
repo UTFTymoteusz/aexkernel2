@@ -71,6 +71,14 @@ namespace AEX::Net {
         static optional<Socket_SP> create(socket_domain_t domain, socket_type_t type,
                                           iproto_t protocol);
 
+        optional<ssize_t> read(void* buf, size_t count) {
+            return receive(buf, count, 0);
+        }
+
+        optional<ssize_t> write(const void* buf, size_t count) {
+            return send(buf, count, 0);
+        }
+
         virtual error_t connect(const sockaddr* addr);
         error_t         connect(ipv4_addr addr, uint16_t port);
 
@@ -80,13 +88,13 @@ namespace AEX::Net {
         virtual error_t             listen(int backlog);
         virtual optional<Socket_SP> accept();
 
-        virtual optional<size_t> sendTo(const void* buffer, size_t len, int flags,
-                                        const sockaddr* dst_addr);
-        virtual optional<size_t> receiveFrom(void* buffer, size_t len, int flags,
-                                             sockaddr* src_addr);
+        virtual optional<ssize_t> sendTo(const void* buffer, size_t len, int flags,
+                                         const sockaddr* dst_addr);
+        virtual optional<ssize_t> receiveFrom(void* buffer, size_t len, int flags,
+                                              sockaddr* src_addr);
 
-        optional<size_t> send(const void* buffer, size_t len, int flags);
-        optional<size_t> receive(void* buffer, size_t len, int flags);
+        optional<ssize_t> send(const void* buffer, size_t len, int flags);
+        optional<ssize_t> receive(void* buffer, size_t len, int flags);
 
         virtual error_t shutdown(int how);
         virtual error_t close();

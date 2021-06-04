@@ -283,7 +283,7 @@ namespace AEX::Proc {
     }
 
     bool Thread::interrupted() {
-        return m_aborting || (m_pending_signals.count() > 0 && !in_signal);
+        return (m_aborting || (m_pending_signals.count() > 0 && !in_signal)) && !m_softcritical;
     }
 
     void broker_cleanup(Thread* thread) {
@@ -351,6 +351,16 @@ namespace AEX::Proc {
             subCritical();
     }
 
+    void Thread::addSoftCritical() {
+        Mem::atomic_add(&m_busy, (uint16_t) 1);
+        Mem::atomic_add(&m_softcritical, (uint16_t) 1);
+    }
+
+    void Thread::subSoftCritical() {
+        Mem::atomic_sub(&m_softcritical, (uint16_t) 1);
+        Mem::atomic_sub(&m_busy, (uint16_t) 1);
+    }
+
     void Thread::addCritical() {
         Mem::atomic_add(&m_busy, (uint16_t) 1);
         Mem::atomic_add(&m_critical, (uint16_t) 1);
@@ -374,17 +384,19 @@ namespace AEX::Proc {
     Thread::state Thread::saveState() {
         auto st = state();
 
-        st.busy     = m_busy;
-        st.critical = m_critical;
-        st.status   = status;
+        st.busy         = m_busy;
+        st.softcritical = m_softcritical;
+        st.critical     = m_critical;
+        st.status       = status;
 
         return st;
     }
 
     void Thread::loadState(state& m_state) {
-        m_busy     = m_state.busy;
-        m_critical = m_state.critical;
-        status     = m_state.status;
+        m_busy         = m_state.busy;
+        m_softcritical = m_state.softcritical;
+        m_critical     = m_state.critical;
+        status         = m_state.status;
     }
 
     void Thread::alloc_tls(uint16_t size) {

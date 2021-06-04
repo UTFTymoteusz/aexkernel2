@@ -24,7 +24,7 @@ namespace AEX::Proc {
             thread->sched_counter -= 1000000;
 
             if (thread->status == TS_RUNNABLE) {
-                Time::uptime_raw();
+                Time::uptime();
                 return;
             }
         }
@@ -38,7 +38,7 @@ namespace AEX::Proc {
 
         cpu->in_interrupt++;
 
-        auto uptime = Time::uptime_raw();
+        auto uptime = Time::uptime();
         auto delta  = uptime - cpu->measurement_start_ns;
         auto next   = thread->next;
 
@@ -58,11 +58,6 @@ namespace AEX::Proc {
             switch (thread->status) {
             case TS_RUNNABLE:
                 break;
-            case TS_BLOCKED:
-                if (!thread->interrupted())
-                    continue;
-
-                break;
             case TS_SLEEPING:
                 Sec::feed_random(thread->wakeup_at);
 
@@ -70,6 +65,11 @@ namespace AEX::Proc {
                     continue;
 
                 thread->status = TS_RUNNABLE;
+                break;
+            case TS_BLOCKED:
+                if (!thread->interrupted())
+                    continue;
+
                 break;
             default:
                 continue;

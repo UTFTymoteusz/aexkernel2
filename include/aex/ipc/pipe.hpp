@@ -16,7 +16,7 @@ namespace AEX::IPC {
         public:
         static error_t create(FS::File_SP& w, FS::File_SP& r);
 
-        Mem::CircularBuffer buffer = Mem::CircularBuffer(PIPE_SIZE);
+        Mem::CircularBuffer<> buffer = Mem::CircularBuffer(PIPE_SIZE);
     };
 
     class PipeWriter : public FS::File {

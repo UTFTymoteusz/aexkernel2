@@ -271,9 +271,11 @@ namespace AEX::Sys {
     inline Proc::Thread::state out(Proc::Thread* thread, CPU*& cpu) {
         auto state = thread->saveState();
 
-        thread->setBusy(1);
-        thread->setCritical(0);
         thread->setStatus(Proc::TS_RUNNABLE);
+
+        thread->setBusy(1);
+        thread->setSoftCritical(1);
+        thread->setCritical(0);
 
         cpu->in_interrupt--;
         CPU::interrupts();

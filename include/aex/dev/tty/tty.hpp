@@ -31,7 +31,7 @@ namespace AEX::Dev::TTY {
          * Reads a character from the virtual terminal.
          * @returns A character.
          **/
-        virtual char read();
+        virtual int read();
 
         /**
          * Reads a line into the specified buffer. Stops on \r or when the buffer is full (counting

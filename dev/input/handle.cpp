@@ -24,14 +24,14 @@ namespace AEX::Dev::Input {
 
     event Handle::read() {
         event m_evnt;
-        m_buffer.read(&m_evnt, sizeof(event));
+        m_buffer.read(&m_evnt, 1);
         return m_evnt;
     }
 
     void Handle::write(event m_evnt) {
-        if ((size_t) m_buffer.writeAvailable() < sizeof(event))
+        if (!m_buffer.writeav())
             return;
 
-        m_buffer.write(&m_evnt, sizeof(event));
+        m_buffer.write(&m_evnt, 1);
     }
 }
