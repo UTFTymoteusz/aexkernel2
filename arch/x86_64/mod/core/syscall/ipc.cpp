@@ -63,7 +63,7 @@ void sigret() {
     Proc::Thread::current()->sigret();
 }
 
-void register_ipc() {
+__attribute__((optimize("O2"))) void register_ipc() {
     auto table = Sys::default_table();
 
     table[SYS_PIPE]   = (void*) pipe;

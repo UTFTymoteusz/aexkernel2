@@ -76,7 +76,10 @@ ssize_t write(int fd, const usr_void* usr_buf, size_t count) {
         USR_ERRNO      = write_try.error;
 
         written += write_try.value;
-        if (write_try.error != EINTR)
+        if (write_try.error && write_try.error != EINTR)
+            break;
+
+        if (write_try.value < len)
             break;
     }
 

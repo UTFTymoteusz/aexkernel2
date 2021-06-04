@@ -117,7 +117,7 @@ namespace AEX {
             char name[FS::PATH_MAX];
 
             FS::canonize_path(list[i].name, "/sys/mod/core/", name, sizeof(name));
-            load_module(name, true);
+            AEX_ASSERT(load_module(name, true) == ENONE);
         }
 
         dir->close();

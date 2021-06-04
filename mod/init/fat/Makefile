@@ -1,5 +1,4 @@
 MODULE_NAME  = fat
-MODULE_ORDER = 20
 
 CXX ?= g++
 LD = ld
@@ -16,12 +15,12 @@ OBJS      := $(patsubst %.o, $(OBJ_DEST)%.o, $(CXXFILES:.cpp=.cpp.o))
 
 OBJS := $(OBJS)
 
-MODULE_OBJ = $(BIN)$(MODULE_NAME).$(MODULE_ORDER).km
+MODULE_OBJ = $(BIN)$(MODULE_NAME).km
 
 GFLAGS = -O3 -Wall -Wextra -Werror -nostdlib -pipe
 
 INCLUDES := -I. -I$(ARCH) -Iinclude/ -I"$(KERNEL_SRC)include" \
-		    -I"$(KERNEL_SRC)arch/$(ARCH)/include" -I../netstack/include/
+		    -I"$(KERNEL_SRC)arch/$(ARCH)/include"
 
 CXXFLAGS := $(GFLAGS)		\
 	-std=c++17				\

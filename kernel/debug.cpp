@@ -7,6 +7,7 @@
 #include "aex/mem.hpp"
 #include "aex/mem/mmap.hpp"
 #include "aex/printk.hpp"
+#include "aex/proc.hpp"
 #include "aex/proc/process.hpp"
 #include "aex/string.hpp"
 #include "aex/sys/pci.hpp"
@@ -91,7 +92,7 @@ namespace AEX::Debug {
 
         if (addr < (void*) 0xFFFF800000000000) {
             delta_ret = 0;
-            return "userspace";
+            return Proc::ready ? "userspace" : "early boot swamp";
         }
 
         uint64_t m_addr = (uint64_t) addr;

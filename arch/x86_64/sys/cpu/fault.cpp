@@ -319,4 +319,15 @@ namespace AEX::Sys {
             "CR0: 0x%016lx  CR1: 0xUDUDUDUDUDUDUDUD  CR2: 0x%016lx  CR3: 0x%016lx  CR4: 0x%016lx\n",
             cr0, cr2, cr3, cr4);
     }
+
+    extern "C" void early_fault_handler(CPU::fault_info* info) {
+        printk(FAIL "Early fault: %93$%s%$ Exception (%i) (%91$%i%$)\n",
+               exception_names[info->int_no], info->int_no, info->err);
+        print_info(info);
+
+        printk("Stack trace:\n");
+        Debug::stack_trace(1);
+
+        CPU::halt();
+    }
 }

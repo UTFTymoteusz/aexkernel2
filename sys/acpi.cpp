@@ -53,7 +53,8 @@ namespace AEX::Sys::ACPI {
 
             for (size_t i = sizeof(xsdt); i < _xsdt->header.length; i += 8) {
                 uint64_t addr = *((uint64_t*) ((size_t) _xsdt + i));
-                auto     table_hdr =
+
+                auto table_hdr =
                     (sdt_header*) Mem::kernel_pagemap->map(sizeof(sdt_header), addr, 0);
                 auto table = (acpi_table*) Mem::kernel_pagemap->map(table_hdr->length, addr, 0);
 
@@ -82,8 +83,13 @@ namespace AEX::Sys::ACPI {
             revision = _rsdt->header.revision;
 
             for (size_t i = sizeof(rsdt); i < _rsdt->header.length; i += 4) {
-                uint32_t addr  = *((uint32_t*) ((size_t) _rsdt + i));
-                auto     table = (acpi_table*) Mem::kernel_pagemap->map(4096, addr, 0);
+                uint32_t addr = *((uint32_t*) ((size_t) _rsdt + i));
+
+                auto table_hdr =
+                    (sdt_header*) Mem::kernel_pagemap->map(sizeof(sdt_header), addr, 0);
+                auto table = (acpi_table*) Mem::kernel_pagemap->map(table_hdr->length, addr, 0);
+
+                Mem::kernel_pagemap->free(table_hdr, sizeof(sdt_header));
 
                 add_table(table);
             }

@@ -71,6 +71,8 @@ namespace AEX::Mem::Heap {
             return slab;
         }
 
+#pragma GCC optimize("O2")
+
         void* alloc(size_t size) {
             if (size == 0)
                 return nullptr;

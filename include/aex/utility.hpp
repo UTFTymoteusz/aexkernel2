@@ -144,4 +144,32 @@ namespace AEX {
         swap(c, g);
         swap(d, h);
     }
+
+    namespace {
+        template <typename T>
+        constexpr auto bor(T a) {
+            return a;
+        }
+
+        template <typename T, typename U>
+        constexpr auto bor(T a, U b) {
+            return a | b;
+        }
+
+        template <typename T, typename U, typename... V>
+        constexpr auto bor(T a, U b, V... c) {
+            return a | bor(b, c...);
+        }
+    }
+
+    template <typename T, typename... U>
+    constexpr bool flagmask(T val, U... bits) {
+        return val & ~bor(bits...);
+    }
+
+    template <typename T, typename... U>
+    constexpr bool flagset(T val, U... bits) {
+        auto flags = bor(bits...);
+        return (val & flags) == flags;
+    }
 }

@@ -17,6 +17,8 @@ namespace AEX::FS {
 
         AEX_ASSERT(m_inode->block_size);
         m_inode->opened++;
+
+        printk("fs: Opened inode %i (%i, %i)\n", m_inode->id, m_inode->opened, m_inode->hard_links);
     }
 
     INodeFile::~INodeFile() {
@@ -63,7 +65,7 @@ namespace AEX::FS {
     }
 
     optional<ssize_t> INodeFile::write(const void* buffer, size_t count) {
-        if (!(m_mode & O_RDONLY))
+        if (!(m_mode & O_WRONLY))
             return EBADF;
 
         if (count == 0)

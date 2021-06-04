@@ -21,6 +21,7 @@ namespace AEX::FS {
         O_NONBLOCK  = 0x10,
         O_CREAT     = 0x20,
         O_EXCL      = 0x40,
+        O_TRUNC     = 0x80,
         O_ACCMODE   = 0xFFFF0000,
         O_RDWR      = O_RDONLY | O_WRONLY,
     };

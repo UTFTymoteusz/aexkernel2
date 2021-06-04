@@ -34,6 +34,8 @@
 #include "sys/syscall.hpp"
 #include "sys/time.hpp"
 
+#define INIT_PATH "/sys/aexinit"
+
 using namespace AEX;
 using namespace AEX::Mem;
 using namespace AEX::Sys;
@@ -140,7 +142,7 @@ void init_mem(multiboot_info_t* mbinfo) {
 void mount_fs() {
     FS::mount(nullptr, "/dev/", "devfs");
 
-    auto res = FS::mount("/dev/sra", "/", nullptr);
+    auto res = FS::mount("/dev/sda1", "/", nullptr);
     if (res != ENONE)
         kpanic("Failed to mount iso9660: %s", strerror((error_t) res));
 
@@ -157,9 +159,6 @@ void exec_init() {
     auto tty_wre = FS::File::open("/dev/tty0", FS::O_WRONLY);
     AEX_ASSERT(tty_wre);
 
-    FS::File_SP rp, wp;
-    IPC::Pipe::create(rp, wp);
-
     auto info = Proc::exec_opt{
         .stdin  = tty_rd.value,
         .stdout = tty_wr.value,
@@ -167,7 +166,7 @@ void exec_init() {
     };
 
     char* argv[2] = {
-        (char*) "aexinit",
+        (char*) INIT_PATH,
         nullptr,
     };
 
@@ -179,16 +178,19 @@ void exec_init() {
 
     int status = 0;
 
-    AEX_ASSERT(Proc::exec(nullptr, nullptr, "/sys/aexinit", argv, envp, &info) == ENONE);
+    AEX_ASSERT(Proc::exec(nullptr, nullptr, INIT_PATH, argv, envp, &info) == ENONE);
     Proc::Process::wait(status);
 
-    printk("init exited with a code %i\n", status);
+    printk(INIT_PATH " exited with status %i\n", status);
 }
 
 void kmain_env() {
     using namespace AEX::Sys::Time;
 
     exec_init();
+
+    printk("We're done here, adios\n");
+    Proc::Thread::sleep(1000);
 
     AEX_ASSERT(Sys::Power::poweroff());
 
@@ -205,7 +207,9 @@ void kmain_env() {
     time_t start_epoch = clocktime();
 
     while (true) {
-        switch (Dev::TTY::TTYs[Dev::TTY::ROOT_TTY]->read()) {
+        char c = Dev::TTY::TTYs[Dev::TTY::ROOT_TTY]->read();
+
+        switch (c) {
         case 't': {
             auto ns    = uptime();
             auto clock = clocktime();
@@ -237,6 +241,7 @@ void kmain_env() {
             AEX_ASSERT(Power::poweroff());
             break;
         default:
+            printk("%c", c);
             break;
         }
     }

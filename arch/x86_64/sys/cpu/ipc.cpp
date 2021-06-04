@@ -19,6 +19,20 @@ namespace AEX::Sys {
     Spinlock ipp_lock;
 
     void CPU::broadcast(ipp_type type, void* data, bool ignore_self) {
+        if (MCore::cpu_count == 0) {
+            switch (type) {
+            case IPP_PG_FLUSH:
+            case IPP_PG_INV:
+            case IPP_PG_INVM:
+                Sys::CPU::flushPg();
+                return;
+            default:
+                kpanic("crazy IPP's too early");
+                return;
+            }
+            return;
+        }
+
         SCOPE(ipp_lock);
 
         for (int i = 0; i < MCore::cpu_count; i++) {

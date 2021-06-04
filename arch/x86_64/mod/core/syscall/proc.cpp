@@ -230,7 +230,7 @@ int getenv(int index, usr_char* buffer, size_t len) {
     return 0;
 }
 
-void register_proc() {
+__attribute__((optimize("O2"))) void register_proc() {
     auto table = Sys::default_table();
 
     table[SYS_EXIT]   = (void*) exit;

@@ -23,6 +23,9 @@ namespace AEX::FS {
     }
 
     optional<File_SP> File::open(const char* path, int mode) {
+        if (flagmask(mode, O_RDONLY, O_WRONLY, O_APPEND, O_CREAT, O_EXCL, O_TRUNC))
+            return EINVAL;
+
         auto mount_info = ENSURE_OPT(find_mount(path));
         auto inode_try  = mount_info.mount->control_block->find(mount_info.new_path, true);
         if (!inode_try) {
@@ -35,7 +38,7 @@ namespace AEX::FS {
         auto rscope = parent ? ReleaseScopeMutex(parent->mutex) : ReleaseScopeMutex();
 
         if (!inode) {
-            if (!(mode & O_CREAT))
+            if (!flagset(mode, O_CREAT))
                 return ENOENT;
 
             char name[FS::NAME_MAX];
@@ -44,23 +47,32 @@ namespace AEX::FS {
             inode = ENSURE_OPT(parent->creat(name, 0x0777, FT_REGULAR));
         }
 
+        if (flagset(mode, O_EXCL, O_CREAT))
+            return EEXIST;
+
         if (inode->is_directory()) {
             if (mode != O_RDONLY)
                 return EISDIR;
 
+            printk("fs: %s: Opened directory %s\n", mount_info.mount->path, path);
             return File_SP(new INodeDirectory(inode));
         }
 
-        if (mode & O_DIRECTORY)
+        if (flagset(mode, O_DIRECTORY))
             return ENOTDIR;
 
         if (inode->dev != -1) {
             auto device = ENSURE_R(Dev::devices.get(inode->dev), ENOENT);
             auto file   = ENSURE_OPT(DevFile::open(device, mode));
 
+            printk("fs: %s: Opened device %s\n", mount_info.mount->path, path);
             return File_SP(file);
         }
 
+        if (flagset(mode, O_WRONLY, O_TRUNC))
+            inode->truncate(0, true);
+
+        printk("fs: %s: Opened file %s\n", mount_info.mount->path, path);
         return File_SP(new INodeFile(inode, mode));
     }
 

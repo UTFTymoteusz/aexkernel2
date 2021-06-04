@@ -10,10 +10,13 @@ namespace AEX::FS {
         AEX_ASSERT(start < m_chain.count());
         AEX_ASSERT(start + count <= m_chain.count());
 
+        char* dst = (char*) buffer;
+
         auto fat_block = (FATControlBlock*) control_block;
-        for (uint64_t i = start; i < start + count; i++)
-            fat_block->block_handle.read(buffer, fat_block->getOffset(m_chain.at(i), 0),
-                                         block_size);
+        for (uint64_t i = start; i < start + count; i++) {
+            fat_block->block_handle.read(dst, fat_block->getOffset(m_chain.at(i), 0), block_size);
+            dst += block_size;
+        }
 
         return ENONE;
     }
@@ -25,10 +28,13 @@ namespace AEX::FS {
         AEX_ASSERT(start < m_chain.count());
         AEX_ASSERT(start + count <= m_chain.count());
 
+        char* dst = (char*) buffer;
+
         auto fat_block = (FATControlBlock*) control_block;
-        for (uint64_t i = start; i < start + count; i++)
-            fat_block->block_handle.write(buffer, fat_block->getOffset(m_chain.at(i), 0),
-                                          block_size);
+        for (uint64_t i = start; i < start + count; i++) {
+            fat_block->block_handle.write(dst, fat_block->getOffset(m_chain.at(i), 0), block_size);
+            dst += block_size;
+        }
 
         return ENONE;
     }

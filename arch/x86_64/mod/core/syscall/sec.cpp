@@ -118,7 +118,7 @@ int setreuid(Sec::uid_t ruid, Sec::uid_t euid) {
     return ret;
 }
 
-void register_sec() {
+__attribute__((optimize("O2"))) void register_sec() {
     auto table = Sys::default_table();
 
     table[SYS_GETEGID] = (void*) getegid;

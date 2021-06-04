@@ -59,8 +59,6 @@ namespace AEX::Proc {
             else if (status == TS_SLEEPING)
                 setStatus(TS_RUNNABLE);
 
-            Debug::stack_trace(0, (Debug::stack_frame*) context->rbp);
-
             return ENONE;
         }
 

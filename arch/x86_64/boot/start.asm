@@ -8,6 +8,7 @@ extern kmain
 extern paging_init
 extern pml4
 extern sse_init
+extern setup_early_idt
 
 extern _start_text
 extern _start_bss
@@ -131,9 +132,12 @@ bootstrap64:
 	mov rdi, rbx
 	mov rsi, rax
 
-	xor rbp, rbp
 	;sub rsp, 8   ; Gotta align the stack to 16 bytes or SSE will explode
 
+	; Let's setup an early IDT to catch some early faults (ahem ACPI ahem)
+	call setup_early_idt
+
+	xor rbp, rbp
     call kmain
 
     cli

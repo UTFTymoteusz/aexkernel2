@@ -11,6 +11,8 @@
 #include "aex/utility.hpp"
 
 namespace AEX::Proc {
+    extern bool ready;
+
     /**
      * Creates a new thread that's gonna run the specified function with the specified arguments.
      * @param func Function to call.

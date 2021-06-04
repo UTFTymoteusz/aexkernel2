@@ -22,7 +22,7 @@ VERSION := $(shell date -u '+%d.%m.%Y').$(shell printf "%05d" $(shell date -d "1
 ISO  = $(BIN)grubiso/
 SYS  = $(ISO)sys/
 
-GFLAGS = -O2 -Wall -Wextra -Werror -nostdlib -pipe -lgcc
+GFLAGS = -O3 -Wall -Wextra -Werror -nostdlib -pipe -lgcc -ffreestanding
 
 INCLUDES := -I. -Iinclude/ -Iarch/$(ARCH)/ -Iarch/$(ARCH)/include/
 
@@ -32,7 +32,6 @@ CXXFLAGS := $(GFLAGS)		   \
 	-std=c++17				   \
 	-fno-rtti				   \
 	-fno-exceptions			   \
-	-ffreestanding			   \
 	-masm=intel				   \
 	-mcmodel=kernel			   \
 	-fno-pic			   	   \
@@ -47,7 +46,6 @@ CXXFLAGS := $(GFLAGS)		   \
 ASFLAGS := -felf64
 
 LDFLAGS := $(GFLAGS)		\
-	-ffreestanding			\
 	-z max-page-size=0x1000 \
 	-no-pie
 
