@@ -11,12 +11,29 @@
 #include "sys/irq/apic.hpp"
 #include "sys/mcore.hpp"
 
+constexpr auto EXC_DIVZERO        = 0;
 constexpr auto EXC_DEBUG          = 1;
 constexpr auto EXC_NMI            = 2;
+constexpr auto EXC_BREAKPOINT     = 3;
+constexpr auto EXC_OVERFLOW       = 4;
+constexpr auto EXC_BOUND          = 5;
 constexpr auto EXC_INVALID_OPCODE = 6;
+constexpr auto EXC_NODEV          = 7;
+constexpr auto EXC_DOUBLEFAULT    = 8;
+constexpr auto EXC_COPROCSEGOVRR  = 9;
+constexpr auto EXC_INVALIDTSS     = 10;
+constexpr auto EXC_NOSEG          = 11;
+constexpr auto EXC_STKSEGFAULT    = 12;
+constexpr auto EXC_GPF            = 13;
 constexpr auto EXC_PAGE_FAULT     = 14;
+constexpr auto EXC_COPROC         = 16;
+constexpr auto EXC_ALIGNCHK       = 17;
+constexpr auto EXC_MACHINECHK     = 18;
+constexpr auto EXC_SIMD           = 19;
+constexpr auto EXC_VIRT           = 20;
+constexpr auto EXC_SECURITY       = 31;
 
-extern "C" void common_fault_handler(AEX::Sys::CPU::fault_info* info);
+extern "C" void fault_handler(AEX::Sys::CPU::fault_info* info);
 
 namespace AEX::Sys {
     char exception_names[][32] = {
@@ -62,7 +79,7 @@ namespace AEX::Sys {
     inline Proc::Thread::state out(Proc::Thread* thread, CPU*& cpu);
     inline void                in(Proc::Thread::state& state, Proc::Thread* thread, CPU*& cpu);
 
-    extern "C" void common_fault_handler(CPU::fault_info* info) {
+    extern "C" void fault_handler(CPU::fault_info* info) {
         CPU::current()->in_interrupt++;
 
         auto cpu    = CPU::current();
@@ -125,8 +142,6 @@ namespace AEX::Sys {
             print_info(info);
             printk(info->rflags & 0x0200 ? "Interrupts were on\n" : "Interrupts were off\n");
 
-            Proc::Process::kill(3, IPC::SIGKILL);
-
             for (int i = 0; i < 4; i++) {
                 for (int j = 0; j < 32; j++)
                     if (Sys::IRQ::APIC::read(0x100 + i * 0x10) & (1 << j))
@@ -135,6 +150,9 @@ namespace AEX::Sys {
 
             printk("Stack trace:\n");
             Debug::stack_trace(1);
+
+            Proc::debug_print_processes();
+            Proc::debug_print_threads();
 
             CPU::current()->in_interrupt--;
 
@@ -220,9 +238,10 @@ namespace AEX::Sys {
                 return false;
             }
 
-            AEX::printk("cpu%i: pid%i: Page fault @ 0x%lx (0x%lx)\n"
-                        "    RIP: 0x%016lx\n",
-                        cpu->id, cpu->current_thread->getProcess()->pid, cr2, cr3, info->rip);
+            printkd(PTKD_UFAULT,
+                    "cpu%i: pid%i: Page fault @ 0x%lx (0x%lx)\n"
+                    "    RIP: 0x%016lx\n",
+                    cpu->id, cpu->current_thread->getProcess()->pid, cr2, cr3, info->rip);
 
             IPC::siginfo_t sinfo = {};
 
@@ -253,8 +272,8 @@ namespace AEX::Sys {
             return false;
         }
 
-        AEX::printk("cpu%i: pid%i: Invalid opcode @ 0x%lx\n", cpu->id,
-                    cpu->current_thread->getProcess()->pid, info->rip);
+        printkd(PTKD_UFAULT, "cpu%i: pid%i: Invalid opcode @ 0x%lx\n", cpu->id,
+                cpu->current_thread->getProcess()->pid, info->rip);
 
         IPC::siginfo_t sinfo = {};
 
@@ -274,7 +293,7 @@ namespace AEX::Sys {
         thread->setStatus(Proc::TS_RUNNABLE);
 
         thread->setBusy(1);
-        thread->setSoftCritical(1);
+        thread->setSignability(0);
         thread->setCritical(0);
 
         cpu->in_interrupt--;
@@ -315,9 +334,7 @@ namespace AEX::Sys {
         asm volatile("mov rax, cr3; mov %0, rax;" : : "m"(cr3) : "memory");
         asm volatile("mov rax, cr4; mov %0, rax;" : : "m"(cr4) : "memory");
 
-        printk(
-            "CR0: 0x%016lx  CR1: 0xUDUDUDUDUDUDUDUD  CR2: 0x%016lx  CR3: 0x%016lx  CR4: 0x%016lx\n",
-            cr0, cr2, cr3, cr4);
+        printk("CR0: 0x%016lx  CR2: 0x%016lx  CR3: 0x%016lx  CR4: 0x%016lx\n", cr0, cr2, cr3, cr4);
     }
 
     extern "C" void early_fault_handler(CPU::fault_info* info) {

@@ -2,6 +2,11 @@
 
 #include "aex/mem.hpp"
 #include "aex/string.hpp"
+#include "aex/sys/acpi/fadt.hpp"
+#include "aex/sys/acpi/madt.hpp"
+#include "aex/sys/acpi/rsdt.hpp"
+#include "aex/sys/acpi/sdt.hpp"
+#include "aex/sys/acpi/xsdt.hpp"
 #include "aex/utility.hpp"
 
 #include <stddef.h>

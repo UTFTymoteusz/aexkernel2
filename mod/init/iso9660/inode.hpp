@@ -27,13 +27,13 @@ namespace AEX::FS {
             if (ctx->pos >= size)
                 return {};
 
-            char name_buffer[NAME_MAX];
-            name_buffer[NAME_MAX - 1] = '\0';
+            char name_buffer[NAME_MAX + 1];
+            name_buffer[NAME_MAX] = '\0';
 
             uint8_t buffer[256];
 
             while (ctx->pos < size) {
-                ((ISO9660ControlBlock*) control_block)
+                ((ISO9660ControlBlock*) controlblock)
                     ->block_handle.read(buffer, m_dentry.data_lba.le * BLOCK_SIZE + ctx->pos,
                                         sizeof(buffer));
 
@@ -131,7 +131,7 @@ namespace AEX::FS {
         }
 
         error_t read(void* buffer, blk_t block, blkcnt_t count) {
-            ((ISO9660ControlBlock*) control_block)
+            ((ISO9660ControlBlock*) controlblock)
                 ->block_handle.read(buffer, m_dentry.data_lba.le * block_size + block * block_size,
                                     count * block_size);
 

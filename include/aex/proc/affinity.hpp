@@ -21,11 +21,11 @@ namespace AEX::Proc {
             return m_mask & (1 << id);
         }
 
-        void mask(int cpuid, bool mask) {
+        void mask(int id, bool mask) {
             if (mask)
-                m_mask |= (1 << cpuid);
+                m_mask |= (1 << id);
             else
-                m_mask &= ~(1 << cpuid);
+                m_mask &= ~(1 << id);
         }
 
         private:

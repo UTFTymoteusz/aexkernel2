@@ -18,7 +18,8 @@ namespace AEX::FS {
         AEX_ASSERT(m_inode->block_size);
         m_inode->opened++;
 
-        printk("fs: Opened inode %i (%i, %i)\n", m_inode->id, m_inode->opened, m_inode->hard_links);
+        printkd(PTKD_FS, "fs: Opened inode %i (%i, %i)\n", m_inode->id, m_inode->opened,
+                m_inode->hard_links);
     }
 
     INodeFile::~INodeFile() {
@@ -37,7 +38,8 @@ namespace AEX::FS {
 
         m_inode->opened--;
 
-        printk("fs: Closed inode %i (%i, %i)\n", m_inode->id, m_inode->opened, m_inode->hard_links);
+        printkd(PTKD_FS, "fs: Closed inode %i (%i, %i)\n", m_inode->id, m_inode->opened,
+                m_inode->hard_links);
 
         if (!m_inode->opened && m_inode->hard_links == 0)
             m_inode->purge();
@@ -56,9 +58,7 @@ namespace AEX::FS {
         if (count == 0)
             return 0;
 
-        error_t error = readBlocks(buffer, m_pos, count);
-        if (error)
-            return error;
+        ENSURE_NERR(readBlocks(buffer, m_pos, count));
 
         m_pos += count;
         return count;
@@ -67,6 +67,9 @@ namespace AEX::FS {
     optional<ssize_t> INodeFile::write(const void* buffer, size_t count) {
         if (!(m_mode & O_WRONLY))
             return EBADF;
+
+        if (m_inode->controlblock->read_only)
+            return EROFS;
 
         if (count == 0)
             return 0;
@@ -77,15 +80,14 @@ namespace AEX::FS {
             m_pos = m_inode->size;
 
         if (m_pos + count > (size_t) m_inode->size) {
-            error_t error            = m_inode->truncate(m_pos + count, true);
+            error_t error = m_inode->truncate(m_pos + count, true);
+
             m_inode->truncate_cached = true;
             if (error)
                 return error;
         }
 
-        error_t error = writeBlocks(buffer, m_pos, count);
-        if (error)
-            return error;
+        ENSURE_NERR(writeBlocks(buffer, m_pos, count));
 
         m_pos += count;
         return count;
@@ -160,6 +162,7 @@ namespace AEX::FS {
         uint8_t* bytes       = (uint8_t*) buffer;
         blk_t    combo_start = 0;
         blkcnt_t combo_count = 0;
+        size_t   offset      = 0;
 
         while (len > 0) {
             off_t  loffset = start - int_floor<uint64_t>(start, m_inode->block_size);
@@ -168,15 +171,14 @@ namespace AEX::FS {
 
             if (!isPerfect(start, llen) || entry) {
                 if (entry) {
-                    memcpy(bytes + combo_count * m_inode->block_size, entry->data + loffset, llen);
+                    memcpy(bytes + offset + combo_count * m_inode->block_size,
+                           entry->data + loffset, llen);
                 }
 
                 if (combo_count != 0) {
-                    auto error = m_inode->read(bytes, combo_start, combo_count);
-                    if (error)
-                        return error;
+                    ENSURE_NERR(m_inode->read(bytes + offset, combo_start, combo_count));
 
-                    bytes += combo_count * m_inode->block_size;
+                    offset += combo_count * m_inode->block_size;
                     combo_count = 0;
                 }
 
@@ -191,8 +193,8 @@ namespace AEX::FS {
                     return error;
                 }
 
-                memcpy(bytes, entry->data + loffset, llen);
-                bytes += llen;
+                memcpy(bytes + offset, entry->data + loffset, llen);
+                offset += llen;
             }
             else {
                 if (combo_count == 0)
@@ -206,16 +208,14 @@ namespace AEX::FS {
         }
 
         if (combo_count) {
-            auto error = m_inode->read(bytes, combo_start, combo_count);
-            if (error)
-                return error;
+            ENSURE_NERR(m_inode->read(bytes + offset, combo_start, combo_count));
 
             auto entry = m_inode->getCacheEntry(this);
             m_inode->writeCheck(entry);
 
             entry->id = combo_start + combo_count - 1;
 
-            memcpy(entry->data, bytes + (combo_count - 1) * m_inode->block_size,
+            memcpy(entry->data, bytes + offset + (combo_count - 1) * m_inode->block_size,
                    m_inode->block_size);
         }
 
@@ -226,6 +226,7 @@ namespace AEX::FS {
         const uint8_t* bytes       = (const uint8_t*) buffer;
         blk_t          combo_start = 0;
         blkcnt_t       combo_count = 0;
+        size_t         offset      = 0;
 
         while (len > 0) {
             off_t  loffset = start - int_floor<uint64_t>(start, m_inode->block_size);
@@ -234,16 +235,15 @@ namespace AEX::FS {
 
             if (!isPerfect(start, llen) || entry) {
                 if (entry) {
-                    memcpy(entry->data + loffset, bytes + combo_count * m_inode->block_size, llen);
+                    memcpy(entry->data + loffset,
+                           bytes + offset + combo_count * m_inode->block_size, llen);
                     entry->changed = true;
                 }
 
                 if (combo_count != 0) {
-                    auto error = m_inode->write(bytes, combo_start, combo_count);
-                    if (error)
-                        return error;
+                    ENSURE_NERR(m_inode->write(bytes + offset, combo_start, combo_count));
 
-                    bytes += combo_count * m_inode->block_size;
+                    offset += combo_count * m_inode->block_size;
                     combo_count = 0;
                 }
 
@@ -254,7 +254,7 @@ namespace AEX::FS {
                     entry->id = start / m_inode->block_size;
                     m_inode->read(entry->data, start / m_inode->block_size, 1);
 
-                    memcpy(entry->data + loffset, bytes, llen);
+                    memcpy(entry->data + loffset, bytes + offset, llen);
                     entry->changed = true;
                 }
             }
@@ -269,11 +269,8 @@ namespace AEX::FS {
             len -= llen;
         }
 
-        if (combo_count) {
-            auto error = m_inode->write(bytes, combo_start, combo_count);
-            if (error)
-                return error;
-        }
+        if (combo_count)
+            ENSURE_NERR(m_inode->write(bytes + offset, combo_start, combo_count));
 
         return ENONE;
     }

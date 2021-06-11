@@ -26,8 +26,8 @@ namespace AEX::Sys {
 
         uint32_t reserved3;
         uint32_t reserved4;
-
         uint16_t reserved5;
+
         uint16_t io_bitmap_pointer = sizeof(tss);
     } PACKED;
 }

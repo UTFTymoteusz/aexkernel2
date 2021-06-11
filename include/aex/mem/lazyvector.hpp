@@ -136,6 +136,14 @@ namespace AEX::Mem {
             return m_rcount;
         }
 
+        optional<T>* begin() {
+            return &m_array[0];
+        }
+
+        optional<T>* end() {
+            return &m_array[m_count];
+        }
+
         private:
         int          m_count  = 0;
         int          m_rcount = 0;

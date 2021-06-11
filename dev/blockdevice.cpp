@@ -70,9 +70,7 @@ namespace AEX::Dev {
             return {};
 
         auto blk_device = (Dev::BlockDevice_SP) device;
-        auto error      = blk_device->initExt();
-        if (error)
-            return error;
+        ENSURE_NERR(blk_device->initExt());
 
         return BlockHandle(blk_device);
     }

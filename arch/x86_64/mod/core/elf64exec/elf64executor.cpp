@@ -10,7 +10,7 @@ using namespace AEX;
 
 error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator, const char* path,
                             char* const argv[], char* const envp[]) {
-    printk("elf64exec: Got a request for %s\n", path);
+    printkd(PTKD_EXEC, "elf64exec: Got a request for %s\n", path);
 
     auto    file = ENSURE_OPT(FS::File::open(path, FS::O_RDONLY));
     ssize_t size = file->seek(0, FS::File::SEEK_END).value;
@@ -33,23 +33,20 @@ error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator
 
     abortall(process, initiator);
 
-    for (int i = 0; i < elf.program_headers.count(); i++) {
-        auto program_header = elf.program_headers[i];
-        if (program_header.type != ELF::PH_TLS)
+    for (auto& header : elf.program_headers) {
+        if (header.type != ELF::PH_TLS)
             continue;
 
-        process->tls_size = program_header.memory_size;
+        process->tls_size = header.memory_size;
     }
 
-    for (int i = 0; i < elf.section_headers.count(); i++) {
-        auto section_header = elf.section_headers[i];
-
-        if (!(section_header.flags & ELF::SC_ALLOC) || section_header.size == 0)
+    for (auto& header : elf.section_headers) {
+        if (!(header.flags & ELF::SC_ALLOC) || header.size == 0)
             continue;
 
-        size_t start = (size_t) section_header.address;
-        size_t end   = start + section_header.size;
-        size_t fptr  = section_header.file_offset;
+        size_t start = (size_t) header.address;
+        size_t end   = start + header.size;
+        size_t fptr  = header.file_offset;
 
         for (size_t ptr = start; ptr < end;) {
             size_t chk_size = min(Sys::CPU::PAGE_SIZE - (ptr & 0x0FFF), end - ptr);
@@ -58,9 +55,9 @@ error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator
             if (!paddr) {
                 auto flags = PAGE_USER | PAGE_FIXED;
 
-                if (section_header.flags & ELF::SC_WRITE)
+                if (header.flags & ELF::SC_WRITE)
                     flags |= PAGE_WRITE;
-                if (section_header.flags & ELF::SC_EXECUTE)
+                if (header.flags & ELF::SC_EXECUTE)
                     flags |= PAGE_EXEC;
 
                 void* vaddr = process->pagemap->alloc(chk_size, flags, (void*) ptr);
@@ -69,11 +66,9 @@ error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator
 
             void* kaddr = Mem::kernel_pagemap->map(chk_size, paddr, PAGE_WRITE);
 
-            if (section_header.type != ELF::sc_type_t::SC_NO_DATA)
+            if (header.type != ELF::sc_type_t::SC_NO_DATA)
                 memcpy(kaddr, (uint8_t*) addr + fptr, chk_size);
             else
-                // AAAASDSADSA I was going over the page boundary
-                // memset64(kaddr, 0x0000, 512);
                 memset(kaddr, '\0', chk_size);
 
             Mem::kernel_pagemap->free(kaddr, chk_size);
@@ -81,17 +76,6 @@ error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator
             ptr += chk_size;
             fptr += chk_size;
         }
-    }
-
-    // PEDANTIC: Goddamned paging issues, better to leave this in
-    for (int i = 0; i < elf.section_headers.count(); i++) {
-        auto section_header = elf.section_headers[i];
-
-        if (!(section_header.flags & ELF::SC_ALLOC) || section_header.size == 0)
-            continue;
-
-        if (!process->pagemap->paddrof((void*) section_header.address))
-            kpanic("section %i, start: 0x%p not present", i, section_header.address);
     }
 
     if (process->pagemap->paddrof((void*) 0x0000) == 0x0000)

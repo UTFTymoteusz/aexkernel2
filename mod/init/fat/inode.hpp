@@ -25,7 +25,7 @@ namespace AEX::FS {
         }
 
         void refresh() {
-            size = m_chain.count() * control_block->block_size;
+            size = m_chain.count() * controlblock->block_size;
         }
 
         friend class FATDirectory;

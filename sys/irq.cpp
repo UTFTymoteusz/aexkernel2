@@ -8,7 +8,6 @@
 #include "aex/spinlock.hpp"
 
 #include "sys/irq.hpp"
-#include "sys/irq_i.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -67,13 +66,14 @@ namespace AEX::Sys::IRQ {
         AEX_ASSERT(irq < 32);
 
         // We need to steal the state of thread so nothing messes with us
-        // State saving is possible because only the executing thread changes it's criticality and
+        // State saving is possible because only the executing thread changes it is criticality and
         // busies.
 
         auto thread = Thread::current();
         auto state  = thread->saveState();
 
         thread->setCritical(1);
+        thread->setSignability(0);
         thread->setBusy(1);
         thread->setStatus(Proc::TS_RUNNABLE);
 

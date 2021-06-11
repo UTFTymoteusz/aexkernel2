@@ -47,12 +47,12 @@ namespace AEX::Proc {
             return EINVAL;
 
         AEX_ASSERT(lock.isAcquired());
-        printkd(PTK_DEBUG, "ipc: th0x%p: Signal %s\n", this, strsignal((signal_t) info.si_signo));
+        printkd(PTKD_IPC, "ipc: th0x%p: Signal %s\n", this, strsignal((signal_t) info.si_signo));
 
         if (isBusy()) {
             m_pending_signals.push(info);
 
-            printkd(PTK_DEBUG, "ipc: th0x%p: Busy, status %s\n", this, strstatus(status));
+            printkd(PTKD_IPC, "ipc: th0x%p: Busy, status %s\n", this, strstatus(status));
 
             if (status == TS_BLOCKED)
                 setStatus(TS_RUNNABLE);
@@ -73,12 +73,12 @@ namespace AEX::Proc {
 
         switch (handler.action) {
         case SIG_CORE:
-            printkd(PTK_DEBUG, WARN "ipc: pid%i: Core dump\n", process->pid);
+            printkd(PTKD_IPC, WARN "ipc: pid%i: Core dump\n", process->pid);
 
             process->exit(info.si_signo | 0x80);
             break;
         case SIG_TERM:
-            printkd(PTK_DEBUG, WARN "ipc: pid%i: Termination\n", process->pid);
+            printkd(PTKD_IPC, WARN "ipc: pid%i: Termination\n", process->pid);
 
             process->exit(info.si_signo);
             break;

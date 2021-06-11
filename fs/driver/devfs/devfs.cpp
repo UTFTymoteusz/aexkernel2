@@ -17,10 +17,10 @@ namespace AEX::FS {
         if (source)
             return EINVAL;
 
-        auto control_block = new DevFSControlBlock();
+        auto controlblock = new DevFSControlBlock();
 
-        control_block->root_inode_id = 1;
+        controlblock->root_inode_id = 1;
 
-        return control_block;
+        return controlblock;
     }
 }

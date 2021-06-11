@@ -14,42 +14,15 @@ namespace AEX::FS {
     }
 
     const char* Walker::next() {
-        if (!m_path[m_index] || m_overflow)
-            return nullptr;
+        char* piece = strntokp_r(m_buffer, NAME_MAX, m_level == 0 ? m_path : nullptr, "/", &m_path);
+        if (piece)
+            m_level++;
 
-        while (m_path[m_index] == '/')
-            m_index++;
-
-        int chars_this_piece = 0;
-
-        while (m_path[m_index] && m_path[m_index] != '/') {
-            if (chars_this_piece >= NAME_MAX - 1) {
-                m_overflow = true;
-                return nullptr;
-            }
-
-            m_buffer[chars_this_piece] = m_path[m_index];
-
-            chars_this_piece++;
-            m_index++;
-        }
-
-        if (chars_this_piece == 0)
-            return nullptr;
-
-        m_buffer[chars_this_piece] = '\0';
-
-        m_level++;
-
-        return m_buffer;
+        return piece;
     }
 
     int Walker::level() {
         return m_level;
-    }
-
-    bool Walker::overflow() {
-        return m_overflow;
     }
 
     bool Walker::final() {
@@ -89,27 +62,23 @@ namespace AEX::FS {
 
     char* get_extension(char* buffer, const char* path, size_t num) {
         size_t len = strlen(path);
-        if (len <= 1)
-            return (char*) path;
-
-        size_t last = 0;
-
-        for (size_t i = 0; i < len; i++) {
-            if (path[i] == '.')
-                last = i + 1;
-        }
-
-        if (last == 0) {
+        if (len <= 1) {
             buffer[0] = '\0';
             return buffer;
         }
 
-        strlcpy(buffer, &((char*) path)[last], min(num, len - last + 1));
+        char* dot = strrchr(buffer, '.');
+        if (!dot) {
+            buffer[0] = '\0';
+            return buffer;
+        }
+
+        strlcpy(buffer, dot + 1, min(num, strlen(dot + 1)));
         return buffer;
     }
 
     bool check_length(const char* path) {
-        return strlen(path) + 1 < PATH_MAX;
+        return strlen(path) + 1 <= PATH_MAX;
     }
 
     bool ends_with_slash(const char* path) {
@@ -132,7 +101,7 @@ namespace AEX::FS {
 
         while (path[index]) {
             while (path[index] && path[index] != '/') {
-                if (chars_this_piece >= NAME_MAX - 1)
+                if (chars_this_piece >= NAME_MAX)
                     return false;
 
                 chars_this_piece++;
@@ -214,20 +183,12 @@ namespace AEX::FS {
     }
 
     int count_levels(const char* path) {
-        int total = 0;
-        int index = 0;
+        int         total = 0;
+        const char* ptr;
 
-        while (path[index] == '/')
-            index++;
-
-        while (path[index]) {
-            while (path[index] && path[index] != '/')
-                index++;
-
+        while (strntokp_r((char*) 0x01, 0, path, "/", &ptr)) {
+            path = nullptr;
             total++;
-
-            while (path[index] == '/')
-                index++;
         }
 
         return total;

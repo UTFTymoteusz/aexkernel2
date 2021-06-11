@@ -92,7 +92,7 @@ namespace AEX::FS {
         return info;
     }
 
-    void filename2shortname(char shortname[12], const char filename[NAME_MAX]) {
+    void filename2shortname(char shortname[12], const char filename[NAME_MAX + 1]) {
         get_filename(shortname, filename, 9, true);
         get_extension(shortname + 8, filename, 4);
 
@@ -104,7 +104,7 @@ namespace AEX::FS {
         }
     }
 
-    void shortname2filename(char filename[NAME_MAX], const char shortname[12]) {
+    void shortname2filename(char filename[NAME_MAX + 1], const char shortname[12]) {
         for (int i = 0; i < 8; i++) {
             if (shortname[i] == ' ')
                 break;

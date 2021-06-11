@@ -141,8 +141,7 @@ namespace AEX {
 
         section_header_agn symbol_table;
 
-        for (int i = 0; i < section_headers.count(); i++) {
-            auto header = section_headers[i];
+        for (auto& header : section_headers) {
             if (strcmp(header.name, ".symtab") != 0)
                 continue;
 
@@ -191,14 +190,12 @@ namespace AEX {
     }
 
     void ELF::loadRelocations64() {
-        for (int i = 0; i < section_headers.count(); i++) {
-            auto section_header = section_headers[i];
-
-            AEX_ASSERT(section_header.type != ELF::sc_type_t::SC_RELOC);
-            if (section_header.type != ELF::sc_type_t::SC_RELOCA)
+        for (auto& header : section_headers) {
+            AEX_ASSERT(header.type != ELF::sc_type_t::SC_RELOC);
+            if (header.type != ELF::sc_type_t::SC_RELOCA)
                 continue;
 
-            loadRelocationsFromSection64(section_header);
+            loadRelocationsFromSection64(header);
         }
     }
 

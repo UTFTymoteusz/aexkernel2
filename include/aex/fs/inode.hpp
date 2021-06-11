@@ -42,7 +42,7 @@ namespace AEX::FS {
         bool  truncate_cached;
         int   opened;
 
-        ControlBlock* control_block;
+        ControlBlock* controlblock;
 
         virtual ~INode();
 
@@ -77,7 +77,7 @@ namespace AEX::FS {
         }
 
         bool is_related(INode_SP inode) {
-            return this->control_block == inode->control_block;
+            return this->controlblock == inode->controlblock;
         }
 
         private:

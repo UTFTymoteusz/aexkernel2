@@ -1,58 +1,17 @@
-[BITS 32]
+%include "arch/x86_64/boot/common.mac"
 
+[BITS 32]
 SECTION .bootstrap
 
-global _start
+global bootstrap
 
-extern kmain
 extern paging_init
-extern pml4
-extern sse_init
 extern setup_early_idt
-
-extern _start_text
-extern _start_bss
-extern _end_bss
-
-_start:
-    jmp bootstrap
-
-ALIGN 4
-mboot:
-	MULTIBOOT_PAGE_ALIGN	equ 1 << 0
-	MULTIBOOT_MEMORY_INFO	equ 1 << 1
-	MULTIBOOT_GRAPHICS_INFO	equ 1 << 2
-	MULTIBOOT_ADDRESS_INFO	equ 1 << 16
-	MULTIBOOT_HEADER_MAGIC	equ 0x1BADB002
-	MULTIBOOT_HEADER_FLAGS  equ MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO | MULTIBOOT_GRAPHICS_INFO | MULTIBOOT_ADDRESS_INFO
-	MULTIBOOT_CHECKSUM	    equ -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
-
-	dd MULTIBOOT_HEADER_MAGIC
-	dd MULTIBOOT_HEADER_FLAGS
-	dd MULTIBOOT_CHECKSUM
-
-	dd mboot
-	dd _start_text
-	dd _start_bss
-	dd 0x1000000 - 0x200000
-	dd _start
-
-	; Graphics things
-	dd 0
-	dd 1280
-	dd 720
-	dd 32
-
-fail:
-	ud2
+extern kmain
 
 bootstrap:
     mov esp, boot_stack_end
-
-	push eax
-	push ebx
-	push ecx
-	push edx
+	pushad
 	
 	; Let's check if we have long mode
 	mov eax, 0x80000001
@@ -62,49 +21,45 @@ bootstrap:
 	cmp edx, 1
 	jl  fail
 
-	; Let's setup paging
 	call paging_init
 
-	; Time to touch the EFER
-	mov ecx, 0xC0000080
+	mov ecx, IA32_EFER
 	rdmsr
-	or eax, 1 << 8  ; Long mode
-	or eax, 1 << 0  ; Syscall
+	or eax, SCE
+	or eax, LME
 	wrmsr
 
-	; Actually enabling paging
 	mov eax, cr0
-	or  eax, (1 << 31)     ; PG
-	and eax, ~0x60000000   ; clear CD and NW
-	or  eax, (1 << 18)     ; And let's enable alignment checking while at it
+	or  eax, PG
+	or  eax, AM
+	and eax, ~(NW | CD)
 	mov cr0, eax
 
-	pop edx
-	pop ecx
-	pop ebx
-	pop eax
+	popad
 
 	; Let's load a temporal GDT
 	lgdt [gdt32to64.ptr]
     jmp gdt32to64.code:bootstrap64
+	
+fail:
+	ud2
 
 [BITS 64]
 bootstrap64:
 	mov rsp, stack_end
-	push rax
+	mov rdi, rbx
+	mov rsi, rax
 
-	; Let's setup SSE
     mov rax, cr0
-    and rax, ~(1 << 2)
-    or  rax, (1 << 1)
+    and rax, ~EM
+    or  rax, MP
     mov rax, cr0
 
     mov rax, cr4
-    or  rax, (0b01 << 7)
-    or  rax, (0b11 << 9)
+    or  rax, PGE
+    or  rax, OSXMMEXCPT | OSFXSR
     mov cr4, rax
 
-	; Let's set our non-code segment registers
 	mov ax, gdt64.data
 	mov ds, ax
 	mov es, ax
@@ -115,35 +70,20 @@ bootstrap64:
 	mov gs, rax
 	mov fs, rax
 
-	; Let's fake the CPU structure
-	mov rcx, 0xC0000101
-
+	mov rcx, IA32_GS_BASE
 	mov rax, fake_cpu_class_ptr
 	mov rdx, rax
 	ror rdx, 32
-
 	wrmsr
 
 	; Let's load our actual GDT
 	lgdt [gdt64.ptr]
-
-	pop rax
-
-	mov rdi, rbx
-	mov rsi, rax
-
-	;sub rsp, 8   ; Gotta align the stack to 16 bytes or SSE will explode
 
 	; Let's setup an early IDT to catch some early faults (ahem ACPI ahem)
 	call setup_early_idt
 
 	xor rbp, rbp
     call kmain
-
-    cli
-	.hcf:
-		hlt
-		jmp .hcf
 
 fake_cpu_class_ptr:
 	dq fake_cpu_class

@@ -71,8 +71,6 @@ namespace AEX::Proc {
     }
 
     Process::~Process() {
-        disposed = true;
-
         if (pagemap != Mem::kernel_pagemap)
             delete pagemap;
 
@@ -120,46 +118,12 @@ namespace AEX::Proc {
     }
 
     void exit_threaded(Process* process) {
-        process->threads_lock.acquire();
-        for (int i = 0; i < process->threads.count(); i++) {
-            if (!process->threads.present(i))
-                continue;
+        process->purge_threads();
+        process->purge_mmaps();
+        process->purge_descriptors();
 
-            process->threads_lock.release();
-            process->threads.at(i)->abort(true);
-            process->threads_lock.acquire();
-        }
-        process->threads_lock.release();
+        SCOPE(processes_lock);
 
-        while (Mem::atomic_read(&process->thread_counter) != 0)
-            Proc::Thread::sleep(50);
-
-        process->lock.acquire();
-
-        for (int i = 0; i < process->mmap_regions.count(); i++) {
-            if (!process->mmap_regions.present(i))
-                continue;
-
-            auto region = process->mmap_regions.at(i);
-            process->mmap_regions.erase(i);
-
-            delete region;
-        }
-
-        process->lock.release();
-
-        process->descs_lock.acquire();
-
-        for (int i = 0; i < process->descs.count(); i++) {
-            if (!process->descs.present(i))
-                continue;
-
-            process->descs.erase(i);
-        }
-
-        process->descs_lock.release();
-
-        processes_lock.acquire();
         process->status = TS_DEAD;
 
         auto iter_process = process_list_head;
@@ -171,14 +135,11 @@ namespace AEX::Proc {
         }
 
         auto parent = get_process(process->parent_pid);
+        using(parent->lock) {
+            parent->child_event.raise();
+        }
 
-        parent->lock.acquire();
-        parent->child_event.raise();
-        parent->lock.release();
-
-        printkd(PTK_DEBUG, "proc: pid%i: Full exit\n", process->pid);
-
-        processes_lock.release();
+        printkd(PTKD_PROC, "proc: pid%i: Full exit\n", process->pid);
     }
 
     void exit_threaded_broker(Process* process) {
@@ -192,7 +153,7 @@ namespace AEX::Proc {
         lock.acquire();
 
         if (m_exiting) {
-            printkd(PTK_DEBUG, WARN "proc: pid%i: exit(%i) while already exitting\n", pid, status);
+            printkd(PTKD_PROC, WARN "proc: pid%i: exit(%i) while already exitting\n", pid, status);
             lock.release();
             return;
         }
@@ -200,8 +161,7 @@ namespace AEX::Proc {
         m_exiting = true;
         ret_code  = status;
 
-        printkd(PTK_DEBUG, "proc: pid%i: exit(%i)\n", pid, status);
-
+        printkd(PTKD_PROC, "proc: pid%i: exit(%i)\n", pid, status);
         broker(exit_threaded_broker, this);
 
         lock.release();
@@ -231,7 +191,6 @@ namespace AEX::Proc {
         int   code;
 
         wait_args() {}
-
         wait_args(pid_t pid, int code) {
             this->pid  = pid;
             this->code = code;
@@ -278,7 +237,7 @@ namespace AEX::Proc {
             }
 
             if (val) {
-                printkd(PTK_DEBUG, "proc: pid%i: Cleaned up pid%i\n", Process::current()->pid,
+                printkd(PTKD_PROC, "proc: pid%i: Cleaned up pid%i\n", Process::current()->pid,
                         val.value.pid);
 
                 status = val.value.code;
@@ -302,13 +261,12 @@ namespace AEX::Proc {
     }
 
     void Process::assoc(Thread* thread) {
-        threads_lock.acquire();
+        SCOPE(threads_lock);
         threads.push(thread);
-        threads_lock.release();
     }
 
     void Process::unassoc(Thread* thread) {
-        threads_lock.acquire();
+        SCOPE(threads_lock);
 
         for (int i = 0; i < threads.count(); i++) {
             if (!threads.present(i) || threads[i] != thread)
@@ -317,8 +275,6 @@ namespace AEX::Proc {
             threads.erase(i);
             break;
         }
-
-        threads_lock.release();
     }
 
     Mem::Vector<char*, 4>& Process::env() {
@@ -328,7 +284,6 @@ namespace AEX::Proc {
 
     void Process::env(char* const envp[]) {
         clearEnv();
-
         SCOPE(lock);
 
         for (int i = 0; i < 256; i++) {
@@ -345,8 +300,8 @@ namespace AEX::Proc {
 
     void Process::env(Mem::Vector<char*, 4>* env) {
         clearEnv();
-
         SCOPE(lock);
+
         for (int i = 0; i < env->count(); i++) {
             char const* var   = env->at(i);
             char*       var_d = new char[strlen(var) + 1];
@@ -395,5 +350,48 @@ namespace AEX::Proc {
         strlcpy(m_environment[index], val, len + 1);
 
         return ENONE;
+    }
+
+    void Process::purge_threads() {
+        threads_lock.acquire();
+        for (auto thread_try : threads) {
+            if (!thread_try.has_value)
+                continue;
+
+            auto thread = thread_try.value;
+
+            threads_lock.release();
+            thread->abort(true);
+            threads_lock.acquire();
+        }
+        threads_lock.release();
+
+        while (Mem::atomic_read(&thread_counter) != 0)
+            Proc::Thread::sleep(50);
+    }
+
+    void Process::purge_mmaps() {
+        SCOPE(lock);
+
+        for (int i = 0; i < mmap_regions.count(); i++) {
+            if (!mmap_regions.present(i))
+                continue;
+
+            auto region = mmap_regions.at(i);
+            mmap_regions.erase(i);
+
+            delete region;
+        }
+    }
+
+    void Process::purge_descriptors() {
+        SCOPE(descs_mutex);
+
+        for (int i = 0; i < descs.count(); i++) {
+            if (!descs.present(i))
+                continue;
+
+            descs.erase(i);
+        }
     }
 }

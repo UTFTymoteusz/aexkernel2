@@ -19,12 +19,12 @@ int pipe(usr_int* rp, usr_int* wp) {
     if (err != ENONE)
         return err;
 
-    current->descs_lock.acquire();
+    current->descs_mutex.acquire();
 
     int rfd = current->descs.push(rsp);
     int wfd = current->descs.push(wsp);
 
-    current->descs_lock.release();
+    current->descs_mutex.release();
 
     USR_ENSURE_OPT(usr_write(rp, rfd));
     USR_ENSURE_OPT(usr_write(wp, wfd));

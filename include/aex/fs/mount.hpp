@@ -17,6 +17,6 @@ namespace AEX::FS {
 
         virtual void unmount();
 
-        Mem::SmartPointer<ControlBlock> control_block;
+        Mem::SmartPointer<ControlBlock> controlblock;
     };
 }

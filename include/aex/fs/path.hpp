@@ -1,32 +1,26 @@
 #pragma once
 
+#include "aex/fs/limits.hpp"
 #include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
 
 namespace AEX::FS {
-    constexpr auto PATH_MAX  = 2048;
-    constexpr auto NAME_MAX  = 256;
-    constexpr auto DEPTH_MAX = 256;
-
     class API Walker {
         public:
         Walker(const char* path);
 
         const char* next();
         int         level();
-        bool        overflow();
         bool        final();
 
         private:
-        char m_buffer[NAME_MAX];
+        char m_buffer[NAME_MAX + 1];
 
-        int         m_index = 0;
         const char* m_path;
-        bool        m_overflow = false;
-        int         m_level    = 0;
-        int         m_levels   = 0;
+        int         m_level  = 0;
+        int         m_levels = 0;
     };
 
     /**

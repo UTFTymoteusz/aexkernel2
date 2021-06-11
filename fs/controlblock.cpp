@@ -19,8 +19,8 @@ namespace AEX::FS {
         auto inode  = INode_SP::null();
         int  steps  = 0;
 
-        parent->id            = root_inode_id;
-        parent->control_block = this;
+        parent->id           = root_inode_id;
+        parent->controlblock = this;
         parent->mutex.acquire();
 
         for (auto walker = Walker(lpath); auto piece = walker.next();) {
@@ -49,7 +49,7 @@ namespace AEX::FS {
 
                 inode     = ENSURE_OPT(get(parent, readd_try.value, readd_try.value.inode_id));
                 inode->id = readd_try.value.inode_id;
-                inode->control_block = this;
+                inode->controlblock = this;
 
                 if (!walker.final()) {
                     parent->mutex.release();
@@ -86,7 +86,7 @@ namespace AEX::FS {
         return find_result{inode, parent};
     }
 
-    ino_t ControlBlock::nextINodeID() {
+    ino_t ControlBlock::nextIno() {
         return Mem::atomic_fetch_add(&m_inocurrent, (ino_t) 1);
     }
 }

@@ -1,21 +1,6 @@
+#include "aex.hpp"
 #include "aex/arch/sys/cpu.hpp"
-#include "aex/assert.hpp"
-#include "aex/debug.hpp"
-#include "aex/dev/input.hpp"
-#include "aex/dev/tty.hpp"
-#include "aex/dev/tty/tty.hpp"
-#include "aex/fs.hpp"
-#include "aex/ipc/pipe.hpp"
-#include "aex/mem.hpp"
-#include "aex/module.hpp"
-#include "aex/net.hpp"
-#include "aex/printk.hpp"
-#include "aex/proc.hpp"
-#include "aex/proc/exec.hpp"
-#include "aex/sys/acpi.hpp"
-#include "aex/sys/irq.hpp"
-#include "aex/sys/power.hpp"
-#include "aex/sys/time.hpp"
+#include "aex/config.hpp"
 
 #include "boot/mboot.h"
 #include "dev/dev.hpp"
@@ -29,12 +14,9 @@
 #include "proc/proc.hpp"
 #include "sys/acpi.hpp"
 #include "sys/irq.hpp"
-#include "sys/irq_i.hpp"
 #include "sys/mcore.hpp"
 #include "sys/syscall.hpp"
 #include "sys/time.hpp"
-
-#define INIT_PATH "/sys/aexinit"
 
 using namespace AEX;
 using namespace AEX::Mem;
@@ -48,10 +30,9 @@ namespace AEX::Dev::Tree {
     void print_debug();
 }
 
-void kmain_env();
-
 void init_mem(multiboot_info_t* mbinfo);
-void mount_fs();
+void mount_fs(uint32_t dev_code);
+void kmain_env();
 
 extern "C" void kmain(multiboot_info_t* mbinfo) {
     // Dirty workaround but meh, it works
@@ -59,7 +40,6 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
 
     Dev::TTY::init(mbinfo);
     Init::print_header();
-    printk(INIT "Booting AEX/2 on " ARCH ", build " VERSION "\n\n");
 
     AEX_ASSERT(mbinfo->flags & MULTIBOOT_INFO_MODS);
 
@@ -67,6 +47,7 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     load_symbols(mbinfo);
 
     AEX_ASSERT(Debug::symbols_loaded);
+    uint32_t mb_boot_dev = mbinfo->boot_device;
 
     ACPI::init();
     printk("\n");
@@ -99,7 +80,7 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     Mem::cleanup();
     printk("\n");
 
-    mount_fs();
+    mount_fs(mb_boot_dev);
 
     IPC::init();
     Net::init();
@@ -114,22 +95,13 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     kmain_env();
 }
 
-void boi(const char*) {
-    for (int i = 0; i < 2; i++) {
-        Proc::debug_print_cpu_jobs();
-        Proc::Thread::sleep(2000);
-    }
-}
-
 void init_mem(multiboot_info_t* mbinfo) {
-    // clang-format off
     printk("Section info:\n");
-    printk(".text  : %93$0x%p%90$, %93$0x%p%$\n", &_start_text  , &_end_text);
+    printk(".text  : %93$0x%p%90$, %93$0x%p%$\n", &_start_text, &_end_text);
     printk(".rodata: %93$0x%p%90$, %93$0x%p%$\n", &_start_rodata, &_end_rodata);
-    printk(".data  : %93$0x%p%90$, %93$0x%p%$\n", &_start_data  , &_end_data);
-    printk(".bss   : %93$0x%p%90$, %93$0x%p%$\n", &_start_bss   , &_end_bss);
+    printk(".data  : %93$0x%p%90$, %93$0x%p%$\n", &_start_data, &_end_data);
+    printk(".bss   : %93$0x%p%90$, %93$0x%p%$\n", &_start_bss, &_end_bss);
     printk("\n");
-    // clang-format on
 
     Phys::init(mbinfo);
     Mem::init();
@@ -139,14 +111,49 @@ void init_mem(multiboot_info_t* mbinfo) {
     Dev::TTY::init_mem(mbinfo);
 }
 
-void mount_fs() {
+void mount_fs(uint32_t dev_code) {
     FS::mount(nullptr, "/dev/", "devfs");
 
-    auto res = FS::mount("/dev/sda1", "/", nullptr);
-    if (res != ENONE)
-        kpanic("Failed to mount iso9660: %s", strerror((error_t) res));
+    if (dev_code == 0x00000000) {
+        printk(WARN "Where we have booted from is one of the greatest mysteries ever\n");
+        return;
+    }
 
-    printk("\n");
+    char to_try[8][8] = {};
+
+    uint8_t drive     = ((dev_code >> 24) & 0xFF) + 0;
+    uint8_t partition = ((dev_code >> 16) & 0xFF) + 1;
+
+    if (drive >= 0xE0) {
+        char drive_letter = 'a' + (drive - 0xE0);
+
+        snprintf(to_try[0], 8, "hr%c", drive_letter);
+        snprintf(to_try[1], 8, "sr%c", drive_letter);
+        strlcpy(to_try[2], "%", 8);
+    }
+    else if (drive >= 0x80 && drive < 0xE0) {
+        char drive_letter = 'a' + (drive - 0x80);
+
+        snprintf(to_try[0], 8, "hd%c%i", drive_letter, partition);
+        snprintf(to_try[1], 8, "sd%c%i", drive_letter, partition);
+        strlcpy(to_try[2], "%", 8);
+    }
+
+    for (int i = 0; i < 8; i++) {
+        if (strcmp(to_try[i], "%") == 0)
+            break;
+
+        char buffer[256];
+        snprintf(buffer, sizeof(buffer), "/dev/%s", to_try[i]);
+
+        if (FS::File::info(buffer) == ENOENT)
+            continue;
+
+        if (FS::mount(buffer, "/", nullptr) == ENONE)
+            return;
+    }
+
+    kpanic("Failed to mount /");
 }
 
 void exec_init() {
@@ -189,7 +196,9 @@ void kmain_env() {
 
     exec_init();
 
-    printk("We're done here, adios\n");
+    // Sys::CPU::tripleFault();
+
+    printk("We are done here, adios\n");
     Proc::Thread::sleep(1000);
 
     AEX_ASSERT(Sys::Power::poweroff());

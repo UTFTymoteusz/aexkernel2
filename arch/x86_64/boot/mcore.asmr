@@ -1,3 +1,5 @@
+%include "arch/x86_64/boot/common.mac"
+
 org 0x1000
 [BITS 16]
 
@@ -21,27 +23,24 @@ fix:
 
     ; Let this just fall through
 
-; Enable PAE
 mov eax, cr4
-or  eax, 1 << 5
+or  eax, PAE
 mov cr4, eax
 
-; Time to touch the EFER
-mov ecx, 0xC0000080
+mov ecx, IA32_EFER
 rdmsr
-or eax, 1 << 8  ; Long mode
-or eax, 1 << 0  ; Syscall
+or eax, SCE
+or eax, LME
 wrmsr
 
 ; Set cr3 to what the BSP gave us
 mov dword eax, [0x500]
 mov cr3, eax
 
-; Actually enabling paging and protected mode
 mov eax, cr0
-or  eax, (1 << 31) | 1 ; PE and PG
-and eax, ~0x60000000   ; clear CD and NW
-or  eax, (1 << 18)     ; And let's enable alignment checking while at it
+or  eax, PE
+or  eax, PG
+and eax, ~(NW | CD)
 mov cr0, eax
 
 lgdt [tmp_gdt.ptr]
@@ -56,26 +55,23 @@ lmode:
     mov es, rax
 
 	xor rax, rax
-	mov gs, rax
+	mov gs , rax
 
-	; Let's setup SSE
-    mov rax, cr0
-    and rax, ~(1 << 2)
-    or  rax, (1 << 1)
+	mov rax, cr0
+    and rax, ~EM
+    or  rax, MP
+	or  rax, AM
     mov rax, cr0
 
     mov rax, cr4
-    or  rax, (0b01 << 7)
-    or  rax, (0b11 << 9)
+    or  rax, PGE
+    or  rax, OSXMMEXCPT | OSFXSR
     mov cr4, rax
 
-	; Let's fake the CPU structure
-	mov rcx, 0xC0000101
-
+	mov rcx, IA32_GS_BASE
 	mov rax, fake_cpu_class_ptr
 	mov rdx, rax
 	ror rdx, 32
-
 	wrmsr
 
 	; Let's load the BSP's GDT and IDT

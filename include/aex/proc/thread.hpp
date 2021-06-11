@@ -6,6 +6,7 @@
 #include "aex/mem/vector.hpp"
 #include "aex/optional.hpp"
 #include "aex/printk.hpp"
+#include "aex/proc/guards.hpp"
 #include "aex/proc/types.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/utility.hpp"
@@ -31,7 +32,7 @@ namespace AEX::Proc {
 
         struct state {
             uint16_t busy;
-            uint16_t softcritical;
+            uint16_t signability;
             uint16_t critical;
 
             status_t status;
@@ -41,14 +42,11 @@ namespace AEX::Proc {
 
         // Do not change the order of these or the kernel will go boom
         struct {
-            tid_t tid; // 0x08
-
+            tid_t    tid;         // 0x08
             Context* context;     // 0x10
             Context* context_aux; // 0x18
-
-            error_t errno; // 0x20
-
-            size_t saved_stack; // 0x28
+            error_t  errno;       // 0x20
+            size_t   saved_stack; // 0x28
         };
 
         Spinlock lock;
@@ -83,6 +81,10 @@ namespace AEX::Proc {
         int sched_counter;
         int held_mutexes;
 
+        CriticalGuard    criticalGuard    = CriticalGuard(this);
+        SignabilityGuard signabilityGuard = SignabilityGuard(this);
+        BusyGuard        busyGuard        = BusyGuard(this);
+
         Thread();
         Thread(Process* parent);
 
@@ -110,12 +112,6 @@ namespace AEX::Proc {
         void finish();
 
         Process* getProcess();
-
-        // Make this actually do what it says it'll do
-        /**
-         * Makes the CPU that's executing the thread back off and acquires the lock.
-         **/
-        void take_lock();
 
         // IPC Stuff
         /**
@@ -172,27 +168,27 @@ namespace AEX::Proc {
         }
 
         /**
-         * Adds 1 to the thread's softcritical counter. If m_softcritical is greater than 0, the
-         * thread cannot be interrupted or killed.
+         * Adds 1 to the thread's signability counter. If m_signability is greater than 0, the
+         * thread can be interrupted by signals.
          **/
-        void addSoftCritical();
+        void addSignability();
 
         /**
-         * Subtracts 1 from the thread's softcritical counter. If m_softcritical is greater than 0,
-         * the thread cannot be interrupted or killed.
+         * Subtracts 1 from the thread's signability counter. If m_signability is greater than 0,
+         * the thread can be interrupted by signals.
          **/
-        void subSoftCritical();
+        void subSignability();
 
-        inline bool isSoftCritical() {
-            return Mem::atomic_read(&m_softcritical) > 0;
+        inline bool isSignalable() {
+            return Mem::atomic_read(&m_signability) > 0;
         }
 
-        inline uint16_t getSoftCritical() {
-            return Mem::atomic_read(&m_softcritical);
+        inline uint16_t getSignability() {
+            return Mem::atomic_read(&m_signability);
         }
 
-        inline void setSoftCritical(uint16_t softcritical) {
-            m_softcritical = softcritical;
+        inline void setSignability(uint16_t signability) {
+            m_signability = signability;
         }
 
         /**
@@ -236,9 +232,9 @@ namespace AEX::Proc {
         void  loadState(state& m_state);
 
         private:
-        uint16_t m_busy         = 0;
-        uint16_t m_softcritical = 0;
-        uint16_t m_critical     = 0;
+        uint16_t m_busy        = 0;
+        uint16_t m_signability = 0;
+        uint16_t m_critical    = 0;
 
         bool m_detached = false;
         bool m_aborting = false;

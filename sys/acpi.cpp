@@ -128,9 +128,7 @@ namespace AEX::Sys::ACPI {
     }
 
     acpi_table* find_table(const char signature[4], int index) {
-        for (int i = 0; i < tables.count(); i++) {
-            auto table = tables.at(i);
-
+        for (auto& table : tables) {
             if (memcmp((void*) signature, (void*) ((sdt_header*) table), 4) != 0) {
                 continue;
             }

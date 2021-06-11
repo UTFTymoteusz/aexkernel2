@@ -8,14 +8,11 @@
 namespace AEX::Sys {
     struct API idt_entry {
         uint16_t offset_0;
-
         uint16_t selector;
         uint8_t  ist;
         uint8_t  attributes;
-
         uint16_t offset_1;
         uint32_t offset_2;
-
         uint32_t zero;
 
         idt_entry& setOffset(size_t offset);

@@ -283,7 +283,7 @@ namespace AEX::Proc {
     }
 
     bool Thread::interrupted() {
-        return (m_aborting || (m_pending_signals.count() > 0 && !in_signal)) && !m_softcritical;
+        return (m_aborting || (m_pending_signals.count() > 0 && !in_signal)) && m_signability;
     }
 
     void broker_cleanup(Thread* thread) {
@@ -292,8 +292,7 @@ namespace AEX::Proc {
     }
 
     void Thread::finish() {
-        Thread::current()->addCritical();
-
+        SCOPE(Thread::current()->criticalGuard);
         AEX_ASSERT(this->status == TS_DEAD);
 
         parent->unassoc(this);
@@ -303,17 +302,11 @@ namespace AEX::Proc {
             parent->exit(0);
 
         broker(broker_cleanup, this);
-
-        Thread::current()->subCritical();
     }
 
     Process* Thread::getProcess() {
         // We need atomicity here
         return this->parent;
-    }
-
-    void Thread::take_lock() {
-        lock.acquire();
     }
 
     void Thread::setStatus(status_t status) {
@@ -347,17 +340,18 @@ namespace AEX::Proc {
                 handleSignal(info);
             }
         }
-        else
+        else {
             subCritical();
+        }
     }
 
-    void Thread::addSoftCritical() {
+    void Thread::addSignability() {
         Mem::atomic_add(&m_busy, (uint16_t) 1);
-        Mem::atomic_add(&m_softcritical, (uint16_t) 1);
+        Mem::atomic_add(&m_signability, (uint16_t) 1);
     }
 
-    void Thread::subSoftCritical() {
-        Mem::atomic_sub(&m_softcritical, (uint16_t) 1);
+    void Thread::subSignability() {
+        Mem::atomic_sub(&m_signability, (uint16_t) 1);
         Mem::atomic_sub(&m_busy, (uint16_t) 1);
     }
 
@@ -384,19 +378,19 @@ namespace AEX::Proc {
     Thread::state Thread::saveState() {
         auto st = state();
 
-        st.busy         = m_busy;
-        st.softcritical = m_softcritical;
-        st.critical     = m_critical;
-        st.status       = status;
+        st.busy        = m_busy;
+        st.signability = m_signability;
+        st.critical    = m_critical;
+        st.status      = status;
 
         return st;
     }
 
     void Thread::loadState(state& m_state) {
-        m_busy         = m_state.busy;
-        m_softcritical = m_state.softcritical;
-        m_critical     = m_state.critical;
-        status         = m_state.status;
+        m_busy        = m_state.busy;
+        m_signability = m_state.signability;
+        m_critical    = m_state.critical;
+        status        = m_state.status;
     }
 
     void Thread::alloc_tls(uint16_t size) {

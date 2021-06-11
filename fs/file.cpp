@@ -27,9 +27,9 @@ namespace AEX::FS {
             return EINVAL;
 
         auto mount_info = ENSURE_OPT(find_mount(path));
-        auto inode_try  = mount_info.mount->control_block->find(mount_info.new_path, true);
+        auto inode_try  = mount_info.mount->controlblock->find(mount_info.new_path, true);
         if (!inode_try) {
-            printkd(FS_DEBUG, "fs: %s, %i: no inode (%s)\n", path, mode, strerror(inode_try.error));
+            printkd(PTKD_FS, "fs: %s, %i: no inode (%s)\n", path, mode, strerror(inode_try.error));
             return inode_try.error;
         }
 
@@ -41,7 +41,7 @@ namespace AEX::FS {
             if (!flagset(mode, O_CREAT))
                 return ENOENT;
 
-            char name[FS::NAME_MAX];
+            char name[FS::NAME_MAX + 1];
             get_filename(name, path, sizeof(name));
 
             inode = ENSURE_OPT(parent->creat(name, 0x0777, FT_REGULAR));
@@ -54,7 +54,7 @@ namespace AEX::FS {
             if (mode != O_RDONLY)
                 return EISDIR;
 
-            printk("fs: %s: Opened directory %s\n", mount_info.mount->path, path);
+            printkd(PTKD_FS, "fs: %s: Opened directory %s\n", mount_info.mount->path, path);
             return File_SP(new INodeDirectory(inode));
         }
 
@@ -65,22 +65,22 @@ namespace AEX::FS {
             auto device = ENSURE_R(Dev::devices.get(inode->dev), ENOENT);
             auto file   = ENSURE_OPT(DevFile::open(device, mode));
 
-            printk("fs: %s: Opened device %s\n", mount_info.mount->path, path);
+            printkd(PTKD_FS, "fs: %s: Opened device %s\n", mount_info.mount->path, path);
             return File_SP(file);
         }
 
         if (flagset(mode, O_WRONLY, O_TRUNC))
             inode->truncate(0, true);
 
-        printk("fs: %s: Opened file %s\n", mount_info.mount->path, path);
+        printkd(PTKD_FS, "fs: %s: Opened file %s\n", mount_info.mount->path, path);
         return File_SP(new INodeFile(inode, mode));
     }
 
     optional<File_SP> File::mkdir(const char* path, int) {
         auto mount_info = ENSURE_OPT(find_mount(path));
-        auto inode_try  = mount_info.mount->control_block->find(mount_info.new_path, true);
+        auto inode_try  = mount_info.mount->controlblock->find(mount_info.new_path, true);
         if (!inode_try) {
-            printkd(FS_DEBUG, "fs: %s: no inode (%s)\n", path, strerror(inode_try.error));
+            printkd(PTKD_FS, "fs: %s: no inode (%s)\n", path, strerror(inode_try.error));
             return inode_try.error;
         }
 
@@ -91,7 +91,7 @@ namespace AEX::FS {
         if (inode)
             return EEXIST;
 
-        char name[FS::NAME_MAX];
+        char name[FS::NAME_MAX + 1];
         get_filename(name, path, sizeof(name));
 
         inode = ENSURE_OPT(parent->creat(name, 0x0777, FT_DIRECTORY));
@@ -101,7 +101,7 @@ namespace AEX::FS {
 
     optional<file_info> File::info(const char* path, int) {
         auto mount_info = ENSURE_OPT(find_mount(path));
-        auto find_try   = ENSURE_OPT(mount_info.mount->control_block->find(mount_info.new_path));
+        auto find_try   = ENSURE_OPT(mount_info.mount->controlblock->find(mount_info.new_path));
 
         auto parent = find_try.parent;
         auto inode  = find_try.inode;
@@ -199,27 +199,44 @@ namespace AEX::FS {
         {
             auto scope = ReleaseScopeMutex(find_new.parent->mutex);
 
-            char newname[FS::NAME_MAX];
+            char newname[FS::NAME_MAX + 1];
             get_filename(newname, newpath, sizeof(newname));
 
             if (find_new.inode) {
-                // It's better if we purge AFTER we're done with the rename (why should we block the
-                // entire directory while we're purging the inode?)
                 using(find_new.inode->mutex) {
                     find_new.inode->opened++;
                 }
 
-                ENSURE_NERR(find_new.parent->unlink(newname));
+                auto error = find_new.parent->unlink(newname);
+                if (error != ENONE) {
+                    using(find_new.inode->mutex) {
+                        find_new.inode->opened--;
+                    }
+
+                    return error;
+                }
             }
 
-            ENSURE_NERR(find_new.parent->link(newname, find_old.inode));
+            auto error = find_new.parent->link(newname, find_old.inode);
+            if (error != ENONE) {
+                if (find_new.parent->link(newname, find_old.inode) != ENONE)
+                    printk(FAIL "Failed to relink %s after an unlink!", newpath);
+
+                using(find_new.inode->mutex) {
+                    find_new.inode->opened--;
+                }
+
+                return error;
+            }
         }
 
+        error_t error = ENONE;
+
         using(find_old.parent->mutex) {
-            char oldname[FS::NAME_MAX];
+            char oldname[FS::NAME_MAX + 1];
             get_filename(oldname, oldpath, sizeof(oldname));
 
-            ENSURE_NERR(find_old.parent->unlink(oldname));
+            error = find_old.parent->unlink(oldname);
         }
 
         using(find_new.inode->mutex) {
@@ -229,18 +246,18 @@ namespace AEX::FS {
                 find_new.inode->purge();
         }
 
-        return ENONE;
+        return error;
     }
 
     error_t File::unlink(const char* path) {
         auto mount_info = ENSURE_OPT(find_mount(path));
-        auto inode_try  = mount_info.mount->control_block->find(mount_info.new_path, true);
+        auto inode_try  = mount_info.mount->controlblock->find(mount_info.new_path, true);
         if (!inode_try) {
-            printkd(FS_DEBUG, "fs: %s: no inode (%s)\n", path, strerror(inode_try.error));
+            printkd(PTKD_FS, "fs: %s: no inode (%s)\n", path, strerror(inode_try.error));
             return inode_try.error;
         }
 
-        char name[FS::NAME_MAX];
+        char name[FS::NAME_MAX + 1];
         get_filename(name, path, sizeof(name));
 
         auto parent = inode_try.value.parent;
@@ -253,26 +270,24 @@ namespace AEX::FS {
                 return ENOENT;
         }
 
-        auto error = parent->unlink(name);
-        if (error)
-            return error;
+        ENSURE_NERR(parent->unlink(name));
 
-        inode->control_block->unlink(inode->id);
+        inode->controlblock->unlink(inode->id);
         return ENONE;
     }
 
     error_t File::rmdir(const char* path) {
         auto mount_info = ENSURE_OPT(find_mount(path));
-        auto inode_try  = mount_info.mount->control_block->find(mount_info.new_path, true);
+        auto inode_try  = mount_info.mount->controlblock->find(mount_info.new_path, true);
         if (!inode_try) {
-            printkd(FS_DEBUG, "fs: %s: no inode (%s)\n", path, strerror(inode_try.error));
+            printkd(PTKD_FS, "fs: %s: no inode (%s)\n", path, strerror(inode_try.error));
             return inode_try.error;
         }
 
         if (!inode_try.value.parent)
             return EINVAL;
 
-        char name[FS::NAME_MAX];
+        char name[FS::NAME_MAX + 1];
         get_filename(name, path, sizeof(name));
 
         auto parent = inode_try.value.parent;
@@ -290,11 +305,9 @@ namespace AEX::FS {
                 return ENOTEMPTY;
         }
 
-        auto error = parent->unlink(name);
-        if (error)
-            return error;
+        ENSURE_NERR(parent->unlink(name));
 
-        inode->control_block->unlink(inode->id);
+        inode->controlblock->unlink(inode->id);
         return ENONE;
     }
 
@@ -309,9 +322,9 @@ namespace AEX::FS {
     optional<find_result> File::get(const char* path, bool allow_incomplete) {
         auto mount_info = ENSURE_OPT(find_mount(path));
         auto inode_try =
-            mount_info.mount->control_block->find(mount_info.new_path, allow_incomplete);
+            mount_info.mount->controlblock->find(mount_info.new_path, allow_incomplete);
         if (!inode_try) {
-            printkd(FS_DEBUG, "fs: %s: no inode (%s)\n", path, strerror(inode_try.error));
+            printkd(PTKD_FS, "fs: %s: no inode (%s)\n", path, strerror(inode_try.error));
             return inode_try.error;
         }
 

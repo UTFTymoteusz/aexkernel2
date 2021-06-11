@@ -36,16 +36,29 @@ namespace AEX {
         else if (Sys::CPU::currentID() != faulted_cpu)
             return; // printk_lock.acquire();
 
-        auto rootTTY = TTYs[ROOT_TTY];
+        static bool newline  = true;
+        static bool in_quote = false;
 
+        auto rootTTY       = TTYs[ROOT_TTY];
         auto printk_common = [rootTTY](char padchar, size_t padlen, char* buffer) {
             for (size_t i = strlen(buffer); i < padlen; i++)
                 *rootTTY << padchar;
 
-            *rootTTY << buffer;
-        };
+            while (true) {
+                char c = *buffer++;
+                if (c == '\0')
+                    break;
 
-        static bool newline = true;
+                if (c == '\'') {
+                    rootTTY->color(in_quote ? ANSI_FG_WHITE : ANSI_FG_GRAY);
+                    in_quote = !in_quote;
+
+                    continue;
+                }
+
+                *rootTTY << c;
+            }
+        };
 
         if (newline) {
             newline = false;
@@ -192,6 +205,12 @@ namespace AEX {
                     *rootTTY << c;
                     break;
                 }
+                continue;
+            }
+            else if (c == '\'') {
+                rootTTY->color(in_quote ? ANSI_FG_WHITE : ANSI_FG_GRAY);
+                in_quote = !in_quote;
+
                 continue;
             }
 

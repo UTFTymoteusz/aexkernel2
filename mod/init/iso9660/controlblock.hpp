@@ -21,6 +21,8 @@ namespace AEX::FS {
 
             block_size    = BLOCK_SIZE;
             root_inode_id = root_dentry.data_lba.le;
+
+            read_only = true;
         }
 
         Dev::BlockHandle block_handle;

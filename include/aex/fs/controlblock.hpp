@@ -24,6 +24,7 @@ namespace AEX::FS {
         char        label[64];
         ino_t       root_inode_id;
         blksize_t   block_size;
+        bool        read_only;
 
         virtual ~ControlBlock();
 
@@ -37,6 +38,6 @@ namespace AEX::FS {
         Mem::Cache<INode_SP> m_cache;
         ino_t                m_inocurrent = 1;
 
-        ino_t nextINodeID();
+        ino_t nextIno();
     };
 }

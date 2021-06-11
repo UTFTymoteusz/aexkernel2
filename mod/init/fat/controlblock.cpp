@@ -24,7 +24,7 @@ namespace AEX::FS {
                               info.cluster_count);
 
         m_root_cluster = info.root_first_cluster;
-        root_inode_id  = nextINodeID();
+        root_inode_id  = nextIno();
     }
 
     FATControlBlock::~FATControlBlock() {
@@ -84,7 +84,7 @@ namespace AEX::FS {
         auto root = new FATDirectory();
         auto sptr = INode_SP(root);
 
-        root->control_block = this;
+        root->controlblock = this;
 
         fillChain(m_root_cluster, root->chain());
         root->refresh();

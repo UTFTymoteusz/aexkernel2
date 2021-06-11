@@ -6,12 +6,12 @@
 
 #include "sys/irq/apic.hpp"
 
-extern "C" void common_irq_handler(AEX::Sys::CPU::irq_info* info);
+extern "C" void irq_handler(AEX::Sys::CPU::irq_info* info);
 
 namespace AEX::Sys::IRQ {
     volatile bool irq_mark = false;
 
-    extern "C" void common_irq_handler(CPU::irq_info* info) {
+    extern "C" void irq_handler(CPU::irq_info* info) {
         CPU::current()->in_interrupt++;
 
         handle(info->irq_no);

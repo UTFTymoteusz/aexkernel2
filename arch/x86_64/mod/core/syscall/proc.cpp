@@ -106,7 +106,7 @@ pid_t fork() {
     child->assoc(thread);
     child->ready();
 
-    printkd(PTK_DEBUG, "syscall: pid%i: forked as pid%i\n", parent->pid, child->pid);
+    printkd(PTKD_EXEC, "syscall: pid%i: forked as pid%i\n", parent->pid, child->pid);
 
     add_thread(thread);
 
@@ -184,7 +184,7 @@ int execve(const usr_char* path, usr_char* const usr_argv[], usr_char* const usr
         usr_finalize_tbl(envp_buffers, envc, envp);
     }
 
-    printkd(PTK_DEBUG, "proc: pid%i: exec '%s'\n", Process::current()->pid, path_buffer);
+    printkd(PTKD_EXEC, "proc: pid%i: exec '%s'\n", Process::current()->pid, path_buffer);
 
     USR_ERRNO = exec(Process::current(), Thread::current(), path_buffer, argv,
                      usr_envp ? envp : nullptr, nullptr);
@@ -193,6 +193,7 @@ int execve(const usr_char* path, usr_char* const usr_argv[], usr_char* const usr
 }
 
 pid_t wait(usr_int* wstatus) {
+    SCOPE(Thread::current()->signabilityGuard);
     return USR_ENSURE_OPT(Process::current()->wait(*wstatus));
 }
 

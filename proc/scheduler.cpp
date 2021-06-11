@@ -111,7 +111,6 @@ namespace AEX::Proc {
         if (thread == idle)
             thread = thread_list_head;
 
-        // We don't care either way, it's our private thread anyways
         idle->lock.tryAcquireRaw();
 
         cpu->current_thread  = idle;

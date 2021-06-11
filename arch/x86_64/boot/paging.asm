@@ -1,5 +1,6 @@
-[BITS 32]
+%include "arch/x86_64/boot/common.mac"
 
+[BITS 32]
 SECTION .bootstrap
 
 global paging_init
@@ -108,12 +109,10 @@ paging_init:
         jl .ptinit2
 
 
-	; Enable PAE
 	mov eax, cr4
-    or  eax, 1 << 5
+    or  eax, PAE
     mov cr4, eax
 
-	; Make cr3 point to our PML4
 	mov eax, pml4
 	mov cr3, eax
 
@@ -132,7 +131,6 @@ pdp0:
         resb 4096
         .pt0_3:
             resb 4096 * 8
-
 
 pdp511:
     resb 4096

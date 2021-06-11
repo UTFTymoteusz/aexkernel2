@@ -1,4 +1,4 @@
-ENTRY(_start)
+ENTRY(bootstrap)
 OUTPUT_FORMAT(elf64-x86-64)
 
 SECTIONS
@@ -62,12 +62,5 @@ SECTIONS
         *(.stabstr)
         *(.eh_frame)
         *(.__GNU_EH_FRAME_HDR)
-        *(.debug_loc)
-        *(.debug_info)
-        *(.debug_aranges)
-        *(.debug_ranges)
-        *(.debug_abbrev)
-        *(.debug_line)
-        *(.debug_str)
     }
 }

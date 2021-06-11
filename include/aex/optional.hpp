@@ -36,7 +36,6 @@ namespace AEX {
             return error;
         }
 
-        // idk
         operator T() {
             return value;
         }

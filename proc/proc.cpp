@@ -3,6 +3,7 @@
 #include "aex/arch/proc/context.hpp"
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/assert.hpp"
+#include "aex/config.hpp"
 #include "aex/debug.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
@@ -50,8 +51,8 @@ namespace AEX::Proc {
 
         auto& bsp = MCore::CPUs[0];
 
-        auto idle_process   = new Process("/sys/aexkrnl", 0, Mem::kernel_pagemap, "idle");
-        auto kernel_process = new Process("/sys/aexkrnl", 0, Mem::kernel_pagemap);
+        auto idle_process   = new Process(KERNEL_PATH, 0, Mem::kernel_pagemap, "idle");
+        auto kernel_process = new Process(KERNEL_PATH, 0, Mem::kernel_pagemap);
 
         idle_process->set_cwd("/");
         kernel_process->set_cwd("/");
@@ -79,10 +80,15 @@ namespace AEX::Proc {
 
         kernel_process->threads.push(bsp_thread);
 
+#if KPANIC_PROC_STACK_TRACE
         kpanic_hook.subscribe([]() {
             printk("Stack trace:\n");
             Debug::stack_trace(1);
+        });
+#endif
 
+#if KPANIC_PROC_LIST
+        kpanic_hook.subscribe([]() {
             printk("Threads:\n");
             Proc::debug_print_threads();
 
@@ -96,6 +102,7 @@ namespace AEX::Proc {
                 printk("%3i. 0x%p\n", i, cpu->current_thread);
             }
         });
+#endif
 
         broker_init();
 

@@ -2,7 +2,7 @@
 
 global exc_array
 
-extern common_fault_handler
+extern fault_handler
 
 SECTION .text
 %macro pusha 0
@@ -118,7 +118,7 @@ exc_common:
 
     mov rdi, rsp
     add rdi, 512 + 16
-    call common_fault_handler
+    call fault_handler
 
     pop rbp
     pop rax

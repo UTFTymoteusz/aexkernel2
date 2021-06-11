@@ -44,8 +44,8 @@ namespace AEX::FS {
 
             printk(OK "fs: Mounted '%s' at %s\n", fs->name, path);
             strlcpy(mount->path, path, sizeof(mount->path));
-            mount->control_block       = res.value;
-            mount->control_block->path = mount->path;
+            mount->controlblock       = res.value;
+            mount->controlblock->path = mount->path;
 
             mounts.addRef(mount);
             return ENONE;

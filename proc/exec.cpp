@@ -30,10 +30,10 @@ namespace AEX::Proc {
             return EINTR;
         }
 
-        auto scope       = executor_mutex.scope();
-        bool new_process = !process;
+        auto scope    = executor_mutex.scope();
+        bool spawning = process == nullptr;
 
-        if (new_process)
+        if (spawning)
             process = new Process(path, Process::current()->pid,
                                   new Mem::Pagemap(0x00000000, 0x7FFFFFFFFFFF));
 
@@ -45,62 +45,60 @@ namespace AEX::Proc {
             if (process->get_cwd() == nullptr)
                 process->set_cwd("/");
 
-            process->lock.acquire();
+            using(process->lock) {
+                for (int i = 0; i < process->mmap_regions.count(); i++) {
+                    if (!process->mmap_regions.present(i))
+                        continue;
 
-            for (int i = 0; i < process->mmap_regions.count(); i++) {
-                if (!process->mmap_regions.present(i))
-                    continue;
+                    auto region = process->mmap_regions.at(i);
+                    process->mmap_regions.erase(i);
 
-                auto region = process->mmap_regions.at(i);
-                process->mmap_regions.erase(i);
-
-                delete region;
+                    delete region;
+                }
             }
-
-            process->lock.release();
 
             if (envp)
                 process->env(envp);
 
-            process->descs_lock.acquire();
+            using(process->descs_mutex) {
+                for (int i = 0; i < process->descs.count(); i++) {
+                    if (!process->descs.present(i))
+                        continue;
 
-            for (int i = 0; i < process->descs.count(); i++) {
-                if (!process->descs.present(i))
-                    continue;
+                    auto desc = process->descs.at(i);
+                    if (desc.flags & FS::FD_CLOEXEC) {
+                        desc.file->close();
+                        process->descs.erase(i);
+                    }
+                }
 
-                auto desc = process->descs.at(i);
-                if (desc.flags & FS::FD_CLOEXEC) {
-                    desc.file->close();
-                    process->descs.erase(i);
+                if (options) {
+                    process->descs.set(0, options->stdin);
+                    process->descs.set(1, options->stdout);
+                    process->descs.set(2, options->stderr);
                 }
             }
 
-            if (options) {
-                process->descs.set(0, options->stdin);
-                process->descs.set(1, options->stdout);
-                process->descs.set(2, options->stderr);
-            }
-
-            process->descs_lock.release();
             process->ready();
-
             if (initiator)
                 initiator->abort(true);
 
-            for (int i = 0; i < process->threads.count(); i++) {
-                if (!process->threads.present(i))
-                    continue;
+            using(process->threads_lock) {
+                for (auto& thread_try : process->threads) {
+                    if (!thread_try.has_value)
+                        continue;
 
-                process->threads[i]->start();
+                    thread_try.value->start();
+                }
             }
 
             return ENONE;
         }
 
-        if (new_process) {
-            processes_lock.acquire();
-            delete process;
-            processes_lock.release();
+        if (spawning) {
+            using(processes_lock) {
+                delete process;
+            }
         }
 
         return ENOEXEC;

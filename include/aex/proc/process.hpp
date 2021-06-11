@@ -32,12 +32,11 @@ namespace AEX::Proc {
         rusage   usage;
 
         Spinlock lock;
+        Spinlock threads_lock;
+        Mutex    descs_mutex;
 
-        int                      thread_counter;
-        Spinlock                 threads_lock;
-        Mem::LazyVector<Thread*> threads;
-
-        Mutex                           descs_lock;
+        int                             thread_counter;
+        Mem::LazyVector<Thread*>        threads;
         Mem::LazyVector<FS::Descriptor> descs;
 
         Mem::Pagemap*                 pagemap;
@@ -63,8 +62,6 @@ namespace AEX::Proc {
         Sec::gid_t real_gid;
         Sec::gid_t eff_gid;
         Sec::gid_t saved_gid;
-
-        bool disposed;
 
         Process() = default;
 
@@ -136,6 +133,11 @@ namespace AEX::Proc {
 
         void ipc_init();
 
+        void purge_threads();
+        void purge_mmaps();
+        void purge_descriptors();
+
+        friend void exit_threaded(Process* process);
         friend class Thread;
     };
 

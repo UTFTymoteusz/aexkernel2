@@ -15,15 +15,12 @@
             printk(format, ##args);    \
     })
 
-//#define NOBONG
-
-#ifndef NOBONG
-#define PTK_DEBUG true
-#define FS_DEBUG true
-#else
-#define PTK_DEBUG false
-#define FS_DEBUG false
-#endif
+#define PTKD_FS false
+#define PTKD_EXEC false
+#define PTKD_UFAULT false
+#define PTKD_PROC false
+#define PTKD_IPC true
+#define PTKD_MMAP true
 
 namespace AEX {
     API void printk(const char* format, ...);

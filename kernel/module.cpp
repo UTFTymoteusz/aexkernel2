@@ -1,6 +1,7 @@
 #include "aex/module.hpp"
 
 #include "aex/assert.hpp"
+#include "aex/config.hpp"
 #include "aex/debug.hpp"
 #include "aex/elf.hpp"
 #include "aex/errno.hpp"
@@ -50,13 +51,13 @@ namespace AEX {
     // Or I'll just need to make the /sys/mod/core/ directory not modifyable by users
     void load_core_modules() {
         struct module_entry {
-            char name[FS::NAME_MAX];
+            char name[FS::NAME_MAX + 1];
             int  order = 99999;
         };
 
-        auto dir_try = FS::File::open("/sys/mod/core/", FS::O_RDONLY);
+        auto dir_try = FS::File::open(COREMOD_PATH, FS::O_RDONLY);
         if (!dir_try) {
-            printk(WARN "module: Failed to open /sys/mod/core/: %s\n", strerror(dir_try));
+            printk(WARN "module: Failed to open " COREMOD_PATH ": %s\n", strerror(dir_try));
             return;
         }
 
@@ -116,7 +117,7 @@ namespace AEX {
         for (int i = 0; i < list.count(); i++) {
             char name[FS::PATH_MAX];
 
-            FS::canonize_path(list[i].name, "/sys/mod/core/", name, sizeof(name));
+            FS::canonize_path(list[i].name, COREMOD_PATH, name, sizeof(name));
             AEX_ASSERT(load_module(name, true) == ENONE);
         }
 
@@ -129,16 +130,13 @@ namespace AEX {
     }
 
     const char* module_addr2name(void* addr, int& delta_ret, Module*& module_ref) {
-        uint64_t m_addr = (uint64_t) addr;
-        uint64_t delta  = 0x63756e74;
-
-        module_symbol match = {};
-        const char*   name  = nullptr;
+        uint64_t      m_addr = (uint64_t) addr;
+        uint64_t      delta  = 0x63756e74;
+        module_symbol match  = {};
+        const char*   name   = nullptr;
 
         for (auto iterator = modules.getIterator(); auto module = iterator.next();)
-            for (int i = 0; i < module->symbols.count(); i++) {
-                auto symbol = module->symbols[i];
-
+            for (auto symbol : module->symbols) {
                 if (m_addr < (size_t) symbol.addr)
                     continue;
 
@@ -149,7 +147,7 @@ namespace AEX {
                 delta = new_delta;
                 match = symbol;
 
-                name       = module->symbols[i].name;
+                name       = symbol.name;
                 module_ref = module;
             }
 
@@ -160,9 +158,7 @@ namespace AEX {
 
     void* module_name2addr_raw(const char* name, Module*& module) {
         for (auto iterator = modules.getIterator(); (module = iterator.next());)
-            for (int i = 0; i < module->symbols.count(); i++) {
-                auto symbol = module->symbols[i];
-
+            for (auto symbol : module->symbols) {
                 const char* clean_name = symbol.name + 1 + module->name_len;
                 if (strcmp(clean_name, name) != 0)
                     continue;

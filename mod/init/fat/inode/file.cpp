@@ -12,7 +12,7 @@ namespace AEX::FS {
 
         char* dst = (char*) buffer;
 
-        auto fat_block = (FATControlBlock*) control_block;
+        auto fat_block = (FATControlBlock*) controlblock;
         for (uint64_t i = start; i < start + count; i++) {
             fat_block->block_handle.read(dst, fat_block->getOffset(m_chain.at(i), 0), block_size);
             dst += block_size;
@@ -30,7 +30,7 @@ namespace AEX::FS {
 
         char* dst = (char*) buffer;
 
-        auto fat_block = (FATControlBlock*) control_block;
+        auto fat_block = (FATControlBlock*) controlblock;
         for (uint64_t i = start; i < start + count; i++) {
             fat_block->block_handle.write(dst, fat_block->getOffset(m_chain.at(i), 0), block_size);
             dst += block_size;
@@ -46,7 +46,7 @@ namespace AEX::FS {
         if (!m_filled && m_chain.count() > 0)
             fill();
 
-        auto fat_block = (FATControlBlock*) control_block;
+        auto fat_block = (FATControlBlock*) controlblock;
         SCOPE(fat_block->m_mutex);
 
         blkcnt_t count = (newsize - 1) / fat_block->m_cluster_size + 1;
@@ -94,10 +94,10 @@ namespace AEX::FS {
     }
 
     error_t FATFile::purge() {
-        printkd(FS_DEBUG, "fat: %s: Purging file inode %i (%i clusters)\n", control_block->path, id,
+        printkd(PTKD_FS, "fat: %s: Purging file inode %i (%i clusters)\n", controlblock->path, id,
                 m_chain.count());
 
-        auto fat_block = (FATControlBlock*) control_block;
+        auto fat_block = (FATControlBlock*) controlblock;
 
         if (!m_filled && m_chain.count() > 0)
             fill();
@@ -114,7 +114,7 @@ namespace AEX::FS {
 
     void FATFile::fill() {
         cluster_t first     = m_chain.at(0);
-        auto      fat_block = (FATControlBlock*) control_block;
+        auto      fat_block = (FATControlBlock*) controlblock;
         fat_block->fillChain(first, m_chain);
 
         m_filled    = true;

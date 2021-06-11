@@ -46,6 +46,92 @@ namespace AEX {
         return (char*) str;
     }
 
+    size_t strspn(const char* str, const char* bongs) {
+        size_t n    = 0;
+        size_t cmps = strlen(bongs);
+
+        while (str[n] != '\0') {
+            bool safe = false;
+
+            for (size_t i = 0; i < cmps; i++)
+                if (str[n] == bongs[i]) {
+                    safe = true;
+                    break;
+                }
+
+            if (!safe)
+                break;
+
+            n++;
+        }
+
+        return n;
+    }
+
+    size_t strcspn(const char* str, const char* bongs) {
+        size_t n    = 0;
+        size_t cmps = strlen(bongs);
+
+        while (str[n] != '\0') {
+            for (size_t i = 0; i < cmps; i++)
+                if (str[n] == bongs[i])
+                    return n;
+
+            n++;
+        }
+
+        return n;
+    }
+
+    char* strntokp_r(char* buffer, size_t len, const char* str, const char* delim,
+                     const char** saveptr) {
+        if (str) {
+            size_t len = strspn(str, delim);
+            if (len == 0)
+                if (*str == '\0')
+                    return NULL;
+
+            *saveptr = str + len;
+        }
+
+        size_t tok_len = strcspn(*saveptr, delim);
+        if (tok_len == 0)
+            return nullptr;
+
+        size_t copy_len = min(len, tok_len);
+
+        if (copy_len < len)
+            buffer[copy_len] = '\0';
+
+        memcpy(buffer, *saveptr, copy_len);
+        *saveptr += tok_len;
+
+        size_t delim_len = strspn(*saveptr, delim);
+        *saveptr += delim_len;
+
+        return buffer;
+    }
+
+    char* strchr(const char* str, int c) {
+        size_t len = strlen(str);
+
+        for (size_t i = 0; i < len; i++)
+            if (str[i] == c)
+                return (char*) &str[i];
+
+        return nullptr;
+    }
+
+    char* strrchr(const char* str, int c) {
+        size_t len = strlen(str);
+
+        for (size_t i = len - 1; i > 0; i--)
+            if (str[i] == c)
+                return (char*) &str[i];
+
+        return nullptr;
+    }
+
     void memset(void* mem, char c, size_t len) {
         char* m_mem = (char*) mem;
 

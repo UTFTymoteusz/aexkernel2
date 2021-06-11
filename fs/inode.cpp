@@ -1,5 +1,7 @@
 #include "aex/fs/inode.hpp"
 
+#include "aex/fs/controlblock.hpp"
+
 namespace AEX::FS {
     INode::~INode() {}
 
@@ -8,10 +10,16 @@ namespace AEX::FS {
     }
 
     error_t INode::write(const void*, blk_t, blkcnt_t) {
+        if (controlblock->read_only)
+            return EROFS;
+
         return ENOSYS;
     }
 
     error_t INode::truncate(size_t, bool) {
+        if (controlblock->read_only)
+            return EROFS;
+
         return ENOSYS;
     }
 
@@ -24,6 +32,9 @@ namespace AEX::FS {
     }
 
     optional<INode_SP> INode::creat(const char*, mode_t, fs_type_t) {
+        if (controlblock->read_only)
+            return EROFS;
+
         return ENOSYS;
     }
 
@@ -40,10 +51,16 @@ namespace AEX::FS {
     }
 
     error_t INode::link(const char*, INode_SP) {
+        if (controlblock->read_only)
+            return EROFS;
+
         return ENOSYS;
     }
 
     error_t INode::unlink(const char*) {
+        if (controlblock->read_only)
+            return EROFS;
+
         return ENOSYS;
     }
 }

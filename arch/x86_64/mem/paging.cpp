@@ -727,7 +727,6 @@ namespace AEX::Mem {
         uint64_t* table = find_table(Mem::kernel_pagemap->root, pptr, 0x0000, nullptr);
 
         memset(table, '\0', 4096);
-
         free_pptr(pptr);
 
         Sys::CPU::broadcast(Sys::CPU::IPP_PG_FLUSH, nullptr);

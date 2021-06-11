@@ -4,7 +4,7 @@ global irq_array
 global irq_spurious
 
 extern ipi_handle
-extern common_irq_handler
+extern irq_handler
 extern irq_marker
 
 SECTION .text
@@ -106,7 +106,7 @@ irq_common:
     mov rdi, rsp
     add rdi, 512
     xor rbp, rbp
-    call common_irq_handler
+    call irq_handler
 
     fxrstor [rsp]
     add rsp, 512

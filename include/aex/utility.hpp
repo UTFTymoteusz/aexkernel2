@@ -25,11 +25,11 @@
 #define LITTLE_ENDIAN (!BIG_ENDIAN)
 
 #ifndef ARCH
-#define ARCH "inv"
+#define ARCH "inv43"
 #endif
 
 #ifndef VERSION
-#define VERSION "inv"
+#define VERSION "00.00.0000.00000"
 #endif
 
 namespace AEX {
@@ -68,7 +68,8 @@ namespace AEX {
 #define ENSURE(cond) ENSURE_R((cond), AEX::EINVAL)
 #define ENSURE_FL(flags, mask) ENSURE_R(!(flags & ~mask), AEX::EINVAL)
 
-#define CONCAT(a, b) a##b
+#define _CONCAT(a, b) a##b
+#define CONCAT(a, b) _CONCAT(a, b)
 #define SCOPE(x) auto CONCAT(scope, __LINE__) = x.scope()
 
 #define using(lock)          \

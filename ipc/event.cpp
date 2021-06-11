@@ -19,8 +19,8 @@ namespace AEX::IPC {
         auto current     = Thread::current();
         bool is_on_queue = false;
 
-        for (int i = 0; i < m_tiddies.count(); i++)
-            if (m_tiddies[i] == current) {
+        for (auto& thread : m_tiddies)
+            if (thread == current) {
                 is_on_queue = true;
                 break;
             }
@@ -33,7 +33,7 @@ namespace AEX::IPC {
         }
         else {
             current->setStatus(TS_SLEEPING);
-            current->wakeup_at = Sys::Time::uptime() + (uint64_t) timeout * 1000000;
+            current->wakeup_at = Sys::Time::uptime() + (time_t) timeout * 1000000;
         }
 
         m_lock.release();
@@ -46,10 +46,10 @@ namespace AEX::IPC {
         m_lock.acquire();
 
         int total = m_tiddies.count();
-        for (int i = 0; i < total; i++) {
-            AEX_ASSERT(m_tiddies.at(i)->status != TS_DEAD);
 
-            m_tiddies.at(i)->setStatus(TS_RUNNABLE);
+        for (auto& thread : m_tiddies) {
+            AEX_ASSERT(thread->status != TS_DEAD);
+            thread->setStatus(TS_RUNNABLE);
         }
 
         m_tiddies.clear();
@@ -60,14 +60,13 @@ namespace AEX::IPC {
 
     int Event::defunct() {
         m_lock.acquire();
-
         m_defunct = true;
 
         int total = m_tiddies.count();
-        for (int i = 0; i < total; i++) {
-            AEX_ASSERT(m_tiddies.at(i)->status != TS_DEAD);
 
-            m_tiddies.at(i)->setStatus(TS_RUNNABLE);
+        for (auto& thread : m_tiddies) {
+            AEX_ASSERT(thread->status != TS_DEAD);
+            thread->setStatus(TS_RUNNABLE);
         }
 
         m_tiddies.clear();

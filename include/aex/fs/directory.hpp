@@ -11,8 +11,8 @@ namespace AEX::FS {
     struct API dirent {
         ino_t     inode_id;
         int       pos;
-        char      name[NAME_MAX] = {};
-        fs_type_t type           = FT_UNKNOWN;
+        char      name[NAME_MAX + 1] = {};
+        fs_type_t type               = FT_UNKNOWN;
 
         dirent(){};
         dirent(const char* name, int pos, int inode_id);

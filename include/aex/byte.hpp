@@ -48,11 +48,11 @@ namespace AEX {
     struct API little_endian {
         T m_value;
 
-        T get() {
+        inline T get() {
             return from_little_endian<T>(m_value);
         }
 
-        void set(T value) {
+        inline void set(T value) {
             m_value = to_little_endian<T>(value);
         }
 
@@ -64,17 +64,17 @@ namespace AEX {
             set(value);
             return *this;
         }
-    } __attribute__((packed));
+    } PACKED;
 
     template <typename T>
     struct API big_endian {
         T m_value;
 
-        T get() {
+        inline T get() {
             return from_big_endian<T>(m_value);
         }
 
-        void set(T value) {
+        inline void set(T value) {
             m_value = to_big_endian<T>(value);
         }
 
@@ -86,7 +86,7 @@ namespace AEX {
             set(value);
             return *this;
         }
-    } __attribute__((packed));
+    } PACKED;
 
     API inline int8_t fromBCD(int8_t val) {
         return ((val & 0xF0) >> 1) + ((val & 0xF0) >> 3) + (val & 0x0F);

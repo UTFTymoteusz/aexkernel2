@@ -56,21 +56,20 @@ namespace AEX {
         ELF::symbol_agn exit  = {};
         ELF::symbol_agn name  = {};
 
-        for (int i = 0; i < elf.symbols.count(); i++) {
-            auto symbol = elf.symbols[i];
+        for (auto& symbol : elf.symbols) {
             if (!symbol.name)
                 continue;
 
             if (strcmp(symbol.name, "_Z12module_enterv") == 0) {
-                entry = elf.symbols[i];
+                entry = symbol;
                 continue;
             }
             else if (strcmp(symbol.name, "_Z11module_exitv") == 0) {
-                exit = elf.symbols[i];
+                exit = symbol;
                 continue;
             }
             else if (strcmp(symbol.name, "MODULE_NAME") == 0) {
-                name = elf.symbols[i];
+                name = symbol;
                 continue;
             }
         }
@@ -83,7 +82,6 @@ namespace AEX {
 
         for (int i = 0; i < elf.section_headers.count(); i++) {
             auto section_header = elf.section_headers[i];
-
             if (!(section_header.flags & ELF::SC_ALLOC) || section_header.size == 0)
                 continue;
 
@@ -99,8 +97,7 @@ namespace AEX {
             module->sections.push(sections[i]);
         }
 
-        for (int i = 0; i < elf.symbols.count(); i++) {
-            auto symbol = elf.symbols[i];
+        for (auto& symbol : elf.symbols) {
             if (!symbol.name)
                 continue;
 
@@ -122,8 +119,7 @@ namespace AEX {
             module->symbols.push(m_symbol);
         }
 
-        for (int i = 0; i < elf.symbols.count(); i++) {
-            auto symbol = elf.symbols[i];
+        for (auto& symbol : elf.symbols) {
             if (!symbol.name || symbol.name[0] != '.')
                 continue;
 
@@ -152,7 +148,7 @@ namespace AEX {
             if (strcmp(module->name, m_module->name) != 0)
                 continue;
 
-            printk(WARN "Not loading module '%s' as it's already loaded\n", module->name);
+            printk(WARN "module: Not loading '%s' as it is already loaded\n", module->name);
 
             delete module;
             delete[] sections;
@@ -162,18 +158,16 @@ namespace AEX {
 
         int string_array_size = (module->name_len + 2) * module->symbols.count();
 
-        for (int i = 0; i < module->symbols.count(); i++)
-            string_array_size += strlen(module->symbols[i].name);
+        for (auto& symbol : module->symbols)
+            string_array_size += strlen(symbol.name);
 
         module->strings = new char[string_array_size];
 
         int str_ptr = 0;
 
-        for (int i = 0; i < module->symbols.count(); i++) {
-            auto&       symbol = module->symbols[i];
-            const char* ptr    = module->strings + str_ptr;
-
-            size_t sym_name_len = strlen(symbol.name);
+        for (auto& symbol : module->symbols) {
+            const char* ptr          = module->strings + str_ptr;
+            size_t      sym_name_len = strlen(symbol.name);
 
             memcpy(module->strings + str_ptr, module->name, module->name_len + 1);
             str_ptr += module->name_len;
@@ -189,10 +183,10 @@ namespace AEX {
 
         modules.addRef(module);
 
-        printk(OK "Loaded module '%s'\n", module->name);
+        printk(OK "module: Loaded '%s'\n", module->name);
 
         for (int i = 0; i < module->references.count(); i++)
-            printk("module: %s references %s\n", module->name, module->references[i]->name);
+            printk("module: '%s' references '%s'\n", module->name, module->references[i]->name);
 
         if (!Proc::ready) {
             ((void (*)()) module->enter)();

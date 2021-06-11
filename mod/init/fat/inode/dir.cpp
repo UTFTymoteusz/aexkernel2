@@ -10,7 +10,7 @@ namespace AEX::FS {
 
         int  lfn_count = (strlen(filename) + 1) / 13 + 1;
         int  pos       = 0;
-        auto fat_block = (FATControlBlock*) control_block;
+        auto fat_block = (FATControlBlock*) controlblock;
 
         char shortname[12] = {};
         filename2shortname(shortname, filename);
@@ -80,7 +80,7 @@ namespace AEX::FS {
         fat_dirent_lfn longs[32];
         int            long_count = 0;
 
-        char filename[NAME_MAX];
+        char filename[NAME_MAX + 1];
         int  filename_offset;
 
         while (ctx->pos < size) {
@@ -150,7 +150,7 @@ namespace AEX::FS {
 
         int  lfn_count = (strlen(filename) + 1) / 13 + 1;
         int  pos       = 0;
-        auto fat_block = (FATControlBlock*) control_block;
+        auto fat_block = (FATControlBlock*) controlblock;
 
         char shortname[12] = {};
         filename2shortname(shortname, filename);
@@ -203,10 +203,10 @@ namespace AEX::FS {
         fat_dirent_lfn longs[32];
         int            long_count = 0;
 
-        char filenameB[NAME_MAX];
+        char filenameB[NAME_MAX + 1];
         int  filenameB_offset;
         int  pos       = 0;
-        auto fat_block = (FATControlBlock*) control_block;
+        auto fat_block = (FATControlBlock*) controlblock;
 
         while (pos < size) {
             auto fat_dirent = read(pos);
@@ -272,8 +272,8 @@ namespace AEX::FS {
                 using(inode->mutex) {
                     inode->hard_links--;
 
-                    printkd(FS_DEBUG, "fat: %s: Unlinked inode %i (hard %i, open %i)\n",
-                            control_block->path, inode->id, inode->hard_links, inode->opened);
+                    printkd(PTKD_FS, "fat: %s: Unlinked inode %i (hard %i, open %i)\n",
+                            controlblock->path, inode->id, inode->hard_links, inode->opened);
 
                     if (inode->is_directory()) {
                         if (inode->opened == 0 && inode->hard_links == 1)
@@ -302,9 +302,9 @@ namespace AEX::FS {
     }
 
     error_t FATDirectory::purge() {
-        printkd(FS_DEBUG, "fat: %s: Purging inode %i\n", control_block->path, id);
+        printkd(PTKD_FS, "fat: %s: Purging inode %i\n", controlblock->path, id);
 
-        auto fat_block = (FATControlBlock*) control_block;
+        auto fat_block = (FATControlBlock*) controlblock;
         SCOPE(fat_block->m_table->mutex);
 
         for (size_t i = 0; i < m_chain.count(); i++)
@@ -336,9 +336,8 @@ namespace AEX::FS {
             if (memcmp(fat_dirent.filename, assoc_try.value.filename, 11))
                 continue;
 
-            printkd(FS_DEBUG, "fat: %s: Resizing inode %i (./%s) from %i to %i\n",
-                    control_block->path, inode->id, assoc_try.value.filename, fat_dirent.size,
-                    size);
+            printkd(PTKD_FS, "fat: %s: Resizing inode %i (./%s) from %i to %i\n",
+                    controlblock->path, inode->id, assoc_try.value.filename, fat_dirent.size, size);
 
             fat_dirent.size             = size;
             fat_dirent.first_cluster_hi = (first >> 16) & 0xFFFF;
@@ -414,7 +413,7 @@ namespace AEX::FS {
     }
 
     fat_dirent FATDirectory::read(int pos) {
-        auto       fat_block = (FATControlBlock*) control_block;
+        auto       fat_block = (FATControlBlock*) controlblock;
         cluster_t  lcluster  = pos / fat_block->m_cluster_size;
         cluster_t  pcluster  = m_chain.at(lcluster);
         off_t      offset    = pos - (lcluster * fat_block->m_cluster_size);
@@ -427,7 +426,7 @@ namespace AEX::FS {
     }
 
     void FATDirectory::write(int pos, fat_dirent& ent) {
-        auto      fat_block = (FATControlBlock*) control_block;
+        auto      fat_block = (FATControlBlock*) controlblock;
         cluster_t lcluster  = pos / fat_block->m_cluster_size;
         cluster_t pcluster  = m_chain.at(lcluster);
         off_t     offset    = pos - (lcluster * fat_block->m_cluster_size);
@@ -500,7 +499,7 @@ namespace AEX::FS {
     }
 
     error_t FATDirectory::expand() {
-        auto      fat_block = (FATControlBlock*) control_block;
+        auto      fat_block = (FATControlBlock*) controlblock;
         cluster_t found;
 
         using(fat_block->m_table->mutex) {
@@ -523,7 +522,7 @@ namespace AEX::FS {
     }
 
     void FATDirectory::prepare(cluster_t cluster, cluster_t parent) {
-        auto       fat_block = (FATControlBlock*) control_block;
+        auto       fat_block = (FATControlBlock*) controlblock;
         fat_dirent ent       = {};
         ent.filename[0]      = 0xE5;
 
@@ -547,7 +546,7 @@ namespace AEX::FS {
     }
 
     void FATDirectory::prepare(cluster_t cluster) {
-        auto       fat_block = (FATControlBlock*) control_block;
+        auto       fat_block = (FATControlBlock*) controlblock;
         fat_dirent freeent;
         freeent.filename[0] = 0xE5;
 
@@ -588,11 +587,11 @@ namespace AEX::FS {
     }
 
     ino_t FATDirectory::createAssoc(fat_dirent dirent) {
-        auto fat_block = (FATControlBlock*) control_block;
+        auto fat_block = (FATControlBlock*) controlblock;
         SCOPE(fat_block->m_mutex);
 
         uint32_t first_cluster = dirent.first_cluster_lo | (dirent.first_cluster_hi << 16);
-        ino_t    inode_id      = fat_block->nextINodeID();
+        ino_t    inode_id      = fat_block->nextIno();
         INode_SP inode;
 
         if (dirent.attributes & FAT_DIRECTORY) {
@@ -605,10 +604,10 @@ namespace AEX::FS {
 
             // strlcpy(dir->m_name, dirent.filename, 12);
 
-            dir->size          = dir->chain().count() * fat_block->block_size;
-            dir->block_count   = dir->chain().count();
-            dir->block_size    = fat_block->block_size;
-            dir->control_block = control_block;
+            dir->size         = dir->chain().count() * fat_block->block_size;
+            dir->block_count  = dir->chain().count();
+            dir->block_size   = fat_block->block_size;
+            dir->controlblock = controlblock;
 
             inode = INode_SP(dir);
         }
@@ -622,9 +621,9 @@ namespace AEX::FS {
 
             // strlcpy(file->m_name, dirent.filename, 12);
 
-            file->size          = dirent.size;
-            file->block_size    = fat_block->block_size;
-            file->control_block = control_block;
+            file->size         = dirent.size;
+            file->block_size   = fat_block->block_size;
+            file->controlblock = controlblock;
 
             inode = INode_SP(file);
         }

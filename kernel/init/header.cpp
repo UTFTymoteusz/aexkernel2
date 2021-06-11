@@ -6,7 +6,7 @@ namespace AEX::Init {
     constexpr auto COLOR1 = Dev::TTY::ANSI_FG_WHITE;
 
     // clang-format off
-    const char header[] = "\
+    const char header[] = "\r\
   |##### |##### \\#  /#   |##### \n\
   |#   # |#      \\#/#        |# \n\
   |##### |#####   \\#     |##### \n\
@@ -16,8 +16,8 @@ namespace AEX::Init {
 
     void print_header() {
         auto rootTTY = Dev::TTY::TTYs[Dev::TTY::ROOT_TTY];
+        char color   = COLOR0;
 
-        char color = COLOR0;
         rootTTY->color(COLOR0);
 
         for (size_t i = 0; i < sizeof(header) - 1; i++) {
@@ -42,5 +42,7 @@ namespace AEX::Init {
 
             rootTTY->write(c);
         }
+
+        printk(INIT "Booting AEX/2 on %93$" ARCH "%97$, build %93$" VERSION "%97$\n\n");
     }
 }

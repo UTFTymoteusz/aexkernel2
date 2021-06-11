@@ -29,14 +29,16 @@ long open(const usr_char* usr_path, int flags) {
 
     auto file = USR_ENSURE_OPT(FS::File::open(path_buffer, flags));
 
-    current->descs_lock.acquire();
+    current->descs_mutex.acquire();
     long fd = current->descs.push(file);
-    current->descs_lock.release();
+    current->descs_mutex.release();
 
     return fd;
 }
 
 ssize_t read(int fd, usr_void* usr_buf, size_t count) {
+    SCOPE(Thread::current()->signabilityGuard);
+
     auto file      = USR_ENSURE_OPT(get_file(fd));
     auto usr_buf_c = (usr_uint8_t*) usr_buf;
 
@@ -62,6 +64,8 @@ ssize_t read(int fd, usr_void* usr_buf, size_t count) {
 }
 
 ssize_t write(int fd, const usr_void* usr_buf, size_t count) {
+    SCOPE(Thread::current()->signabilityGuard);
+
     auto file      = USR_ENSURE_OPT(get_file(fd));
     auto usr_buf_c = (const usr_uint8_t*) usr_buf;
 
@@ -99,9 +103,9 @@ int dup(int fd) {
     auto current = Proc::Process::current();
     auto desc    = USR_ENSURE_OPT(get_desc(fd));
 
-    current->descs_lock.acquire();
+    current->descs_mutex.acquire();
     int fd2 = current->descs.push({desc.file, desc.flags & ~FS::FD_CLOEXEC});
-    current->descs_lock.release();
+    current->descs_mutex.release();
 
     return fd2;
 }
@@ -110,9 +114,9 @@ int dup2(int srcfd, int dstfd) {
     auto current = Proc::Process::current();
     auto desc    = USR_ENSURE_OPT(get_desc(srcfd));
 
-    current->descs_lock.acquire();
+    current->descs_mutex.acquire();
     current->descs.set(dstfd, {desc.file, desc.flags & ~FS::FD_CLOEXEC});
-    current->descs_lock.release();
+    current->descs_mutex.release();
 
     return dstfd;
 }
@@ -121,9 +125,9 @@ int dupP(int fd) {
     auto current = Proc::Process::current();
     auto desc    = USR_ENSURE_OPT(get_desc(fd));
 
-    current->descs_lock.acquire();
+    current->descs_mutex.acquire();
     int fd2 = current->descs.push({desc.file, desc.flags | FS::FD_CLOEXEC});
-    current->descs_lock.release();
+    current->descs_mutex.release();
 
     return fd2;
 }
@@ -229,8 +233,8 @@ bool isatty(int fd) {
 }
 
 void* mmap(void* addr, size_t length, int prot, int flags, int fd, FS::off_t offset) {
-    printk("pid%i: mmap(0x%p, %i, %i, %i, %i, %i)\n", Proc::Process::current()->pid, addr, length,
-           prot, flags, fd, offset);
+    printkd(PTKD_MMAP, "pid%i: mmap(0x%p, %i, %i, %i, %i, %i)\n", Proc::Process::current()->pid,
+            addr, length, prot, flags, fd, offset);
 
     auto fd_try = get_file(fd);
     if (!fd_try && !(flags & Mem::MAP_ANONYMOUS)) {
@@ -266,9 +270,9 @@ long mkdir(const usr_char* usr_path, int flags) {
 
     auto file = USR_ENSURE_OPT(FS::File::mkdir(path_buffer, flags));
 
-    current->descs_lock.acquire();
+    current->descs_mutex.acquire();
     long fd = current->descs.push(file);
-    current->descs_lock.release();
+    current->descs_mutex.release();
 
     return fd;
 }
@@ -398,10 +402,10 @@ void register_fs() {
 
 optional<FS::Descriptor> get_desc(int fd) {
     auto current = Proc::Process::current();
-    auto scope   = current->descs_lock.scope();
+    auto scope   = current->descs_mutex.scope();
 
     if (!current->descs.present(fd)) {
-        printkd(PTK_DEBUG, WARN "syscall: pid%i: ebadf (%i)\n", current->pid, fd);
+        printkd(PTKD_FS, WARN "syscall: pid%i: ebadf (%i)\n", current->pid, fd);
         return EBADF;
     }
 
@@ -410,10 +414,10 @@ optional<FS::Descriptor> get_desc(int fd) {
 
 optional<FS::Descriptor> pop_desc(int fd) {
     auto current = Proc::Process::current();
-    auto scope   = current->descs_lock.scope();
+    auto scope   = current->descs_mutex.scope();
 
     if (!current->descs.present(fd)) {
-        printkd(PTK_DEBUG, WARN "syscall: pid%i: ebadf (%i)\n", current->pid, fd);
+        printkd(PTKD_FS, WARN "syscall: pid%i: ebadf (%i)\n", current->pid, fd);
         return EBADF;
     }
 
@@ -433,10 +437,10 @@ optional<FS::File_SP> pop_file(int fd) {
 
 optional<int> get_flags(int fd) {
     auto current = Proc::Process::current();
-    auto scope   = current->descs_lock.scope();
+    auto scope   = current->descs_mutex.scope();
 
     if (!current->descs.present(fd)) {
-        printkd(PTK_DEBUG, WARN "syscall: pid%i: ebadf (%i)\n", current->pid, fd);
+        printkd(PTKD_FS, WARN "syscall: pid%i: ebadf (%i)\n", current->pid, fd);
         return EBADF;
     }
 
@@ -445,7 +449,7 @@ optional<int> get_flags(int fd) {
 
 void set_flags(int fd, int flags) {
     auto current = Proc::Process::current();
-    auto scope   = current->descs_lock.scope();
+    auto scope   = current->descs_mutex.scope();
 
     if (!current->descs.present(fd))
         return;

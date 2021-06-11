@@ -247,16 +247,15 @@ class RTL8139 : public Dev::NetDevice {
         little_endian<uint16_t> len;
     } __attribute((packed));
 
+    Spinlock m_tx_lock;
+
+    uint8_t  m_irq;
     uint32_t m_io_base;
 
     uint8_t* m_tx_buffers        = nullptr;
     uint8_t  m_tx_buffer_current = 0;
     uint8_t* m_rx_buffer         = nullptr;
     size_t   m_rx_buffer_pos     = 0;
-
-    uint8_t m_irq;
-
-    Spinlock m_tx_lock;
 
     void handleIRQ() {
         static Spinlock lock;

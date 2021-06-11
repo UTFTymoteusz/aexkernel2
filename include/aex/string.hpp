@@ -65,7 +65,13 @@ namespace AEX {
     API size_t strlen(const char* str);
     API int    strcmp(const char* a, const char* b);
     API size_t strlcpy(char* dst, const char* src, size_t num);
+    API size_t strcspn(const char* str, const char* bongs);
     API char*  strndup(const char* str, size_t len);
+    API size_t strspn(const char* str, const char* bongs);
+    API char*  strntokp_r(char* buffer, size_t len, const char* str, const char* delim,
+                          const char** saveptr);
+    API char*  strchr(const char* str, int c);
+    API char*  strrchr(const char* str, int c);
 
     API void memset(void* mem, char c, size_t len);
     API void memset16(void* mem, uint16_t val, size_t count);

@@ -21,8 +21,8 @@ namespace AEX::Sys::Power {
 
         printk(WARN "sys: power: Poweroff\n");
 
-        for (int i = 0; i < poweroff_handlers.count(); i++)
-            poweroff_handlers[i].func();
+        for (auto& handler : poweroff_handlers)
+            handler.func();
 
         return ENONE;
     }

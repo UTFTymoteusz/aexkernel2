@@ -118,12 +118,12 @@ namespace AEX::Mem::Heap {
                        ptr, header->sanity, header->sanity ^ SANITY_XOR, (size_t) ptr ^ SANITY_XOR);
             }
 
-            lock.acquire();
-            unmark((uint32_t)((size_t) block - (size_t) data) / ALLOC_SIZE, header->len);
-            Mem::atomic_add(&heap_free, (uint64_t) header->len * ALLOC_SIZE);
+            using(lock) {
+                unmark((uint32_t)((size_t) block - (size_t) data) / ALLOC_SIZE, header->len);
+                Mem::atomic_add(&heap_free, (uint64_t) header->len * ALLOC_SIZE);
 
-            memset(block, '\x5A', header->len * ALLOC_SIZE);
-            lock.release();
+                memset(block, '\x5A', header->len * ALLOC_SIZE);
+            }
         }
 
         bool owns(void* ptr) {
@@ -291,15 +291,12 @@ namespace AEX::Mem::Heap {
                 return addr;
 
             if (!slab->next) {
-                malloc_lock.acquire();
+                SCOPE(malloc_lock);
 
-                if (slab->next) {
-                    malloc_lock.release();
+                if (slab->next)
                     continue;
-                }
 
                 slab->next = Slab::createFromVMem(max<size_t>(size * 2, 0x100000));
-                malloc_lock.release();
             }
 
             slab = slab->next;

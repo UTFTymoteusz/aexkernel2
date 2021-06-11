@@ -25,9 +25,9 @@ namespace AEX::Sys::ACPI {
 
         uint32_t pm1a_event_block;
         uint32_t pm1b_event_block;
-        uint32_t pm1a_control_block;
-        uint32_t pm1b_control_block;
-        uint32_t pm2_control_block;
+        uint32_t pm1a_controlblock;
+        uint32_t pm1b_controlblock;
+        uint32_t pm2_controlblock;
         uint32_t pm_timer_block;
 
         uint32_t gpe0_block;
