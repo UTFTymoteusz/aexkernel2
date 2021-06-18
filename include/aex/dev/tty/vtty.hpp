@@ -87,12 +87,26 @@ namespace AEX::Dev::TTY {
             return *this;
         }
 
+        Proc::pid_t tcgetpgrp() {
+            SCOPE(m_mutex);
+            return m_foreground_pgrp;
+        }
+
+        void tcsetpgrp(Proc::pid_t pgrp) {
+            SCOPE(m_mutex);
+            m_foreground_pgrp = pgrp;
+        }
+
         private:
+        Mutex m_mutex;
+
         int m_bg;
         int m_fg;
 
         Mem::CircularBuffer<int, true>* m_inputBuffer;
         Dev::Input::keymap              m_keymap = Dev::Input::default_keymap;
+
+        Proc::pid_t m_foreground_pgrp = -1;
 
         void inputReady();
         void keyPress(Dev::Input::event m_event);

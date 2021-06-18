@@ -1,6 +1,7 @@
 #include "aex/proc/process.hpp"
 
 #include "aex/assert.hpp"
+#include "aex/bool.hpp"
 #include "aex/fs.hpp"
 #include "aex/mem.hpp"
 #include "aex/proc.hpp"
@@ -172,18 +173,61 @@ namespace AEX::Proc {
     }
 
     error_t Process::kill(pid_t pid, int sig) {
-        auto scope   = processes_lock.scope();
+        SCOPE(processes_lock);
+
+        if (pid == -1) {
+            if (sig == 0)
+                return ENONE;
+
+            auto process = process_list_head;
+
+            for (int i = 0; i < process_list_size; i++) {
+                if (inrange(process->pid, 0, 2) || process == Proc::Process::current()) {
+                    process = process->next;
+                    continue;
+                }
+
+                process->kill(sig);
+                process = process->next;
+            }
+
+            return ENONE;
+        }
+
+        if (pid < 0) {
+            auto process = process_list_head;
+
+            for (int i = 0; i < process_list_size; i++) {
+                if (process->group != -pid) {
+                    process = process->next;
+                    continue;
+                }
+
+                process->kill(sig);
+                process = process->next;
+            }
+
+            return ENONE;
+        }
+
         auto process = get_process(pid);
-        if (!process || process->status == TS_FRESH)
+        if (!process || equals_one(process->status, TS_FRESH, TS_DEAD))
             return ESRCH;
 
+        if (sig == 0)
+            return ENONE;
+
+        return process->kill(sig);
+    }
+
+    error_t Process::kill(int sig) {
         IPC::siginfo_t info;
 
         info.si_signo = sig;
-        info.si_uid   = process->real_uid;
+        info.si_uid   = Process::current()->real_uid;
         info.si_code  = SI_USER;
 
-        return process->signal(info);
+        return signal(info);
     }
 
     struct wait_args {

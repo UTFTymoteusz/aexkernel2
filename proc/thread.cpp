@@ -85,7 +85,7 @@ namespace AEX::Proc {
         thread->setup_context(pagemap, stack_size, entry, usermode);
 
         if (parent->tls_size != 0)
-            thread->alloc_tls(parent->tls_size);
+            thread->create_tls();
 
         thread->original_entry = entry;
 
@@ -343,6 +343,9 @@ namespace AEX::Proc {
         else {
             subCritical();
         }
+
+        if (parent->stopped)
+            Thread::yield();
     }
 
     void Thread::addSignability() {
@@ -393,17 +396,24 @@ namespace AEX::Proc {
         status        = m_state.status;
     }
 
-    void Thread::alloc_tls(uint16_t size) {
-        auto actual_size = size + sizeof(void*);
+    void Thread::create_tls() {
+        if (parent->tls_size == 0)
+            return;
+
+        auto actual_size = parent->tls_size + sizeof(void*);
 
         auto tls = parent->pagemap->alloc(actual_size, PAGE_WRITE | PAGE_USER);
         auto tlsk =
             Mem::kernel_pagemap->map(actual_size, parent->pagemap->paddrof(tls), PAGE_WRITE);
 
-        auto tls_self = (size_t) tls + size;
+        auto tls_self = (size_t) tls + parent->tls_size;
 
-        *((size_t*) ((size_t) tlsk + size)) = tls_self;
-        this->tls                           = (void*) tls_self;
+        *((size_t*) ((size_t) tlsk + parent->tls_size)) = tls_self;
+        this->tls                                       = (void*) tls_self;
+
+        memcpy((char*) tlsk, parent->tls_base, parent->tls_size);
+
+        Mem::kernel_pagemap->free(tlsk, actual_size);
     }
 
     void Thread::alloc_stacks(Mem::Pagemap* pagemap, size_t size, bool usermode) {

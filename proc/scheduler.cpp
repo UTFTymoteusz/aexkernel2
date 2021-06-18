@@ -30,7 +30,7 @@ namespace AEX::Proc {
         }
 
         if (!sched_lock.tryAcquireRaw()) {
-            if (thread->status != TS_RUNNABLE)
+            if (thread->status != TS_RUNNABLE || thread->parent->stopped)
                 sched_lock.acquireRaw();
             else
                 return;
@@ -77,6 +77,9 @@ namespace AEX::Proc {
 
             auto process = thread->getProcess();
             if (process->cpu_affinity.masked(cpu->id))
+                continue;
+
+            if (process->stopped && !thread->isBusy())
                 continue;
 
             auto counter = thread->sched_counter;

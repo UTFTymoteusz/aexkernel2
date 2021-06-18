@@ -39,6 +39,14 @@ namespace AEX::Dev::TTY {
         return m_vtty->output();
     }
 
+    Proc::pid_t Abstractor::tcgetpgrp() {
+        return m_vtty->tcgetpgrp();
+    }
+
+    void Abstractor::tcsetpgrp(Proc::pid_t pgrp) {
+        m_vtty->tcsetpgrp(pgrp);
+    }
+
     void Abstractor::_write(char c) {
         if (c == '\n')
             Sys::CPU::outb(0xE9, '\r');

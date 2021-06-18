@@ -39,6 +39,9 @@ constexpr auto PAT_COMBINE = 0x01;
 constexpr auto CPUID_FEAT_PAT = (1 << 16);
 
 namespace AEX::Sys {
+    InterruptionGuard<true>  CPU::interruptsGuard;
+    InterruptionGuard<false> CPU::nointerruptsGuard;
+
     CPU::CPU(int id) {
         this->id = id;
         apic_id  = IRQ::APIC::id();

@@ -191,9 +191,12 @@ void exec_init() {
     printk(INIT_PATH " exited with status %i\n", status);
 }
 
+void apple();
+
 void kmain_env() {
     using namespace AEX::Sys::Time;
 
+    // apple();
     exec_init();
 
     // Sys::CPU::tripleFault();

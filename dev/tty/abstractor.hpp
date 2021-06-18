@@ -20,6 +20,9 @@ namespace AEX::Dev::TTY {
         tty_info info();
         void*    output();
 
+        Proc::pid_t tcgetpgrp();
+        void        tcsetpgrp(Proc::pid_t pgrp);
+
         private:
         enum state {
             OUT       = 0,

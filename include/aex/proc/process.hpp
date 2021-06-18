@@ -24,10 +24,13 @@ namespace AEX::Proc {
         public:
         pid_t pid;
         pid_t parent_pid;
+        pid_t session = -1;
+        pid_t group   = -1;
 
         char  name[64];
         char* image_path;
 
+        int      nice;
         affinity cpu_affinity;
         rusage   usage;
 
@@ -44,16 +47,13 @@ namespace AEX::Proc {
 
         Sys::syscall_t* syscall_table;
 
-        Process* next;
-        Process* prev;
-
         IPC::Event        child_event;
         volatile status_t status;
         int               ret_code;
+        bool              stopped;
 
         uint16_t tls_size;
-
-        int nice;
+        char*    tls_base;
 
         Sec::uid_t real_uid;
         Sec::uid_t eff_uid;
@@ -62,6 +62,9 @@ namespace AEX::Proc {
         Sec::gid_t real_gid;
         Sec::gid_t eff_gid;
         Sec::gid_t saved_gid;
+
+        Process* next;
+        Process* prev;
 
         Process() = default;
 
@@ -103,7 +106,9 @@ namespace AEX::Proc {
         void        set_cwd(const char* cwd);
         const char* get_cwd();
 
-        void exit(int status);
+
+        error_t kill(int sig);
+        void    exit(int status);
 
         void assoc(Thread* thread);
         void unassoc(Thread* thread);
@@ -115,6 +120,14 @@ namespace AEX::Proc {
 
         optional<char*> envGet(int index);
         error_t         envSet(int index, char const* val);
+
+        bool isGroupLeader() {
+            return group == pid;
+        }
+
+        bool isSessionLeader() {
+            return session == pid;
+        }
 
         // IPC Stuff
         /**

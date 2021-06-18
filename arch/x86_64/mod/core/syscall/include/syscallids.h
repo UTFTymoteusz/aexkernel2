@@ -48,6 +48,7 @@ enum syscall_id_t {
     SYS_SIGACT = 50,
     SYS_SIGRET = 51,
     SYS_NICE   = 52,
+    SYS_SETSID = 53,
 
     SYS_TCREATE = 72,
     SYS_TJOIN   = 73,

@@ -249,7 +249,7 @@ namespace AEX::Proc {
         [[noreturn]] error_t exitSignal();
 
         void alloc_stacks(Mem::Pagemap* pagemap, size_t size, bool usermode);
-        void alloc_tls(uint16_t size);
+        void create_tls();
         void setup_context(Mem::Pagemap* pagemap, size_t size, void* entry, bool usermode);
     };
 

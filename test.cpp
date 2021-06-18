@@ -1,3 +1,4 @@
+#include "aex/dev.hpp"
 #include "aex/net.hpp"
 #include "aex/proc.hpp"
 
@@ -165,7 +166,7 @@ void apple() {
     auto sock_try = Net::Socket::create(Net::AF_INET, Net::SOCK_STREAM, Net::IPROTO_TCP);
     auto sock     = sock_try.value;
 
-    auto error = sock->connect(Net::ipv4_addr(192, 168, 0, 20), 17267);
+    auto error = sock->connect(Net::ipv4_addr(192, 168, 0, 11), 8193);
     if (error)
         BROKEN;
 
@@ -177,5 +178,15 @@ void apple() {
     while (true) {
         auto aaa = sock->receive(buffer, 4096, 0);
         tty_wr.value->write(buffer, aaa.value);
+
+        if (aaa.value == 0)
+            break;
     }
+
+    printk("Bad apple is done\n");
+    Proc::Thread::sleep(2000);
+
+    Dev::TTY::VTTYs[0]->clear();
+    Dev::TTY::VTTYs[0]->setCursorX(0);
+    Dev::TTY::VTTYs[0]->setCursorY(0);
 }

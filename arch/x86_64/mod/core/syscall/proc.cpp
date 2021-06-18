@@ -35,6 +35,9 @@ pid_t fork() {
     auto child =
         new Process(parent->image_path, parent->pid, parent->pagemap->fork(), parent->name);
 
+    child->session = parent->session;
+    child->group   = parent->group;
+
     for (int i = 0; i < parent->descs.count(); i++) {
         if (!parent->descs.present(i))
             continue;
@@ -231,6 +234,20 @@ int getenv(int index, usr_char* buffer, size_t len) {
     return 0;
 }
 
+pid_t setsid() {
+    auto current = Process::current();
+    if (current->isGroupLeader()) {
+        USR_ERRNO = EPERM;
+        return -1;
+    }
+
+    current->session = current->pid;
+    current->group   = current->pid;
+
+    USR_ERRNO = ENONE;
+    return current->pid;
+}
+
 __attribute__((optimize("O2"))) void register_proc() {
     auto table = Sys::default_table();
 
@@ -244,4 +261,5 @@ __attribute__((optimize("O2"))) void register_proc() {
     table[SYS_GETPID] = (void*) getpid;
     table[SYS_NICE]   = (void*) nice;
     table[SYS_GETENV] = (void*) getenv;
+    table[SYS_SETSID] = (void*) setsid;
 }

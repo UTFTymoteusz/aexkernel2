@@ -83,9 +83,11 @@ namespace AEX::Proc {
             process->exit(info.si_signo);
             break;
         case SIG_STOP:
-            NOT_IMPLEMENTED;
+            process->stopped = true;
+            break;
         case SIG_CONT:
-            NOT_IMPLEMENTED;
+            process->stopped = false;
+            break;
         case SIG_USER:
             if (Thread::current() != this)
                 lock.acquire();

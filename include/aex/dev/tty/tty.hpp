@@ -57,6 +57,9 @@ namespace AEX::Dev::TTY {
         virtual tty_info info();
         virtual void*    output();
 
+        virtual Proc::pid_t tcgetpgrp()                 = 0;
+        virtual void        tcsetpgrp(Proc::pid_t pgrp) = 0;
+
         /**
          * Sets the foreground or background color.
          * @param ansi An ANSI color code.

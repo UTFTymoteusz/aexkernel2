@@ -11,3 +11,6 @@
 #define VTGRHEIGHT 0x05
 #define VTGRDEPTH 0x06
 #define VTGRBYTES 0x07
+
+#define VTTCGETPGRP 0x08
+#define VTTCSETPGRP 0x09

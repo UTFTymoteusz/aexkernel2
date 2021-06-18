@@ -8,6 +8,7 @@
 
 using namespace AEX;
 
+// TODO: Bound checks on ELF files
 error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator, const char* path,
                             char* const argv[], char* const envp[]) {
     printkd(PTKD_EXEC, "elf64exec: Got a request for %s\n", path);
@@ -33,11 +34,20 @@ error_t Elf64Executor::exec(Proc::Process* process, AEX::Proc::Thread* initiator
 
     abortall(process, initiator);
 
+    process->tls_size = 0;
+    delete[] process->tls_base;
+
     for (auto& header : elf.program_headers) {
         if (header.type != ELF::PH_TLS)
             continue;
 
-        process->tls_size = header.memory_size;
+        // TODO: Figure out why it has to be ceiled to 16
+        process->tls_size = int_ceil(header.memory_size, 16);
+        process->tls_base = new char[process->tls_size];
+
+        // printk("tls_size: %i (phys %i)\n", process->tls_size, header.file_size);
+
+        memcpy(process->tls_base, (char*) addr + header.file_offset, header.file_size);
     }
 
     for (auto& header : elf.section_headers) {

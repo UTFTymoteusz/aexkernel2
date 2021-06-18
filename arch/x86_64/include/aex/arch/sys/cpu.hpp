@@ -20,6 +20,9 @@ namespace AEX::Sys {
 
     extern "C" void ipi_handle();
 
+    template <bool Interruptible>
+    class InterruptionGuard;
+
     struct tss;
 
     /**
@@ -76,6 +79,9 @@ namespace AEX::Sys {
         uint64_t measurement_start_ns;
 
         char name[48];
+
+        static InterruptionGuard<true>  interruptsGuard;
+        static InterruptionGuard<false> nointerruptsGuard;
 
         CPU(int id);
 
@@ -216,5 +222,33 @@ namespace AEX::Sys {
 
         friend void ipi_handle();
         friend void AEX::Sys::MCore::init();
+    };
+
+    template <bool Interruptible>
+    class InterruptionGuardScope {
+        public:
+        InterruptionGuardScope() {
+            m_prevstate = Sys::CPU::checkInterrupts();
+        }
+
+        ~InterruptionGuardScope() {
+            if (m_prevstate)
+                Sys::CPU::interrupts();
+            else
+                Sys::CPU::nointerrupts();
+        }
+
+        private:
+        bool m_prevstate;
+    };
+
+    template <bool Interruptible>
+    class InterruptionGuard {
+        public:
+        InterruptionGuardScope<Interruptible> scope() {
+            return InterruptionGuardScope<Interruptible>();
+        }
+
+        private:
     };
 }

@@ -57,6 +57,14 @@ namespace AEX::Proc {
         idle_process->set_cwd("/");
         kernel_process->set_cwd("/");
 
+        idle_process->session   = kernel_process->pid;
+        idle_process->group     = kernel_process->pid;
+        kernel_process->session = kernel_process->pid;
+        kernel_process->group   = kernel_process->pid;
+
+        AEX_ASSERT(kernel_process->isSessionLeader());
+        AEX_ASSERT(kernel_process->isGroupLeader());
+
         idle_process->ready();
         kernel_process->ready();
 
@@ -80,7 +88,7 @@ namespace AEX::Proc {
 
         kernel_process->threads.push(bsp_thread);
 
-#if KPANIC_PROC_STACK_TRACE
+#if KPANIC_PROC_TRACE
         kpanic_hook.subscribe([]() {
             printk("Stack trace:\n");
             Debug::stack_trace(1);
@@ -89,6 +97,9 @@ namespace AEX::Proc {
 
 #if KPANIC_PROC_LIST
         kpanic_hook.subscribe([]() {
+            printk("Processes:\n");
+            Proc::debug_print_processes();
+
             printk("Threads:\n");
             Proc::debug_print_threads();
 
@@ -98,7 +109,6 @@ namespace AEX::Proc {
             printk("Processors:\n");
             for (int i = 0; i < MCore::cpu_count; i++) {
                 auto cpu = Sys::MCore::CPUs[i];
-
                 printk("%3i. 0x%p\n", i, cpu->current_thread);
             }
         });

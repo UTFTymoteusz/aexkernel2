@@ -36,9 +36,6 @@ int kill(Proc::pid_t pid, int sig) {
     if (inrange(pid, 1, Proc::Process::kernel()->pid))
         return EPERM;
 
-    if (pid == 0)
-        NOT_IMPLEMENTED;
-
     USR_ERRNO = Proc::Process::kill(pid, sig);
     return USR_ERRNO ? -1 : 0;
 }

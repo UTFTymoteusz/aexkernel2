@@ -51,6 +51,14 @@ namespace AEX::Dev {
             if (v == -1)
                 return i;
 
+            // TODO: Figure out if this is correct at all
+            if (v == -2) {
+                IPC::siginfo_t info = {};
+                info.si_signo       = IPC::SIGTSTP;
+
+                Proc::Thread::current()->signal(info);
+            }
+
             cptr[i] = v;
         }
 
@@ -92,6 +100,11 @@ namespace AEX::Dev {
             return m_tty->info().gr_depth;
         case VTGRBYTES:
             return m_tty->info().gr_bytes;
+        case VTTCGETPGRP:
+            return m_tty->tcgetpgrp();
+        case VTTCSETPGRP:
+            m_tty->tcsetpgrp(val);
+            return 0;
         default:
             return EINVAL;
         }

@@ -19,8 +19,10 @@ namespace AEX::Dev::TTY {
     GrTTY::GrTTY() {}
 
     GrTTY::GrTTY(multiboot_info_t* mbinfo) {
-        if (mbinfo->framebuffer_bpp != 32)
+        if (mbinfo->framebuffer_bpp != 32) {
+            printk(FAIL "Framebuffer BPP is %i\n", mbinfo->framebuffer_bpp);
             asm volatile("ud2");
+        }
 
         m_px_width  = mbinfo->framebuffer_width;
         m_px_height = mbinfo->framebuffer_height;

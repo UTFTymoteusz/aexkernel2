@@ -1,5 +1,6 @@
 #include "table.hpp"
 
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/sys/time.hpp"
 
 #include "layer/link/arp.hpp"
@@ -23,6 +24,7 @@ namespace NetStack {
     }
 
     AEX::optional<AEX::Net::mac_addr> ARPTable::get_mac(AEX::Net::ipv4_addr ipv4) {
+        SCOPE(AEX::Sys::CPU::nointerruptsGuard);
         SCOPE(m_entries_lock);
 
         uint64_t time = AEX::Sys::Time::uptime();
@@ -52,25 +54,24 @@ namespace NetStack {
         return {};
     }
 
-    // need to make it actually look if we've been querying
+    // need to make it actually look whether we've been querying
     void ARPTable::set_mac(AEX::Net::ipv4_addr ipv4, AEX::Net::mac_addr mac) {
-        using(m_queries_lock) {
-            for (int i = 0; i < m_queries.count(); i++) {
-                auto& query = m_queries[i];
+        SCOPE(AEX::Sys::CPU::nointerruptsGuard);
+        SCOPE(m_entries_lock);
 
-                if (query.uuid != to_arp_uuid(ARP_ETHERNET, ETH_IPv4))
-                    continue;
+        for (int i = 0; i < m_queries.count(); i++) {
+            auto& query = m_queries[i];
 
-                if (query.ipv4 == ipv4) {
-                    m_queries.erase(i);
-                    i--;
+            if (query.uuid != to_arp_uuid(ARP_ETHERNET, ETH_IPv4))
+                continue;
 
-                    continue;
-                }
+            if (query.ipv4 == ipv4) {
+                m_queries.erase(i);
+                i--;
+
+                continue;
             }
         }
-
-        SCOPE(m_entries_lock);
 
         for (int i = 0; i < m_entries.count(); i++) {
             auto& entry = m_entries[i];
@@ -103,36 +104,35 @@ namespace NetStack {
         while (true) {
             uint64_t time = AEX::Sys::Time::uptime();
 
-            m_queries_lock.acquire();
+            using(m_queries_lock) {
+                for (int i = 0; i < m_queries.count(); i++) {
+                    auto& query = m_queries[i];
 
-            for (int i = 0; i < m_queries.count(); i++) {
-                auto& query = m_queries[i];
+                    if (time < query.retry_at)
+                        continue;
 
-                if (time < query.retry_at)
-                    continue;
+                    if (query.retries == ARP_RETRIES) {
+                        m_queries.erase(i);
+                        i--;
 
-                if (query.retries == ARP_RETRIES) {
-                    m_queries.erase(i);
-                    i--;
+                        continue;
+                    }
 
-                    continue;
+                    if (query.uuid == to_arp_uuid(ARP_ETHERNET, ETH_IPv4))
+                        send_mac_request(query.ipv4);
+
+                    query.retry_at = time + ARP_INTERVAL_NS;
+                    query.retries++;
                 }
-
-                if (query.uuid == to_arp_uuid(ARP_ETHERNET, ETH_IPv4))
-                    send_mac_request(query.ipv4);
-
-                query.retry_at = time + ARP_INTERVAL_NS;
-                query.retries++;
             }
-
-            m_queries_lock.release();
 
             AEX::Proc::Thread::sleep(100);
         }
     }
 
     void ARPTable::query_mac(AEX::Net::ipv4_addr ipv4) {
-        m_queries_lock.acquire();
+        SCOPE(AEX::Sys::CPU::nointerruptsGuard);
+        SCOPE(m_queries_lock);
 
         for (int i = 0; i < m_queries.count(); i++) {
             auto& query = m_queries[i];
@@ -140,10 +140,8 @@ namespace NetStack {
             if (query.uuid != to_arp_uuid(ARP_ETHERNET, ETH_IPv4))
                 continue;
 
-            if (query.ipv4 == ipv4) {
-                m_queries_lock.release();
+            if (query.ipv4 == ipv4)
                 return;
-            }
         }
 
         arp_query query;
@@ -155,7 +153,6 @@ namespace NetStack {
         query.ipv4 = ipv4;
 
         m_queries.push(query);
-        m_queries_lock.release();
     }
 
     void ARPTable::send_mac_request(AEX::Net::ipv4_addr ipv4) {
