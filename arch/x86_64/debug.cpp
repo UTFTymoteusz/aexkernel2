@@ -13,7 +13,7 @@ namespace AEX::Debug {
     };
 
     void stack_trace(int skip, stack_frame* frame) {
-        const int max   = 12;
+        const int max   = 24;
         int       level = 0;
 
         if (!frame)
@@ -41,7 +41,7 @@ namespace AEX::Debug {
                 printk("  *kernel entry*\n");
                 return;
             default:
-                if (frame->rip == (size_t) Proc::Thread::exit) {
+                if (frame->rip == (size_t) Proc::Thread::exit_implicit) {
                     printk("  *thread entry/exit*\n");
                     return;
                 }

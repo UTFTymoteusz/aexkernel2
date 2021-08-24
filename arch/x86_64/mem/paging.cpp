@@ -231,8 +231,9 @@ namespace AEX::Mem {
         m_lock.acquire();
 
         size_t amount = ceiltopg(bytes);
-        virt_t virt   = (virt_t)(
-            (flags & PAGE_FIXED) ? source : findContiguous(pptr, amount, flags & PAGE_EXEC));
+        virt_t virt =
+            (virt_t) ((flags & PAGE_FIXED) ? source
+                                           : findContiguous(pptr, amount, flags & PAGE_EXEC));
         size_t start       = virt;
         size_t chunk_upper = clamp(amount / 512, (size_t) 1, (size_t) 1024);
 
@@ -276,8 +277,9 @@ namespace AEX::Mem {
         m_lock.acquire();
 
         size_t amount = ceiltopg(bytes);
-        virt_t virt   = (virt_t)(
-            (flags & PAGE_FIXED) ? source : findContiguous(pptr, amount, flags & PAGE_EXEC));
+        virt_t virt =
+            (virt_t) ((flags & PAGE_FIXED) ? source
+                                           : findContiguous(pptr, amount, flags & PAGE_EXEC));
         virt_t start = virt;
         phys_t paddr = Mem::Phys::alloc(bytes);
 
@@ -309,7 +311,7 @@ namespace AEX::Mem {
 
         size_t amount = ceiltopg(bytes);
         phys_t offset = 0;
-        virt_t virt   = (virt_t)((flags & PAGE_FIXED) ? source : findContiguous(pptr, amount));
+        virt_t virt   = (virt_t) ((flags & PAGE_FIXED) ? source : findContiguous(pptr, amount));
         virt_t start  = virt;
 
         if ((paddr & 0xFFF) > 0) {

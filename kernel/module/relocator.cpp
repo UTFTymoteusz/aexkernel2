@@ -83,10 +83,10 @@ namespace AEX {
                 *((uint64_t*) self) = S + A;
                 break;
             case R_AMD64_PC32:
-                *((int32_t*) self) = (int32_t)(S - P + A);
+                *((int32_t*) self) = (int32_t) (S - P + A);
                 break;
             case R_AMD64_PLT32:
-                *((int32_t*) self) = (int32_t)(S - P + A);
+                *((int32_t*) self) = (int32_t) (S - P + A);
                 break;
             case R_AMD64_32S:
                 *((int32_t*) self) = S + A;

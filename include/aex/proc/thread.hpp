@@ -2,6 +2,8 @@
 
 #include "aex/arch/proc/context.hpp"
 #include "aex/ipc/signal.hpp"
+#include "aex/ipc/sigqueue.hpp"
+#include "aex/ipc/types.hpp"
 #include "aex/mem/atomic.hpp"
 #include "aex/mem/vector.hpp"
 #include "aex/optional.hpp"
@@ -28,66 +30,59 @@ namespace AEX::Proc {
         static constexpr auto USER_STACK_SIZE   = 16384;
         static constexpr auto KERNEL_STACK_SIZE = 16384;
         static constexpr auto FAULT_STACK_SIZE  = 32768;
-        static constexpr auto AUX_STACK_SIZE    = 4096;
 
         struct state {
-            uint16_t busy;
             uint16_t signability;
             uint16_t critical;
 
             status_t status;
         };
 
-        Thread* self = this;
+        Thread* self = this; // 0x00
 
-        // Do not change the order of these or the kernel will go boom
+        // Do not change the order of these or the kernel will go boom boom
         struct {
             tid_t    tid;         // 0x08
             Context* context;     // 0x10
-            Context* context_aux; // 0x18
+            void*    unused;      // 0x18
             error_t  errno;       // 0x20
             size_t   saved_stack; // 0x28
         };
 
         Spinlock lock;
+        Spinlock sigcheck_lock;
 
         volatile status_t status;
         union {
             int64_t wakeup_at;
         };
 
+        CriticalGuard    criticalGuard    = CriticalGuard(this);
+        SignabilityGuard signabilityGuard = SignabilityGuard(this);
+
         Process*    parent;
-        Thread*     next;
-        Thread*     prev;
         IPC::Event* event;
 
         void* original_entry;
 
-        size_t user_stack;
-        size_t kernel_stack;
-        size_t fault_stack;
-        size_t aux_stack;
-
-        size_t user_stack_size;
-        size_t kernel_stack_size;
-        size_t fault_stack_size;
-        size_t aux_stack_size;
+        stack user_stack;
+        stack kernel_stack;
+        stack fault_stack;
 
         bool faulting;
-        bool in_signal;
 
         void* tls;
+        void* retval = nullptr;
+        bool  safe_exit;
 
         int sched_counter;
         int held_mutexes;
 
-        CriticalGuard    criticalGuard    = CriticalGuard(this);
-        SignabilityGuard signabilityGuard = SignabilityGuard(this);
-        BusyGuard        busyGuard        = BusyGuard(this);
+        Thread* next;
+        Thread* prev;
 
         Thread();
         Thread(Process* parent);
-
         ~Thread();
 
         [[nodiscard]] static optional<Thread*> create(pid_t parent, void* entry, size_t stack_size,
@@ -96,29 +91,38 @@ namespace AEX::Proc {
 
         static void yield();
         static void sleep(uint64_t ms);
-        static void usleep(uint64_t ns);
-        static void exit();
+        static void nsleep(uint64_t ns);
+        static void exit(void* retval = nullptr, bool ignoreBusy = false);
+        static void exit_implicit() {
+            exit(nullptr, true);
+        }
 
         static Thread* current();
 
-        error_t start();
-        error_t join();
-        error_t detach();
-        error_t abort(bool force = false);
-        bool    aborting();
-        bool    interrupted();
+        error_t         start();
+        optional<void*> join();
+        error_t         detach();
+        error_t         abort(bool force = false);
+        bool            aborting();
+        bool            interrupted();
 
-        void _abort(bool force = false);
-        void finish();
+        void abortCheck();
 
         Process* getProcess();
 
         // IPC Stuff
-        /**
-         *
-         **/
-        error_t signal(IPC::siginfo_t& info);
-        error_t sigret();
+        error_t                  signal(IPC::siginfo_t& info);
+        error_t                  sigret();
+        bool                     signalCheck(bool allow_handle);
+        bool                     signalCheck(bool allow_handle, IPC::interrupt_registers* regs);
+        bool                     signalCheck(bool allow_handle, IPC::syscall_registers* regs);
+        void                     asyncThreadingSignals(bool asyncthrdsig);
+        void                     signalWait(bool sigwait);
+        optional<IPC::siginfo_t> signalGet(IPC::sigset_t* set = nullptr);
+
+        IPC::sigset_t getSignalMask();
+        void          setSignalMask(const IPC::sigset_t& mask);
+        IPC::sigset_t getSignalPending();
 
         /**
          * Sets the arguments of the thread.
@@ -135,38 +139,13 @@ namespace AEX::Proc {
          **/
         void setStatus(status_t status);
 
+        /**
+         * Returns true if the thread is currently executing kernel code.
+         * @returns Whether the thread is executing kernel code.
+         **/
+        bool isBusy();
+
         // pls atomic<T> later
-        /**
-         * Adds 1 to the thread's busy counter. If m_busy is greater than 0, the thread cannot be
-         * killed.
-         **/
-        inline void addBusy() {
-            Mem::atomic_add(&m_busy, (uint16_t) 1);
-        }
-
-        /**
-         * Subtracts 1 from the thread's busy counter. If m_busy is greater than 0, the thread
-         * cannot be killed.
-         **/
-        void subBusy();
-
-        /**
-         * Checks the thread's busy counter. If m_busy is greater than 0, the thread cannot
-         * be killed.
-         * @returns Whenever the thread is "busy".
-         **/
-        inline bool isBusy() {
-            return Mem::atomic_read(&m_busy) > 0;
-        }
-
-        inline uint16_t getBusy() {
-            return Mem::atomic_read(&m_busy);
-        }
-
-        inline void setBusy(uint16_t busy) {
-            m_busy = busy;
-        }
-
         /**
          * Adds 1 to the thread's signability counter. If m_signability is greater than 0, the
          * thread can be interrupted by signals.
@@ -232,21 +211,31 @@ namespace AEX::Proc {
         void  loadState(state& m_state);
 
         private:
-        uint16_t m_busy        = 0;
         uint16_t m_signability = 0;
         uint16_t m_critical    = 0;
 
-        bool m_detached = false;
-        bool m_aborting = false;
+        bool m_detached   = false;
+        bool m_aborting   = false;
+        bool m_retval_set = false;
 
-        Thread* m_joiner = nullptr;
+        Thread*       m_joiner = nullptr;
+        IPC::SigQueue m_sigqueue;
 
-        Mem::Vector<IPC::siginfo_t> m_pending_signals;
+        uint16_t m_pending_handleable;
+        bool     m_asyncthrdsig = false;
+        bool     m_sigwait      = false;
 
-        error_t              _signal(IPC::siginfo_t& info);
-        error_t              handleSignal(IPC::siginfo_t& info);
-        error_t              enterSignal(IPC::siginfo_t& info);
+        bool    signalCheck(bool allow_handle, IPC::state_combo* combo);
+        error_t handleSignal(IPC::siginfo_t& info, IPC::state_combo* combo = nullptr);
+        error_t enterSignal(IPC::siginfo_t& info, IPC::state_combo* combo);
+        error_t pushSignalContext(uint8_t id, IPC::sigaction& action, IPC::state_combo* combo,
+                                  IPC::siginfo_t& info);
+        error_t popSignalContext();
         [[noreturn]] error_t exitSignal();
+        void                 finish();
+
+        error_t _signal(IPC::siginfo_t& info);
+        void    _abort(bool force = false);
 
         void alloc_stacks(Mem::Pagemap* pagemap, size_t size, bool usermode);
         void create_tls();

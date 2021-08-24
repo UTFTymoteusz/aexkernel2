@@ -2,7 +2,9 @@
 
 global exc_array
 
+extern exc_check_signal
 extern fault_handler
+extern safe_mxcsr
 
 SECTION .text
 %macro pusha 0
@@ -44,15 +46,15 @@ SECTION .text
 %macro exc_err 1
     global exc%1
     exc%1:
-        push byte %1
+        push qword %1
         jmp exc_common
 %endmacro
 
 %macro exc_noerr 1
     global exc%1
     exc%1:
-        push byte 0
-        push byte %1
+        push qword 0
+        push qword %1
         jmp exc_common
 %endmacro
 
@@ -117,11 +119,17 @@ exc_common:
     popfq
 
     mov rdi, rsp
-    add rdi, 512 + 16
+    add rdi, 16
+
+    ldmxcsr [safe_mxcsr]
     call fault_handler
 
-    pop rbp
-    pop rax
+    sti
+    mov rdi, rsp
+    add rdi, 16
+    call exc_check_signal
+
+    add rsp, 16
 
     fxrstor [rsp]
     add rsp, 512

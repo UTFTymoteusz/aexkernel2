@@ -119,7 +119,7 @@ namespace AEX::Mem::Heap {
             }
 
             using(lock) {
-                unmark((uint32_t)((size_t) block - (size_t) data) / ALLOC_SIZE, header->len);
+                unmark((uint32_t) ((size_t) block - (size_t) data) / ALLOC_SIZE, header->len);
                 Mem::atomic_add(&heap_free, (uint64_t) header->len * ALLOC_SIZE);
 
                 memset(block, '\x5A', header->len * ALLOC_SIZE);

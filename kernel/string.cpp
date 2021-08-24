@@ -42,8 +42,10 @@ namespace AEX {
     }
 
     char* strndup(const char* str, size_t len) {
-        strlcpy(new char[len + 1], str, len + 1);
-        return (char*) str;
+        char* nstr = new char[len + 1];
+        strlcpy(nstr, str, len + 1);
+
+        return nstr;
     }
 
     size_t strspn(const char* str, const char* bongs) {

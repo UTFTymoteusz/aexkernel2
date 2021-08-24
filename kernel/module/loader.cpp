@@ -202,9 +202,9 @@ namespace AEX {
         if (block) {
             thread.value->start();
             if (block) {
-                auto error = thread.value->join();
-                if (error)
-                    kpanic("Failed to join: %s", strerror(error));
+                auto retval = thread.value->join();
+                if (!retval.has_value)
+                    kpanic("Failed to join: %s", strerror(retval.error));
             }
 
             delete[] sections;

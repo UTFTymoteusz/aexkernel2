@@ -44,7 +44,7 @@ namespace AEX {
         printk("\rto your computer.\n");
         printk("\r\n");
 
-        printk("\rIf this is the first time you've seen this Stop error screen,\n");
+        printk("\rIf this is the first time you have seen this Stop error screen,\n");
         printk("\rrestart your computer. If this screen appears again, follow\n");
         printk("\rthese steps:\n");
         printk("\r\n");

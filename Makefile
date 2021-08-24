@@ -56,10 +56,10 @@ format:
 all: $(OBJS)	
 	@$(MKDIR) $(ISO) $(SYS)
 
-	cd mod/core && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../..
-	cd mod/init && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../..
-	cd arch/$(ARCH)/mod/core && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../../../..
-	cd arch/$(ARCH)/mod/init && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../../../..
+	@cd mod/core && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../..
+	@cd mod/init && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../..
+	@cd arch/$(ARCH)/mod/core && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../../../..
+	@cd arch/$(ARCH)/mod/init && $(MAKE) all ROOT_DIR="$(ROOT_DIR)" KERNEL_SRC="$(KERNEL_SRC)" && cd ../../../..
 
 	@$(CXX) $(OBJS) $(LDFLAGS) -T linker.ld -o $(SYS)aexkrnl
 	# Yees, absolutely EVERY symbol to debug it all, for now
@@ -69,6 +69,8 @@ all: $(OBJS)
 	#objcopy --localize-hidden -K __dso_handle $(SYS)aexkrnl
 	#nm $(SYS)aexkrnl | grep -o 'W \w*$$' | sed 's/W /-L/g' | xargs objcopy $(SYS)aexkrnl
 	#objcopy -x -g -K __dso_handle $(SYS)aexkrnl
+
+	@printf '\033[0;36maexkrnl\033[0m: Done building\033[0K\n'
 
 copy:
 	@cp -u $(SYS)aexkrnl    "$(ROOT_DIR)sys/"
@@ -89,27 +91,35 @@ clean:
 $(OBJ_DEST)%.cpp.o : %.cpp
 	@$(MKDIR) ${@D}
 	@$(MKDIR) $(dir $(DEP_DEST)$*)
-	$(CXX) $(CXXFLAGS) -c $< -o $@ -MMD -MT $@ -MF $(DEP_DEST)$*.cpp.d
+
+	@printf '\033[0;36maexkrnl\033[0m: Building \033[0;36m$(<)\033[0m\033[0K\r'
+	@$(CXX) $(CXXFLAGS) -c $< -o $@ -MMD -MT $@ -MF $(DEP_DEST)$*.cpp.d
 
 $(OBJ_DEST)%.asm.o : %.asm
 	@$(MKDIR) ${@D}
-	$(AS) $(ASFLAGS) $< -o $@
-	objcopy --weaken $@
+
+	@printf '\033[0;36maexkrnl\033[0m: Building \033[0;36m$(<)\033[0m\033[0K\r'
+	@$(AS) $(ASFLAGS) $< -o $@
+	@objcopy --weaken $@
 
 $(OBJ_DEST)%.psf.o : %.psf
 	@$(MKDIR) ${@D}
-	objcopy -B i386:x86-64 -O elf64-x86-64 -I binary $< $@
-	objcopy --weaken $@
+
+	@printf '\033[0;36maexkrnl\033[0m: Building \033[0;36m$(<)\033[0m\033[0K\r'
+	@objcopy -B i386:x86-64 -O elf64-x86-64 -I binary $< $@
+	@objcopy --weaken $@
 
 $(OBJ_DEST)%.asmr.o : %.asmr
 	@$(MKDIR) ${@D}
-	$(AS) -f bin -o $@ $<
-	objcopy -B i386:x86-64 -O elf64-x86-64 -I binary $@ $@
-	objcopy --weaken $@
+	@$(AS) -f bin -o $@ $<
+	
+	@printf '\033[0;36maexkrnl\033[0m: Building \033[0;36m$(<)\033[0m\033[0K\r'
+	@objcopy -B i386:x86-64 -O elf64-x86-64 -I binary $@ $@
+	@objcopy --weaken $@
 
 iso:
 	@$(MKDIR) $(ISO)bin/ $(ISO)dev/ $(ISO)mnt/
-	@grub-mkrescue -o $(BIN)aex.iso $(ISO) 2> /dev/null
+	@grub-mkrescue -o $(BIN)aex.iso $(ISO)
 
 qemunet:
 	qemu-system-x86_64 -monitor stdio -machine type=q35 -smp 4 -m 32M -cdrom $(BIN)aex.iso \

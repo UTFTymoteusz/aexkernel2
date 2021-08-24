@@ -10,23 +10,10 @@
 using namespace AEX;
 using namespace AEX::Proc;
 
+void register_proc_thread(Sys::syscall_t* table);
+
 void exit(int status) {
     Process::current()->exit(status);
-    USR_ERRNO = ENONE;
-}
-
-void thexit() {
-    Thread::exit();
-    USR_ERRNO = ENONE;
-}
-
-void usleep(uint64_t ns) {
-    Thread::usleep(ns);
-    USR_ERRNO = ENONE;
-}
-
-void yield() {
-    Thread::yield();
     USR_ERRNO = ENONE;
 }
 
@@ -68,23 +55,18 @@ pid_t fork() {
     thread->context = new Context();
     memcpy(thread->context, calling_thread->context, sizeof(Context));
 
-    thread->context_aux = new Context();
+    thread->user_stack.ptr  = calling_thread->user_stack.ptr;
+    thread->user_stack.size = calling_thread->user_stack.size;
 
-    thread->user_stack      = calling_thread->user_stack;
-    thread->user_stack_size = calling_thread->user_stack_size;
+    thread->kernel_stack.ptr =
+        Mem::kernel_pagemap->alloc(calling_thread->kernel_stack.size, PAGE_WRITE);
+    thread->kernel_stack.size = calling_thread->kernel_stack.size;
 
-    thread->kernel_stack =
-        (size_t) Mem::kernel_pagemap->alloc(calling_thread->kernel_stack_size, PAGE_WRITE);
-    thread->kernel_stack_size = calling_thread->kernel_stack_size;
+    thread->fault_stack.ptr  = Mem::kernel_pagemap->alloc(Thread::FAULT_STACK_SIZE, PAGE_WRITE);
+    thread->fault_stack.size = Thread::FAULT_STACK_SIZE;
 
-    thread->fault_stack = (size_t) Mem::kernel_pagemap->alloc(Thread::FAULT_STACK_SIZE, PAGE_WRITE);
-    thread->fault_stack_size = Thread::FAULT_STACK_SIZE;
-
-    thread->aux_stack = (size_t) Mem::kernel_pagemap->alloc(Thread::AUX_STACK_SIZE, PAGE_WRITE);
-    thread->aux_stack_size = Thread::AUX_STACK_SIZE;
-
-    auto stack_end =
-        (size_t*) (calling_thread->kernel_stack + calling_thread->kernel_stack_size - 32);
+    auto stack_end = (size_t*) ((size_t) calling_thread->kernel_stack.ptr +
+                                calling_thread->kernel_stack.size - 512 - 32);
 
     thread->tls = calling_thread->tls;
 
@@ -204,6 +186,10 @@ pid_t getpid() {
     return Process::current()->pid;
 }
 
+tid_t gettid() {
+    return Thread::current()->tid;
+}
+
 int nice(int nice) {
     auto current = Process::current();
 
@@ -248,18 +234,16 @@ pid_t setsid() {
     return current->pid;
 }
 
-__attribute__((optimize("O2"))) void register_proc() {
-    auto table = Sys::default_table();
-
+__attribute__((optimize("O2"))) void register_proc(Sys::syscall_t* table) {
     table[SYS_EXIT]   = (void*) exit;
-    table[SYS_THEXIT] = (void*) thexit;
-    table[SYS_USLEEP] = (void*) usleep;
-    table[SYS_YIELD]  = (void*) yield;
     table[SYS_FORK]   = (void*) fork;
     table[SYS_EXECVE] = (void*) execve;
     table[SYS_WAIT]   = (void*) wait;
     table[SYS_GETPID] = (void*) getpid;
+    table[SYS_GETTID] = (void*) gettid;
     table[SYS_NICE]   = (void*) nice;
     table[SYS_GETENV] = (void*) getenv;
     table[SYS_SETSID] = (void*) setsid;
+
+    register_proc_thread(table);
 }

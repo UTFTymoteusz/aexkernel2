@@ -7,7 +7,6 @@
 #include "aex/proc/affinity.hpp"
 #include "aex/proc/broker.hpp"
 #include "aex/proc/exec.hpp"
-#include "aex/proc/handles.hpp"
 #include "aex/proc/process.hpp"
 #include "aex/proc/rusage.hpp"
 #include "aex/proc/thread.hpp"

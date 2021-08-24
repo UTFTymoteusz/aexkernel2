@@ -1,9 +1,9 @@
 #pragma once
 
+#include "aex/arch/proc/context.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/sys/syscall.hpp"
-
-#include <aex/utility.hpp>
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -43,16 +43,18 @@ namespace AEX::Sys {
         static constexpr int PAGE_SIZE = 4096;
 
         struct fault_info {
+            Proc::fpu_context fxstate;
             uint64_t r15, r14, r13, r12, r11, r10, r9, r8, rbp, rdi, rsi, rdx, rcx, rbx, rax;
+
             uint64_t int_no, err;
             uint64_t rip, cs, rflags, rsp, ss;
-        } __attribute((packed));
+        } PACKED;
 
         struct irq_info {
             uint64_t r15, r14, r13, r12, r11, r10, r9, r8, rbp, rdi, rsi, rdx, rcx, rbx, rax;
             uint64_t irq_no;
             uint64_t rip, cs, rflags, rsp, ss;
-        } __attribute((packed));
+        } PACKED;
 
         // Don't change the order of these or the kernel will go boom boom
         int id;
@@ -67,13 +69,15 @@ namespace AEX::Sys {
 
             volatile uint64_t unused; // 0x18
 
-            uint64_t        kernel_stack;  // 0x20
-            Sys::syscall_t* syscall_table; // 0x28
+            uint64_t        kernel_stack;    // 0x20
+            Sys::syscall_t* syscall_table;   // 0x28
+            uint64_t        interrupt_stack; // 0x30
         };
 
         uint8_t       in_interrupt = 1;
         volatile bool halted;
         bool          should_yield;
+        bool          rescheduling;
         tss*          local_tss;
 
         uint64_t measurement_start_ns;
@@ -232,10 +236,7 @@ namespace AEX::Sys {
         }
 
         ~InterruptionGuardScope() {
-            if (m_prevstate)
-                Sys::CPU::interrupts();
-            else
-                Sys::CPU::nointerrupts();
+            m_prevstate ? Sys::CPU::interrupts() : Sys::CPU::nointerrupts();
         }
 
         private:

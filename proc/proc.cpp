@@ -39,7 +39,7 @@ namespace AEX::Proc {
     Thread** void_threads;
 
     const char* status_names[] = {
-        "TS_FRESH", "TS_RUNNABLE", "TS_SLEEPING", "TS_BLOCKED", "TS_DEAD",
+        "TS_FRESH", "TS_RUNNABLE", "TS_SLEEPING", "TS_BLOCKED", "TS_VERYSPECIAL", "TS_DEAD",
     };
 
     void setup_idles();
@@ -69,13 +69,20 @@ namespace AEX::Proc {
         kernel_process->ready();
 
         auto bsp_thread = new Thread(kernel_process);
-        bsp_thread->fault_stack =
-            (size_t) Mem::kernel_pagemap->alloc(Thread::FAULT_STACK_SIZE, PAGE_WRITE) +
-            Thread::FAULT_STACK_SIZE;
-        bsp_thread->fault_stack_size = Thread::FAULT_STACK_SIZE;
+        bsp_thread->fault_stack.ptr =
+            (void*) ((size_t) Mem::kernel_pagemap->alloc(Thread::FAULT_STACK_SIZE, PAGE_WRITE) +
+                     Thread::FAULT_STACK_SIZE);
+        bsp_thread->fault_stack.size = Thread::FAULT_STACK_SIZE;
         bsp_thread->setStatus(TS_RUNNABLE);
 
         bsp_thread->original_entry = nullptr;
+        // printk("aa 0x%p\n", bsp_thread);
+        // printk("bb 0x%p\n", &bsp_thread->context->rip);
+        // printk("cc 0x%p\n", &bsp_thread->context->padding);
+        // printk("ss 0x%p\n", &bsp_thread->context->ss);
+        // printk("cs 0x%p\n", &bsp_thread->context->cs);
+        // printk("fx 0x%p\n", &bsp_thread->context->fxstate);
+        // printk("int 0x%p\n", Sys::MCore::CPUs[0]->interrupt_stack);
 
         bsp->current_thread  = bsp_thread;
         bsp->current_context = bsp_thread->context;
@@ -242,9 +249,11 @@ namespace AEX::Proc {
     void setup_idles() {
         idle_threads = (Thread**) new Thread*[MCore::cpu_count];
 
-        for (int i = 0; i < MCore::cpu_count; i++)
+        for (int i = 0; i < MCore::cpu_count; i++) {
             idle_threads[i] =
                 Thread::create(0, (void*) idle, 512, Mem::kernel_pagemap, false, true).value;
+            idle_threads[i]->status = TS_VERYSPECIAL;
+        }
     }
 
     void setup_cores(Thread* bsp_thread) {
@@ -254,6 +263,7 @@ namespace AEX::Proc {
 
             MCore::CPUs[i]->current_thread  = void_thread;
             MCore::CPUs[i]->current_context = void_thread->context;
+            MCore::CPUs[i]->update(void_thread);
 
             void_thread->lock.acquireRaw();
             void_thread->next = thread_list_head;
@@ -262,6 +272,7 @@ namespace AEX::Proc {
 
         MCore::CPUs[0]->current_thread  = bsp_thread;
         MCore::CPUs[0]->current_context = bsp_thread->context;
+        MCore::CPUs[0]->update(bsp_thread);
 
         // The scheduler will release the lock
         bsp_thread->lock.acquireRaw();

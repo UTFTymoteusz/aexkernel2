@@ -22,7 +22,8 @@ namespace AEX::Net {
         constexpr ipv4_addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d) : bytes{a, b, c, d} {}
 
         constexpr ipv4_addr(uint32_t v)
-            : bytes{(uint8_t)(v >> 24), (uint8_t)(v >> 16), (uint8_t)(v >> 8), (uint8_t)(v >> 0)} {}
+            : bytes{(uint8_t) (v >> 24), (uint8_t) (v >> 16), (uint8_t) (v >> 8),
+                    (uint8_t) (v >> 0)} {}
 
         uint8_t& operator[](int index) {
             return bytes[index];

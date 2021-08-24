@@ -8,7 +8,13 @@ namespace AEX::Proc {
         TS_RUNNABLE,
         TS_SLEEPING,
         TS_BLOCKED,
+        TS_VERYSPECIAL,
         TS_DEAD,
+    };
+
+    struct stack {
+        void*  ptr;
+        size_t size;
     };
 
     typedef int pid_t;
@@ -16,6 +22,9 @@ namespace AEX::Proc {
 
     class Process;
     class Thread;
+
+    typedef Mem::SmartPointer<Process> Process_SP;
+    typedef Mem::SmartPointer<Thread>  Thread_SP;
 
     API const char* strstatus(status_t status);
 }

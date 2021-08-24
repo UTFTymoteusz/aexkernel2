@@ -392,8 +392,7 @@ namespace AEX {
         void loadRelocations();
 
         // private:
-        header m_header;
-
+        header   m_header;
         uint8_t* m_addr;
 
         void loadSymbols64();

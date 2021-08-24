@@ -17,8 +17,6 @@ int gethostname(char* name, size_t len) {
     return 0;
 }
 
-__attribute__((optimize("O2"))) void register_net() {
-    auto table = Sys::default_table();
-
+__attribute__((optimize("O2"))) void register_net(Sys::syscall_t* table) {
     table[SYS_GETHOSTNAME] = (void*) gethostname;
 }

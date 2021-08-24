@@ -12,6 +12,14 @@ namespace AEX::Proc {
         m_thread->subCritical();
     }
 
+    void CriticalGuard::acquire() {
+        m_thread->addCritical();
+    }
+
+    void CriticalGuard::release() {
+        m_thread->subCritical();
+    }
+
     SignabilityGuard::Scope::Scope(Thread* thread) {
         m_thread = thread;
         m_thread->addSignability();
@@ -21,12 +29,11 @@ namespace AEX::Proc {
         m_thread->subSignability();
     }
 
-    BusyGuard::Scope::Scope(Thread* thread) {
-        m_thread = thread;
-        m_thread->addBusy();
+    void SignabilityGuard::acquire() {
+        m_thread->addSignability();
     }
 
-    BusyGuard::Scope::~Scope() {
-        m_thread->subBusy();
+    void SignabilityGuard::release() {
+        m_thread->subSignability();
     }
 }

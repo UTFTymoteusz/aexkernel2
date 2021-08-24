@@ -39,15 +39,22 @@ namespace AEX::Mem {
 
         int push(T val) {
             m_count++;
-
-            int new_mem_count = int_ceil(m_count, chunk_count);
-            if (new_mem_count != m_mem_count) {
-                m_mem_count = new_mem_count;
-                m_array     = (T*) Heap::realloc((void*) m_array, m_mem_count * sizeof(T));
-            }
+            realloc(true);
 
             m_array[m_count - 1] = val;
             return m_count - 1;
+        }
+
+        void insert(int index, T val) {
+            if (index == m_count) {
+                m_count++;
+                realloc(true);
+            }
+
+            m_array[index] = val;
+            memcpy(m_array + index + 1, m_array + index, m_count - index - 1);
+
+            return;
         }
 
         void erase(int index) {
@@ -58,9 +65,9 @@ namespace AEX::Mem {
             m_count--;
 
             int copy_amount = m_mem_count - index;
-            memcpy(&m_array[index], &m_array[index + 1], copy_amount * sizeof(T));
 
-            deallocCheck();
+            memcpy(&m_array[index], &m_array[index + 1], copy_amount * sizeof(T));
+            realloc();
         }
 
         void clear() {
@@ -69,7 +76,7 @@ namespace AEX::Mem {
 
             m_count = 0;
 
-            deallocCheck();
+            realloc();
 
             if (m_array)
                 memset(m_array, '\0', m_mem_count * sizeof(T));
@@ -108,9 +115,10 @@ namespace AEX::Mem {
             pushRecursive(rest...);
         }
 
-        inline void deallocCheck() {
+        inline void realloc(bool force = false) {
+            int min_alloc     = force ? -1 : minimum_allocation;
             int new_mem_count = int_ceil(m_count, chunk_count);
-            if (new_mem_count != m_mem_count && new_mem_count > minimum_allocation) {
+            if (new_mem_count != m_mem_count && new_mem_count > min_alloc) {
                 m_mem_count = new_mem_count;
                 m_array     = (T*) Heap::realloc((void*) m_array, m_mem_count * sizeof(T));
             }

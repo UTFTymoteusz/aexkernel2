@@ -6,16 +6,17 @@ global irq_spurious
 extern ipi_handle
 extern irq_handler
 extern irq_marker
+extern safe_mxcsr
 
 SECTION .text
 %macro pusha 0
+    push rbp
     push rax
     push rbx
     push rcx
     push rdx
     push rsi
     push rdi
-    push rbp
     push r8
     push r9
     push r10
@@ -35,13 +36,13 @@ SECTION .text
     pop r10
     pop r9
     pop r8
-    pop rbp
     pop rdi
     pop rsi
     pop rdx
     pop rcx
     pop rbx
     pop rax
+    pop rbp
 %endmacro
 
 %macro irq 1
@@ -106,6 +107,8 @@ irq_common:
     mov rdi, rsp
     add rdi, 512
     xor rbp, rbp
+
+    ldmxcsr [safe_mxcsr]
     call irq_handler
 
     fxrstor [rsp]
@@ -125,7 +128,8 @@ _irq_marker:
     mov rax, 0x0002
     push rax
     popfq
-
+    
+    ldmxcsr [safe_mxcsr]
     call irq_marker
 
     popa
@@ -142,7 +146,8 @@ irq_ipi:
     mov rax, 0x0002
     push rax
     popfq
-
+    
+    ldmxcsr [safe_mxcsr]
     call ipi_handle
 
     fxrstor [rsp]

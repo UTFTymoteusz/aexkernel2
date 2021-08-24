@@ -14,11 +14,7 @@ using Thread = AEX::Proc::Thread;
 namespace AEX {
     void Mutex::acquire() {
         volatile size_t count = 0;
-        Thread::current()->addBusy();
-
         while (!__sync_bool_compare_and_swap(&m_lock, false, true)) {
-            Thread::current()->subBusy();
-
             count++;
             if (count > 12212222) {
                 int  delta = 0;
@@ -42,8 +38,6 @@ namespace AEX {
 
             if (Sys::MCore::cpu_count == 1)
                 Proc::Thread::yield();
-
-            Thread::current()->addBusy();
         }
 
         m_thread = Thread::current();
@@ -55,22 +49,16 @@ namespace AEX {
     void Mutex::release() {
         __sync_synchronize();
 
-        AEX_ASSERT(Thread::current()->isBusy());
         AEX_ASSERT(__sync_bool_compare_and_swap(&m_lock, true, false));
 
         m_thread = nullptr;
 
         Thread::current()->held_mutexes--;
-        Thread::current()->subBusy();
     }
 
     bool Mutex::tryAcquire() {
-        Thread::current()->addBusy();
-
         bool ret = __sync_bool_compare_and_swap(&m_lock, false, true);
-        if (!ret)
-            Thread::current()->subBusy();
-        else {
+        if (ret) {
             m_thread = Thread::current();
             Thread::current()->held_mutexes++;
         }

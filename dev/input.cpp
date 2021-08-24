@@ -91,7 +91,7 @@ namespace AEX::Dev::Input {
             event m_event;
 
             m_event.keycode = code;
-            m_event.mod     = (keymod_t)(mod | KEYMOD_RELEASE);
+            m_event.mod     = (keymod_t) (mod | KEYMOD_RELEASE);
 
             handle->write(m_event);
         }
@@ -156,22 +156,22 @@ namespace AEX::Dev::Input {
         auto mod = KEYMOD_NONE;
 
         if (num_lock)
-            mod = (keymod_t)(mod | KEYMOD_NUMLOCK);
+            mod = (keymod_t) (mod | KEYMOD_NUMLOCK);
 
         if (caps_lock)
-            mod = (keymod_t)(mod | KEYMOD_CAPSLOCK);
+            mod = (keymod_t) (mod | KEYMOD_CAPSLOCK);
 
         if (shift)
-            mod = (keymod_t)(mod | KEYMOD_SHIFT);
+            mod = (keymod_t) (mod | KEYMOD_SHIFT);
 
         if (ctrl)
-            mod = (keymod_t)(mod | KEYMOD_CTRL);
+            mod = (keymod_t) (mod | KEYMOD_CTRL);
 
         if (alt)
-            mod = (keymod_t)(mod | KEYMOD_ALT);
+            mod = (keymod_t) (mod | KEYMOD_ALT);
 
         if (altgr)
-            mod = (keymod_t)(mod | KEYMOD_ALTGR);
+            mod = (keymod_t) (mod | KEYMOD_ALTGR);
 
         return mod;
     }

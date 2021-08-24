@@ -32,7 +32,7 @@ namespace AEX::Mem {
             resize();
         }
 
-        const T& operator[](int index) {
+        T& operator[](int index) {
             if (index < 0 || index >= m_count)
                 return m_array[0].value;
 
@@ -142,6 +142,20 @@ namespace AEX::Mem {
 
         optional<T>* end() {
             return &m_array[m_count];
+        }
+
+        int remove(T val) {
+            for (int i = 0; i < m_count; i++) {
+                if (m_array[i].has_value)
+                    continue;
+
+                if (m_array[i].value == val) {
+                    erase(i);
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         private:

@@ -7,6 +7,7 @@
 #include "aex/sec/random.hpp"
 #include "aex/string.hpp"
 
+#include "proc/proc.hpp"
 #include "sys/irq/apic.hpp"
 
 // For some reason g++ adds 8 to the offset
@@ -247,15 +248,16 @@ namespace AEX::Sys {
 
     void CPU::update(Proc::Thread* thread) {
         // 3 weeks of rest because of the goddamned + thread->fault_stack_size
-        local_tss->ist1 = thread->fault_stack + thread->fault_stack_size;
-        local_tss->ist7 = thread->kernel_stack + thread->kernel_stack_size;
+        local_tss->ist1 = (size_t) thread->fault_stack.ptr + thread->fault_stack.size;
+        local_tss->ist4 = (size_t) thread->context + 22 * 8;
+        local_tss->ist7 = (size_t) thread->kernel_stack.ptr + thread->kernel_stack.size;
 
         wrmsr(MSR_FSBase, (size_t) thread->tls);
 
-        AEX_ASSERT(thread->parent);
+        if (Proc::ready)
+            AEX_ASSERT(thread->parent);
 
         Sec::feed_random(thread->context->rsp);
-        Sec::feed_random(thread->context_aux->rsp);
         Sec::feed_random(IRQ::APIC::counter());
     }
 

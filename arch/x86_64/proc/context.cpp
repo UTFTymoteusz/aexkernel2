@@ -36,8 +36,7 @@ namespace AEX::Proc {
             ss = 0x1B;
         }
 
-        rflags = FLAGS_INTERRUPTS | FLAGS_RESERVED;
-
-        *((uint16_t*) &fxstate[24]) = 0b0001111110000000;
+        rflags        = FLAGS_INTERRUPTS | FLAGS_RESERVED;
+        fxstate.mxcsr = 0x1f80;
     }
 }

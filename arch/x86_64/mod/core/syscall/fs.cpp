@@ -372,9 +372,7 @@ int rename(const usr_char* from, const usr_char* to) {
     return USR_ENSURE_ENONE(FS::File::rename(from_buffer, to_buffer));
 }
 
-void register_fs() {
-    auto table = Sys::default_table();
-
+void register_fs(Sys::syscall_t* table) {
     table[SYS_OPEN]    = (void*) open;
     table[SYS_READ]    = (void*) read;
     table[SYS_WRITE]   = (void*) write;

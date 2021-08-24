@@ -1,8 +1,10 @@
+#include "aex/arch/ipc/signal.hpp"
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/assert.hpp"
 #include "aex/debug.hpp"
 #include "aex/ipc/signal.hpp"
 #include "aex/printk.hpp"
+#include "aex/proc/process.hpp"
 #include "aex/proc/thread.hpp"
 #include "aex/sys/irq.hpp"
 #include "aex/sys/syscall.hpp"
@@ -46,13 +48,13 @@ extern "C" void int_handler(void*);
 void            register_syscalls();
 void            install_handler();
 
-void register_fs();
-void register_ipc();
-void register_proc();
-void register_sec();
-void register_net();
-void register_test();
-void print_all();
+void register_fs(Sys::syscall_t* table);
+void register_ipc(Sys::syscall_t* table);
+void register_proc(Sys::syscall_t* table);
+void register_sec(Sys::syscall_t* table);
+void register_net(Sys::syscall_t* table);
+void register_test(Sys::syscall_t* table);
+void print_all(Sys::syscall_t* table);
 
 int sigact(int signum, const IPC::sigaction_usr* act, IPC::sigaction_usr* oldact);
 
@@ -76,41 +78,37 @@ void install_handler() {
     Sys::CPU::wrmsr(IA32_STAR, (Sys::CPU::rdmsr(IA32_STAR) & 0xFFFFFFFF) | (0x00100008ul << 32));
     Sys::CPU::wrmsr(IA32_LSTAR, (uint64_t) handler);
 
-    AEX::Sys::idt[0x80]
-        .setOffset((void*) int_handler)
-        .setSelector(0x08)
-        .setType(0x6F)
-        .setIST(7)
-        .setPresent(true);
+    // AEX::Sys::idt[0x80]
+    //     .setOffset((void*) int_handler)
+    //     .setSelector(0x08)
+    //     .setType(0x6F)
+    //     .setIST(7)
+    //     .setPresent(true);
 }
 
 void register_syscalls() {
-    register_fs();
-    register_ipc();
-    register_proc();
-    register_sec();
-    register_net();
-    register_test();
+    auto table = Sys::default_table();
+
+    register_fs(table);
+    register_ipc(table);
+    register_proc(table);
+    register_sec(table);
+    register_net(table);
+    register_test(table);
 }
 
-extern "C" void syscall_prepare() {
-    AEX_ASSERT(!Proc::Thread::current()->isBusy());
+extern "C" void syscall_prepare(int syscall) {
     AEX_ASSERT(!Proc::Thread::current()->isCritical());
-
-    Proc::Thread::current()->addBusy();
 }
 
-extern "C" void syscall_done(int syscall) {
-    Proc::Thread::current()->subBusy();
+extern "C" void syscall_done(int syscall, IPC::syscall_registers* regs) {
+    auto thread = Proc::Thread::current();
+    AEX_ASSERT(!thread->isCritical());
 
-    if (Proc::Thread::current()->getBusy() > 0) {
-        printk(WARN "thread's busy is %i? wuzz (syscall %i)\n", Proc::Thread::current()->getBusy(),
-               syscall);
-        printk(WARN "mutexes held: %i\n", Proc::Thread::current()->held_mutexes);
-    }
-
-    AEX_ASSERT(!Proc::Thread::current()->isBusy());
-    AEX_ASSERT(!Proc::Thread::current()->isCritical());
+    thread->safe_exit = true;
+    thread->abortCheck();
+    thread->signalCheck(true, regs);
+    thread->safe_exit = false;
 }
 
 void print_all() {

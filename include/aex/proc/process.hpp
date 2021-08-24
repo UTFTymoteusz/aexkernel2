@@ -3,6 +3,7 @@
 #include "aex/fs/descriptor.hpp"
 #include "aex/ipc/event.hpp"
 #include "aex/ipc/signal.hpp"
+#include "aex/ipc/sigqueue.hpp"
 #include "aex/mem.hpp"
 #include "aex/mem/mmap.hpp"
 #include "aex/mutex.hpp"
@@ -36,10 +37,12 @@ namespace AEX::Proc {
 
         Spinlock lock;
         Spinlock threads_lock;
+        Spinlock sigcheck_lock;
+        Spinlock sigact_lock;
         Mutex    descs_mutex;
 
         int                             thread_counter;
-        Mem::LazyVector<Thread*>        threads;
+        Mem::LazyVector<Thread_SP>      threads;
         Mem::LazyVector<FS::Descriptor> descs;
 
         Mem::Pagemap*                 pagemap;
@@ -80,6 +83,7 @@ namespace AEX::Proc {
         ~Process();
 
         static error_t kill(pid_t pid, int sig);
+        static error_t kill(pid_t pid, IPC::siginfo_t info);
 
         /**
          * Waits for any child process to exit.
@@ -103,23 +107,27 @@ namespace AEX::Proc {
         void ready();
         void rename(const char* image_path, const char* name);
 
+        // TODO: pls make this lock properly
         void        set_cwd(const char* cwd);
         const char* get_cwd();
 
-
         error_t kill(int sig);
+        error_t kill(IPC::siginfo_t info);
         void    exit(int status);
+        bool    exiting() {
+            return m_exiting;
+        }
 
-        void assoc(Thread* thread);
-        void unassoc(Thread* thread);
+        void                assoc(Thread* thread);
+        optional<Thread_SP> unassoc(Thread* thread);
+        optional<Thread_SP> get(tid_t tiddie);
 
         Mem::Vector<char*, 4>& env();
         void                   env(char* const envp[]);
         void                   env(Mem::Vector<char*, 4>* env);
+        optional<char*>        envGet(int index);
+        error_t                envSet(int index, char const* val);
         void                   clearEnv();
-
-        optional<char*> envGet(int index);
-        error_t         envSet(int index, char const* val);
 
         bool isGroupLeader() {
             return group == pid;
@@ -130,19 +138,19 @@ namespace AEX::Proc {
         }
 
         // IPC Stuff
-        /**
-         *
-         **/
         error_t                  signal(IPC::siginfo_t& info);
         optional<IPC::sigaction> sigaction(uint8_t id);
         error_t                  sigaction(uint8_t id, IPC::sigaction& action);
 
-        private:
-        bool  m_exiting = false;
-        char* m_cwd;
+        IPC::sigset_t getSignalPending();
 
-        IPC::sigaction        m_signals[32];
+        private:
+        char*                 m_cwd;
         Mem::Vector<char*, 4> m_environment;
+
+        bool           m_exiting = false;
+        IPC::SigQueue  m_sigqueue;
+        IPC::sigaction m_signals[72];
 
         void ipc_init();
 

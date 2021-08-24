@@ -7,14 +7,14 @@ SECTION .text
 
 %macro flt_err 1
     flt%1:
-        push byte %1
+        push qword %1
         jmp early_fault_wrapper
 %endmacro
 
 %macro flt_noerr 1
     flt%1:
-        push byte 0
-        push byte %1
+        push qword 0
+        push qword %1
         jmp early_fault_wrapper
 %endmacro
 

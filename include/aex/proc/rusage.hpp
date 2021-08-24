@@ -11,5 +11,10 @@ namespace AEX::Proc {
 
         uint64_t block_bytes_read;
         uint64_t block_bytes_written;
+
+        uint64_t network_bytes_rx;
+        uint64_t network_bytes_tx;
+        uint64_t network_packets_rx;
+        uint64_t network_packets_tx;
     };
 }

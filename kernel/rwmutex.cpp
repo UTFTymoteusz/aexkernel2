@@ -14,7 +14,6 @@ namespace AEX {
             m_lock.acquire();
         }
 
-        Thread::current()->addBusy();
         Mem::atomic_add(&m_read, 1);
 
         m_lock.release();
@@ -29,7 +28,6 @@ namespace AEX {
             m_lock.acquire();
         }
 
-        Thread::current()->addBusy();
         Mem::atomic_add(&m_write, 1);
 
         m_lock.release();
@@ -44,7 +42,6 @@ namespace AEX {
             return false;
         }
 
-        Thread::current()->addBusy();
         Mem::atomic_add(&m_read, 1);
 
         m_lock.release();
@@ -61,7 +58,6 @@ namespace AEX {
             return false;
         }
 
-        Thread::current()->addBusy();
         Mem::atomic_add(&m_write, 1);
 
         m_lock.release();
@@ -99,8 +95,6 @@ namespace AEX {
         AEX_ASSERT(Mem::atomic_read(&m_read) > 0);
 
         Mem::atomic_sub(&m_read, 1);
-        Thread::current()->subBusy();
-
         __sync_synchronize();
     }
 
@@ -108,8 +102,6 @@ namespace AEX {
         AEX_ASSERT(Mem::atomic_read(&m_write) > 0);
 
         Mem::atomic_sub(&m_write, 1);
-        Thread::current()->subBusy();
-
         __sync_synchronize();
     }
 

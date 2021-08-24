@@ -60,6 +60,8 @@ namespace AEX::Sys {
             m_tss->ist2 = (size_t) Mem::kernel_pagemap->alloc(16384) + 16384;
             m_tss->ist3 = (size_t) Mem::kernel_pagemap->alloc(4096) + 4096;
 
+            MCore::CPUs[i / 2]->interrupt_stack = m_tss->ist3;
+
             tsses[i / 2] = m_tss;
         }
 

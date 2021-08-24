@@ -12,7 +12,9 @@ using APIC = AEX::Sys::IRQ::APIC;
 
 namespace AEX::Proc {
     extern "C" void proc_timer_tick();
-    extern "C" void proc_sched_int();
+    extern "C" void proc_sched_nosave_int();
+    extern "C" void proc_ctxsave_int();
+    extern "C" void proc_ctxload_int();
 
     void reload_idt() {
         Sys::load_idt(Sys::idt, 256);
@@ -21,6 +23,9 @@ namespace AEX::Proc {
     void setup_irq() {
         Sys::idt[0x20].setOffset((size_t) proc_timer_tick).setIST(3);
         Sys::idt[0x70].setOffset((size_t) proc_timer_tick).setIST(3).setPresent(true);
+        Sys::idt[0x71].setOffset((size_t) proc_sched_nosave_int).setIST(3).setPresent(true);
+        Sys::idt[0x72].setOffset((size_t) proc_ctxsave_int).setIST(4).setPresent(true);
+        Sys::idt[0x73].setOffset((size_t) proc_ctxload_int).setIST(3).setPresent(true);
 
         CPU::broadcast(CPU::IPP_CALL, (void*) reload_idt);
         reload_idt();

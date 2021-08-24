@@ -39,58 +39,58 @@ namespace AEX::Proc {
         m_signals[SIGXCPU].action   = SIG_CORE;
         m_signals[SIGXFSZ].action   = SIG_CORE;
         m_signals[SIGWINCH].action  = SIG_IGN;
+        m_signals[SIGCNCL].action   = SIG_IGN;
     }
 
     error_t Process::signal(siginfo_t& info) {
         if (!inrange(info.si_signo, SIGHUP, SIGSYS))
             return EINVAL;
 
-        auto thl = threads_lock.scope();
+        printkd(PTKD_IPC, "ipc: pid%i: Signal %s\n", this->pid,
+                strsignal((signal_t) info.si_signo));
+        m_sigqueue.push(info);
 
-        for (int i = 0; i < threads.count(); i++) {
-            if (!threads.present(i))
-                continue;
-
-            return threads[i]->signal(info);
-        }
-
-        return EINVAL;
+        return ENONE;
     }
 
     optional<sigaction> Process::sigaction(uint8_t id) {
-        if (!inrange(id, 1, IPC::SIGSYS))
+        if (!inrange(id, SIGHUP, SIGSYS) && id != SIGCNCL)
             return {};
 
-        lock.acquire();
-        auto signal = m_signals[id];
-        lock.release();
-
-        return signal;
+        SCOPE(sigact_lock);
+        return m_signals[id];
     }
 
     error_t Process::sigaction(uint8_t id, IPC::sigaction& action) {
-        if (!inrange(id, 1, IPC::SIGSYS))
+        if (!inrange(id, SIGHUP, SIGSYS) && id != SIGCNCL)
             return EINVAL;
 
         if (id == SIGKILL || id == SIGSTOP || id == SIGCONT)
             return EINVAL;
 
-        lock.acquire();
-        m_signals[id] = action;
+        SCOPE(sigact_lock);
 
         if (action.action == SIG_DFL) {
-            const uint8_t def[32] = {
-                0,        SIG_TERM, SIG_TERM, SIG_CORE, SIG_CORE, SIG_CORE, SIG_CORE, SIG_CORE,
+            const sig_action_t def[72] = {
+                SIG_IGN,  SIG_TERM, SIG_TERM, SIG_CORE, SIG_CORE, SIG_CORE, SIG_CORE, SIG_CORE,
                 SIG_TERM, SIG_TERM, SIG_CORE, SIG_TERM, SIG_TERM, SIG_TERM, SIG_TERM, SIG_IGN,
                 SIG_CONT, SIG_STOP, SIG_STOP, SIG_STOP, SIG_STOP, SIG_IGN,  SIG_CORE, SIG_CORE,
-                SIG_TERM, SIG_TERM, SIG_IGN,  SIG_TERM, SIG_TERM, SIG_CORE,
+                SIG_TERM, SIG_TERM, SIG_IGN,  SIG_TERM, SIG_TERM, SIG_CORE, SIG_IGN,  SIG_IGN,
+                SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,
+                SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,
+                SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,
+                SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,
+                SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,  SIG_IGN,
             };
-
-            m_signals[id].action = def[id];
+            action.action = def[id];
         }
 
-        lock.release();
-
+        m_signals[id] = action;
         return ENONE;
+    }
+
+    IPC::sigset_t Process::getSignalPending() {
+        SCOPE(sigcheck_lock);
+        return m_sigqueue.pending();
     }
 }

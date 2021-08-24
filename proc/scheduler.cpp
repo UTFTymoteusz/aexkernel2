@@ -37,6 +37,7 @@ namespace AEX::Proc {
         }
 
         cpu->in_interrupt++;
+        cpu->rescheduling = true;
 
         auto uptime = Time::uptime();
         auto delta  = uptime - cpu->measurement_start_ns;
@@ -100,13 +101,23 @@ namespace AEX::Proc {
 
             cpu->current_thread  = thread;
             cpu->current_context = thread->context;
-            cpu->kernel_stack    = thread->kernel_stack + thread->kernel_stack_size;
+            cpu->kernel_stack    = (size_t) thread->kernel_stack.ptr + thread->kernel_stack.size;
             cpu->syscall_table   = process->syscall_table;
+
+            if (!thread->isBusy() && thread->signalCheck(true)) {
+                if (process->stopped)
+                    continue;
+
+                if (!thread->isBusy() && process->exiting())
+                    continue;
+            }
 
             cpu->update(thread);
             sched_lock.releaseRaw();
 
+            cpu->rescheduling = false;
             cpu->in_interrupt--;
+
             return;
         }
 
@@ -124,6 +135,7 @@ namespace AEX::Proc {
         cpu->update(idle);
         sched_lock.releaseRaw();
 
+        cpu->rescheduling = false;
         cpu->in_interrupt--;
     }
 }

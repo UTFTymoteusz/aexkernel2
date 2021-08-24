@@ -106,7 +106,7 @@ namespace AEX::Sys::IRQ {
     }
 
     void setup_timer(double hz) {
-        APIC::timer(0x20 + 0, (size_t)(apic_tps / hz), true);
+        APIC::timer(0x20 + 0, (size_t) (apic_tps / hz), true);
     }
 
     void irq_sleep(double ms) {
@@ -114,7 +114,7 @@ namespace AEX::Sys::IRQ {
             apic_tps = find_apic_tps();
 
         irq_mark = false;
-        APIC::timer(0x20 + 31, (size_t)(apic_tps * (ms / 1000.0)), false);
+        APIC::timer(0x20 + 31, (size_t) (apic_tps * (ms / 1000.0)), false);
 
         while (!irq_mark)
             CPU::wait();

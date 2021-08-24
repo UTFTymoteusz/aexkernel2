@@ -38,9 +38,7 @@ error_t test5(uint64_t a, uint64_t b, uint64_t c, uint64_t d, uint64_t e) {
     return ENONE;
 }
 
-void register_test() {
-    auto table = Sys::default_table();
-
+void register_test(Sys::syscall_t* table) {
     table[SYS_PANIC] = (void*) panic;
     table[SYS_TEST1] = (void*) test1;
     table[SYS_TEST2] = (void*) test2;

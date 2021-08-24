@@ -74,7 +74,6 @@ namespace AEX::Sys::IRQ {
 
         thread->setCritical(1);
         thread->setSignability(0);
-        thread->setBusy(1);
         thread->setStatus(Proc::TS_RUNNABLE);
 
         handlers[irq].call();

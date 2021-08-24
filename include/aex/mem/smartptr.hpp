@@ -83,6 +83,14 @@ namespace AEX::Mem {
             return m_val;
         }
 
+        bool operator==(T* b) {
+            return m_val == b;
+        }
+
+        bool operator!=(T* b) {
+            return m_val != b;
+        }
+
         SmartPointer& operator=(const SmartPointer& sp) {
             if (this == &sp)
                 return *this;
@@ -116,7 +124,7 @@ namespace AEX::Mem {
         }
 
         void defuse() {
-            m_refs = nullptr;
+            m_val = nullptr;
         }
 
         void decrement() {

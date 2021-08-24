@@ -20,7 +20,8 @@ namespace AEX::Proc {
         if (process == Process::current()) {
             AEX_ASSERT(initiator->getProcess() == process);
 
-            process->unassoc(initiator);
+            auto thread_sp = process->unassoc(initiator);
+            thread_sp.value.defuse();
 
             auto thread = threaded_call(exec, process, initiator, path, argv, envp, options);
 

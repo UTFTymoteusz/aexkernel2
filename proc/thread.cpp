@@ -33,36 +33,29 @@ namespace AEX::Proc {
     }
 
     Thread::Thread(Process* process) {
-        this->self        = this;
-        this->context     = new Context();
-        this->context_aux = new Context();
-        this->parent      = process;
-        this->status      = TS_FRESH;
+        this->self    = this;
+        this->context = new Context();
+        this->parent  = process;
+        this->status  = TS_FRESH;
 
         Mem::atomic_add(&process->thread_counter, 1);
     }
 
     Thread::~Thread() {
-        this->lock.acquire();
+        SCOPE(lock);
 
         delete context;
-        delete context_aux;
 
-        if (user_stack)
-            parent->pagemap->free((void*) user_stack, user_stack_size);
+        if (user_stack.ptr)
+            parent->pagemap->free(user_stack.ptr, user_stack.size);
 
-        if (kernel_stack)
-            Mem::kernel_pagemap->free((void*) kernel_stack, kernel_stack_size);
+        if (kernel_stack.ptr)
+            Mem::kernel_pagemap->free(kernel_stack.ptr, kernel_stack.size);
 
-        if (fault_stack)
-            Mem::kernel_pagemap->free((void*) fault_stack, fault_stack_size);
-
-        if (aux_stack)
-            Mem::kernel_pagemap->free((void*) aux_stack, aux_stack_size);
+        if (fault_stack.ptr)
+            Mem::kernel_pagemap->free(fault_stack.ptr, fault_stack.size);
 
         Mem::atomic_sub(&parent->thread_counter, 1);
-
-        this->lock.release();
     }
 
     optional<Thread*> Thread::create(pid_t ppid, void* entry, size_t stack_size,
@@ -92,7 +85,6 @@ namespace AEX::Proc {
         Mem::atomic_add(&parent->thread_counter, 1);
 
         parent->threads_lock.release();
-
         parent->assoc(thread);
 
         if (!dont_add)
@@ -119,10 +111,10 @@ namespace AEX::Proc {
     }
 
     void Thread::sleep(uint64_t ms) {
-        usleep(ms * 1000000);
+        nsleep(ms * 1000000);
     }
 
-    void Thread::usleep(uint64_t ns) {
+    void Thread::nsleep(uint64_t ns) {
         auto current = Thread::current();
 
         current->wakeup_at = Sys::Time::uptime() + (Sys::Time::time_t) ns;
@@ -130,20 +122,33 @@ namespace AEX::Proc {
 
         Thread::yield();
 
-        if (current->interrupted())
+        if (current->interrupted()) {
             printk("sleep: Interrupted [%i, 0x%p]\n", current->getProcess()->pid, current);
+            current->status = TS_RUNNABLE;
+        }
     }
 
     // TODO: Make this migrate pending signals over
-    void Thread::exit() {
+    void Thread::exit(void* retval, bool ignoreBusy) {
         // If we're running we have the lock acquired
         auto thread = Thread::current();
 
+        if (thread->m_retval_set) {
+            printkd(PTKD_PROC_TH, "proc: th0x%p: Exit %s\n", Thread::current(),
+                    ignoreBusy ? "finalized" : "attempted");
+        }
+        else {
+            printkd(PTKD_PROC_TH, "proc: th0x%p: Exit 0x%p\n", Thread::current(), retval);
+            thread->retval = retval;
+        }
+
+        thread->m_retval_set = true;
+
         AEX_ASSERT(!thread->lock.tryAcquire());
-        AEX_ASSERT(thread->m_pending_signals.count() == 0);
+        // AEX_ASSERT(thread->sigqueue.count() == 0);
         AEX_ASSERT(CPU::checkInterrupts());
 
-        if (thread->isBusy()) {
+        if (thread->isBusy() && !ignoreBusy && !thread->safe_exit) {
             thread->_abort();
             return;
         }
@@ -179,23 +184,28 @@ namespace AEX::Proc {
         return ENONE;
     }
 
-    error_t Thread::join() {
+    optional<void*> Thread::join() {
+        if (this == Thread::current()) {
+            printkd(PTKD_PROC_TH, "proc: th0x%p: Attempted to join itself\n", Thread::current());
+            return EDEADLK;
+        }
+
         SCOPE(this->lock);
 
         if (m_detached || m_joiner)
             return EINVAL;
 
-        if (this == Thread::current() || Thread::current()->m_joiner == this)
+        if (Thread::current()->m_joiner == this)
             return EDEADLK;
 
-        Thread::current()->addBusy();
+        printkd(PTKD_PROC_TH, "proc: th0x%p: Joining th0x%p\n", Thread::current(), this);
 
         // I've forgotten about joining an already-exitted thread.
         if (status == TS_DEAD) {
+            auto retval = this->retval;
             finish();
-            Thread::current()->subBusy();
 
-            return ENONE;
+            return retval;
         }
 
         auto state = Thread::current()->saveState();
@@ -208,7 +218,7 @@ namespace AEX::Proc {
         this->lock.acquire();
 
         // TODO: this needs to be improved
-        if (Thread::current()->interrupted()) {
+        if (Thread::current()->aborting()) {
             m_joiner = nullptr;
 
             if (status == TS_DEAD)
@@ -217,20 +227,25 @@ namespace AEX::Proc {
                 m_detached = true;
 
             Thread::current()->loadState(state);
-            Thread::current()->subBusy();
+            return EINTR;
+        }
 
+        if (Thread::current()->interrupted()) {
+            m_joiner = nullptr;
+
+            Thread::current()->loadState(state);
             return EINTR;
         }
 
         AEX_ASSERT(!this->m_detached);
         AEX_ASSERT(Thread::current()->status == TS_RUNNABLE);
 
+        auto retval = this->retval;
         finish();
 
         Thread::current()->loadState(state);
-        Thread::current()->subBusy();
 
-        return ENONE;
+        return retval;
     }
 
     error_t Thread::detach() {
@@ -242,7 +257,9 @@ namespace AEX::Proc {
         if (status == TS_DEAD)
             finish();
 
+        printkd(PTKD_PROC_TH, "proc: th0x%p: Detached th0x%p\n", Thread::current(), this);
         m_detached = true;
+
         return ENONE;
     }
 
@@ -260,7 +277,7 @@ namespace AEX::Proc {
         if (force)
             m_detached = true;
 
-        if (isBusy())
+        if (isBusy() && !safe_exit)
             return;
 
         if (m_joiner) {
@@ -269,12 +286,8 @@ namespace AEX::Proc {
             m_joiner->lock.release();
         }
         else if (m_detached) {
-            Thread::current()->addBusy();
-
             setStatus(TS_DEAD);
             finish();
-
-            Thread::current()->subBusy();
         }
     }
 
@@ -283,25 +296,43 @@ namespace AEX::Proc {
     }
 
     bool Thread::interrupted() {
-        return (m_aborting || (m_pending_signals.count() > 0 && !in_signal)) && m_signability;
+        return (m_aborting ||
+                (parent->m_sigqueue.countUnmasked() > 0 || m_sigqueue.countUnmasked() > 0)) &&
+               m_signability > 0;
     }
 
-    void broker_cleanup(Thread* thread) {
+    void broker_cleanup(Thread_SP* thread_sp_ptr) {
+        auto thread = *thread_sp_ptr;
+        delete thread_sp_ptr;
+
+        while (thread.refCount() > 1)
+            Thread::sleep(2);
+
         SCOPE(thread->parent->threads_lock);
-        delete thread;
+
+        delete thread.get();
+        thread.defuse();
     }
 
     void Thread::finish() {
         SCOPE(Thread::current()->criticalGuard);
         AEX_ASSERT(this->status == TS_DEAD);
 
-        parent->unassoc(this);
+        auto thread = parent->unassoc(this);
+        if (!thread)
+            thread = Thread_SP(this);
+
         remove_thread(this);
 
         if (Mem::atomic_read(&parent->thread_counter) == 1)
             parent->exit(0);
 
-        broker(broker_cleanup, this);
+        broker(broker_cleanup, new Thread_SP(thread));
+    }
+
+    void Thread::abortCheck() {
+        if (Thread::current()->m_aborting)
+            Thread::exit((void*) 0x2137, true);
     }
 
     Process* Thread::getProcess() {
@@ -312,54 +343,26 @@ namespace AEX::Proc {
     void Thread::setStatus(status_t status) {
         this->status = status;
 
-        if (status == TS_DEAD)
-            AEX_ASSERT(getBusy() <= 1);
+        // if (status == TS_DEAD)
+        //    AEX_ASSERT(!isBusy());
     }
 
-    void Thread::subBusy() {
-        uint16_t busy = Mem::atomic_sub_fetch(&m_busy, (uint16_t) 1);
-        if (busy)
-            return;
+    bool Thread::isBusy() {
+        AEX_ASSERT(Thread::current()->lock.isAcquired());
 
-        if (this == Thread::current() && aborting()) {
-            interruptible(true) {
-                Thread::exit();
-            }
-        }
-
-        addCritical();
-
-        if (m_pending_signals.count() != 0) {
-            interruptible(true) {
-                int            last = m_pending_signals.count() - 1;
-                IPC::siginfo_t info = m_pending_signals[last];
-
-                m_pending_signals.erase(last);
-
-                subCritical();
-                handleSignal(info);
-            }
-        }
-        else {
-            subCritical();
-        }
-
-        if (parent->stopped)
-            Thread::yield();
+        return (Thread::current() == this && !Sys::CPU::current()->rescheduling) ||
+               context->kernelmode();
     }
 
     void Thread::addSignability() {
-        Mem::atomic_add(&m_busy, (uint16_t) 1);
         Mem::atomic_add(&m_signability, (uint16_t) 1);
     }
 
     void Thread::subSignability() {
         Mem::atomic_sub(&m_signability, (uint16_t) 1);
-        Mem::atomic_sub(&m_busy, (uint16_t) 1);
     }
 
     void Thread::addCritical() {
-        Mem::atomic_add(&m_busy, (uint16_t) 1);
         Mem::atomic_add(&m_critical, (uint16_t) 1);
 
         // if (!CPU::current()->in_interrupt)
@@ -372,8 +375,6 @@ namespace AEX::Proc {
         //    CPU::interrupts();
 
         uint16_t res = Mem::atomic_sub_fetch(&m_critical, (uint16_t) 1);
-        Mem::atomic_sub(&m_busy, (uint16_t) 1);
-
         if (res == 0 && CPU::current()->should_yield)
             Thread::yield();
     }
@@ -381,7 +382,6 @@ namespace AEX::Proc {
     Thread::state Thread::saveState() {
         auto st = state();
 
-        st.busy        = m_busy;
         st.signability = m_signability;
         st.critical    = m_critical;
         st.status      = status;
@@ -390,7 +390,6 @@ namespace AEX::Proc {
     }
 
     void Thread::loadState(state& m_state) {
-        m_busy        = m_state.busy;
         m_signability = m_state.signability;
         m_critical    = m_state.critical;
         status        = m_state.status;
@@ -418,33 +417,29 @@ namespace AEX::Proc {
 
     void Thread::alloc_stacks(Mem::Pagemap* pagemap, size_t size, bool usermode) {
         if (usermode) {
-            user_stack      = (size_t) pagemap->alloc(size, PAGE_WRITE | PAGE_USER);
-            user_stack_size = size;
+            user_stack.ptr  = pagemap->alloc(size, PAGE_WRITE | PAGE_USER);
+            user_stack.size = size;
 
-            kernel_stack      = (size_t) Mem::kernel_pagemap->alloc(KERNEL_STACK_SIZE, PAGE_WRITE);
-            kernel_stack_size = KERNEL_STACK_SIZE;
+            kernel_stack.ptr  = Mem::kernel_pagemap->alloc(KERNEL_STACK_SIZE, PAGE_WRITE);
+            kernel_stack.size = KERNEL_STACK_SIZE;
         }
         else {
-            user_stack      = 0x0000;
-            user_stack_size = 0;
+            user_stack.ptr  = nullptr;
+            user_stack.size = 0;
 
-            kernel_stack      = (size_t) Mem::kernel_pagemap->alloc(size, PAGE_WRITE);
-            kernel_stack_size = size;
+            kernel_stack.ptr  = Mem::kernel_pagemap->alloc(size, PAGE_WRITE);
+            kernel_stack.size = size;
         }
 
-        fault_stack      = (size_t) Mem::kernel_pagemap->alloc(FAULT_STACK_SIZE, PAGE_WRITE);
-        fault_stack_size = FAULT_STACK_SIZE;
-
-        aux_stack      = (size_t) Mem::kernel_pagemap->alloc(AUX_STACK_SIZE, PAGE_WRITE);
-        aux_stack_size = AUX_STACK_SIZE;
+        fault_stack.ptr  = Mem::kernel_pagemap->alloc(FAULT_STACK_SIZE, PAGE_WRITE);
+        fault_stack.size = FAULT_STACK_SIZE;
     }
 
     void Thread::setup_context(Mem::Pagemap* pagemap, size_t size, void* entry, bool usermode) {
         if (usermode)
-            context = new Context(entry, (void*) user_stack, size, pagemap, true);
+            context = new Context(entry, user_stack.ptr, size, pagemap, true);
         else
-            context = new Context(entry, (void*) kernel_stack, size, pagemap, false, Thread::exit);
-
-        context_aux = new Context();
+            context =
+                new Context(entry, kernel_stack.ptr, size, pagemap, false, Thread::exit_implicit);
     }
 }

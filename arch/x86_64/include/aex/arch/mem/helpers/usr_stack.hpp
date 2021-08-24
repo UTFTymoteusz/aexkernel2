@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aex/optional.hpp"
 #include "aex/proc/process.hpp"
 #include "aex/proc/thread.hpp"
 #include "aex/utility.hpp"
@@ -12,8 +13,8 @@ namespace AEX::Mem {
         usr_stack(Proc::Thread* thread, size_t rsp) {
             m_thread = thread;
 
-            m_min = thread->user_stack;
-            m_max = thread->user_stack + thread->user_stack_size;
+            m_min = (size_t) thread->user_stack.ptr;
+            m_max = (size_t) thread->user_stack.ptr + thread->user_stack.size;
 
             m_rsp = rsp;
         }
@@ -62,6 +63,42 @@ namespace AEX::Mem {
         int push(T val) {
             return push_bytes_inv((uint8_t*) &val, sizeof(val));
         }
+
+        optional<uint8_t> pop_byte() {
+            uint64_t new_page = m_rsp / 4096;
+            if (new_page != m_page) {
+                m_mapped = (uint8_t*) kernel_pagemap->map(
+                    4096, m_thread->getProcess()->pagemap->paddrof((void*) (new_page * 4096)), 0);
+                m_page = new_page;
+            }
+
+            return m_mapped[m_rsp++ - new_page * 4096];
+        }
+
+        int pop_bytes(uint8_t* bytes, int len) {
+            for (int i = 0; i < len; i++) {
+                auto bong = pop_byte();
+                if (!bong)
+                    return i;
+
+                bytes[i] = bong.value;
+            }
+
+            return len;
+        }
+
+        template <typename T>
+        optional<T> pop() {
+            T val;
+            if (pop_bytes((uint8_t*) &val, sizeof(val)) != sizeof(T))
+                return {};
+
+            return val;
+        }
+
+        void move(int amnt) {
+            m_rsp -= amnt;
+        };
 
         private:
         Proc::Thread* m_thread;

@@ -1,3 +1,4 @@
+#include "aex/arch/ipc/signal.hpp"
 #include "aex/arch/sys/cpu.hpp"
 #include "aex/assert.hpp"
 #include "aex/debug.hpp"
@@ -5,6 +6,8 @@
 #include "aex/mem/mmap.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
+#include "aex/proc/thread.hpp"
+#include "aex/sec/random.hpp"
 #include "aex/utility.hpp"
 
 #include "proc/proc.hpp"
@@ -74,6 +77,7 @@ namespace AEX::Sys {
 
     bool handle_page_fault(CPU::fault_info* info, CPU* cpu, Proc::Thread* thread);
     bool handle_invalid_opcode(CPU::fault_info* info, CPU* cpu, Proc::Thread* thread);
+    bool handle_invalid_div0(CPU::fault_info* info, CPU* cpu, Proc::Thread* thread);
     void print_info(CPU::fault_info* info);
 
     inline Proc::Thread::state out(Proc::Thread* thread, CPU*& cpu);
@@ -84,8 +88,6 @@ namespace AEX::Sys {
 
         auto cpu    = CPU::current();
         auto thread = cpu->current_thread;
-
-        thread->addBusy();
 
         AEX_ASSERT_PEDANTIC(!CPU::checkInterrupts());
 
@@ -110,8 +112,6 @@ namespace AEX::Sys {
             CPU::current()->in_interrupt--;
 
             thread->faulting = false;
-            thread->subBusy();
-
             return;
         case EXC_INVALID_OPCODE:
             if (!handle_invalid_opcode(info, cpu, thread))
@@ -120,8 +120,14 @@ namespace AEX::Sys {
             CPU::current()->in_interrupt--;
 
             thread->faulting = false;
-            thread->subBusy();
+            return;
+        case EXC_DIVZERO:
+            if (!handle_invalid_div0(info, cpu, thread))
+                break;
 
+            CPU::current()->in_interrupt--;
+
+            thread->faulting = false;
             return;
         default:
             break;
@@ -145,7 +151,7 @@ namespace AEX::Sys {
             for (int i = 0; i < 4; i++) {
                 for (int j = 0; j < 32; j++)
                     if (Sys::IRQ::APIC::read(0x100 + i * 0x10) & (1 << j))
-                        printk("apparently i'm handling interrupt %i\n", i * 32 + j);
+                        printk("apparently i am handling interrupt %i\n", i * 32 + j);
             }
 
             printk("Stack trace:\n");
@@ -157,8 +163,6 @@ namespace AEX::Sys {
             CPU::current()->in_interrupt--;
 
             thread->faulting = false;
-            thread->subBusy();
-
             return;
         default:
             printk(FAIL "cpu%i: %93$%s%$ Exception (%i) (%91$%i%$)\nRIP: 0x%016lx <%s+0x%x>\n",
@@ -186,12 +190,12 @@ namespace AEX::Sys {
 
         print_info(info);
 
-        printk("USTK: 0x%p (%i, 0x%p)\n", thread->user_stack, thread->user_stack_size,
-               thread->user_stack + thread->user_stack_size);
-        printk("KSTK: 0x%p (%i, 0x%p)\n", thread->kernel_stack, thread->kernel_stack_size,
-               thread->kernel_stack + thread->kernel_stack_size);
-        printk("FSTK: 0x%p (%i, 0x%p)\n", thread->fault_stack, thread->fault_stack_size,
-               thread->fault_stack + thread->fault_stack_size);
+        printk("USTK: 0x%p (%i, 0x%p)\n", thread->user_stack.ptr, thread->user_stack.size,
+               (size_t) thread->user_stack.ptr + thread->user_stack.size);
+        printk("KSTK: 0x%p (%i, 0x%p)\n", thread->kernel_stack.ptr, thread->kernel_stack.size,
+               (size_t) thread->kernel_stack.ptr + thread->kernel_stack.size);
+        printk("FSTK: 0x%p (%i, 0x%p)\n", thread->fault_stack.ptr, thread->fault_stack.size,
+               (size_t) thread->fault_stack.ptr + thread->fault_stack.size);
 
         if (info->int_no == EXC_DEBUG) {
             Debug::stack_trace();
@@ -206,8 +210,6 @@ namespace AEX::Sys {
                 ;
 
             thread->faulting = false;
-            thread->subBusy();
-
             CPU::current()->in_interrupt--;
             return;
         }
@@ -215,7 +217,6 @@ namespace AEX::Sys {
         kpanic("Unrecoverable processor exception occured in CPU %i", CPU::currentID());
 
         thread->faulting = false;
-        thread->subBusy();
 
         CPU::current()->in_interrupt--;
     }
@@ -287,12 +288,34 @@ namespace AEX::Sys {
         return true;
     }
 
+    bool handle_invalid_div0(CPU::fault_info* info, CPU* cpu, Proc::Thread* thread) {
+        auto state = out(thread, cpu);
+
+        if (info->cs == 0x08) {
+            in(state, thread, cpu);
+            return false;
+        }
+
+        printkd(PTKD_UFAULT, "cpu%i: pid%i: Division by zero @ 0x%lx\n", cpu->id,
+                cpu->current_thread->getProcess()->pid, info->rip);
+
+        IPC::siginfo_t sinfo = {};
+
+        sinfo.si_signo = IPC::SIGFPE;
+        sinfo.si_code  = FPE_INTDIV;
+        sinfo.si_addr  = (void*) info->rip;
+
+        thread->signal(sinfo);
+
+        in(state, thread, cpu);
+        return true;
+    }
+
     inline Proc::Thread::state out(Proc::Thread* thread, CPU*& cpu) {
         auto state = thread->saveState();
 
         thread->setStatus(Proc::TS_RUNNABLE);
 
-        thread->setBusy(1);
         thread->setSignability(0);
         thread->setCritical(0);
 
@@ -346,5 +369,17 @@ namespace AEX::Sys {
         Debug::stack_trace(1);
 
         CPU::halt();
+    }
+
+    extern "C" void exc_check_signal(IPC::interrupt_registers* regs) {
+        auto process = Proc::Process::current();
+        auto thread  = Proc::Thread::current();
+
+        thread->safe_exit = true;
+        thread->signalCheck(true, regs);
+        thread->safe_exit = false;
+
+        while (process->stopped || process->exiting())
+            Proc::Thread::yield();
     }
 }

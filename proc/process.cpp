@@ -87,22 +87,28 @@ namespace AEX::Proc {
     }
 
     void Process::rename(const char* image_path_n, const char* name_n) {
+        SCOPE(lock);
+
         if (name_n == nullptr)
             FS::get_filename(name, image_path_n, sizeof(name));
         else
             strlcpy(name, name_n, sizeof(name));
 
-        image_path = Mem::Heap::realloc(image_path, strlen(image_path_n) + 1);
-        strlcpy(image_path, image_path_n, strlen(image_path_n) + 1);
+        auto old_image_path = image_path;
+        image_path          = strndup(image_path_n, FS::PATH_MAX - 1);
+
+        if (old_image_path)
+            delete old_image_path;
     }
 
     void Process::set_cwd(const char* cwd) {
         SCOPE(lock);
 
-        size_t len = min<size_t>(strlen(cwd), FS::PATH_MAX - 1);
+        auto old_cwd = m_cwd;
+        m_cwd        = strndup(cwd, FS::PATH_MAX - 1);
 
-        m_cwd = Mem::Heap::realloc(m_cwd, len + 1);
-        strlcpy(m_cwd, cwd, len + 1);
+        if (old_cwd)
+            delete old_cwd;
     }
 
     const char* Process::get_cwd() {
@@ -167,16 +173,26 @@ namespace AEX::Proc {
 
         lock.release();
 
-        if (Process::current() == this)
+        if (Process::current() == this && !Sys::CPU::current()->rescheduling)
             while (!Thread::current()->aborting())
                 Thread::yield();
     }
 
     error_t Process::kill(pid_t pid, int sig) {
+        IPC::siginfo_t info;
+
+        info.si_signo = sig;
+        info.si_uid   = Process::current()->real_uid;
+        info.si_code  = SI_USER;
+
+        return kill(pid, info);
+    }
+
+    error_t Process::kill(pid_t pid, IPC::siginfo_t info) {
         SCOPE(processes_lock);
 
         if (pid == -1) {
-            if (sig == 0)
+            if (info.si_signo == 0)
                 return ENONE;
 
             auto process = process_list_head;
@@ -187,7 +203,7 @@ namespace AEX::Proc {
                     continue;
                 }
 
-                process->kill(sig);
+                process->kill(info);
                 process = process->next;
             }
 
@@ -203,7 +219,7 @@ namespace AEX::Proc {
                     continue;
                 }
 
-                process->kill(sig);
+                process->kill(info);
                 process = process->next;
             }
 
@@ -214,10 +230,10 @@ namespace AEX::Proc {
         if (!process || equals_one(process->status, TS_FRESH, TS_DEAD))
             return ESRCH;
 
-        if (sig == 0)
+        if (info.si_signo == 0)
             return ENONE;
 
-        return process->kill(sig);
+        return process->kill(info);
     }
 
     error_t Process::kill(int sig) {
@@ -227,6 +243,10 @@ namespace AEX::Proc {
         info.si_uid   = Process::current()->real_uid;
         info.si_code  = SI_USER;
 
+        return signal(info);
+    }
+
+    error_t Process::kill(IPC::siginfo_t info) {
         return signal(info);
     }
 
@@ -304,21 +324,33 @@ namespace AEX::Proc {
         }
     }
 
-    void Process::assoc(Thread* thread) {
+    __attribute__((optimize("O2"))) void Process::assoc(Thread* thread) {
         SCOPE(threads_lock);
-        threads.push(thread);
+        thread->tid = threads.push(thread);
     }
 
-    void Process::unassoc(Thread* thread) {
+    __attribute__((optimize("O2"))) optional<Thread_SP> Process::unassoc(Thread* thread) {
         SCOPE(threads_lock);
 
         for (int i = 0; i < threads.count(); i++) {
             if (!threads.present(i) || threads[i] != thread)
                 continue;
 
+            auto thread_sp = threads[i];
             threads.erase(i);
-            break;
+
+            return thread_sp;
         }
+
+        return ESRCH;
+    }
+
+    optional<Thread_SP> Process::get(tid_t tiddie) {
+        SCOPE(threads_lock);
+        if (!threads.present(tiddie))
+            return ESRCH;
+
+        return threads[tiddie];
     }
 
     Mem::Vector<char*, 4>& Process::env() {
@@ -398,16 +430,16 @@ namespace AEX::Proc {
 
     void Process::purge_threads() {
         threads_lock.acquire();
+
         for (auto thread_try : threads) {
             if (!thread_try.has_value)
                 continue;
 
-            auto thread = thread_try.value;
-
             threads_lock.release();
-            thread->abort(true);
+            thread_try.value->abort(true);
             threads_lock.acquire();
         }
+
         threads_lock.release();
 
         while (Mem::atomic_read(&thread_counter) != 0)

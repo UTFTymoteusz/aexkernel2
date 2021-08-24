@@ -1,14 +1,22 @@
 [BITS 64]
-
 section .text
 
-global proc_timer_tick
-global proc_sched_int
-
 global proc_reshed
+global proc_reshed_nosave
+global proc_ctxsave
+global proc_ctxload
+global proc_ctxsave_int
+global proc_ctxload_int
+global safe_mxcsr
+
+global proc_timer_tick
+global proc_sched_nosave_int
 
 extern proc_timer_tick_ext
 extern proc_sched_int_ext
+
+safe_mxcsr:
+    dd 0x1f80
 
 %macro save_context 0
     push rcx
@@ -55,13 +63,15 @@ extern proc_sched_int_ext
     pop r11 ; ss
 
     mov qword rsp, [gs:0x08]
-    add rsp, 0x08 * 21
+    add rsp, 0x08 * 22
 
     push r11
     push r12
     push r13
     push r14
     push r15
+
+    sub rsp, 0x08
     push r10
 
     fxsave [rsp + 0x08 * 7]
@@ -69,22 +79,47 @@ extern proc_sched_int_ext
     mov rsp, rbx
 %endmacro
 
+%macro save_context_hw 0
+    sub rsp, 0x10
+
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push rbp
+    push r8
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
+
+    mov rax, cr3
+    mov [rsp + 0x08 * 15], qword rax
+    
+    fxsave [rsp + 0x08 * 22]
+
+    mov rsp, qword [gs:0x30]
+%endmacro
+
 enter_context:
-    mov qword rax, [gs:0x08]
+    mov qword rsp, [gs:0x08]
 
-    fxrstor [rax + 0x08 * 22]
+    fxrstor [rsp + 0x08 * 22]
 
-    mov qword rbx, [rax + 0x08 * 15] ; Thread-to-enter cr3
-    ;mov rcx, cr3                     ; Current cr3
+    mov qword rbx, [rsp + 0x08 * 15] ; Thread-to-enter cr3
+    mov rcx, cr3                     ; Current cr3
 
-    ;cmp rcx, rbx  ; Let's check if they are equal, and if they are, skip to not anger the cache.
+    ;cmp rcx, rbx 
     ;je .no_reload
 
     mov cr3, rbx
 
     .no_reload:
-    mov qword rsp, [gs:0x08]
-
     pop r15
     pop r14
     pop r13
@@ -101,8 +136,7 @@ enter_context:
     pop rbx
     pop rax
 
-    add rsp, 8
-
+    add rsp, 16
     iretq
 
 proc_timer_tick:
@@ -111,24 +145,43 @@ proc_timer_tick:
     push rbp
     mov rbp, rsp
 
+    ldmxcsr [safe_mxcsr]
     call proc_timer_tick_ext
 
     pop rbp
 
     jmp enter_context
 
-proc_sched_int:
-    save_context
-
+proc_sched_nosave_int:
     push rbp
     mov rbp, rsp
 
+    ldmxcsr [safe_mxcsr]
     call proc_sched_int_ext
 
     pop rbp
 
     jmp enter_context
 
+proc_ctxsave_int:
+    save_context
+    jmp enter_context
+
+proc_ctxload_int:
+    jmp enter_context
+
 proc_reshed:
     int 0x70
+    ret
+
+proc_reshed_nosave:
+    int 0x71
+    ret
+
+proc_ctxsave:
+    int 0x72
+    ret
+
+proc_ctxload:
+    int 0x73
     ret

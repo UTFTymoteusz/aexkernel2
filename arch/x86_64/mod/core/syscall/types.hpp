@@ -4,6 +4,10 @@
 
 #include <stdint.h>
 
+#define SIG_BLOCK 0
+#define SIG_UNBLOCK 1
+#define SIG_SETMASK 2
+
 enum perm_test_t {
     R_OK = 0x01,
     W_OK = 0x02,

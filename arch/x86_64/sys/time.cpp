@@ -48,7 +48,7 @@ namespace AEX::Sys::Time {
                 delta = ticks - acpi_pm_timer_ticks;
 
             ret = Mem::atomic_add_fetch(
-                &ns_uptime, (time_t)((delta / (double) ACPI_PM_TIMER_FREQUENCY) * 1000000000.0));
+                &ns_uptime, (time_t) ((delta / (double) ACPI_PM_TIMER_FREQUENCY) * 1000000000.0));
 
             acpi_pm_timer_ticks = ticks;
         }

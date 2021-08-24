@@ -22,6 +22,9 @@ namespace AEX::Proc {
             m_thread = thread;
         }
 
+        void acquire();
+        void release();
+
         private:
         Thread* m_thread = nullptr;
     };
@@ -45,6 +48,9 @@ namespace AEX::Proc {
             m_thread = thread;
         }
 
+        void acquire();
+        void release();
+
         private:
         Thread* m_thread = nullptr;
     };
@@ -67,6 +73,9 @@ namespace AEX::Proc {
         BusyGuard(Thread* thread) {
             m_thread = thread;
         }
+
+        void acquire();
+        void release();
 
         private:
         Thread* m_thread = nullptr;

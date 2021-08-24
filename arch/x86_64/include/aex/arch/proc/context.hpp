@@ -1,6 +1,7 @@
 #pragma once
 
-#include <aex/utility.hpp>
+#include "aex/arch/proc/fpu_context.hpp"
+#include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -14,11 +15,11 @@ namespace AEX::Proc {
         public:
         uint64_t r15, r14, r13, r12, r11, r10, r9, r8, rbp, rdi, rsi, rdx, rcx, rbx, rax;
         uint64_t cr3;
-        uint64_t rip, cs, rflags, rsp, ss;
 
         uint64_t padding;
+        uint64_t rip, cs, rflags, rsp, ss;
 
-        uint8_t fxstate[512];
+        fpu_context fxstate;
 
         Context() = default;
 
@@ -72,8 +73,12 @@ namespace AEX::Proc {
             r9  = (uint64_t) f;
         }
 
+        bool kernelmode() {
+            return !usermode();
+        }
+
         bool usermode() {
-            return cs == 0x23 && ss == 0x1B;
+            return cs == 0x23;
         }
     } PACKED;
 }
