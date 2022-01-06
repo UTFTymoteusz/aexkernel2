@@ -1,5 +1,6 @@
 #include "aex/sys/power.hpp"
 
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/mem/vector.hpp"
 #include "aex/mutex.hpp"
 #include "aex/printk.hpp"
@@ -21,10 +22,15 @@ namespace AEX::Sys::Power {
 
         printk(WARN "sys: power: Poweroff\n");
 
-        for (auto& handler : poweroff_handlers)
-            handler.func();
+        for (auto& handler : poweroff_handlers) {
+            if (handler.func() == ESHUTDOWN)
+                break;
+        }
 
-        return ENONE;
+        while (true)
+            Sys::CPU::wait();
+
+        return ESHUTDOWN;
     }
 
     void register_poweroff_handler(int order, error_t (*func)()) {

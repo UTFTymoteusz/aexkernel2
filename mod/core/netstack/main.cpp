@@ -30,8 +30,12 @@ void module_enter() {
     UDPProtocol::init();
     TCPProtocol::init();
 
-    register_inet_protocol(IPROTO_TCP, new TCPProtocol());
-    register_inet_protocol(IPROTO_UDP, new UDPProtocol());
+    auto domain = new Domain();
+
+    domain->push(SOCK_STREAM, 6, new TCPProtocol());
+    domain->push(SOCK_DGRAM, 17, new UDPProtocol());
+
+    register_domain(AF_INET, domain);
 }
 
 void module_exit() {}

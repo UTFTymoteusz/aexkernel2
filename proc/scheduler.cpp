@@ -60,10 +60,10 @@ namespace AEX::Proc {
             case TS_RUNNABLE:
                 break;
             case TS_SLEEPING:
-                Sec::feed_random(thread->wakeup_at);
-
                 if (uptime < thread->wakeup_at && !thread->interrupted())
                     continue;
+
+                Sec::feed_random(thread->wakeup_at);
 
                 thread->status = TS_RUNNABLE;
                 break;
@@ -97,22 +97,22 @@ namespace AEX::Proc {
                 continue;
 
             thread->sched_counter = counter - 1000000;
-            AEX_ASSERT_PEDANTIC(thread->sched_counter < 25000000);
 
+            cpu->previous_thread = cpu->current_thread;
             cpu->current_thread  = thread;
             cpu->current_context = thread->context;
             cpu->kernel_stack    = (size_t) thread->kernel_stack.ptr + thread->kernel_stack.size;
             cpu->syscall_table   = process->syscall_table;
 
-            if (!thread->isBusy() && thread->signalCheck(true)) {
-                if (process->stopped)
-                    continue;
+            cpu->swthread(thread);
 
-                if (!thread->isBusy() && process->exiting())
+            if (!thread->isBusy() && thread->sigchk()) {
+                if (process->stopped || (!thread->isBusy() && process->exiting())) {
+                    thread->lock.releaseRaw();
                     continue;
+                }
             }
 
-            cpu->update(thread);
             sched_lock.releaseRaw();
 
             cpu->rescheduling = false;
@@ -132,7 +132,7 @@ namespace AEX::Proc {
 
         idle->next = thread;
 
-        cpu->update(idle);
+        cpu->swthread(idle);
         sched_lock.releaseRaw();
 
         cpu->rescheduling = false;

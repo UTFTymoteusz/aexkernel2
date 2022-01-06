@@ -16,7 +16,7 @@
     })
 
 #define PTKD_FS false
-#define PTKD_EXEC false
+#define PTKD_EXEC true
 #define PTKD_UFAULT true
 #define PTKD_PROC true
 #define PTKD_PROC_TH true

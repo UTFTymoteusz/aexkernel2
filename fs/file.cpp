@@ -23,11 +23,13 @@ namespace AEX::FS {
     }
 
     optional<File_SP> File::open(const char* path, int mode) {
-        if (flagmask(mode, O_RDONLY, O_WRONLY, O_APPEND, O_CREAT, O_EXCL, O_TRUNC))
+        if (flagmask(mode, O_RDONLY, O_WRONLY, O_EXEC, O_DIRECTORY, O_CREAT, O_EXCL, O_TRUNC,
+                     O_APPEND))
             return EINVAL;
 
         auto mount_info = ENSURE_OPT(find_mount(path));
         auto inode_try  = mount_info.mount->controlblock->find(mount_info.new_path, true);
+
         if (!inode_try) {
             printkd(PTKD_FS, "fs: %s, %i: no inode (%s)\n", path, mode, strerror(inode_try.error));
             return inode_try.error;
@@ -46,20 +48,20 @@ namespace AEX::FS {
 
             inode = ENSURE_OPT(parent->creat(name, 0x0777, FT_REGULAR));
         }
-
-        if (flagset(mode, O_EXCL, O_CREAT))
+        else if (inode && flagset(mode, O_EXCL, O_CREAT)) {
             return EEXIST;
+        }
 
         if (inode->is_directory()) {
-            if (mode != O_RDONLY)
+            if (mode & O_WRONLY)
                 return EISDIR;
 
             printkd(PTKD_FS, "fs: %s: Opened directory %s\n", mount_info.mount->path, path);
             return File_SP(new INodeDirectory(inode));
         }
-
-        if (flagset(mode, O_DIRECTORY))
+        else if (!inode->is_directory() && flagset(mode, O_DIRECTORY)) {
             return ENOTDIR;
+        }
 
         if (inode->dev != -1) {
             auto device = ENSURE_R(Dev::devices.get(inode->dev), ENOENT);
@@ -79,6 +81,7 @@ namespace AEX::FS {
     optional<File_SP> File::mkdir(const char* path, int) {
         auto mount_info = ENSURE_OPT(find_mount(path));
         auto inode_try  = mount_info.mount->controlblock->find(mount_info.new_path, true);
+
         if (!inode_try) {
             printkd(PTKD_FS, "fs: %s: no inode (%s)\n", path, strerror(inode_try.error));
             return inode_try.error;
@@ -102,11 +105,10 @@ namespace AEX::FS {
     optional<file_info> File::info(const char* path, int) {
         auto mount_info = ENSURE_OPT(find_mount(path));
         auto find_try   = ENSURE_OPT(mount_info.mount->controlblock->find(mount_info.new_path));
-
-        auto parent = find_try.parent;
-        auto inode  = find_try.inode;
-        auto rscope = parent ? ReleaseScopeMutex(parent->mutex) : ReleaseScopeMutex();
-        auto finfo  = file_info();
+        auto parent     = find_try.parent;
+        auto inode      = find_try.inode;
+        auto rscope     = parent ? ReleaseScopeMutex(parent->mutex) : ReleaseScopeMutex();
+        auto finfo      = file_info();
 
         if (parent)
             AEX_ASSERT(!parent->mutex.tryAcquire());
@@ -311,11 +313,11 @@ namespace AEX::FS {
         return ENONE;
     }
 
-    int File::getFlags() {
+    int File::flags() {
         return m_flags;
     }
 
-    void File::setFlags(int flags) {
+    void File::flags(int flags) {
         m_flags = flags;
     }
 

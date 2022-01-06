@@ -45,7 +45,7 @@ namespace NetStack {
 
     error_t UDPSocket::connect(const sockaddr* addr) {
         sockaddr_inet* m_addr = (sockaddr_inet*) addr;
-        if (m_addr->domain != socket_domain_t::AF_INET)
+        if (m_addr->domain != domain_t::AF_INET)
             return EINVAL;
 
         destination_address = m_addr->addr;
@@ -59,7 +59,7 @@ namespace NetStack {
 
     error_t UDPSocket::bind(const sockaddr* addr) {
         sockaddr_inet* m_addr = (sockaddr_inet*) addr;
-        if (m_addr->domain != socket_domain_t::AF_INET)
+        if (m_addr->domain != domain_t::AF_INET)
             return EINVAL;
 
         if (!UDPProtocol::allocatePort(m_addr->port))
@@ -76,7 +76,7 @@ namespace NetStack {
         return ENONE;
     }
 
-    optional<ssize_t> UDPSocket::sendTo(const void* buffer, size_t len, int flags,
+    optional<ssize_t> UDPSocket::sendto(const void* buffer, size_t len, int flags,
                                         const sockaddr* dst_addr) {
         if (!buffer)
             return EINVAL;
@@ -125,12 +125,13 @@ namespace NetStack {
         m_udp_header->checksum = to_checksum(sum);
 
         memcpy(payload + sizeof(udp_header), buffer, len);
+        memcpy(payload + sizeof(udp_header) + len, "aexTCPaexTCP", 12);
 
-        IPv4Layer::route(packet, IPv4Layer::encaps_len(sizeof(udp_header) + len));
+        IPv4Layer::route(packet, IPv4Layer::encaps_len(sizeof(udp_header) + len + 12));
         return len;
     }
 
-    optional<ssize_t> UDPSocket::receiveFrom(void* buffer, size_t len, int flags,
+    optional<ssize_t> UDPSocket::receivefrom(void* buffer, size_t len, int flags,
                                              sockaddr* src_addr) {
         m_lock.acquire();
 
@@ -158,7 +159,7 @@ namespace NetStack {
         if (src_addr) {
             auto m_src_addr = (sockaddr_inet*) src_addr;
 
-            m_src_addr->domain = socket_domain_t::AF_INET;
+            m_src_addr->domain = domain_t::AF_INET;
             m_src_addr->addr   = dgram->source_address;
             m_src_addr->port   = dgram->source_port;
         }

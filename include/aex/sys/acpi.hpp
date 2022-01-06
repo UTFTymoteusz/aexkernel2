@@ -17,6 +17,6 @@ namespace AEX::Sys::ACPI {
 
     API extern uint8_t revision;
 
-    API bool validate_table(const void* tbl, size_t len);
+    API bool        validate_table(const void* tbl, size_t len);
     API acpi_table* find_table(const char signature[4], int index);
 }

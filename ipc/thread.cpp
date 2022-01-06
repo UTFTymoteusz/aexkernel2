@@ -1,7 +1,6 @@
 #include "aex/proc/thread.hpp"
 
 #include "aex/arch/ipc/signal.hpp"
-#include "aex/arch/mem/helpers/usr_stack.hpp"
 #include "aex/errno.hpp"
 #include "aex/ipc/signal.hpp"
 #include "aex/math.hpp"
@@ -19,6 +18,7 @@ namespace AEX::Proc {
         if (!inrange(info.si_signo, SIGHUP, SIGSYS) && info.si_signo != SIGCNCL)
             return EINVAL;
 
+        // TODO: change this over to the normal lock
         SCOPE(sigcheck_lock);
         return _signal(info);
     }
@@ -26,26 +26,27 @@ namespace AEX::Proc {
     error_t Thread::sigret() {
         AEX_ASSERT(this == Thread::current());
 
-        printkd(PTKD_IPC, "ipc: th0x%p: Sigret\n", this);
-        exitSignal();
+        printkd(PTKD_IPC, "ipc: th%p: Sigret\n", this);
+        sigexit();
 
         return ENONE;
     }
 
     error_t Thread::_signal(siginfo_t& info) {
+        // TODO: change this over to the normal lock
         AEX_ASSERT(sigcheck_lock.isAcquired());
 
-        printkd(PTKD_IPC, "ipc: th0x%p: Signal %s %s\n", this, strsignal((signal_t) info.si_signo),
+        printkd(PTKD_IPC, "ipc: th%p: Signal %s %s\n", this, strsignal((signal_t) info.si_signo),
                 this->m_sigqueue.mask.member(info.si_signo) ? "~masked~" : "");
         m_sigqueue.push(info);
 
         if (this->isSignalable() && (status == TS_BLOCKED || status == TS_SLEEPING))
-            setStatus(TS_RUNNABLE);
+            status = TS_RUNNABLE;
 
         return ENONE;
     }
 
-    error_t Thread::handleSignal(siginfo_t& info, IPC::state_combo* combo) {
+    error_t Thread::sighandle(siginfo_t& info, state_combo scmb) {
         auto process = getProcess();
         auto handler = process->sigaction(info.si_signo).value;
 
@@ -65,11 +66,18 @@ namespace AEX::Proc {
             process->stopped = false;
             break;
         case SIG_USER:
-            AEX_ASSERT(!this->isBusy() || this->safe_exit);
+            AEX_ASSERT(!this->isBusy() || scmb.finfo_regs || scmb.syscall_regs);
+
+            error_t err;
             interruptible(false) {
-                this->enterSignal(info, combo);
+                err = this->sigenter(info, scmb);
             }
 
+            if (err == EFAULT) {
+                printkd(PTKD_IPC, WARN "ipc: pid%i: Core dump (signal stack fault)\n",
+                        process->pid);
+                process->exit(SIGSEGV | 0x80);
+            }
             break;
         default:
             break;
@@ -78,43 +86,21 @@ namespace AEX::Proc {
         return ENONE;
     }
 
-    error_t Thread::enterSignal(siginfo_t& info, IPC::state_combo* combo) {
+    error_t Thread::sigenter(siginfo_t& info, state_combo scmb) {
         auto action = this->getProcess()->sigaction(info.si_signo).value;
-        pushSignalContext(info.si_signo, action, combo, info);
-
-        if (Thread::current() == this && safe_exit) {
-            safe_exit = false;
-            proc_ctxload();
-        }
-
-        return ENONE;
+        return sigpush(info.si_signo, action, info, scmb);
     }
 
-    error_t Thread::exitSignal() {
+    error_t Thread::sigexit() {
         interruptible(false) {
-            popSignalContext();
+            AEX_ASSERT(sigpop() == ENONE);
             proc_ctxload();
         }
 
-        while (true)
-            ;
+        BROKEN;
     }
 
-    bool Thread::signalCheck(bool allow_handle) {
-        return signalCheck(allow_handle, (state_combo*) nullptr);
-    }
-
-    bool Thread::signalCheck(bool allow_handle, IPC::interrupt_registers* regs) {
-        auto combo = state_combo(regs);
-        return signalCheck(allow_handle, &combo);
-    }
-
-    bool Thread::signalCheck(bool allow_handle, IPC::syscall_registers* regs) {
-        auto combo = state_combo(regs);
-        return signalCheck(allow_handle, &combo);
-    }
-
-    bool Thread::signalCheck(bool allow_handle, IPC::state_combo* combo) {
+    bool Thread::sigchk(state_combo scmb) {
         if (m_sigwait)
             return false;
 
@@ -127,21 +113,21 @@ namespace AEX::Proc {
             if (this->m_sigqueue.mask.member(info.si_signo))
                 continue;
 
-            if (!m_asyncthrdsig && (!combo || !combo->syscall_regs) && info.si_signo >= SIGCNCL)
+            if (!m_asyncthrdsig && (!scmb.valid() && scmb.syscall_regs) && info.si_signo >= SIGCNCL)
                 continue;
 
             auto action = parent->sigaction(info.si_signo).value.action;
-            if (!allow_handle && action == SIG_USER)
-                continue;
-
             this->m_sigqueue.erase(i--);
-            handleSignal(info, combo);
 
-            if (action == SIG_USER)
+            sighandle(info, scmb);
+
+            if (action == SIG_USER) {
+                sigcheck_lock.releaseRaw();
                 return true;
+            }
         }
 
-        using(parent->sigcheck_lock) {
+        if (parent->sigcheck_lock.tryAcquireRaw()) {
             for (int i = 0; i < parent->m_sigqueue.count(); i++) {
                 auto info = parent->m_sigqueue.peek(i);
                 if (parent->m_sigqueue.mask.member(info.si_signo) ||
@@ -149,35 +135,34 @@ namespace AEX::Proc {
                     continue;
 
                 auto action = parent->sigaction(info.si_signo).value.action;
-                if (!allow_handle && action == SIG_USER)
-                    continue;
-
                 parent->m_sigqueue.erase(i--);
 
-                if (action == SIG_USER)
-                    parent->sigcheck_lock.release();
+                sighandle(info, scmb);
 
-                handleSignal(info, combo);
-
-                if (action == SIG_USER)
+                if (action == SIG_USER) {
+                    parent->sigcheck_lock.releaseRaw();
+                    sigcheck_lock.releaseRaw();
                     return true;
+                }
             }
+
+            parent->sigcheck_lock.releaseRaw();
         }
 
         sigcheck_lock.releaseRaw();
         return true;
     }
 
-    void Thread::asyncThreadingSignals(bool asyncthrdsig) {
+    void Thread::sigthasync(bool asyncthrdsig) {
         m_asyncthrdsig = asyncthrdsig;
     }
 
-    IPC::sigset_t Thread::getSignalMask() {
+    IPC::sigset_t Thread::sigmask() {
         SCOPE(sigcheck_lock);
         return m_sigqueue.mask;
     }
 
-    void Thread::setSignalMask(const IPC::sigset_t& mask) {
+    void Thread::sigmask(const IPC::sigset_t& mask) {
         printkd(PTKD_IPC, "ipc: thread %i:%i mask set to: ", parent->pid, this->tid);
 
         for (int i = 0; i < 4; i++)
@@ -191,11 +176,11 @@ namespace AEX::Proc {
         m_sigqueue.recalculate();
     }
 
-    void Thread::signalWait(bool sigwait) {
+    void Thread::sigwait(bool sigwait) {
         m_sigwait = sigwait;
     }
 
-    optional<IPC::siginfo_t> Thread::signalGet(IPC::sigset_t* set) {
+    optional<IPC::siginfo_t> Thread::sigget(IPC::sigset_t* set) {
         SCOPE(this->sigcheck_lock);
 
         // TODO: Find a better locking mechanism (or perhaps use a RCU-esque solution)
@@ -213,29 +198,30 @@ namespace AEX::Proc {
             return this->m_sigqueue.erase(i);
         }
 
-        using(parent->sigcheck_lock) {
-            for (int i = 0; i < parent->m_sigqueue.count(); i++) {
-                auto info = parent->m_sigqueue.peek(i);
-                if (parent->m_sigqueue.mask.member(info.si_signo))
-                    continue;
+        parent->sigcheck_lock.acquire();
 
-                if (set && !set->member(info.si_signo))
-                    continue;
+        for (int i = 0; i < parent->m_sigqueue.count(); i++) {
+            auto info = parent->m_sigqueue.peek(i);
+            if (parent->m_sigqueue.mask.member(info.si_signo))
+                continue;
 
-                if (!m_asyncthrdsig && info.si_signo >= SIGCNCL)
-                    continue;
+            if (set && !set->member(info.si_signo))
+                continue;
 
-                parent->m_sigqueue.erase(i);
-                parent->sigcheck_lock.release();
+            if (!m_asyncthrdsig && info.si_signo >= SIGCNCL)
+                continue;
 
-                return info;
-            }
+            parent->m_sigqueue.erase(i);
+
+            parent->sigcheck_lock.release();
+            return info;
         }
 
+        parent->sigcheck_lock.release();
         return {};
     }
 
-    IPC::sigset_t Thread::getSignalPending() {
+    IPC::sigset_t Thread::sigpending() {
         SCOPE(sigcheck_lock);
         return m_sigqueue.pending();
     }

@@ -123,6 +123,8 @@ setup_early_idt:
 
 early_fault_wrapper:
     push rbp
+	mov rbp, rsp
+	
     push rax
     push rbx
     push rcx
@@ -138,6 +140,7 @@ early_fault_wrapper:
     push r14
     push r15
 	
+	sub rsp, 512
     mov rdi, rsp
 	call early_fault_handler
 	

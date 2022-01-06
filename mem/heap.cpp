@@ -113,7 +113,7 @@ namespace AEX::Mem::Heap {
 
                 Debug::dump_bytes((uint8_t*) header - 96, 128 + 80);
 
-                kpanic("heap: free(0x%p) sanity check failed (sanity was 0x%lx (0x%lx), should "
+                kpanic("heap: free(%p) sanity check failed (sanity was 0x%lx (0x%lx), should "
                        "have been %p)",
                        ptr, header->sanity, header->sanity ^ SANITY_XOR, (size_t) ptr ^ SANITY_XOR);
             }
@@ -138,7 +138,7 @@ namespace AEX::Mem::Heap {
 
                 Debug::dump_bytes((uint8_t*) header - 96, 128 + 80);
 
-                kpanic("heap: size(0x%p) sanity check failed (sanity was 0x%lx (0x%lx), should "
+                kpanic("heap: size(%p) sanity check failed (sanity was 0x%lx (0x%lx), should "
                        "have been %p)",
                        ptr, header->sanity, header->sanity ^ SANITY_XOR, (size_t) ptr ^ SANITY_XOR);
             }
@@ -323,11 +323,11 @@ namespace AEX::Mem::Heap {
         slab = rootSlab;
 
         do {
-            printk("mmm: 0x%p-0x%p\n", slab->data, (size_t) slab->data + slab->pieces * ALLOC_SIZE);
+            printk("mmm: %p-%p\n", slab->data, (size_t) slab->data + slab->pieces * ALLOC_SIZE);
             slab = slab->next;
         } while (slab != nullptr);
 
-        kpanic("heap: free(0x%p) failed", ptr);
+        kpanic("heap: free(%p) failed", ptr);
     }
 
     size_t msize(void* ptr) {

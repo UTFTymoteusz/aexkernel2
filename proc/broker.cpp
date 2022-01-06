@@ -31,8 +31,7 @@ namespace AEX::Proc {
             int  delta = 0;
             auto name  = Debug::addr2name((void*) broker_current.func, delta) ?: "unknown";
 
-            printk("broker: Currently executing 0x%p <%s+0x%x>\n", broker_current.func, name,
-                   delta);
+            printk("broker: Currently executing %p <%s+0x%x>\n", broker_current.func, name, delta);
         });
     }
 

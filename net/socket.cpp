@@ -1,5 +1,6 @@
 #include "aex/net.hpp"
-#include "aex/net/inetprotocol.hpp"
+#include "aex/net/domain.hpp"
+#include "aex/net/protocol.hpp"
 #include "aex/printk.hpp"
 
 namespace AEX::Net {
@@ -7,16 +8,11 @@ namespace AEX::Net {
         printk("socket is gone\n");
     }
 
-    optional<Socket_SP> Socket::create(socket_domain_t domain, socket_type_t type,
-                                       iproto_t protocol) {
-        switch (domain) {
-        case socket_domain_t::AF_INET:
-            return ENSURE_OPT(inet_protocols[(uint8_t) protocol]->createSocket(type));
-        case socket_domain_t::AF_UNIX:
-            return EINVAL;
-        default:
-            return EINVAL;
-        }
+    optional<Socket_SP> Socket::create(domain_t domain, socket_type_t type, int proto) {
+        if (!domains[(uint8_t) domain])
+            return EAFNOSUPPORT;
+
+        return domains[(uint8_t) domain]->create(type, proto);
     }
 
     error_t Socket::connect(const sockaddr*) {
@@ -26,7 +22,7 @@ namespace AEX::Net {
     error_t Socket::connect(ipv4_addr addr, uint16_t port) {
         sockaddr_inet aaa = {};
 
-        aaa.domain = socket_domain_t::AF_INET;
+        aaa.domain = domain_t::AF_INET;
         aaa.addr   = addr;
         aaa.port   = port;
 
@@ -40,7 +36,7 @@ namespace AEX::Net {
     error_t Socket::bind(ipv4_addr addr, uint16_t port) {
         sockaddr_inet aaa = {};
 
-        aaa.domain = socket_domain_t::AF_INET;
+        aaa.domain = domain_t::AF_INET;
         aaa.addr   = addr;
         aaa.port   = port;
 
@@ -55,20 +51,20 @@ namespace AEX::Net {
         return ENOSYS;
     }
 
-    optional<ssize_t> Socket::sendTo(const void*, size_t, int, const sockaddr*) {
+    optional<ssize_t> Socket::sendto(const void*, size_t, int, const sockaddr*) {
         return ENOSYS;
     }
 
-    optional<ssize_t> Socket::receiveFrom(void*, size_t, int, sockaddr*) {
+    optional<ssize_t> Socket::receivefrom(void*, size_t, int, sockaddr*) {
         return ENOSYS;
     }
 
     optional<ssize_t> Socket::send(const void* buffer, size_t len, int flags) {
-        return sendTo(buffer, len, flags, nullptr);
+        return sendto(buffer, len, flags, nullptr);
     }
 
     optional<ssize_t> Socket::receive(void* buffer, size_t len, int flags) {
-        return receiveFrom(buffer, len, flags, nullptr);
+        return receivefrom(buffer, len, flags, nullptr);
     }
 
     error_t Socket::shutdown(int) {

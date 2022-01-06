@@ -1,5 +1,6 @@
 #include "aex/errno.hpp"
 #include "aex/fs/file.hpp"
+#include "aex/mem/usr.hpp"
 #include "aex/proc/process.hpp"
 #include "aex/sys/syscall.hpp"
 #include "aex/types.hpp"
@@ -10,6 +11,7 @@
 #include "usr.hpp"
 
 using namespace AEX;
+using namespace AEX::Mem;
 using namespace AEX::Proc;
 
 optional<FS::Descriptor> get_desc(int fd);
@@ -21,7 +23,7 @@ optional<int>            get_flags(int fd);
 
 bool copy_and_canonize(char* buffer, const usr_char* usr_path);
 
-long open(const usr_char* usr_path, int flags) {
+long sys_open(const usr_char* usr_path, int flags) {
     auto current = Proc::Process::current();
     char path_buffer[FS::PATH_MAX];
 
@@ -30,13 +32,13 @@ long open(const usr_char* usr_path, int flags) {
     auto file = USR_ENSURE_OPT(FS::File::open(path_buffer, flags));
 
     current->descs_mutex.acquire();
-    long fd = current->descs.push(file);
+    long fd = current->descs.push({file, flags & FS::O_CLOEXEC ? FS::FD_CLOEXEC : 0});
     current->descs_mutex.release();
 
     return fd;
 }
 
-ssize_t read(int fd, usr_void* usr_buf, size_t count) {
+ssize_t sys_read(int fd, usr_void* usr_buf, size_t count) {
     SCOPE(Thread::current()->signabilityGuard);
 
     auto file      = USR_ENSURE_OPT(get_file(fd));
@@ -63,7 +65,7 @@ ssize_t read(int fd, usr_void* usr_buf, size_t count) {
     return read;
 }
 
-ssize_t write(int fd, const usr_void* usr_buf, size_t count) {
+ssize_t sys_write(int fd, const usr_void* usr_buf, size_t count) {
     SCOPE(Thread::current()->signabilityGuard);
 
     auto file      = USR_ENSURE_OPT(get_file(fd));
@@ -90,16 +92,16 @@ ssize_t write(int fd, const usr_void* usr_buf, size_t count) {
     return written;
 }
 
-int close(int fd) {
+int sys_close(int fd) {
     USR_ENSURE_OPT(pop_file(fd));
     return 0;
 }
 
-int ioctl(int fd, int rq, uint64_t val) {
+int sys_ioctl(int fd, int rq, uint64_t val) {
     return USR_ENSURE_OPT(USR_ENSURE_OPT(get_file(fd))->ioctl(rq, val));
 }
 
-int dup(int fd) {
+int sys_dup(int fd) {
     auto current = Proc::Process::current();
     auto desc    = USR_ENSURE_OPT(get_desc(fd));
 
@@ -110,7 +112,7 @@ int dup(int fd) {
     return fd2;
 }
 
-int dup2(int srcfd, int dstfd) {
+int sys_dup2(int srcfd, int dstfd) {
     auto current = Proc::Process::current();
     auto desc    = USR_ENSURE_OPT(get_desc(srcfd));
 
@@ -121,7 +123,7 @@ int dup2(int srcfd, int dstfd) {
     return dstfd;
 }
 
-int dupP(int fd) {
+int sys_dupP(int fd) {
     auto current = Proc::Process::current();
     auto desc    = USR_ENSURE_OPT(get_desc(fd));
 
@@ -133,10 +135,10 @@ int dupP(int fd) {
 }
 
 // this needs path verification
-int chdir(const usr_char* path) {
+int sys_chdir(const usr_char* path) {
     char path_buffer[FS::PATH_MAX];
 
-    size_t strlen = USR_ENSURE_OPT(usr_strlen(path));
+    size_t strlen = USR_ENSURE_OPT(u_strlen(path));
     size_t len    = min(strlen, sizeof(path_buffer) - 1);
 
     USR_ENSURE_OPT(u2k_memcpy(path_buffer, path, len));
@@ -146,7 +148,7 @@ int chdir(const usr_char* path) {
     return 0;
 }
 
-char* getcwd(char* buffer, size_t buffer_len) {
+char* sys_getcwd(char* buffer, size_t buffer_len) {
     const char* cwd = Proc::Process::current()->get_cwd();
     size_t      len = strlen(cwd);
 
@@ -159,7 +161,7 @@ char* getcwd(char* buffer, size_t buffer_len) {
     return buffer;
 }
 
-int statat(const usr_char* usr_path, stat* usr_statbuf, int flags) {
+int sys_statat(const usr_char* usr_path, stat* usr_statbuf, int flags) {
     char path_buffer[FS::PATH_MAX];
     USR_ENSURE(copy_and_canonize(path_buffer, usr_path));
 
@@ -180,11 +182,11 @@ int statat(const usr_char* usr_path, stat* usr_statbuf, int flags) {
     ker_statbuf.st_blksize = info.value.block_size;
     ker_statbuf.st_blocks  = info.value.blocks;
 
-    USR_ENSURE_OPT(u2k_memcpy(usr_statbuf, &ker_statbuf, sizeof(ker_statbuf)));
+    USR_ENSURE_OPT(k2u_memcpy(usr_statbuf, &ker_statbuf, sizeof(ker_statbuf)));
     return 0;
 }
 
-int fstat(int fd, stat* usr_statbuf) {
+int sys_fstat(int fd, stat* usr_statbuf) {
     auto file = USR_ENSURE_OPT(get_file(fd));
     auto info = USR_ENSURE_OPT(file->finfo());
 
@@ -204,11 +206,11 @@ int fstat(int fd, stat* usr_statbuf) {
     ker_statbuf.st_blksize = info.block_size;
     ker_statbuf.st_blocks  = info.blocks;
 
-    USR_ENSURE_OPT(u2k_memcpy(usr_statbuf, &ker_statbuf, sizeof(ker_statbuf)));
+    USR_ENSURE_OPT(k2u_memcpy(usr_statbuf, &ker_statbuf, sizeof(ker_statbuf)));
     return 0;
 }
 
-int access(const usr_char* usr_path, int mode) {
+int sys_access(const usr_char* usr_path, int mode) {
     char path_buffer[FS::PATH_MAX];
 
     USR_ENSURE(copy_and_canonize(path_buffer, usr_path));
@@ -219,7 +221,7 @@ int access(const usr_char* usr_path, int mode) {
     return 0;
 }
 
-bool isatty(int fd) {
+bool sys_isatty(int fd) {
     auto fd_try = get_file(fd);
     if (!fd_try) {
         USR_ERRNO = fd_try.error;
@@ -232,9 +234,9 @@ bool isatty(int fd) {
     return tty;
 }
 
-void* mmap(void* addr, size_t length, int prot, int flags, int fd, FS::off_t offset) {
-    printkd(PTKD_MMAP, "pid%i: mmap(0x%p, %i, %i, %i, %i, %i)\n", Proc::Process::current()->pid,
-            addr, length, prot, flags, fd, offset);
+void* sys_mmap(void* addr, size_t length, int prot, int flags, int fd, FS::off_t offset) {
+    printkd(PTKD_MMAP, "pid%i: mmap(%p, %i, %i, %i, %i, %i)", Proc::Process::current()->pid, addr,
+            length, prot, flags, fd, offset);
 
     auto fd_try = get_file(fd);
     if (!fd_try && !(flags & Mem::MAP_ANONYMOUS)) {
@@ -249,10 +251,12 @@ void* mmap(void* addr, size_t length, int prot, int flags, int fd, FS::off_t off
         return nullptr;
     }
 
+    printkd(PTKD_MMAP, " = %p\n", mmap_try.value);
+
     return mmap_try.value;
 }
 
-int munmap(void* addr, size_t len) {
+int sys_munmap(void* addr, size_t len) {
     auto result = Mem::munmap(Proc::Process::current(), addr, len);
     if (result != ENONE) {
         USR_ERRNO = result;
@@ -262,7 +266,7 @@ int munmap(void* addr, size_t len) {
     return 0;
 }
 
-long mkdir(const usr_char* usr_path, int flags) {
+long sys_mkdir(const usr_char* usr_path, int flags) {
     auto current = Proc::Process::current();
     char path_buffer[FS::PATH_MAX];
 
@@ -277,7 +281,7 @@ long mkdir(const usr_char* usr_path, int flags) {
     return fd;
 }
 
-long readdir(int fd, dirent* uent) {
+long sys_readdir(int fd, dirent* uent) {
     auto   file   = USR_ENSURE_OPT(get_file(fd));
     auto   dentry = USR_ENSURE_OPT(file->readdir());
     dirent kent;
@@ -289,14 +293,14 @@ long readdir(int fd, dirent* uent) {
     return 0;
 }
 
-FS::off_t seek(int fd, long pos, int mode) {
+FS::off_t sys_seek(int fd, long pos, int mode) {
     auto file = USR_ENSURE_OPT(get_file(fd));
 
     USR_ENSURE(inrange(mode, FS::File::SEEK_SET, FS::File::SEEK_END));
     return USR_ENSURE_OPT(file->seek(pos, (FS::File::seek_mode) mode));
 }
 
-void seekdir(int fd, long pos) {
+void sys_seekdir(int fd, long pos) {
     auto fd_try = get_file(fd);
     if (!fd_try) {
         USR_ERRNO = fd_try.error;
@@ -306,19 +310,19 @@ void seekdir(int fd, long pos) {
     USR_ERRNO = fd_try.value->seekdir(pos);
 }
 
-long telldir(int fd) {
+long sys_telldir(int fd) {
     auto file = USR_ENSURE_OPT(get_file(fd));
     return file->telldir();
 }
 
-int fcntl(int fd, int cmd, int val) {
+int sys_fcntl(int fd, int cmd, int val) {
     auto file = USR_ENSURE_OPT(get_file(fd));
 
     switch (cmd) {
     case F_DUPFD:
-        return dup(fd);
+        return sys_dup(fd);
     case F_DUPFD_CLOEXEC:
-        return dupP(fd);
+        return sys_dupP(fd);
     case F_GETFD:
         return USR_ENSURE_OPT(get_flags(fd));
     case F_SETFD:
@@ -330,8 +334,8 @@ int fcntl(int fd, int cmd, int val) {
     }
 }
 
-long mount(const usr_char* source, const usr_char* target, const usr_char* type, unsigned long,
-           const usr_void*) {
+long sys_mount(const usr_char* source, const usr_char* target, const usr_char* type, unsigned long,
+               const usr_void*) {
     char source_buffer[FS::PATH_MAX];
     char target_buffer[FS::PATH_MAX];
     char type_buffer[32];
@@ -340,7 +344,7 @@ long mount(const usr_char* source, const usr_char* target, const usr_char* type,
     USR_ENSURE(copy_and_canonize(target_buffer, target));
 
     if (type) {
-        size_t strlen = USR_ENSURE_OPT(usr_strlen(type));
+        size_t strlen = USR_ENSURE_OPT(u_strlen(type));
         if (strlen > 31) {
             USR_ERRNO = EINVAL;
             return -1;
@@ -354,7 +358,7 @@ long mount(const usr_char* source, const usr_char* target, const usr_char* type,
     return USR_ENSURE_ENONE(FS::mount(source_buffer, target_buffer, type ? type_buffer : nullptr));
 }
 
-int unlink(const usr_char* usr_path, int flags) {
+int sys_unlink(const usr_char* usr_path, int flags) {
     auto current = Proc::Process::current();
     char path_buffer[FS::PATH_MAX];
 
@@ -362,7 +366,7 @@ int unlink(const usr_char* usr_path, int flags) {
     return USR_ENSURE_ENONE(FS::File::unlink(path_buffer));
 }
 
-int rename(const usr_char* from, const usr_char* to) {
+int sys_rename(const usr_char* from, const usr_char* to) {
     char from_buffer[FS::PATH_MAX];
     char to_buffer[FS::PATH_MAX];
 
@@ -372,30 +376,30 @@ int rename(const usr_char* from, const usr_char* to) {
     return USR_ENSURE_ENONE(FS::File::rename(from_buffer, to_buffer));
 }
 
-void register_fs(Sys::syscall_t* table) {
-    table[SYS_OPEN]    = (void*) open;
-    table[SYS_READ]    = (void*) read;
-    table[SYS_WRITE]   = (void*) write;
-    table[SYS_CLOSE]   = (void*) close;
-    table[SYS_SEEK]    = (void*) seek;
-    table[SYS_IOCTL]   = (void*) ioctl;
-    table[SYS_FSTAT]   = (void*) fstat;
-    table[SYS_ISATTY]  = (void*) isatty;
-    table[SYS_DUP]     = (void*) dup;
-    table[SYS_DUP2]    = (void*) dup2;
-    table[SYS_CHDIR]   = (void*) chdir;
-    table[SYS_GETCWD]  = (void*) getcwd;
-    table[SYS_ACCESS]  = (void*) access;
-    table[SYS_STATAT]  = (void*) statat;
-    table[SYS_MMAP]    = (void*) mmap;
-    table[SYS_MUNMAP]  = (void*) munmap;
-    table[SYS_MKDIR]   = (void*) mkdir;
-    table[SYS_READDIR] = (void*) readdir;
-    table[SYS_SEEKDIR] = (void*) seekdir;
-    table[SYS_FCNTL]   = (void*) fcntl;
-    table[SYS_MOUNT]   = (void*) mount;
-    table[SYS_UNLINK]  = (void*) unlink;
-    table[SYS_RENAME]  = (void*) rename;
+O2 void register_fs(Sys::syscall_t* table) {
+    table[SYS_OPEN]    = (void*) sys_open;
+    table[SYS_READ]    = (void*) sys_read;
+    table[SYS_WRITE]   = (void*) sys_write;
+    table[SYS_CLOSE]   = (void*) sys_close;
+    table[SYS_SEEK]    = (void*) sys_seek;
+    table[SYS_IOCTL]   = (void*) sys_ioctl;
+    table[SYS_FSTAT]   = (void*) sys_fstat;
+    table[SYS_ISATTY]  = (void*) sys_isatty;
+    table[SYS_DUP]     = (void*) sys_dup;
+    table[SYS_DUP2]    = (void*) sys_dup2;
+    table[SYS_CHDIR]   = (void*) sys_chdir;
+    table[SYS_GETCWD]  = (void*) sys_getcwd;
+    table[SYS_ACCESS]  = (void*) sys_access;
+    table[SYS_STATAT]  = (void*) sys_statat;
+    table[SYS_MMAP]    = (void*) sys_mmap;
+    table[SYS_MUNMAP]  = (void*) sys_munmap;
+    table[SYS_MKDIR]   = (void*) sys_mkdir;
+    table[SYS_READDIR] = (void*) sys_readdir;
+    table[SYS_SEEKDIR] = (void*) sys_seekdir;
+    table[SYS_FCNTL]   = (void*) sys_fcntl;
+    table[SYS_MOUNT]   = (void*) sys_mount;
+    table[SYS_UNLINK]  = (void*) sys_unlink;
+    table[SYS_RENAME]  = (void*) sys_rename;
 }
 
 optional<FS::Descriptor> get_desc(int fd) {

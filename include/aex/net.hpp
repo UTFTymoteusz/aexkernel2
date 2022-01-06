@@ -1,7 +1,9 @@
 #pragma once
 
 #include "aex/errno.hpp"
+#include "aex/net/domain.hpp"
 #include "aex/net/ipv4.hpp"
+#include "aex/net/protocol.hpp"
 #include "aex/net/socket.hpp"
 #include "aex/optional.hpp"
 #include "aex/utility.hpp"
@@ -22,17 +24,16 @@ namespace AEX::Net {
         NET_RAW  = 0xFFFF,
     };
 
-    class INetProtocol;
-
-    extern API INetProtocol** inet_protocols;
+    class Domain;
+    extern API Domain** domains;
 
     /**
-     * Registers an inet protocol in the network subsystem.
-     * @param id Protocol ID.
-     * @param protocol Pointer to the protocol class.
+     * Registers a domain in the network subsystem.
+     * @param id Domain ID.
+     * @param protocol Pointer to the domain class.
      * @returns Preferably ENONE, an error otherwise.
      **/
-    API error_t register_inet_protocol(iproto_t id, INetProtocol* protocol);
+    API error_t register_domain(domain_t af, Domain* protocol);
 
     API optional<char*> get_hostname(char* buffer, size_t len);
     API void            set_hostname(const char* hostname);

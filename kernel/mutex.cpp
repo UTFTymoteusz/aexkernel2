@@ -22,16 +22,15 @@ namespace AEX {
 
                 Debug::stack_trace(0, (Debug::stack_frame*) ((Thread*) m_thread)->context->rsp);
 
-                kpanic("mutex 0x%p <%s+0x%x> hung (val: %i (held by thread 0x%p), cpu: %i)", this,
-                       name, delta, m_lock, m_thread, Sys::CPU::currentID());
+                kpanic("mutex %p <%s+0x%x> hung (val: %i (held by thread %p), cpu: %i)", this, name,
+                       delta, m_lock, m_thread, Sys::CPU::currentID());
             }
 
             if (Thread::current()->isCritical() && count == 1) {
                 int  delta = 0;
                 auto name  = Debug::addr2name((void*) this, delta) ?: "no idea";
 
-                printk(WARN "Attempt to acquire 0x%p <%s+0x%x> while critical\n", this, name,
-                       delta);
+                printk(WARN "Attempt to acquire %p <%s+0x%x> while critical\n", this, name, delta);
 
                 Debug::stack_trace(0, (Debug::stack_frame*) ((Thread*) m_thread)->context->rsp);
             }

@@ -47,10 +47,7 @@ namespace NetStack {
         }
     }
 
-    optional<Socket_SP> TCPProtocol::createSocket(socket_type_t type) {
-        if (type != socket_type_t::SOCK_STREAM)
-            return ESOCKTNOSUPPORT;
-
+    optional<Socket_SP> TCPProtocol::create() {
         auto socket = new TCPSocket();
         if (!socket)
             return ENOMEM;

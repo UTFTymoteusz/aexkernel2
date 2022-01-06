@@ -1,4 +1,5 @@
 #include "aex/errno.hpp"
+#include "aex/mem/usr.hpp"
 #include "aex/proc/exec.hpp"
 #include "aex/proc/process.hpp"
 #include "aex/proc/thread.hpp"
@@ -8,16 +9,17 @@
 #include "usr.hpp"
 
 using namespace AEX;
+using namespace AEX::Mem;
 using namespace AEX::Proc;
 
 void register_proc_thread(Sys::syscall_t* table);
 
-void exit(int status) {
+void sys_exit(int status) {
     Process::current()->exit(status);
     USR_ERRNO = ENONE;
 }
 
-pid_t fork() {
+pid_t sys_fork() {
     auto parent = Process::current();
     auto child =
         new Process(parent->image_path, parent->pid, parent->pagemap->fork(), parent->name);
@@ -102,7 +104,7 @@ optional<int> usr_get_tblc(usr_char* const argv[]) {
     int argc = 0;
 
     for (int i = 0; i < 32; i++) {
-        auto read_try = usr_read<usr_char*>(&argv[i]);
+        auto read_try = u_read<usr_char*>(&argv[i]);
         USR_ENSURE(read_try);
 
         if (read_try.value == nullptr)
@@ -118,7 +120,7 @@ bool usr_get_tbl(usr_char* const argv[], int argc, tmp_array<char>* argv_buff) {
     size_t arg_len = 0;
 
     for (int i = 0; i < argc; i++) {
-        auto strlen_try = usr_strlen(argv[i]);
+        auto strlen_try = u_strlen(argv[i]);
         if (!strlen_try)
             return false;
 
@@ -141,7 +143,7 @@ void usr_finalize_tbl(tmp_array<char>* argv_buff, int argc, char** table) {
     table[argc] = nullptr;
 }
 
-int execve(const usr_char* path, usr_char* const usr_argv[], usr_char* const usr_envp[]) {
+int sys_execve(const usr_char* path, usr_char* const usr_argv[], usr_char* const usr_envp[]) {
     char path_buffer[FS::PATH_MAX];
     USR_ENSURE(copy_and_canonize(path_buffer, path));
 
@@ -177,20 +179,25 @@ int execve(const usr_char* path, usr_char* const usr_argv[], usr_char* const usr
     return USR_ERRNO != ENONE ? -1 : 0;
 }
 
-pid_t wait(usr_int* wstatus) {
+pid_t sys_wait(usr_int* wstatus) {
     SCOPE(Thread::current()->signabilityGuard);
-    return USR_ENSURE_OPT(Process::current()->wait(*wstatus));
+
+    int   status;
+    pid_t pid = USR_ENSURE_OPT(Process::current()->wait(status));
+
+    USR_ENSURE_OPT(u_write(wstatus, status));
+    return pid;
 }
 
-pid_t getpid() {
+pid_t sys_getpid() {
     return Process::current()->pid;
 }
 
-tid_t gettid() {
+tid_t sys_gettid() {
     return Thread::current()->tid;
 }
 
-int nice(int nice) {
+int sys_nice(int nice) {
     auto current = Process::current();
 
     if (nice < 0 && current->eff_uid != 0) {
@@ -208,7 +215,7 @@ int nice(int nice) {
     return nice;
 }
 
-int getenv(int index, usr_char* buffer, size_t len) {
+int sys_getenv(int index, usr_char* buffer, size_t len) {
     auto current = Process::current();
     auto scope   = current->lock.scope();
 
@@ -220,7 +227,7 @@ int getenv(int index, usr_char* buffer, size_t len) {
     return 0;
 }
 
-pid_t setsid() {
+pid_t sys_setsid() {
     auto current = Process::current();
     if (current->isGroupLeader()) {
         USR_ERRNO = EPERM;
@@ -234,16 +241,16 @@ pid_t setsid() {
     return current->pid;
 }
 
-__attribute__((optimize("O2"))) void register_proc(Sys::syscall_t* table) {
-    table[SYS_EXIT]   = (void*) exit;
-    table[SYS_FORK]   = (void*) fork;
-    table[SYS_EXECVE] = (void*) execve;
-    table[SYS_WAIT]   = (void*) wait;
-    table[SYS_GETPID] = (void*) getpid;
-    table[SYS_GETTID] = (void*) gettid;
-    table[SYS_NICE]   = (void*) nice;
-    table[SYS_GETENV] = (void*) getenv;
-    table[SYS_SETSID] = (void*) setsid;
+O2 void register_proc(Sys::syscall_t* table) {
+    table[SYS_EXIT]   = (void*) sys_exit;
+    table[SYS_FORK]   = (void*) sys_fork;
+    table[SYS_EXECVE] = (void*) sys_execve;
+    table[SYS_WAIT]   = (void*) sys_wait;
+    table[SYS_GETPID] = (void*) sys_getpid;
+    table[SYS_GETTID] = (void*) sys_gettid;
+    table[SYS_NICE]   = (void*) sys_nice;
+    table[SYS_GETENV] = (void*) sys_getenv;
+    table[SYS_SETSID] = (void*) sys_setsid;
 
     register_proc_thread(table);
 }

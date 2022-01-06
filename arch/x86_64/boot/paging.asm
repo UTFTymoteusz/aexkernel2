@@ -6,7 +6,7 @@ SECTION .bootstrap
 global paging_init
 global pml4
 
-PAGE_FLAGS equ 0x003
+PAGE_FLAGS equ 0x103
 
 paging_init:
     mov ecx, pml4

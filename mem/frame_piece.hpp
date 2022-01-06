@@ -44,7 +44,6 @@ namespace AEX::Mem::Phys {
                     m_bitmap[ii] |= 1 << ib++;
 
                 amount -= bit_count;
-                frames_free -= bit_count;
 
                 ii++;
             }
@@ -74,7 +73,6 @@ namespace AEX::Mem::Phys {
                 m_bitmap[ii++] &= ~tmp;
 
                 amount -= bit_count;
-                frames_free -= bit_count;
             }
 
             for (size_t i = 0; i < amount / 32; i++)

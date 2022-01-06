@@ -340,7 +340,8 @@ namespace AEX::Mem {
                 virt += Sys::CPU::PAGE_SIZE;
             }
 
-        recache(start, bytes + Sys::CPU::PAGE_SIZE * !!offset);
+        if (!Proc::ready || Sys::CPU::checkInterrupts())
+            recache(start, bytes + Sys::CPU::PAGE_SIZE * !!offset);
 
         m_lock.release();
         free_pptr(pptr);
@@ -363,7 +364,9 @@ namespace AEX::Mem {
                 Mem::Phys::free(free_buff[i], Sys::CPU::PAGE_SIZE);
 
             free_ptr = 0;
-            recache((virt_t) addr, bytes);
+
+            if (!Proc::ready || Sys::CPU::checkInterrupts())
+                recache((virt_t) addr, bytes);
         };
 
         for (size_t i = 0; i < amount; i++) {
@@ -487,7 +490,7 @@ namespace AEX::Mem {
 
             for (size_t i = 0; i < 512; i++) {
                 if (srctbl[i])
-                    printk("0x%p >> 0x%p\n", virt, srctbl[i]);
+                    printk("%p >> %p\n", virt, srctbl[i]);
 
                 virt += Sys::CPU::PAGE_SIZE;
             }

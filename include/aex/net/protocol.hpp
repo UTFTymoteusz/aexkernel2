@@ -4,8 +4,8 @@
 #include "aex/utility.hpp"
 
 namespace AEX::Net {
-    class API INetProtocol {
+    class API Protocol {
         public:
-        virtual optional<Socket_SP> createSocket(socket_type_t type);
+        virtual optional<Socket_SP> create();
     };
 }

@@ -77,13 +77,13 @@ namespace AEX::Sys {
 
             AEX_ASSERT(Sys::CPU::current()->id != this->id);
 
-            if (counter == 100000000l * 4) {
-                IRQ::APIC::nmi(apic_id);
-            }
+            // if (counter == 100000000l * 4) {
+            //     IRQ::APIC::nmi(apic_id);
+            // }
 
-            if (counter == 100000000l * 8) {
+            if (counter == 100000000l * 2) {
                 m_ipi_lock.release();
-                kpanic("ipi to cpu%i from cpu%i stuck (%i, 0x%p)", this->id, CPU::currentID(), type,
+                kpanic("ipi to cpu%i from cpu%i stuck (%i, %p)", this->id, CPU::currentID(), type,
                        data);
             }
         }

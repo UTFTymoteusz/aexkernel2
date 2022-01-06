@@ -80,6 +80,7 @@ namespace AEX {
         [ESOCKTNOSUPPORT] = "Socket type not supported",
         [ESRCH]           = "No such process",
         [ETIMEDOUT]       = "Connection timed out",
+        [EAFNOSUPPORT]    = "Address family not supported",
     };
 
     const char* strerror(error_t code) {

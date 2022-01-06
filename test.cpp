@@ -164,8 +164,10 @@ void test_udp_client() {
 
 void apple() {
     auto sock_try = Net::Socket::create(Net::AF_INET, Net::SOCK_STREAM, Net::IPROTO_TCP);
-    auto sock     = sock_try.value;
+    if (!sock_try)
+        kpanic("sock: %s", strerror(sock_try.error));
 
+    auto sock  = sock_try.value;
     auto error = sock->connect(Net::ipv4_addr(192, 168, 0, 11), 8193);
     if (error)
         BROKEN;

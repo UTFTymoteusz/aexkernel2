@@ -25,6 +25,13 @@
         ret;                                                          \
     }))
 
+#define PREVIOUS_THREAD                                               \
+    ((AEX::Proc::Thread*) ({                                          \
+        size_t ret = 0;                                               \
+        asm volatile("mov %0, qword [gs:-0x08 + 0x18];" : "=r"(ret)); \
+        ret;                                                          \
+    }))
+
 constexpr auto MSR_FSBase       = 0xC0000100;
 constexpr auto MSR_GSBase       = 0xC0000101;
 constexpr auto MSR_KernelGSBase = 0xC0000102;
@@ -82,11 +89,13 @@ namespace AEX::Sys {
         asm volatile("mov eax, %0; ltr ax;" : : "r"(0x28 + id * 0x10));
         asm volatile("mov rax, cr3; mov cr3, rax;");
 
+        // reshed_fault_stack_start = (size_t) Mem::kernel_pagemap->alloc(4096);
         in_interrupt = 1;
     }
 
     void CPU::halt() {
         printk(WARN "cpu%i: Halted\n", CPU::currentID());
+        Debug::stack_trace();
 
         CPU::current()->halted = true;
 
@@ -199,7 +208,13 @@ namespace AEX::Sys {
         return CURRENT_THREAD;
     }
 
+    Proc::Thread* CPU::previousThread() {
+        return PREVIOUS_THREAD;
+    }
+
     void CPU::tripleFault() {
+        printk("cpu%i: Triple fault!\n", currentID());
+
         nointerrupts();
         load_idt(nullptr, 0);
 
@@ -246,11 +261,16 @@ namespace AEX::Sys {
         asm volatile("mov dr7, %0" : : "r"(dr7));
     }
 
-    void CPU::update(Proc::Thread* thread) {
+    void CPU::swthread(Proc::Thread* thread) {
+        asm volatile("mov %0, cr3;" : : "r"(thread->context->cr3));
+
         // 3 weeks of rest because of the goddamned + thread->fault_stack_size
         local_tss->ist1 = (size_t) thread->fault_stack.ptr + thread->fault_stack.size;
         local_tss->ist4 = (size_t) thread->context + 22 * 8;
         local_tss->ist7 = (size_t) thread->kernel_stack.ptr + thread->kernel_stack.size;
+
+        if (thread->faulting)
+            local_tss->ist1 -= 8192;
 
         wrmsr(MSR_FSBase, (size_t) thread->tls);
 

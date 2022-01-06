@@ -3,13 +3,12 @@
 #include "aex/assert.hpp"
 #include "aex/fs.hpp"
 #include "aex/math.hpp"
-#include "aex/net/inetprotocol.hpp"
+#include "aex/net/domain.hpp"
 #include "aex/printk.hpp"
 #include "aex/spinlock.hpp"
 
 namespace AEX::Net {
-    INetProtocol** inet_protocols;
-    INetProtocol*  null_protocol;
+    Domain** domains;
 
     char*    hostname;
     Spinlock hostname_lock;
@@ -19,11 +18,7 @@ namespace AEX::Net {
     void init() {
         printk(INIT "net: Initializing\n");
 
-        inet_protocols = new INetProtocol*[256];
-        null_protocol  = new INetProtocol();
-
-        for (size_t i = 0; i < 256; i++)
-            inet_protocols[i] = null_protocol;
+        domains = new Domain*[256];
 
         read_hostname();
 
@@ -33,9 +28,8 @@ namespace AEX::Net {
         printk(OK "net: Initialized\n");
     }
 
-    error_t register_inet_protocol(iproto_t id, INetProtocol* protocol) {
-        inet_protocols[(uint8_t) id] = protocol;
-
+    error_t register_domain(domain_t af, Domain* domain) {
+        domains[(uint8_t) af] = domain;
         return ENONE;
     }
 

@@ -56,7 +56,9 @@ void register_net(Sys::syscall_t* table);
 void register_test(Sys::syscall_t* table);
 void print_all(Sys::syscall_t* table);
 
-int sigact(int signum, const IPC::sigaction_usr* act, IPC::sigaction_usr* oldact);
+int  sys_sigact(int signum, const IPC::sigaction_usr* act, IPC::sigaction_usr* oldact);
+void sys_sigathrd(bool asyncthrdsig);
+void sys_panic();
 
 void module_enter() {
     Sys::CPU::broadcast(Sys::CPU::IPP_CALL, (void*) install_handler, false);
@@ -64,8 +66,10 @@ void module_enter() {
 
     auto table = Sys::default_table();
 
-    // -O2 makes this assert pass
-    AEX_ASSERT(table[SYS_SIGACT] == (void*) sigact);
+    // -O2 makes these asserts pass
+    AEX_ASSERT(table[SYS_SIGACT] == (void*) sys_sigact);
+    AEX_ASSERT(table[SYS_SIGATHRD] == (void*) sys_sigathrd);
+    AEX_ASSERT(table[SYS_PANIC] == (void*) sys_panic);
 
     // print_all();
 }
@@ -105,10 +109,8 @@ extern "C" void syscall_done(int syscall, IPC::syscall_registers* regs) {
     auto thread = Proc::Thread::current();
     AEX_ASSERT(!thread->isCritical());
 
-    thread->safe_exit = true;
-    thread->abortCheck();
-    thread->signalCheck(true, regs);
-    thread->safe_exit = false;
+    thread->sigchk(regs);
+    thread->abortchk();
 }
 
 void print_all() {

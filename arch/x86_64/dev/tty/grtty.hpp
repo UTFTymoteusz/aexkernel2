@@ -29,7 +29,8 @@ namespace AEX::Dev::TTY {
 
         private:
         enum color {
-            RGB_BLACK        = 0x050808,
+            // RGB_BLACK        = 0x050808,
+            RGB_BLACK        = 0x050E0E,
             RGB_BLUE         = 0x0000AA,
             RGB_GREEN        = 0x00AA00,
             RGB_CYAN         = 0x00AAAA,

@@ -65,16 +65,12 @@ namespace AEX::Sys::IRQ {
 
         AEX_ASSERT(irq < 32);
 
-        // We need to steal the state of thread so nothing messes with us
-        // State saving is possible because only the executing thread changes it is criticality and
-        // busies.
-
         auto thread = Thread::current();
         auto state  = thread->saveState();
 
         thread->setCritical(1);
         thread->setSignability(0);
-        thread->setStatus(Proc::TS_RUNNABLE);
+        thread->status = Proc::TS_RUNNABLE;
 
         handlers[irq].call();
 

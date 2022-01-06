@@ -219,14 +219,14 @@ namespace AEX::Sys::IRQ {
 
             IRQ::irq_mark = false;
 
-            PIT::interrupt(50);
+            PIT::interrupt(100);
             APIC::timer(0x20 + 0);
 
             interruptible(true) {
                 while (!IRQ::irq_mark)
                     CPU::wait();
 
-                ticks = -APIC::counter() * 20;
+                ticks = -APIC::counter() * 10;
             }
         }
 
@@ -234,6 +234,8 @@ namespace AEX::Sys::IRQ {
         set_vector(0, 0x20 + 30);
         set_mask(0, true);
         set_destination(0, 1);
+
+        printk("apparently %li tps\n", ticks);
 
         return ticks;
     }

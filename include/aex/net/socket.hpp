@@ -6,18 +6,19 @@
 #include "aex/utility.hpp"
 
 namespace AEX::Net {
-    enum socket_domain_t : uint16_t {
+    enum domain_t : uint16_t {
         AF_UNSPEC = 0,
-        AF_INET   = 1,
-        AF_INET6  = 2,
-        AF_UNIX   = 3,
+        AF_UNIX   = 1,
+        AF_LOCAL  = 1,
+        AF_INET   = 2,
+        AF_INET6  = 3,
     };
 
     enum socket_type_t {
-        SOCK_STREAM    = 0,
-        SOCK_DGRAM     = 1,
-        SOCK_SEQPACKET = 2,
-        SOCK_RAW       = 3,
+        SOCK_STREAM    = 1,
+        SOCK_DGRAM     = 2,
+        SOCK_SEQPACKET = 3,
+        SOCK_RAW       = 4,
     };
 
     enum iproto_t {
@@ -41,15 +42,15 @@ namespace AEX::Net {
     };
 
     struct API sockaddr {
-        socket_domain_t domain;
-        char            idk[14];
+        domain_t domain;
+        char     idk[14];
     };
 
     struct API sockaddr_inet {
-        socket_domain_t domain;
-        uint16_t        port;
-        ipv4_addr       addr;
-        char            idk[8];
+        domain_t  domain;
+        uint16_t  port;
+        ipv4_addr addr;
+        char      idk[8];
 
         sockaddr_inet() {}
 
@@ -66,10 +67,7 @@ namespace AEX::Net {
         public:
         virtual ~Socket();
 
-        optional<Mem::SmartPointer<FS::File>> open(const char* path) = delete;
-
-        static optional<Socket_SP> create(socket_domain_t domain, socket_type_t type,
-                                          iproto_t protocol);
+        static optional<Socket_SP> create(domain_t domain, socket_type_t type, int proto);
 
         optional<ssize_t> read(void* buf, size_t count) {
             return receive(buf, count, 0);
@@ -79,24 +77,23 @@ namespace AEX::Net {
             return send(buf, count, 0);
         }
 
-        virtual error_t connect(const sockaddr* addr);
-        error_t         connect(ipv4_addr addr, uint16_t port);
-
-        virtual error_t bind(const sockaddr* addr);
-        error_t         bind(ipv4_addr addr, uint16_t port);
-
+        virtual error_t             connect(const sockaddr* addr);
+        error_t                     connect(ipv4_addr addr, uint16_t port);
+        virtual error_t             bind(const sockaddr* addr);
+        error_t                     bind(ipv4_addr addr, uint16_t port);
         virtual error_t             listen(int backlog);
         virtual optional<Socket_SP> accept();
 
-        virtual optional<ssize_t> sendTo(const void* buffer, size_t len, int flags,
+        virtual optional<ssize_t> sendto(const void* buffer, size_t len, int flags,
                                          const sockaddr* dst_addr);
-        virtual optional<ssize_t> receiveFrom(void* buffer, size_t len, int flags,
+        virtual optional<ssize_t> receivefrom(void* buffer, size_t len, int flags,
                                               sockaddr* src_addr);
-
-        optional<ssize_t> send(const void* buffer, size_t len, int flags);
-        optional<ssize_t> receive(void* buffer, size_t len, int flags);
+        optional<ssize_t>         send(const void* buffer, size_t len, int flags);
+        optional<ssize_t>         receive(void* buffer, size_t len, int flags);
 
         virtual error_t shutdown(int how);
         virtual error_t close();
+
+        optional<Mem::SmartPointer<FS::File>> open(const char* path) = delete;
     };
 }

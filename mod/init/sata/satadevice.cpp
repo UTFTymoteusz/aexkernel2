@@ -59,8 +59,8 @@ namespace AEX::Sys::SATA {
         if (!atapi)
             sector_count = *((uint64_t*) (&identify[100]));
         else {
-            uint8_t              packet[12] = {AHCI::scsi_command::READ_CAPACITY_10};
-            big_endian<uint32_t> buffer[2]  = {0};
+            uint8_t      packet[12] = {AHCI::scsi_command::READ_CAPACITY_10};
+            be<uint32_t> buffer[2]  = {0};
 
             scsiPacket(packet, buffer, sizeof(buffer));
 
@@ -202,7 +202,6 @@ namespace AEX::Sys::SATA {
         header->phys_region_table_transferred = 0;
 
         fillPRDTs(table, buffer, len);
-
         memcpy(table->atapi_command, packet, 16);
 
         auto fis = &table->fis_reg_h2d_data;

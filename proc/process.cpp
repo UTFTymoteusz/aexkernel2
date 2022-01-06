@@ -324,12 +324,12 @@ namespace AEX::Proc {
         }
     }
 
-    __attribute__((optimize("O2"))) void Process::assoc(Thread* thread) {
+    O2 void Process::assoc(Thread* thread) {
         SCOPE(threads_lock);
         thread->tid = threads.push(thread);
     }
 
-    __attribute__((optimize("O2"))) optional<Thread_SP> Process::unassoc(Thread* thread) {
+    O2 optional<Thread_SP> Process::unassoc(Thread* thread) {
         SCOPE(threads_lock);
 
         for (int i = 0; i < threads.count(); i++) {

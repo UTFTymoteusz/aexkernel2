@@ -2,6 +2,7 @@
 
 #include "aex/byte.hpp"         // meh
 #include "aex/net/ethernet.hpp" // meh
+#include "aex/utility.hpp"
 
 #include <stdint.h>
 
@@ -13,10 +14,10 @@ namespace NetStack {
     };
 
     struct ethernet_frame {
-        AEX::Net::mac_addr        destination;
-        AEX::Net::mac_addr        source;
-        AEX::big_endian<uint16_t> ethertype;
+        Net::mac_addr destination;
+        Net::mac_addr source;
+        be<uint16_t>  ethertype;
 
         uint8_t payload[];
-    } __attribute__((packed));
+    } PACKED;
 }

@@ -28,9 +28,12 @@ namespace AEX {
 
         len--;
 
-        auto snprintf_common = [&buffer, &len](char padchar, int padlen, char* str) {
+        auto snprintf_common = [&buffer, &len](char padchar, int padlen, const char* str) {
             if (len == 0)
                 return;
+
+            if (!str)
+                str = "<null>";
 
             size_t pad_len = min((size_t) max<int>(padlen - strlen(str), 0), len);
             len -= pad_len;

@@ -66,13 +66,14 @@ namespace AEX::Sys {
         struct {
             Proc::Context* current_context; // 0x08
             Proc::Thread*  current_thread;  // 0x10
+            Proc::Thread*  previous_thread; // 0x18
 
-            volatile uint64_t unused; // 0x18
-
-            uint64_t        kernel_stack;    // 0x20
-            Sys::syscall_t* syscall_table;   // 0x28
-            uint64_t        interrupt_stack; // 0x30
+            uint64_t        kernel_stack;  // 0x20
+            Sys::syscall_t* syscall_table; // 0x28
         };
+
+        uint64_t irq_stack_start;
+        uint64_t reshed_stack_start;
 
         uint8_t       in_interrupt = 1;
         volatile bool halted;
@@ -81,6 +82,8 @@ namespace AEX::Sys {
         tss*          local_tss;
 
         uint64_t measurement_start_ns;
+
+        uint64_t reshed_fault_stack_start;
 
         char name[48];
 
@@ -163,6 +166,11 @@ namespace AEX::Sys {
         static Proc::Thread* currentThread();
 
         /**
+         * Gets a pointer to the previous thread.
+         **/
+        static Proc::Thread* previousThread();
+
+        /**
          * Broadcasts a packet to all processors (except the local one, unless you specify
          * otherwise) and IPIs them.
          * @param type Type of the packet.
@@ -199,7 +207,7 @@ namespace AEX::Sys {
          **/
         void send(ipp_type type, void* data = nullptr);
 
-        void update(Proc::Thread* thread);
+        void swthread(Proc::Thread* thread);
 
         void pushFmsg(const char* msg);
         void printFmsgs();

@@ -97,10 +97,10 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
 
 void init_mem(multiboot_info_t* mbinfo) {
     printk("Section info:\n");
-    printk(".text  : %93$0x%p%90$, %93$0x%p%$\n", &_start_text, &_end_text);
-    printk(".rodata: %93$0x%p%90$, %93$0x%p%$\n", &_start_rodata, &_end_rodata);
-    printk(".data  : %93$0x%p%90$, %93$0x%p%$\n", &_start_data, &_end_data);
-    printk(".bss   : %93$0x%p%90$, %93$0x%p%$\n", &_start_bss, &_end_bss);
+    printk(".text  : %93$%p%90$, %93$%p%$\n", &_start_text, &_end_text);
+    printk(".rodata: %93$%p%90$, %93$%p%$\n", &_start_rodata, &_end_rodata);
+    printk(".data  : %93$%p%90$, %93$%p%$\n", &_start_data, &_end_data);
+    printk(".bss   : %93$%p%90$, %93$%p%$\n", &_start_bss, &_end_bss);
     printk("\n");
 
     Phys::init(mbinfo);
@@ -113,6 +113,7 @@ void init_mem(multiboot_info_t* mbinfo) {
 
 void mount_fs(uint32_t dev_code) {
     FS::mount(nullptr, "/dev/", "devfs");
+    FS::mount(nullptr, "/proc/", "procfs");
 
     if (dev_code == 0x00000000) {
         printk(WARN "Where we have booted from is one of the greatest mysteries ever\n");
@@ -196,67 +197,9 @@ void apple();
 void kmain_env() {
     using namespace AEX::Sys::Time;
 
-    // apple();
+    apple();
     exec_init();
 
-    // Sys::CPU::tripleFault();
-
     printk("We are done here, adios\n");
-    Proc::Thread::sleep(1000);
-
     AEX_ASSERT(Sys::Power::poweroff());
-
-    printk(OK "mm it works\n");
-    Proc::Thread::sleep(100);
-
-    Proc::processes_lock.acquire();
-
-    auto idle    = Proc::get_process(0);
-    auto process = Proc::Process::current();
-
-    Proc::processes_lock.release();
-
-    time_t start_epoch = clocktime();
-
-    while (true) {
-        char c = Dev::TTY::TTYs[Dev::TTY::ROOT_TTY]->read();
-
-        switch (c) {
-        case 't': {
-            auto ns    = uptime();
-            auto clock = clocktime();
-
-            auto dt = epoch2dt(clock);
-
-            printk("cpu%i: %16li ns (%li ms, %li s, %li min), clock says %li s, %02i:%02i:%02i\n",
-                   CPU::currentID(), ns, ns / 1000000, ns / 1000000000, ns / 1000000000 / 60,
-                   clock - start_epoch, dt.hour, dt.minute, dt.second);
-            printk("idle: %16li ns (%li ms) cpu time (pid %i)\n", idle->usage.cpu_time_ns,
-                   idle->usage.cpu_time_ns / 1000000, idle->pid);
-            printk("us  : %16li ns (%li ms) cpu time (pid %i)\n", process->usage.cpu_time_ns,
-                   process->usage.cpu_time_ns / 1000000, process->pid);
-            printk("bytes read: %li\n", process->usage.block_bytes_read);
-            printk("heap free : %li\n", Heap::heap_free);
-
-            Proc::debug_print_cpu_jobs();
-        } break;
-        case 'r':
-            CPU::tripleFault();
-            break;
-        case 'l':
-            Proc::debug_print_threads();
-            break;
-        case 'p':
-            Proc::debug_print_processes();
-            break;
-        case 's':
-            AEX_ASSERT(Power::poweroff());
-            break;
-        default:
-            printk("%c", c);
-            break;
-        }
-    }
-
-    Proc::Thread::exit();
 }

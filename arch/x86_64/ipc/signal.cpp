@@ -1,6 +1,5 @@
 #include "aex/arch/ipc/signal.hpp"
 
-#include "aex/arch/mem/helpers/usr_stack.hpp"
 #include "aex/mem/paging.hpp"
 
 namespace AEX::IPC {

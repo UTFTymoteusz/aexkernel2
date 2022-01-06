@@ -1,12 +1,14 @@
 #include "usr.hpp"
 
+#include "aex/mem/usr.hpp"
 #include "aex/proc.hpp"
 
 using namespace AEX;
+using namespace AEX::Mem;
 
 bool copy_and_canonize(char buffer[FS::PATH_MAX], const usr_char* usr_path) {
     auto current    = Proc::Process::current();
-    auto strlen_try = usr_strlen(usr_path);
+    auto strlen_try = u_strlen(usr_path);
     if (!strlen_try)
         return false;
 

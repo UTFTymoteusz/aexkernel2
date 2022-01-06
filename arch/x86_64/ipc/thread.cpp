@@ -1,9 +1,14 @@
 #include "aex/proc/thread.hpp"
 
 #include "aex/arch/ipc/signal.hpp"
-#include "aex/arch/mem/helpers/usr_stack.hpp"
+#include "aex/arch/mem/helpers/stacker.hpp"
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/ipc/signal.hpp"
 #include "aex/ipc/types.hpp"
+#include "aex/proc/setjmp.hpp"
+
+// ASDAD
+#include "aex/proc/process.hpp"
 
 #include "signal.hpp"
 
@@ -15,64 +20,88 @@ namespace AEX::Proc {
 
     static constexpr auto REDZONE_SIZE = 128;
 
-    error_t Thread::pushSignalContext(uint8_t id, sigaction& action, state_combo* combo,
-                                      siginfo_t& info) {
+    error_t Thread::sigpush(uint8_t id, sigaction& action, siginfo_t& info, state_combo scmb) {
         AEX_ASSERT(!Sys::CPU::checkInterrupts());
 
-        if (combo)
-            proc_ctxsave();
+        size_t stack   = scmb.valid() ? scmb.stack() : context->rsp;
+        auto   stacker = Mem::Stacker(stack);
+        auto   frame   = scmb.valid() ? signal_registers(scmb) : signal_registers(context);
 
-        auto stack = Mem::usr_stack(this, saved_stack);
-        auto frame = signal_registers(context);
+        if (Proc::setjmp(&Proc::Thread::current()->fault_recovery) == 0 &&
+            stack <= Mem::kernel_pagemap->vstart) {
+            stacker.move(REDZONE_SIZE);
+            stacker.push(info);
+            auto siginfo_rsp = stacker.pointer();
 
-        if (combo)
-            combo->write(&frame);
+            stacker.push(m_sigqueue.mask);
+            stacker.push(frame);
+            auto frame_rsp = stacker.pointer();
 
-        stack.move(REDZONE_SIZE);
-        stack.push(info);
-        auto siginfo_rsp = stack.pointer();
+            stacker.push(action.flags & SA_RESTORER ? action.restorer : sigret_trampoline);
 
-        stack.push(m_sigqueue.mask);
-        stack.push(frame);
-        auto frame_rsp = stack.pointer();
+            m_sigqueue.mask.block(action.mask);
+            m_sigqueue.mask.add(info.si_signo);
+            m_sigqueue.recalculate();
 
-        stack.push(action.flags & SA_RESTORER ? action.restorer : sigret_trampoline);
+            if (scmb.valid()) {
+                if (scmb.finfo_regs) {
+                    scmb.finfo_regs->rip = (size_t) action.handler;
+                    scmb.finfo_regs->rdi = id;
+                    scmb.finfo_regs->rsi = siginfo_rsp;
+                    scmb.finfo_regs->rdx = frame_rsp;
+                    scmb.finfo_regs->rsp = stacker.pointer();
+                }
+                else {
+                    scmb.syscall_regs->rip = (size_t) action.handler;
+                    scmb.syscall_regs->rdi = id;
+                    scmb.syscall_regs->rsi = siginfo_rsp;
+                    scmb.syscall_regs->rdx = frame_rsp;
+                    scmb.syscall_regs->rsp = stacker.pointer();
+                }
+            }
+            else {
+                AEX_ASSERT(context->usermode());
 
-        m_sigqueue.mask.block(action.mask);
-        m_sigqueue.mask.add(info.si_signo);
-        m_sigqueue.recalculate();
+                context->rip = (size_t) action.handler;
+                context->rdi = id;
+                context->rsi = siginfo_rsp;
+                context->rdx = frame_rsp;
+                context->rsp = stacker.pointer();
+            }
 
-        context->rip = (size_t) action.handler;
-        context->rdi = id;
-        context->rsi = siginfo_rsp;
-        context->rdx = frame_rsp;
-
-        context->rsp = stack.pointer();
-        context->cs  = 0x23;
-        context->ss  = 0x1B;
-
-        if (combo)
-            sigcheck_lock.releaseRaw();
+            Proc::nojmp(&Proc::Thread::current()->fault_recovery);
+        }
+        else {
+            return EFAULT;
+        }
 
         return ENONE;
     }
 
-    error_t Thread::popSignalContext() {
+    error_t Thread::sigpop() {
         AEX_ASSERT(!Sys::CPU::checkInterrupts());
 
-        auto stack = Mem::usr_stack(this, saved_stack);
-        auto frame = stack.pop<signal_registers>();
-        AEX_ASSERT(frame);
+        auto stacker = Mem::Stacker(sigret_stack);
 
-        auto sigmask = stack.pop<sigset_t>();
-        AEX_ASSERT(sigmask);
+        if (Proc::setjmp(&Proc::Thread::current()->fault_recovery) == 0) {
+            auto frame = stacker.pop<signal_registers>();
+            AEX_ASSERT(frame);
 
-        frame.value.inscribe(context);
+            auto sigmask = stacker.pop<sigset_t>();
+            AEX_ASSERT(sigmask);
 
-        sigcheck_lock.acquireRaw();
-        m_sigqueue.mask = sigmask;
-        m_sigqueue.recalculate();
-        sigcheck_lock.releaseRaw();
+            frame.value.inscribe(context);
+
+            sigcheck_lock.acquireRaw();
+            m_sigqueue.mask = sigmask;
+            m_sigqueue.recalculate();
+            sigcheck_lock.releaseRaw();
+        }
+        else {
+            return EFAULT;
+        }
+
+        Proc::nojmp(&Proc::Thread::current()->fault_recovery);
 
         return ENONE;
     }

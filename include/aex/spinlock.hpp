@@ -22,10 +22,18 @@ namespace AEX {
         bool tryReleaseRaw();
 
         ScopeSpinlock scope();
+        void          trace();
 
         private:
-        volatile int m_lock   = 0;
-        void*        m_thread = 0;
+        static constexpr auto TRACE_DEPTH = 2;
+
+        volatile int m_lock               = 0;
+        void*        m_thread             = 0;
+        void*        callers[TRACE_DEPTH] = {};
+
+        void acquired(bool raw = false);
+        void released(bool raw = false);
+        void fail(const char* reason);
     };
 
     class API ScopeSpinlock {

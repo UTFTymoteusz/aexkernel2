@@ -73,6 +73,22 @@ namespace AEX::Proc {
             r9  = (uint64_t) f;
         }
 
+        template <typename T>
+        void setInstructionPointer(T a) {
+            rip = (uint64_t) a;
+        }
+
+        template <typename T>
+        void setReturnValue(T a) {
+            rax = (uint64_t) a;
+        }
+
+        template <typename T, typename T2>
+        void setReturnValue(T a, T2 b) {
+            rax = (uint64_t) a;
+            rdx = (uint64_t) b;
+        }
+
         bool kernelmode() {
             return !usermode();
         }

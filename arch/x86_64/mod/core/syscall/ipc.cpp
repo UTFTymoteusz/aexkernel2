@@ -1,6 +1,7 @@
 #include "aex/errno.hpp"
 #include "aex/ipc/pipe.hpp"
 #include "aex/ipc/signal.hpp"
+#include "aex/mem/usr.hpp"
 #include "aex/proc.hpp"
 #include "aex/proc/process.hpp"
 #include "aex/sys/syscall.hpp"
@@ -11,8 +12,9 @@
 #include "usr.hpp"
 
 using namespace AEX;
+using namespace AEX::Mem;
 
-int pipe(usr_int* rp, usr_int* wp) {
+int sys_pipe(usr_int* rp, usr_int* wp) {
     FS::File_SP rsp, wsp;
     auto        current = Proc::Process::current();
 
@@ -27,13 +29,13 @@ int pipe(usr_int* rp, usr_int* wp) {
 
     current->descs_mutex.release();
 
-    USR_ENSURE_OPT(usr_write(rp, rfd));
-    USR_ENSURE_OPT(usr_write(wp, wfd));
+    USR_ENSURE_OPT(u_write(rp, rfd));
+    USR_ENSURE_OPT(u_write(wp, wfd));
 
     return 0;
 }
 
-int kill(Proc::pid_t pid, int sig) {
+int sys_kill(Proc::pid_t pid, int sig) {
     if (inrange(pid, 1, Proc::Process::kernel()->pid))
         return EPERM;
 
@@ -41,7 +43,7 @@ int kill(Proc::pid_t pid, int sig) {
     return USR_ERRNO ? -1 : 0;
 }
 
-int sigqueue(Proc::pid_t pid, int sig, IPC::sigval val) {
+int sys_sigqueue(Proc::pid_t pid, int sig, IPC::sigval val) {
     if (inrange(pid, 1, Proc::Process::kernel()->pid))
         return EPERM;
 
@@ -56,16 +58,16 @@ int sigqueue(Proc::pid_t pid, int sig, IPC::sigval val) {
     return USR_ERRNO ? -1 : 0;
 }
 
-int sigact(int signum, const IPC::sigaction_usr* act, IPC::sigaction_usr* oldact) {
+int sys_sigact(int signum, const IPC::sigaction_usr* act, IPC::sigaction_usr* oldact) {
     auto current = Proc::Process::current();
 
     if (oldact) {
         IPC::sigaction_usr action = USR_ENSURE_OPT(current->sigaction(signum));
-        USR_ENSURE_OPT(usr_write(oldact, action));
+        USR_ENSURE_OPT(u_write(oldact, action));
     }
 
     if (act) {
-        IPC::sigaction action = USR_ENSURE_OPT(usr_read(act));
+        IPC::sigaction action = USR_ENSURE_OPT(u_read(act));
 
         USR_ENSURE_R((size_t) action.handler < Proc::Process::current()->pagemap->vend, EFAULT);
         USR_ENSURE_ENONE(current->sigaction(signum, action));
@@ -74,35 +76,35 @@ int sigact(int signum, const IPC::sigaction_usr* act, IPC::sigaction_usr* oldact
     return 0;
 }
 
-void sigret() {
+void sys_sigret() {
     Proc::Thread::current()->sigret();
 }
 
-void sigathrd(bool asyncthrdsig) {
-    Proc::Thread::current()->asyncThreadingSignals(asyncthrdsig);
+void sys_sigathrd(bool asyncthrdsig) {
+    Proc::Thread::current()->sigthasync(asyncthrdsig);
 }
 
-int sigpmask(int how, const IPC::sigset_t* usr_set, IPC::sigset_t* usr_oldset) {
+int sys_sigpmask(int how, const IPC::sigset_t* usr_set, IPC::sigset_t* usr_oldset) {
     USR_ERRNO = ENOSYS;
     return 0;
 
-    /*auto oldset = Proc::Process::current()->getSignalMask();
+    /*auto oldset = Proc::Process::current()->sigmask();
     USR_ERRNO   = ENONE;
 
     if (usr_oldset)
-        USR_ENSURE_OPT(usr_write(usr_oldset, oldset));
+        USR_ENSURE_OPT(u_write(usr_oldset, oldset));
 
     if (usr_set) {
-        auto set = USR_ENSURE_OPT(usr_read(usr_set));
+        auto set = USR_ENSURE_OPT(u_read(usr_set));
         switch (how) {
         case SIG_BLOCK:
-            Proc::Process::current()->setSignalMask(oldset.block(set));
+            Proc::Process::current()->sigmask(oldset.block(set));
             break;
         case SIG_UNBLOCK:
-            Proc::Process::current()->setSignalMask(oldset.unblock(set));
+            Proc::Process::current()->sigmask(oldset.unblock(set));
             break;
         case SIG_SETMASK:
-            Proc::Process::current()->setSignalMask(set);
+            Proc::Process::current()->sigmask(set);
             break;
         default:
             USR_ERRNO = EINVAL;
@@ -113,24 +115,24 @@ int sigpmask(int how, const IPC::sigset_t* usr_set, IPC::sigset_t* usr_oldset) {
     return 0;*/
 }
 
-int sigtmask(int how, const IPC::sigset_t* usr_set, IPC::sigset_t* usr_oldset) {
-    auto oldset = Proc::Thread::current()->getSignalMask();
+int sys_sigtmask(int how, const IPC::sigset_t* usr_set, IPC::sigset_t* usr_oldset) {
+    auto oldset = Proc::Thread::current()->sigmask();
     USR_ERRNO   = ENONE;
 
     if (usr_oldset)
-        USR_ENSURE_OPT(usr_write(usr_oldset, oldset));
+        USR_ENSURE_OPT(u_write(usr_oldset, oldset));
 
     if (usr_set) {
-        auto set = USR_ENSURE_OPT(usr_read(usr_set));
+        auto set = USR_ENSURE_OPT(u_read(usr_set));
         switch (how) {
         case SIG_BLOCK:
-            Proc::Thread::current()->setSignalMask(oldset.block(set));
+            Proc::Thread::current()->sigmask(oldset.block(set));
             break;
         case SIG_UNBLOCK:
-            Proc::Thread::current()->setSignalMask(oldset.unblock(set));
+            Proc::Thread::current()->sigmask(oldset.unblock(set));
             break;
         case SIG_SETMASK:
-            Proc::Thread::current()->setSignalMask(set);
+            Proc::Thread::current()->sigmask(set);
             break;
         default:
             USR_ERRNO = EINVAL;
@@ -141,15 +143,15 @@ int sigtmask(int how, const IPC::sigset_t* usr_set, IPC::sigset_t* usr_oldset) {
     return 0;
 }
 
-int sigwait(const IPC::sigset_t* usr_set, IPC::siginfo_t* usr_info, uint64_t timeout_ns) {
-    auto set    = USR_ENSURE_OPT(usr_read(usr_set));
-    auto oldset = Proc::Thread::current()->getSignalMask();
+int sys_sigwait(const IPC::sigset_t* usr_set, IPC::siginfo_t* usr_info, uint64_t timeout_ns) {
+    auto set    = USR_ENSURE_OPT(u_read(usr_set));
+    auto oldset = Proc::Thread::current()->sigmask();
 
     int          signo = -1;
     AEX::error_t errno = EINTR;
 
-    Proc::Thread::current()->setSignalMask(Proc::Thread::current()->getSignalMask().unblock(set));
-    Proc::Thread::current()->signalWait(true);
+    Proc::Thread::current()->sigmask(Proc::Thread::current()->sigmask().unblock(set));
+    Proc::Thread::current()->sigwait(true);
 
     using(Proc::Thread::current()->signabilityGuard) {
         // TODO: add an instant check here
@@ -157,70 +159,70 @@ int sigwait(const IPC::sigset_t* usr_set, IPC::siginfo_t* usr_info, uint64_t tim
         if (timeout_ns)
             Proc::Thread::nsleep(timeout_ns);
         else
-            Proc::Thread::current()->setStatus(Proc::TS_BLOCKED);
+            Proc::Thread::current()->status = Proc::TS_BLOCKED;
 
         Proc::Thread::yield();
 
         if (Proc::Thread::current()->status == Proc::TS_RUNNABLE && timeout_ns > 0)
             errno = EAGAIN;
 
-        Proc::Thread::current()->setStatus(Proc::TS_RUNNABLE);
+        Proc::Thread::current()->status = Proc::TS_RUNNABLE;
 
-        auto info_try = Proc::Thread::current()->signalGet(&set);
+        auto info_try = Proc::Thread::current()->sigget(&set);
         if (info_try.has_value) {
             auto info = info_try.value;
             signo     = info.si_signo;
 
             if (usr_info)
-                USR_ENSURE_OPT(usr_write(usr_info, info));
+                USR_ENSURE_OPT(u_write(usr_info, info));
         }
     }
 
-    Proc::Thread::current()->signalWait(false);
-    Proc::Thread::current()->setSignalMask(oldset);
+    Proc::Thread::current()->sigwait(false);
+    Proc::Thread::current()->sigmask(oldset);
 
     USR_ERRNO = signo == -1 ? errno : ENONE;
     return signo;
 }
 
-int sigpending(IPC::sigset_t* usr_set) {
+int sys_sigpending(IPC::sigset_t* usr_set) {
     IPC::sigset_t set = {};
 
-    set.block(Proc::Process::current()->getSignalPending());
-    set.block(Proc::Thread::current()->getSignalPending());
+    set.block(Proc::Process::current()->sigpending());
+    set.block(Proc::Thread::current()->sigpending());
 
     if (usr_set)
-        USR_ENSURE_OPT(usr_write(usr_set, set));
+        USR_ENSURE_OPT(u_write(usr_set, set));
 
     return 0;
 }
 
-int sigsuspend(const IPC::sigset_t* usr_mask) {
-    const auto mask    = USR_ENSURE_OPT(usr_read(usr_mask));
-    auto       oldmask = Proc::Thread::current()->getSignalMask();
+int sys_sigsuspend(const IPC::sigset_t* usr_mask) {
+    const auto mask    = USR_ENSURE_OPT(u_read(usr_mask));
+    auto       oldmask = Proc::Thread::current()->sigmask();
 
-    Proc::Thread::current()->setSignalMask(mask);
+    Proc::Thread::current()->sigmask(mask);
 
     using(Proc::Thread::current()->signabilityGuard) {
-        Proc::Thread::current()->setStatus(Proc::TS_BLOCKED);
+        Proc::Thread::current()->status = Proc::TS_BLOCKED;
         Proc::Thread::yield();
-        Proc::Thread::current()->setStatus(Proc::TS_RUNNABLE);
+        Proc::Thread::current()->status = Proc::TS_RUNNABLE;
     }
 
     USR_ERRNO = EINTR;
     return -1;
 }
 
-__attribute__((optimize("O2"))) void register_ipc(Sys::syscall_t* table) {
-    table[SYS_PIPE]       = (void*) pipe;
-    table[SYS_KILL]       = (void*) kill;
-    table[SYS_SIGACT]     = (void*) sigact;
-    table[SYS_SIGRET]     = (void*) sigret;
-    table[SYS_SIGATHRD]   = (void*) sigathrd;
-    table[SYS_SIGPMASK]   = (void*) sigpmask;
-    table[SYS_SIGTMASK]   = (void*) sigtmask;
-    table[SYS_SIGWAIT]    = (void*) sigwait;
-    table[SYS_SIGQUEUE]   = (void*) sigqueue;
-    table[SYS_SIGPENDING] = (void*) sigpending;
-    table[SYS_SIGSUSPEND] = (void*) sigsuspend;
+O2 void register_ipc(Sys::syscall_t* table) {
+    table[SYS_PIPE]       = (void*) sys_pipe;
+    table[SYS_KILL]       = (void*) sys_kill;
+    table[SYS_SIGACT]     = (void*) sys_sigact;
+    table[SYS_SIGRET]     = (void*) sys_sigret;
+    table[SYS_SIGATHRD]   = (void*) sys_sigathrd;
+    table[SYS_SIGPMASK]   = (void*) sys_sigpmask;
+    table[SYS_SIGTMASK]   = (void*) sys_sigtmask;
+    table[SYS_SIGWAIT]    = (void*) sys_sigwait;
+    table[SYS_SIGQUEUE]   = (void*) sys_sigqueue;
+    table[SYS_SIGPENDING] = (void*) sys_sigpending;
+    table[SYS_SIGSUSPEND] = (void*) sys_sigsuspend;
 }

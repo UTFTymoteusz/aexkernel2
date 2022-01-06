@@ -1,4 +1,5 @@
 #include "aex/errno.hpp"
+#include "aex/mem/usr.hpp"
 #include "aex/proc/process.hpp"
 #include "aex/sys/syscall.hpp"
 #include "aex/utility.hpp"
@@ -7,28 +8,27 @@
 #include "usr.hpp"
 
 using namespace AEX;
+using namespace AEX::Mem;
 
-Sec::gid_t getegid() {
+Sec::gid_t sys_getegid() {
     return Proc::Process::current()->eff_gid;
 }
 
-Sec::uid_t geteuid() {
+Sec::uid_t sys_geteuid() {
     return Proc::Process::current()->eff_uid;
 }
 
-Sec::gid_t getgid() {
+Sec::gid_t sys_getgid() {
     return Proc::Process::current()->real_gid;
 }
 
-Sec::uid_t getuid() {
+Sec::uid_t sys_getuid() {
     return Proc::Process::current()->real_uid;
 }
 
-int setrgid(Sec::gid_t gid) {
-    NOT_IMPLEMENTED;
-}
+int sys_setrgid(Sec::gid_t gid) NOT_IMPLEMENTED;
 
-int setruid(Sec::uid_t uid) {
+int sys_setruid(Sec::uid_t uid) {
     auto current = Proc::Process::current();
 
     if (current->eff_uid == 0) {
@@ -45,11 +45,9 @@ int setruid(Sec::uid_t uid) {
     return -1;
 }
 
-int setegid(Sec::gid_t gid) {
-    NOT_IMPLEMENTED;
-}
+int sys_setegid(Sec::gid_t gid) NOT_IMPLEMENTED;
 
-int seteuid(Sec::uid_t uid) {
+int sys_seteuid(Sec::uid_t uid) {
     auto current = Proc::Process::current();
 
     // or if the process has appropriate privileges,
@@ -68,11 +66,9 @@ int seteuid(Sec::uid_t uid) {
     return -1;
 }
 
-int setgid(Sec::gid_t gid) {
-    NOT_IMPLEMENTED;
-}
+int sys_setgid(Sec::gid_t gid) NOT_IMPLEMENTED;
 
-int setuid(Sec::uid_t uid) {
+int sys_setuid(Sec::uid_t uid) {
     auto current = Proc::Process::current();
 
     // If the process has appropriate privileges,
@@ -95,11 +91,9 @@ int setuid(Sec::uid_t uid) {
     return -1;
 }
 
-int setregid(Sec::gid_t rgid, Sec::gid_t egid) {
-    NOT_IMPLEMENTED;
-}
+int sys_setregid(Sec::gid_t rgid, Sec::gid_t egid) NOT_IMPLEMENTED;
 
-int setreuid(Sec::uid_t ruid, Sec::uid_t euid) {
+int sys_setreuid(Sec::uid_t ruid, Sec::uid_t euid) {
     if (!inrange(ruid, -1, INT32_MAX) || !inrange(euid, -1, INT32_MAX)) {
         USR_ERRNO = EINVAL;
         return -1;
@@ -108,26 +102,26 @@ int setreuid(Sec::uid_t ruid, Sec::uid_t euid) {
     int ret = 0;
 
     if (ruid != -1)
-        if (setruid(ruid) < 0)
+        if (sys_setruid(ruid) < 0)
             ret = -1;
 
     if (euid != -1)
-        if (seteuid(euid) < 0)
+        if (sys_seteuid(euid) < 0)
             ret = -1;
 
     return ret;
 }
 
-__attribute__((optimize("O2"))) void register_sec(Sys::syscall_t* table) {
-    table[SYS_GETEGID] = (void*) getegid;
-    table[SYS_GETEUID] = (void*) geteuid;
-    table[SYS_GETGID]  = (void*) getgid;
-    table[SYS_GETUID]  = (void*) getuid;
+O2 void register_sec(Sys::syscall_t* table) {
+    table[SYS_GETEGID] = (void*) sys_getegid;
+    table[SYS_GETEUID] = (void*) sys_geteuid;
+    table[SYS_GETGID]  = (void*) sys_getgid;
+    table[SYS_GETUID]  = (void*) sys_getuid;
 
-    table[SYS_SETEGID]  = (void*) setegid;
-    table[SYS_SETEUID]  = (void*) seteuid;
-    table[SYS_SETGID]   = (void*) setgid;
-    table[SYS_SETUID]   = (void*) setuid;
-    table[SYS_SETREGID] = (void*) setregid;
-    table[SYS_SETREUID] = (void*) setreuid;
+    table[SYS_SETEGID]  = (void*) sys_setegid;
+    table[SYS_SETEUID]  = (void*) sys_seteuid;
+    table[SYS_SETGID]   = (void*) sys_setgid;
+    table[SYS_SETUID]   = (void*) sys_setuid;
+    table[SYS_SETREGID] = (void*) sys_setregid;
+    table[SYS_SETREUID] = (void*) sys_setreuid;
 }

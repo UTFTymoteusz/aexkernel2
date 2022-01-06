@@ -28,7 +28,7 @@ namespace AEX::FS {
 
         next |= _next(cluster) & 0xF0000000;
 
-        cluster_t next_l = from_little_endian(next);
+        cluster_t next_l = from_le(next);
         m_handle.write(&next_l, m_start + cluster * sizeof(cluster_t), sizeof(cluster_t));
     }
 
@@ -44,7 +44,7 @@ namespace AEX::FS {
     }
 
     cluster_t Table32::_next(cluster_t cluster) {
-        little_endian<cluster_t> next;
+        le<cluster_t> next;
         m_handle.read(&next, m_start + cluster * sizeof(cluster_t), sizeof(cluster_t));
 
         cluster = next;

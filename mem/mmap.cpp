@@ -29,7 +29,7 @@ namespace AEX::Mem {
     Region::~Region() {}
 
     error_t Region::read(void* addr, FS::off_t offset, size_t count) {
-        kpanic("Default Region::read(0x%p, %li, %i) called", addr, offset, count);
+        kpanic("Default Region::read(%p, %li, %i) called", addr, offset, count);
     }
 
     optional<Region*> Region::fork(Pagemap* dst) {
@@ -92,7 +92,7 @@ namespace AEX::Mem {
     }
 
     optional<Region*> FileBackedRegion::fork(Pagemap* dst) {
-        kpanic("FileBackedRegion::fork(0x%p) called", dst);
+        kpanic("FileBackedRegion::fork(%p) called", dst);
     }
 
     int FileBackedRegion::findSlot(int32_t id) {

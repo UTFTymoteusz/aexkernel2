@@ -103,11 +103,12 @@ namespace AEX::Sys::MCore {
             IRQ::set_destination(i, i % cpu_count);
 
         for (int i = 0; i < cpu_count; i++) {
-            // We need to check because a CPU can fail to start.
             if (!CPUs[i])
                 continue;
 
-            CPUs[i]->local_tss = tsses[i];
+            CPUs[i]->local_tss          = tsses[i];
+            CPUs[i]->irq_stack_start    = CPUs[i]->local_tss->ist2 - 16384;
+            CPUs[i]->reshed_stack_start = CPUs[i]->local_tss->ist3 - 4096;
         }
 
         kpanic_hook.subscribe([]() {

@@ -16,10 +16,10 @@ namespace AEX::Sys {
         uint32_t reserved1;
         uint32_t reserved2;
 
-        uint64_t ist1;
-        uint64_t ist2;
-        uint64_t ist3;
-        uint64_t ist4;
+        uint64_t ist1; // fault stack
+        uint64_t ist2; // irq stack
+        uint64_t ist3; // reshed stack
+        uint64_t ist4; // context quick-save
         uint64_t ist5;
         uint64_t ist6;
         uint64_t ist7;
@@ -30,4 +30,6 @@ namespace AEX::Sys {
 
         uint16_t io_bitmap_pointer = sizeof(tss);
     } PACKED;
+
+    static_assert(sizeof(tss) == 104);
 }

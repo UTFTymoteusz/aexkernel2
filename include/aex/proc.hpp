@@ -9,6 +9,7 @@
 #include "aex/proc/exec.hpp"
 #include "aex/proc/process.hpp"
 #include "aex/proc/rusage.hpp"
+#include "aex/proc/setjmp.hpp"
 #include "aex/proc/thread.hpp"
 #include "aex/proc/types.hpp"
 #include "aex/utility.hpp"

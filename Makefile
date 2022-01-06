@@ -22,7 +22,7 @@ VERSION := $(shell date -u '+%d.%m.%Y').$(shell printf "%05d" $(shell date -d "1
 ISO  = $(BIN)grubiso/
 SYS  = $(ISO)sys/
 
-GFLAGS = -O3 -Wall -Wextra -Werror -nostdlib -pipe -lgcc -ffreestanding
+GFLAGS = -O3 -Wall -Wextra -Werror -nostdlib -pipe -lgcc -ffreestanding -g
 
 INCLUDES := -I. -Iinclude/ -Iarch/$(ARCH)/ -Iarch/$(ARCH)/include/
 
@@ -37,10 +37,10 @@ CXXFLAGS := $(GFLAGS)		   \
 	-fno-pic			   	   \
 	-fno-stack-protector       \
 	-fno-omit-frame-pointer    \
-	-mno-red-zone		       \
 	-fvisibility=hidden		   \
 	-DARCH="\"$(ARCH)\""       \
 	-DVERSION="\"$(VERSION)\"" \
+	-DDEBUG="$(DEBUG)"         \
 	$(INCLUDES)
 
 ASFLAGS := -felf64
@@ -70,7 +70,7 @@ all: $(OBJS)
 	#nm $(SYS)aexkrnl | grep -o 'W \w*$$' | sed 's/W /-L/g' | xargs objcopy $(SYS)aexkrnl
 	#objcopy -x -g -K __dso_handle $(SYS)aexkrnl
 
-	@printf '\033[0;36maexkrnl\033[0m: Done building\033[0K\n'
+	@printf '\033[0;36m%-10s\033[0m: Done building\033[0K\n' aexkrnl
 
 copy:
 	@cp -u $(SYS)aexkrnl    "$(ROOT_DIR)sys/"
@@ -92,20 +92,20 @@ $(OBJ_DEST)%.cpp.o : %.cpp
 	@$(MKDIR) ${@D}
 	@$(MKDIR) $(dir $(DEP_DEST)$*)
 
-	@printf '\033[0;36maexkrnl\033[0m: Building \033[0;36m$(<)\033[0m\033[0K\r'
+	@printf '\033[0;36m%-10s\033[0m: Building \033[0;36m$(<)\033[0m\033[0K\r' aexkrnl
 	@$(CXX) $(CXXFLAGS) -c $< -o $@ -MMD -MT $@ -MF $(DEP_DEST)$*.cpp.d
 
 $(OBJ_DEST)%.asm.o : %.asm
 	@$(MKDIR) ${@D}
 
-	@printf '\033[0;36maexkrnl\033[0m: Building \033[0;36m$(<)\033[0m\033[0K\r'
+	@printf '\033[0;36m%-10s\033[0m: Building \033[0;36m$(<)\033[0m\033[0K\r' aexkrnl
 	@$(AS) $(ASFLAGS) $< -o $@
 	@objcopy --weaken $@
 
 $(OBJ_DEST)%.psf.o : %.psf
 	@$(MKDIR) ${@D}
 
-	@printf '\033[0;36maexkrnl\033[0m: Building \033[0;36m$(<)\033[0m\033[0K\r'
+	@printf '\033[0;36m%-10s\033[0m: Building \033[0;36m$(<)\033[0m\033[0K\r' aexkrnl
 	@objcopy -B i386:x86-64 -O elf64-x86-64 -I binary $< $@
 	@objcopy --weaken $@
 
@@ -113,7 +113,7 @@ $(OBJ_DEST)%.asmr.o : %.asmr
 	@$(MKDIR) ${@D}
 	@$(AS) -f bin -o $@ $<
 	
-	@printf '\033[0;36maexkrnl\033[0m: Building \033[0;36m$(<)\033[0m\033[0K\r'
+	@printf '\033[0;36m%-10s\033[0m: Building \033[0;36m$(<)\033[0m\033[0K\r' aexkrnl
 	@objcopy -B i386:x86-64 -O elf64-x86-64 -I binary $@ $@
 	@objcopy --weaken $@
 

@@ -12,11 +12,11 @@ namespace AEX::Mem {
         m_page_combine, m_page_global, m_page_nophys, m_page_exec, m_page_fixed, m_page_arbitrary;
 }
 
-// Specifies if a page is present.
+// Specifies if pages are present.
 #define PAGE_PRESENT AEX::Mem::m_page_present
-// Specifies if a page is writeable.
+// Specifies if pages are writeable.
 #define PAGE_WRITE AEX::Mem::m_page_write
-// Specifies if a page is accessible by userspace code.
+// Specifies if pages are accessible from userspace.
 #define PAGE_USER AEX::Mem::m_page_user
 // Write-through mode.
 #define PAGE_THROUGH AEX::Mem::m_page_through
@@ -24,11 +24,11 @@ namespace AEX::Mem {
 #define PAGE_NOCACHE AEX::Mem::m_page_nocache
 // Write-combining mode.
 #define PAGE_COMBINE AEX::Mem::m_page_combine
-// Makes the page not get flushed on context switches.
+// Makes the pages not get flushed on context switches.
 #define PAGE_GLOBAL AEX::Mem::m_page_global
-// Marks the page as not being the owner of a physical memory frame.
+// Marks the pages as not being the owner of a physical memory frame.
 #define PAGE_NOPHYS AEX::Mem::m_page_nophys
-// Puts the page in the executable space.
+// Puts the pages in the executable space.
 #define PAGE_EXEC AEX::Mem::m_page_exec
 // If set, the pages will be mapped at the source address.
 #define PAGE_FIXED AEX::Mem::m_page_fixed

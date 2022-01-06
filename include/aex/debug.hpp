@@ -10,9 +10,10 @@
 
 namespace AEX::Debug {
     enum thread_entry_type {
-        ENTRY_BOOT   = 0,
-        ENTRY_USER   = 1,
-        ENTRY_KERNEL = 2,
+        ENTRY_BOOT    = 0,
+        ENTRY_USER    = 1,
+        ENTRY_KERNEL  = 2,
+        ENTRY_SYSCALL = 3,
     };
 
     struct cookie {
@@ -28,11 +29,18 @@ namespace AEX::Debug {
     API void stack_trace(int skip = 0, stack_frame* frame = nullptr);
     API void stack_check();
 
+    /**
+     * Returns the address of a caller.
+     * @param depth How many callers should we skip over.
+     * @returns Void pointer to the caller.
+     **/
+    API void* caller(int depth = 0);
+
     API const char* addr2name(void* addr, int& delta, bool only_kernel = false);
     API const char* addr2name(void* addr, bool only_kernel = false);
     API void*       name2addr(const char* name);
 
-    API char* demangle_name(const char* symbol, char* buffer, size_t buffer_len);
+    // API char* demangle_name(const char* symbol, char* buffer, size_t buffer_len);
 
     API void dump_bytes(void* addr, size_t len);
 

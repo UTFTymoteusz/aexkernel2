@@ -41,46 +41,46 @@ namespace AEX::FS {
     };
 
     struct fat_ebpb16 {
-        uint8_t                 drive_number;
-        uint8_t                 nt_flags;
-        uint8_t                 signature;
-        little_endian<uint32_t> serial;
-        char                    label[11];
-        char                    system_identifier_string[8];
+        uint8_t      drive_number;
+        uint8_t      nt_flags;
+        uint8_t      signature;
+        le<uint32_t> serial;
+        char         label[11];
+        char         system_identifier_string[8];
     } PACKED;
 
     struct fat_ebpb32 {
-        little_endian<uint32_t>  fat_sector_count;
-        little_endian<uint16_t>  flags;
-        little_endian<uint16_t>  version;
-        little_endian<cluster_t> root_cluster;
-        little_endian<uint16_t>  fsinfo_sector;
-        little_endian<uint16_t>  backup_sector;
-        char                     zero[12];
-        uint8_t                  drive_number;
-        uint8_t                  nt_flags;
-        uint8_t                  signature;
-        little_endian<uint32_t>  serial;
-        char                     label[11];
-        char                     system_identifier_string[8];
+        le<uint32_t>  fat_sector_count;
+        le<uint16_t>  flags;
+        le<uint16_t>  version;
+        le<cluster_t> root_cluster;
+        le<uint16_t>  fsinfo_sector;
+        le<uint16_t>  backup_sector;
+        char          zero[12];
+        uint8_t       drive_number;
+        uint8_t       nt_flags;
+        uint8_t       signature;
+        le<uint32_t>  serial;
+        char          label[11];
+        char          system_identifier_string[8];
     } PACKED;
 
     struct fat_bpb {
         uint8_t code[3];
         char    oem[8];
 
-        little_endian<uint16_t> bytes_per_sector;
-        uint8_t                 sectors_per_cluster;
-        little_endian<uint16_t> reserved_sector_count;
-        uint8_t                 fat_count;
-        little_endian<uint16_t> directory_entries;
-        little_endian<uint16_t> total_sector_count;
-        uint8_t                 media_descriptor_type;
-        little_endian<uint16_t> fat_sector_count;
-        little_endian<uint16_t> sectors_per_track;
-        little_endian<uint16_t> head_count;
-        little_endian<uint32_t> hidden_sector_count;
-        little_endian<uint32_t> large_sector_count;
+        le<uint16_t> bytes_per_sector;
+        uint8_t      sectors_per_cluster;
+        le<uint16_t> reserved_sector_count;
+        uint8_t      fat_count;
+        le<uint16_t> directory_entries;
+        le<uint16_t> total_sector_count;
+        uint8_t      media_descriptor_type;
+        le<uint16_t> fat_sector_count;
+        le<uint16_t> sectors_per_track;
+        le<uint16_t> head_count;
+        le<uint32_t> hidden_sector_count;
+        le<uint32_t> large_sector_count;
 
         union {
             fat_ebpb16 ebpb16;
@@ -120,13 +120,13 @@ namespace AEX::FS {
 
         fat_date access_date;
 
-        little_endian<uint16_t> first_cluster_hi;
+        le<uint16_t> first_cluster_hi;
 
         fat_time modify_time;
         fat_date modify_date;
 
-        little_endian<uint16_t> first_cluster_lo;
-        little_endian<uint32_t> size;
+        le<uint16_t> first_cluster_lo;
+        le<uint32_t> size;
     } PACKED;
 
     struct fat_dirent_lfn {

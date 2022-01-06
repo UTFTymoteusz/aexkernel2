@@ -243,8 +243,8 @@ class RTL8139 : public Dev::NetDevice {
 
     private:
     struct rx_frame {
-        little_endian<uint16_t> flags;
-        little_endian<uint16_t> len;
+        le<uint16_t> flags;
+        le<uint16_t> len;
     } __attribute((packed));
 
     Spinlock m_tx_lock;

@@ -1,3 +1,4 @@
+#include "aex/debug.hpp"
 #include "aex/dev/tree.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"

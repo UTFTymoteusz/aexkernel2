@@ -13,7 +13,7 @@ handler:
 
     push r15
     push rbp
-    mov rbp, rsp
+    mov rbp, 3
 
     push rcx
     push r11

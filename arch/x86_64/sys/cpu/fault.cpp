@@ -1,12 +1,12 @@
 #include "aex/arch/ipc/signal.hpp"
 #include "aex/arch/sys/cpu.hpp"
+#include "aex/arch/sys/cpu/tss.hpp"
 #include "aex/assert.hpp"
 #include "aex/debug.hpp"
 #include "aex/kpanic.hpp"
 #include "aex/mem/mmap.hpp"
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
-#include "aex/proc/thread.hpp"
 #include "aex/sec/random.hpp"
 #include "aex/utility.hpp"
 
@@ -91,17 +91,18 @@ namespace AEX::Sys {
 
         AEX_ASSERT_PEDANTIC(!CPU::checkInterrupts());
 
-        if (thread->faulting) {
+        if (thread->faulting && !Proc::testjmp(&Proc::Thread::current()->fault_recovery)) {
             int  delta = 0;
             auto name  = Debug::addr2name((void*) info->rip, delta) ?: "no idea";
 
-            printk("recursive fault @ 0x%016lx <%s+0x%x>\n", info->rip, name, delta);
-            Debug::stack_trace();
+            printk("recursive fault @ %p <%s+0x%x>\n", info->rip, name, delta);
+            // Debug::stack_trace();
 
             CPU::broadcast(CPU::IPP_HALT);
             CPU::halt();
         }
 
+        cpu->local_tss->ist1 -= 8192;
         thread->faulting = true;
 
         switch (info->int_no) {
@@ -112,6 +113,13 @@ namespace AEX::Sys {
             CPU::current()->in_interrupt--;
 
             thread->faulting = false;
+            cpu->local_tss->ist1 += 8192;
+
+            if (Proc::testjmp(&Proc::Thread::current()->fault_recovery))
+                Proc::longjmp(&Proc::Thread::current()->fault_recovery, 2137);
+
+            thread->abortchk();
+
             return;
         case EXC_INVALID_OPCODE:
             if (!handle_invalid_opcode(info, cpu, thread))
@@ -120,6 +128,8 @@ namespace AEX::Sys {
             CPU::current()->in_interrupt--;
 
             thread->faulting = false;
+            cpu->local_tss->ist1 += 8192;
+
             return;
         case EXC_DIVZERO:
             if (!handle_invalid_div0(info, cpu, thread))
@@ -128,6 +138,8 @@ namespace AEX::Sys {
             CPU::current()->in_interrupt--;
 
             thread->faulting = false;
+            cpu->local_tss->ist1 += 8192;
+
             return;
         default:
             break;
@@ -140,7 +152,7 @@ namespace AEX::Sys {
         case EXC_DEBUG:
         case EXC_NMI:
             printk(WARN "cpu%i: %93$%s%$ Exception (%i) (%93$%i%$)\nRIP: 0x%016lx <%s+0x%x> "
-                        "(cpu%i, pid%i, th0x%p)\n",
+                        "(cpu%i, pid%i, th%p)\n",
                    CPU::currentID(), exception_names[info->int_no], info->int_no, info->err,
                    info->rip, name, delta, CPU::currentID(),
                    CPU::current()->current_thread->parent->pid, CPU::current()->current_thread);
@@ -154,15 +166,20 @@ namespace AEX::Sys {
                         printk("apparently i am handling interrupt %i\n", i * 32 + j);
             }
 
-            printk("Stack trace:\n");
-            Debug::stack_trace(1);
-
+            printk("Processes:\n");
             Proc::debug_print_processes();
+
+            printk("Threads:\n");
             Proc::debug_print_threads();
+
+            printk("Idles:\n");
+            Proc::debug_print_idles();
 
             CPU::current()->in_interrupt--;
 
             thread->faulting = false;
+            cpu->local_tss->ist1 += 8192;
+
             return;
         default:
             printk(FAIL "cpu%i: %93$%s%$ Exception (%i) (%91$%i%$)\nRIP: 0x%016lx <%s+0x%x>\n",
@@ -172,16 +189,16 @@ namespace AEX::Sys {
             break;
         }
 
-        printk("PID: %i THPTR: 0x%p (b%i, c%i, i%i)\n", thread->parent->pid, thread, 2137, 2137,
-               cpu->in_interrupt);
+        printk("PID: %i TH: %i (%p) %s\n", thread->parent->pid, thread->tid, thread,
+               thread->context->usermode() ? "user" : "krnl");
 
         if (info->int_no == EXC_PAGE_FAULT) {
             size_t cr2 = 0;
 
             asm volatile("mov rax, cr2; mov %0, rax;" : : "m"(cr2) : "memory");
 
-            printk("%91$%s, %s, %s%$\n", (info->err & 0x04) ? "User" : "Kernel",
-                   (info->err & 0x02) ? "Write" : "Read",
+            printk("%91$%s, %s, %s, %s%$\n", (info->err & 0x04) ? "User" : "Kernel",
+                   (info->err & 0x10) ? "Exec" : "Data", (info->err & 0x02) ? "Write" : "Read",
                    (info->err & 0x01) ? "Present" : "Not Present");
 
             printk("ssssss: 0x%lx\n", cr2);
@@ -190,11 +207,15 @@ namespace AEX::Sys {
 
         print_info(info);
 
-        printk("USTK: 0x%p (%i, 0x%p)\n", thread->user_stack.ptr, thread->user_stack.size,
-               (size_t) thread->user_stack.ptr + thread->user_stack.size);
-        printk("KSTK: 0x%p (%i, 0x%p)\n", thread->kernel_stack.ptr, thread->kernel_stack.size,
+        if (thread->context->usermode())
+            printk("USTK: %p (%i, %p)\n", thread->user_stack.ptr, thread->user_stack.size,
+                   (size_t) thread->user_stack.ptr + thread->user_stack.size);
+        else
+            printk("USTK: N/A\n");
+
+        printk("KSTK: %p (%i, %p)\n", thread->kernel_stack.ptr, thread->kernel_stack.size,
                (size_t) thread->kernel_stack.ptr + thread->kernel_stack.size);
-        printk("FSTK: 0x%p (%i, 0x%p)\n", thread->fault_stack.ptr, thread->fault_stack.size,
+        printk("FSTK: %p (%i, %p)\n", thread->fault_stack.ptr, thread->fault_stack.size,
                (size_t) thread->fault_stack.ptr + thread->fault_stack.size);
 
         if (info->int_no == EXC_DEBUG) {
@@ -210,6 +231,8 @@ namespace AEX::Sys {
                 ;
 
             thread->faulting = false;
+            cpu->local_tss->ist1 += 8192;
+
             CPU::current()->in_interrupt--;
             return;
         }
@@ -217,11 +240,12 @@ namespace AEX::Sys {
         kpanic("Unrecoverable processor exception occured in CPU %i", CPU::currentID());
 
         thread->faulting = false;
+        cpu->local_tss->ist1 += 8192;
 
         CPU::current()->in_interrupt--;
     }
 
-    bool handle_page_fault(UNUSED CPU::fault_info* info, CPU* cpu, Proc::Thread* thread) {
+    bool handle_page_fault(CPU::fault_info* info, CPU* cpu, Proc::Thread* thread) {
         auto state = out(thread, cpu);
 
         size_t cr2 = 0, cr3 = 0;
@@ -236,13 +260,14 @@ namespace AEX::Sys {
         if (!region) {
             if (process == Proc::Process::kernel()) {
                 in(state, thread, cpu);
-                return false;
+                return Proc::testjmp(&Proc::Thread::current()->fault_recovery);
             }
 
             printkd(PTKD_UFAULT,
-                    "cpu%i: pid%i: Page fault @ 0x%lx (0x%lx)\n"
-                    "    RIP: 0x%016lx\n",
-                    cpu->id, cpu->current_thread->getProcess()->pid, cr2, cr3, info->rip);
+                    "cpu%i: pid%i: Page fault @ 0x%lx (pgroot 0x%lx)\n"
+                    "    RIP: 0x%016lx\n    RSP: 0x%016lx\n",
+                    cpu->id, cpu->current_thread->getProcess()->pid, cr2, cr3, info->rip,
+                    info->rsp);
 
             IPC::siginfo_t sinfo = {};
 
@@ -250,7 +275,7 @@ namespace AEX::Sys {
             sinfo.si_code  = (info->err & 0x01) ? SEGV_ACCERR : SEGV_MAPERR;
             sinfo.si_addr  = addr;
 
-            thread->signal(sinfo);
+            thread->sighandle(sinfo, info);
 
             in(state, thread, cpu);
             return true;
@@ -314,7 +339,7 @@ namespace AEX::Sys {
     inline Proc::Thread::state out(Proc::Thread* thread, CPU*& cpu) {
         auto state = thread->saveState();
 
-        thread->setStatus(Proc::TS_RUNNABLE);
+        thread->status = Proc::TS_RUNNABLE;
 
         thread->setSignability(0);
         thread->setCritical(0);
@@ -347,7 +372,7 @@ namespace AEX::Sys {
         int   delta;
         auto* name = Debug::addr2name((void*) info->rip, delta) ?: "no idea";
 
-        printk("RIP: 0x%p <%s+0x%x>\n", info->rip, name, delta);
+        printk("RIP: %p <%s+0x%x>\n", info->rip, name, delta);
         printk("RFLAGS: 0x%016lx  CS: 0x%04x  SS: 0x%04x\n", info->rflags, info->cs, info->ss);
 
         size_t cr0 = 0, cr2 = 0, cr3 = 0, cr4 = 0;
@@ -371,15 +396,12 @@ namespace AEX::Sys {
         CPU::halt();
     }
 
-    extern "C" void exc_check_signal(IPC::interrupt_registers* regs) {
+    extern "C" void exc_check_signal() {
         auto process = Proc::Process::current();
-        auto thread  = Proc::Thread::current();
 
-        thread->safe_exit = true;
-        thread->signalCheck(true, regs);
-        thread->safe_exit = false;
-
-        while (process->stopped || process->exiting())
+        while (process->stopped || process->exiting()) {
+            BROKEN;
             Proc::Thread::yield();
+        }
     }
 }

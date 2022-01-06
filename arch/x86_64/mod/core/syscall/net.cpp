@@ -1,12 +1,15 @@
 
 #include "aex/net.hpp"
 
+#include "aex/mem/usr.hpp"
+
 #include "syscallids.h"
 #include "usr.hpp"
 
 using namespace AEX;
+using namespace AEX::Mem;
 
-int gethostname(char* name, size_t len) {
+int sys_gethostname(char* name, size_t len) {
     USR_ENSURE(len <= 256);
 
     char buffer[len];
@@ -17,6 +20,6 @@ int gethostname(char* name, size_t len) {
     return 0;
 }
 
-__attribute__((optimize("O2"))) void register_net(Sys::syscall_t* table) {
-    table[SYS_GETHOSTNAME] = (void*) gethostname;
+O2 void register_net(Sys::syscall_t* table) {
+    table[SYS_GETHOSTNAME] = (void*) sys_gethostname;
 }

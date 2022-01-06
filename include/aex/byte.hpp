@@ -25,64 +25,64 @@ namespace AEX {
     }
 
     template <typename T>
-    API inline T from_little_endian(T x) {
+    API inline T from_le(T x) {
         return BIG_ENDIAN ? bswap(x) : x;
     }
 
     template <typename T>
-    API inline T to_little_endian(T x) {
+    API inline T to_le(T x) {
         return BIG_ENDIAN ? bswap(x) : x;
     }
 
     template <typename T>
-    API inline T from_big_endian(T x) {
+    API inline T from_be(T x) {
         return LITTLE_ENDIAN ? bswap(x) : x;
     }
 
     template <typename T>
-    API inline T to_big_endian(T x) {
+    API inline T to_be(T x) {
         return LITTLE_ENDIAN ? bswap(x) : x;
     }
 
     template <typename T>
-    struct API little_endian {
+    struct API le {
         T m_value;
 
         inline T get() {
-            return from_little_endian<T>(m_value);
+            return from_le<T>(m_value);
         }
 
         inline void set(T value) {
-            m_value = to_little_endian<T>(value);
+            m_value = to_le<T>(value);
         }
 
         operator T() {
             return get();
         }
 
-        little_endian& operator=(const T& value) {
+        le& operator=(const T& value) {
             set(value);
             return *this;
         }
     } PACKED;
 
     template <typename T>
-    struct API big_endian {
+    struct API be {
         T m_value;
 
         inline T get() {
-            return from_big_endian<T>(m_value);
+            return from_be<T>(m_value);
         }
 
         inline void set(T value) {
-            m_value = to_big_endian<T>(value);
+            m_value = to_be<T>(value);
         }
 
         operator T() {
             return get();
         }
 
-        big_endian& operator=(const T& value) {
+        be& operator=(const T& value) {
             set(value);
             return *this;
         }

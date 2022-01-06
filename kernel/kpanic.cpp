@@ -31,9 +31,13 @@ namespace AEX {
 
         CPU::current()->pushFmsg(buffer);
 
-        if (Mem::atomic_add_fetch(&panicked, 1) > 20)
-            while (true)
-                CPU::wait();
+        if (Mem::atomic_fetch_add(&panicked, 1) != 0) {
+            printk(FAIL "recursive kpanic, wonderful (cpu%i, pid%i, th%p)\n", CPU::currentID(),
+                   CPU::current()->current_thread->parent->pid, CPU::current()->current_thread);
+
+            Debug::stack_trace();
+            CPU::halt();
+        }
 
         printk_fault();
 
@@ -61,7 +65,7 @@ namespace AEX {
         printk("\rTechnical information:\n\n");
 #endif
 
-        printk(FAIL "Kernel Panic (cpu%i, pid%i, th0x%p)\n", CPU::currentID(),
+        printk(FAIL "Kernel Panic (cpu%i, pid%i, th%p)\n", CPU::currentID(),
                CPU::current()->current_thread->parent->pid, CPU::current()->current_thread);
         printk("%s", buffer);
         printk("\n");
@@ -88,7 +92,7 @@ namespace AEX {
 
         printk_fault();
 
-        printk(OK "Kernel Calmness (cpu%i, pid%i, th0x%p)\n", CPU::currentID(),
+        printk(OK "Kernel Calmness (cpu%i, pid%i, th%p)\n", CPU::currentID(),
                CPU::current()->current_thread->parent->pid, CPU::current()->current_thread);
         printk(format, args);
         printk("\n");

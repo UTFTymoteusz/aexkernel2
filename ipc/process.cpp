@@ -89,7 +89,7 @@ namespace AEX::Proc {
         return ENONE;
     }
 
-    IPC::sigset_t Process::getSignalPending() {
+    IPC::sigset_t Process::sigpending() {
         SCOPE(sigcheck_lock);
         return m_sigqueue.pending();
     }

@@ -252,7 +252,7 @@ namespace NetStack {
         return EINVAL;
     }
 
-    optional<ssize_t> TCPSocket::sendTo(const void* buffer, size_t len, int,
+    optional<ssize_t> TCPSocket::sendto(const void* buffer, size_t len, int,
                                         const sockaddr* dst_addr) {
         if (!buffer || len == 0)
             return EINVAL;
@@ -302,7 +302,7 @@ namespace NetStack {
         return req_len;
     }
 
-    optional<ssize_t> TCPSocket::receiveFrom(void* buffer, size_t len, int flags,
+    optional<ssize_t> TCPSocket::receivefrom(void* buffer, size_t len, int flags,
                                              sockaddr* src_addr) {
         if (!buffer || len == 0)
             return EINVAL;
@@ -461,7 +461,7 @@ namespace NetStack {
 
         seg->seq        = m_block.snd_nxt;
         seg->ack        = m_block.rcv_nxt;
-        seg->flags      = (tcp_flags_t)(TCP_FIN | TCP_ACK);
+        seg->flags      = (tcp_flags_t) (TCP_FIN | TCP_ACK);
         seg->header_len = 20;
         seg->len        = 0;
 
@@ -599,6 +599,7 @@ namespace NetStack {
         m_tcp_header->checksum = to_checksum(sum);
 
         memcpy(payload + sizeof(tcp_header), seg->data, seg->len);
+        memcpy(payload + sizeof(tcp_header) + seg->len, "aexTCPaexTCP", 12);
 
         if constexpr (TCPConfig::FLAG_PRINT) {
             char buffer[32];
@@ -607,7 +608,7 @@ namespace NetStack {
             printk("tcp: %5i >> %5i <%s>\n", this->source_port, port, buffer);
         }
 
-        IPv4Layer::route(packet, IPv4Layer::encaps_len(sizeof(tcp_header) + seg->len));
+        IPv4Layer::route(packet, IPv4Layer::encaps_len(sizeof(tcp_header) + seg->len + 12));
         return true;
     }
 
@@ -630,7 +631,7 @@ namespace NetStack {
         auto m_tcp_header = (tcp_header*) buffer;
 
         uint16_t    hdr_len = ((((uint16_t) m_tcp_header->goddamned_bitvalues) >> 12) * 4);
-        tcp_flags_t flags   = (tcp_flags_t)((uint16_t) m_tcp_header->goddamned_bitvalues);
+        tcp_flags_t flags   = (tcp_flags_t) ((uint16_t) m_tcp_header->goddamned_bitvalues);
 
         uint32_t seqn = (uint32_t) m_tcp_header->seq_number;
         uint32_t ackn = (uint32_t) m_tcp_header->ack_number;
@@ -791,7 +792,7 @@ namespace NetStack {
         auto m_tcp_header = (tcp_header*) buffer;
 
         uint16_t    hdr_len = ((((uint16_t) m_tcp_header->goddamned_bitvalues) >> 12) * 4);
-        tcp_flags_t flags   = (tcp_flags_t)((uint16_t) m_tcp_header->goddamned_bitvalues);
+        tcp_flags_t flags   = (tcp_flags_t) ((uint16_t) m_tcp_header->goddamned_bitvalues);
 
         uint32_t seqn = (uint32_t) m_tcp_header->seq_number;
         uint32_t ackn = (uint32_t) m_tcp_header->ack_number;
@@ -835,7 +836,7 @@ namespace NetStack {
 
             seg.seq        = new_entry->block.snd_nxt - 1;
             seg.ack        = new_entry->block.rcv_nxt;
-            seg.flags      = (tcp_flags_t)(TCP_SYN | TCP_ACK);
+            seg.flags      = (tcp_flags_t) (TCP_SYN | TCP_ACK);
             seg.header_len = 24;
             seg.len        = 4;
             seg.data       = new uint8_t[4];
@@ -916,7 +917,7 @@ namespace NetStack {
 
             seg->seq        = m_block.snd_nxt;
             seg->ack        = m_block.rcv_nxt;
-            seg->flags      = (tcp_flags_t)(TCP_PSH | TCP_ACK);
+            seg->flags      = (tcp_flags_t) (TCP_PSH | TCP_ACK);
             seg->header_len = 20;
             seg->len        = size;
             seg->data       = new uint8_t[size];
@@ -998,7 +999,7 @@ namespace NetStack {
                 i++;
                 return;
             case TCP_OPT_MSS: {
-                auto mss       = (big_endian<uint16_t>*) &buffer[i + 2];
+                auto mss       = (be<uint16_t>*) &buffer[i + 2];
                 block->snd_mss = clamp((uint16_t) *mss, (uint16_t) TCP_MIN_MSS, (uint16_t) 1460);
             } break;
             default:

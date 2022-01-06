@@ -49,7 +49,7 @@ namespace AEX::Proc {
     void init() {
         void_threads = new Thread*[MCore::cpu_count];
 
-        auto& bsp = MCore::CPUs[0];
+        // auto& bsp = MCore::CPUs[0];
 
         auto idle_process   = new Process(KERNEL_PATH, 0, Mem::kernel_pagemap, "idle");
         auto kernel_process = new Process(KERNEL_PATH, 0, Mem::kernel_pagemap);
@@ -73,19 +73,20 @@ namespace AEX::Proc {
             (void*) ((size_t) Mem::kernel_pagemap->alloc(Thread::FAULT_STACK_SIZE, PAGE_WRITE) +
                      Thread::FAULT_STACK_SIZE);
         bsp_thread->fault_stack.size = Thread::FAULT_STACK_SIZE;
-        bsp_thread->setStatus(TS_RUNNABLE);
+        bsp_thread->status           = TS_RUNNABLE;
 
         bsp_thread->original_entry = nullptr;
-        // printk("aa 0x%p\n", bsp_thread);
-        // printk("bb 0x%p\n", &bsp_thread->context->rip);
-        // printk("cc 0x%p\n", &bsp_thread->context->padding);
-        // printk("ss 0x%p\n", &bsp_thread->context->ss);
-        // printk("cs 0x%p\n", &bsp_thread->context->cs);
-        // printk("fx 0x%p\n", &bsp_thread->context->fxstate);
-        // printk("int 0x%p\n", Sys::MCore::CPUs[0]->interrupt_stack);
+        // printk("aa %p\n", bsp_thread);
+        // printk("bb %p\n", &bsp_thread->context->rip);
+        // printk("cc %p\n", &bsp_thread->context->padding);
+        // printk("ss %p\n", &bsp_thread->context->ss);
+        // printk("cs %p\n", &bsp_thread->context->cs);
+        // printk("fx %p\n", &bsp_thread->context->fxstate);
+        // printk("int %p\n", Sys::MCore::CPUs[0]->reshed_stack);
 
-        bsp->current_thread  = bsp_thread;
-        bsp->current_context = bsp_thread->context;
+        // bsp->previous_thread = bsp_thread;
+        // bsp->current_thread  = bsp_thread;
+        // bsp->current_context = bsp_thread->context;
 
         thread_list_size       = 1;
         thread_list_head       = bsp_thread;
@@ -116,7 +117,7 @@ namespace AEX::Proc {
             printk("Processors:\n");
             for (int i = 0; i < MCore::cpu_count; i++) {
                 auto cpu = Sys::MCore::CPUs[i];
-                printk("%3i. 0x%p\n", i, cpu->current_thread);
+                printk("%3i. %p\n", i, cpu->current_thread);
             }
         });
 #endif
@@ -261,18 +262,20 @@ namespace AEX::Proc {
             auto void_thread = new Thread();
             void_threads[i]  = void_thread;
 
+            MCore::CPUs[i]->previous_thread = void_thread;
             MCore::CPUs[i]->current_thread  = void_thread;
             MCore::CPUs[i]->current_context = void_thread->context;
-            MCore::CPUs[i]->update(void_thread);
+            MCore::CPUs[i]->swthread(void_thread);
 
             void_thread->lock.acquireRaw();
-            void_thread->next = thread_list_head;
-            void_thread->setStatus(TS_DEAD);
+            void_thread->next   = thread_list_head;
+            void_thread->status = TS_DEAD;
         }
 
+        MCore::CPUs[0]->previous_thread = bsp_thread;
         MCore::CPUs[0]->current_thread  = bsp_thread;
         MCore::CPUs[0]->current_context = bsp_thread->context;
-        MCore::CPUs[0]->update(bsp_thread);
+        MCore::CPUs[0]->swthread(bsp_thread);
 
         // The scheduler will release the lock
         bsp_thread->lock.acquireRaw();

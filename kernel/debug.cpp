@@ -81,6 +81,9 @@ namespace AEX::Debug {
     }
 
     const char* addr2name(void* addr, int& delta_ret, bool only_kernel) {
+        if (!addr)
+            return nullptr;
+
         if (kernel_symbols.count() == 0)
             return nullptr;
 

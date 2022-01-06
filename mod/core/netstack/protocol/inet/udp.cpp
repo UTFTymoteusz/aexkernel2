@@ -25,10 +25,7 @@ namespace NetStack {
         m_port_bitmap = new uint32_t[65536 / sizeof(uint32_t) / 8];
     }
 
-    optional<Socket_SP> UDPProtocol::createSocket(socket_type_t type) {
-        if (type != socket_type_t::SOCK_DGRAM)
-            return ESOCKTNOSUPPORT;
-
+    optional<Socket_SP> UDPProtocol::create() {
         auto socket = new UDPSocket();
         if (!socket)
             return ENOMEM;

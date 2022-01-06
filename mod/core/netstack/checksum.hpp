@@ -22,6 +22,6 @@ namespace NetStack {
         while (total >> 16)
             total = (total & 0xFFFF) + (total >> 16);
 
-        return AEX::from_big_endian<uint16_t>((uint16_t) ~total);
+        return AEX::from_be<uint16_t>((uint16_t) ~total);
     }
 }

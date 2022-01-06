@@ -4,7 +4,6 @@
 #include "aex/ipc/event.hpp"
 #include "aex/mem.hpp"
 #include "aex/net.hpp"
-#include "aex/net/inetprotocol.hpp"
 #include "aex/rwspinlock.hpp"
 #include "aex/spinlock.hpp"
 
@@ -15,7 +14,7 @@ namespace NetStack {
 
     class TCPSocket;
 
-    class TCPProtocol : public AEX::Net::INetProtocol {
+    class TCPProtocol : public AEX::Net::Protocol {
         public:
         static AEX::RWSpinlock                      sockets_lock;
         static AEX::Mem::Vector<TCPSocket*, 32, 32> sockets;
@@ -23,7 +22,7 @@ namespace NetStack {
         static void init();
         static void loop();
 
-        AEX::optional<AEX::Net::Socket_SP> createSocket(AEX::Net::socket_type_t type);
+        AEX::optional<AEX::Net::Socket_SP> create();
 
         static void packetReceived(AEX::Net::ipv4_addr src, uint16_t src_port,
                                    AEX::Net::ipv4_addr dst, uint16_t dst_port,

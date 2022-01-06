@@ -1,6 +1,8 @@
 #pragma once
 
+#include "aex/arch/ipc/signal.hpp"
 #include "aex/arch/proc/context.hpp"
+#include "aex/arch/sys/cpu.hpp"
 #include "aex/ipc/signal.hpp"
 #include "aex/ipc/sigqueue.hpp"
 #include "aex/ipc/types.hpp"
@@ -34,7 +36,6 @@ namespace AEX::Proc {
         struct state {
             uint16_t signability;
             uint16_t critical;
-
             status_t status;
         };
 
@@ -42,20 +43,18 @@ namespace AEX::Proc {
 
         // Do not change the order of these or the kernel will go boom boom
         struct {
-            tid_t    tid;         // 0x08
-            Context* context;     // 0x10
-            void*    unused;      // 0x18
-            error_t  errno;       // 0x20
-            size_t   saved_stack; // 0x28
+            tid_t    tid;          // 0x08
+            Context* context;      // 0x10
+            void*    unused;       // 0x18
+            error_t  errno;        // 0x20
+            size_t   sigret_stack; // 0x28
         };
 
         Spinlock lock;
         Spinlock sigcheck_lock;
 
         volatile status_t status;
-        union {
-            int64_t wakeup_at;
-        };
+        int64_t           wakeup_at;
 
         CriticalGuard    criticalGuard    = CriticalGuard(this);
         SignabilityGuard signabilityGuard = SignabilityGuard(this);
@@ -70,10 +69,10 @@ namespace AEX::Proc {
         stack fault_stack;
 
         bool faulting;
+        ALIGN(16) Context fault_recovery;
 
         void* tls;
         void* retval = nullptr;
-        bool  safe_exit;
 
         int sched_counter;
         int held_mutexes;
@@ -84,6 +83,8 @@ namespace AEX::Proc {
         Thread();
         Thread(Process* parent);
         ~Thread();
+
+        static Thread* current();
 
         [[nodiscard]] static optional<Thread*> create(pid_t parent, void* entry, size_t stack_size,
                                                       Mem::Pagemap* pagemap, bool usermode = false,
@@ -97,8 +98,6 @@ namespace AEX::Proc {
             exit(nullptr, true);
         }
 
-        static Thread* current();
-
         error_t         start();
         optional<void*> join();
         error_t         detach();
@@ -106,23 +105,25 @@ namespace AEX::Proc {
         bool            aborting();
         bool            interrupted();
 
-        void abortCheck();
+        /**
+         * Exits the thread if it is supposed to get aborted. Keep in mind that this method can
+         * restore interrupts, so use it only where that is safe.
+         */
+        void abortchk();
 
         Process* getProcess();
 
         // IPC Stuff
         error_t                  signal(IPC::siginfo_t& info);
         error_t                  sigret();
-        bool                     signalCheck(bool allow_handle);
-        bool                     signalCheck(bool allow_handle, IPC::interrupt_registers* regs);
-        bool                     signalCheck(bool allow_handle, IPC::syscall_registers* regs);
-        void                     asyncThreadingSignals(bool asyncthrdsig);
-        void                     signalWait(bool sigwait);
-        optional<IPC::siginfo_t> signalGet(IPC::sigset_t* set = nullptr);
-
-        IPC::sigset_t getSignalMask();
-        void          setSignalMask(const IPC::sigset_t& mask);
-        IPC::sigset_t getSignalPending();
+        bool                     sigchk(IPC::state_combo scmb = {});
+        error_t                  sighandle(IPC::siginfo_t& info, IPC::state_combo scmb);
+        void                     sigthasync(bool asyncthrdsig);
+        void                     sigwait(bool sigwait);
+        optional<IPC::siginfo_t> sigget(IPC::sigset_t* set = nullptr);
+        IPC::sigset_t            sigmask();
+        void                     sigmask(const IPC::sigset_t& mask);
+        IPC::sigset_t            sigpending();
 
         /**
          * Sets the arguments of the thread.
@@ -132,12 +133,6 @@ namespace AEX::Proc {
         void setArguments(U... args) {
             context->setArguments(args...);
         }
-
-        /**
-         * Sets the status of the thread.
-         * @param status Status to set to.
-         **/
-        void setStatus(status_t status);
 
         /**
          * Returns true if the thread is currently executing kernel code.
@@ -211,8 +206,8 @@ namespace AEX::Proc {
         void  loadState(state& m_state);
 
         private:
-        uint16_t m_signability = 0;
-        uint16_t m_critical    = 0;
+        uint32_t m_signability = 0;
+        uint32_t m_critical    = 0;
 
         bool m_detached   = false;
         bool m_aborting   = false;
@@ -221,18 +216,17 @@ namespace AEX::Proc {
         Thread*       m_joiner = nullptr;
         IPC::SigQueue m_sigqueue;
 
-        uint16_t m_pending_handleable;
-        bool     m_asyncthrdsig = false;
-        bool     m_sigwait      = false;
+        bool m_asyncthrdsig = false;
+        bool m_sigwait      = false;
 
-        bool    signalCheck(bool allow_handle, IPC::state_combo* combo);
-        error_t handleSignal(IPC::siginfo_t& info, IPC::state_combo* combo = nullptr);
-        error_t enterSignal(IPC::siginfo_t& info, IPC::state_combo* combo);
-        error_t pushSignalContext(uint8_t id, IPC::sigaction& action, IPC::state_combo* combo,
-                                  IPC::siginfo_t& info);
-        error_t popSignalContext();
-        [[noreturn]] error_t exitSignal();
-        void                 finish();
+        error_t              sigenter(IPC::siginfo_t& info, IPC::state_combo scmb);
+        [[noreturn]] error_t sigexit();
+
+        error_t sigpush(uint8_t id, IPC::sigaction& action, IPC::siginfo_t& info,
+                        IPC::state_combo scmb);
+        error_t sigpop();
+
+        void finish();
 
         error_t _signal(IPC::siginfo_t& info);
         void    _abort(bool force = false);

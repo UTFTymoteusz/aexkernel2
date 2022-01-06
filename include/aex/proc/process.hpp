@@ -137,12 +137,10 @@ namespace AEX::Proc {
             return session == pid;
         }
 
-        // IPC Stuff
         error_t                  signal(IPC::siginfo_t& info);
         optional<IPC::sigaction> sigaction(uint8_t id);
         error_t                  sigaction(uint8_t id, IPC::sigaction& action);
-
-        IPC::sigset_t getSignalPending();
+        IPC::sigset_t            sigpending();
 
         private:
         char*                 m_cwd;
@@ -162,7 +160,7 @@ namespace AEX::Proc {
         friend class Thread;
     };
 
-    API pid_t add_process(Process* process);
-    API void  remove_process(Process* process);
+    API pid_t    add_process(Process* process);
+    API void     remove_process(Process* process);
     API Process* get_process(pid_t pid);
 }

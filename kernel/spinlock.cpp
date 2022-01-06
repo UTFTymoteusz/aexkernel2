@@ -31,15 +31,11 @@ namespace AEX {
             asm volatile("pause");
             count++;
 
-            if (count > 12212222 * 1) {
-                int  delta = 0;
-                auto name  = Debug::addr2name((void*) this, delta) ?: "no idea";
+            if (count == 40213259) {
+                if (Thread::current() == m_thread)
+                    fail("recursive");
 
-                if (__sync_bool_compare_and_swap(&spinlock_faulted, false, true))
-                    kpanic("spinlock 0x%p <%s+0x%x> hung (val: %i (held by thread 0x%p), cpu: %i)",
-                           this, name, delta, m_lock, m_thread, Sys::CPU::currentID());
-                else
-                    Sys::CPU::halt();
+                fail("hung");
             }
 
             if (Sys::MCore::cpu_count == 1 && !Thread::current()->isCritical())
@@ -48,7 +44,7 @@ namespace AEX {
             Thread::current()->addCritical();
         }
 
-        m_thread = Thread::current();
+        acquired();
         __sync_synchronize();
     }
 
@@ -59,19 +55,13 @@ namespace AEX {
             Sys::CPU::nointerrupts();
 
             printk_fault();
-
-            int  delta = 0;
-            auto name  = Debug::addr2name((void*) &m_lock, delta) ?: "no idea";
-
-            printk("aaa (0x%p, <%s>+0x%x)\n", this, name, delta);
-            Debug::stack_trace();
-            kpanic("spinlock: Too many releases");
+            fail("too many releases");
         }
 
         __sync_synchronize();
         Thread::current()->subCritical();
 
-        m_thread = nullptr;
+        released();
     }
 
     bool Spinlock::tryAcquire() {
@@ -80,6 +70,8 @@ namespace AEX {
         bool ret = __sync_bool_compare_and_swap(&m_lock, false, true);
         if (!ret)
             Thread::current()->subCritical();
+        else
+            acquired();
 
         __sync_synchronize();
 
@@ -90,7 +82,6 @@ namespace AEX {
         return m_lock;
     }
 
-
     void Spinlock::acquireRaw() {
         volatile size_t count = 0;
 
@@ -99,18 +90,15 @@ namespace AEX {
             count++;
 
             if (count > 12212222 * 10) {
-                int  delta = 0;
-                auto name  = Debug::addr2name((void*) this, delta) ?: "no idea";
-
                 if (__sync_bool_compare_and_swap(&spinlock_faulted, false, true)) {
-                    kpanic("spinlock 0x%p <%s+0x%x> hung (val: %i, cpu: %i) *RAW*", this, name,
-                           delta, m_lock, Sys::CPU::currentID());
+                    fail("hung raw");
                 }
                 else
                     Sys::CPU::halt();
             }
         }
 
+        acquired(true);
         __sync_synchronize();
     }
 
@@ -121,18 +109,16 @@ namespace AEX {
             Sys::CPU::nointerrupts();
 
             printk_fault();
-
-            int  delta = 0;
-            auto name  = Debug::addr2name((void*) &m_lock, delta) ?: "no idea";
-
-            printk("bbb (0x%p, <%s>+0x%x), %i\n", this, name, delta, m_lock);
-            Debug::stack_trace();
-            kpanic("spinlock: Too many releases");
+            fail("too many releases raw");
         }
+
+        released(true);
     }
 
     bool Spinlock::tryAcquireRaw() {
         bool ret = acquireLock(&m_lock);
+        if (ret)
+            acquired(true);
 
         __sync_synchronize();
         return ret;
@@ -140,10 +126,71 @@ namespace AEX {
 
     bool Spinlock::tryReleaseRaw() {
         __sync_synchronize();
+        released(true);
+
         return releaseLock(&m_lock);
+    }
+
+    void Spinlock::trace() {
+#ifdef DEBUG
+        printk("Stack trace at acquisition:\n");
+
+        for (int i = 0; i < TRACE_DEPTH; i++) {
+            void* caller = callers[i];
+            int   delta  = 0;
+            auto  name   = Debug::addr2name(caller, delta);
+
+            printk("%p <%s+0x%x>\n", caller, name ?: "no idea", delta);
+        }
+#endif
     }
 
     ScopeSpinlock Spinlock::scope() {
         return ScopeSpinlock(*this);
+    }
+
+    void Spinlock::acquired(bool raw) {
+        m_thread = raw ? nullptr : Thread::current();
+
+#ifdef DEBUG
+        for (int i = 0; i < TRACE_DEPTH; i++)
+            callers[i] = Debug::caller(i);
+#endif
+    }
+
+    void Spinlock::released(bool raw) {
+        m_thread = raw ? nullptr : Thread::current();
+
+#ifdef DEBUG
+        for (int i = 0; i < TRACE_DEPTH; i++)
+            callers[i] = Debug::caller(i);
+#endif
+    }
+
+    void Spinlock::fail(const char* reason) {
+        int  delta = 0;
+        auto name  = Debug::addr2name((void*) this, delta) ?: "no idea";
+
+        if (__sync_bool_compare_and_swap(&spinlock_faulted, false, true)) {
+            printk(FAIL "spinlock %p <%s+0x%x> fail (%s) (val: %i (held by thread %p), cpu: %i)\n",
+                   this, name, delta, reason, m_lock, m_thread, Sys::CPU::currentID());
+
+#ifdef DEBUG
+            printk("Stack trace at acquisition:\n");
+
+            for (int i = 0; i < TRACE_DEPTH; i++) {
+                void* caller = callers[i];
+                int   delta  = 0;
+                auto  name   = Debug::addr2name(caller, delta);
+
+                printk("%p <%s+0x%x>\n", caller, name ?: "no idea", delta);
+            }
+#endif
+
+            kpanic("spinlock fail");
+        }
+        else {
+            Sys::CPU::halt();
+        }
     }
 }

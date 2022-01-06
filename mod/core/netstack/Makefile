@@ -33,6 +33,9 @@ CXXFLAGS := $(GFLAGS)		\
 	-fno-pic				\
 	-fno-stack-protector	\
 	-fno-omit-frame-pointer \
+    -fno-inline \
+    -fno-inline-small-functions \
+    -fno-optimize-sibling-calls \
 	-mno-red-zone			\
 	$(INCLUDES)
 
@@ -50,7 +53,7 @@ format:
 all: $(OBJS)
 	@$(MKDIR) $(BIN)
 	@$(LD) -r -o $(MODULE_OBJ) $(OBJS)
-	@printf '\033[0;95m$(MODULE_NAME)\033[0m: Done building\033[0K\n'
+	@printf '\033[0;95m%-10s\033[0m: Done building\033[0K\n' $(MODULE_NAME)
 
 include $(shell find $(DEP_DEST) -type f -name *.d)
 

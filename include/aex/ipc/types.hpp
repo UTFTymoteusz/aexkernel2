@@ -46,10 +46,6 @@ namespace AEX::IPC {
     // from a syscall.
     struct syscall_registers;
 
-    // An architecture-specific struct containing the state of registers upon an entry into an
-    // interrupt.
-    struct interrupt_registers;
-
-    // A combination of syscall_registers and interrupt_registers to make life easier;
+    // A combination of syscall_registers and interrupt_registers to make life easier.
     struct state_combo;
 }

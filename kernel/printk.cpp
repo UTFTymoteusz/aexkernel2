@@ -40,7 +40,7 @@ namespace AEX {
         static bool in_quote = false;
 
         auto rootTTY       = TTYs[ROOT_TTY];
-        auto printk_common = [rootTTY](char padchar, size_t padlen, char* buffer) {
+        auto printk_common = [rootTTY](char padchar, size_t padlen, const char* buffer) {
             for (size_t i = strlen(buffer); i < padlen; i++)
                 *rootTTY << padchar;
 
@@ -138,9 +138,13 @@ namespace AEX {
                         break;
                     }
                     break;
-                case 's':
-                    printk_common(padchar, padlen, va_arg(args, char*));
-                    break;
+                case 's': {
+                    const char* str = va_arg(args, const char*);
+                    if (!str)
+                        str = "<null>";
+
+                    printk_common(padchar, padlen, str);
+                } break;
                 case 'c':
                     buffer[0] = (char) va_arg(args, int);
                     buffer[1] = '\0';
@@ -191,10 +195,13 @@ namespace AEX {
                     printk_common(padchar, padlen, buffer);
                     break;
                 case 'p':
+                    buffer[0] = '0';
+                    buffer[1] = 'x';
+
 #if BIT64
-                    itos((uint64_t) va_arg(args, unsigned long), 16, buffer);
+                    itos((uint64_t) va_arg(args, unsigned long), 16, buffer + 2);
 #elif BIT32
-                    itos((uint32_t) va_arg(args, unsigned int), 16, buffer);
+                    itos((uint32_t) va_arg(args, unsigned int), 16, buffer + 2);
 #else
 #error "Environment is not 32 bit or 64 bit"
 #endif

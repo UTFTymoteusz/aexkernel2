@@ -16,8 +16,8 @@ namespace AEX::Proc {
             int         delta = 0;
             const char* name  = Debug::addr2name(addr, delta) ?: "no idea";
 
-            printk("cpu%i: PID %8i, TID %8i @ 0x%p <%s+0x%x> (c%i, i%i)\n", i,
-                   cpu->current_thread->parent->pid, cpu->unused, addr, name, delta,
+            printk("cpu%i: PID %8i, TID %8i @ %p <%s+0x%x> (c%i, i%i)\n", i,
+                   cpu->current_thread->parent->pid, cpu->currentThread(), addr, name, delta,
                    cpu->current_thread->getCritical(), cpu->in_interrupt);
         }
     }
@@ -29,12 +29,15 @@ namespace AEX::Proc {
         for (int i = 0; i < thread_list_size; i++) {
             auto name = Debug::addr2name(thread->original_entry) ?: "no idea";
 
-            printk("  0x%p %6i %12s <%s> %s 0x%p %li [cr %i, sg %i] %i %s\n", thread,
-                   thread->parent->pid, strstatus(thread->status), name,
+            printk("  %p %6i %12s %18p entry <%s> %s %p %li [cr %i, sg %i] %i lk%i %s\n", thread,
+                   thread->parent->pid, strstatus(thread->status), thread->context->rip, name,
                    thread->detached() ? "detached" : (thread->joiner() ? "joined by" : ""),
                    thread->joiner(), thread->interrupted(), thread->getCritical(),
-                   thread->getSignability(), thread->sched_counter,
+                   thread->getSignability(), thread->sched_counter, thread->lock.isAcquired(),
                    thread->isBusy() ? "krl" : "usr");
+
+            if (thread->parent->pid == 3)
+                thread->lock.trace();
 
 #if KPANIC_PROC_THREAD_TRACE
             Debug::stack_trace(0, (Debug::stack_frame*) thread->context->rsp);
@@ -44,7 +47,7 @@ namespace AEX::Proc {
             // const char* name = Debug::addr2name(thread->original_entry);
             // name             = name ?: "no idea";
 
-            /*printk("0x%p, <%s>, 0x%p-0x%p (0x%lx), 0x%p-0x%p (0x%lx)\n", thread, name,
+            /*printk("%p, <%s>, %p-%p (0x%lx), %p-%p (0x%lx)\n", thread, name,
                    thread->kernel_stack, thread->kernel_stack + thread->kernel_stack_size,
                    thread->kernel_stack_size, thread->fault_stack,
                    thread->fault_stack + thread->fault_stack_size, thread->fault_stack_size);*/
@@ -56,9 +59,8 @@ namespace AEX::Proc {
         for (int i = 0; i < Sys::MCore::cpu_count; i++) {
             auto thread = idle_threads[i];
 
-            printk("  0x%p (p: 0x%p, n: 0x%p) <%s> <%s> %s 0x%p\n", thread, thread->prev,
-                   thread->next, strstatus(thread->status),
-                   Debug::addr2name(thread->original_entry),
+            printk("  %p (p: %p, n: %p) <%s> <%s> %s %p\n", thread, thread->prev, thread->next,
+                   strstatus(thread->status), Debug::addr2name(thread->original_entry),
                    thread->detached() ? "detached" : (thread->joiner() ? "joined by" : ""),
                    thread->joiner());
         }
@@ -68,14 +70,13 @@ namespace AEX::Proc {
         auto process = process_list_head;
 
         for (int i = 0; i < process_list_size; i++) {
-            printk(
-                "  0x%p: %i. %s, [%i, %i] %12s, uid: %i-%i-%i  gid: %i-%i-%i, ni %i, sid %i  pgrp "
-                "%i %s\n",
-                process, process->pid, process->name, process->threads.realCount(),
-                process->thread_counter, strstatus(process->status), process->real_uid,
-                process->eff_uid, process->saved_uid, process->real_gid, process->eff_gid,
-                process->saved_gid, process->nice, process->session, process->group,
-                process->get_cwd());
+            printk("  %p: %i. %s, [%i, %i] %12s, uid: %i-%i-%i  gid: %i-%i-%i, ni %i, sid %i  pgrp "
+                   "%i %s\n",
+                   process, process->pid, process->name, process->threads.realCount(),
+                   process->thread_counter, strstatus(process->status), process->real_uid,
+                   process->eff_uid, process->saved_uid, process->real_gid, process->eff_gid,
+                   process->saved_gid, process->nice, process->session, process->group,
+                   process->get_cwd());
             printk("  ");
 
             if (process->threads.count() > 0) {

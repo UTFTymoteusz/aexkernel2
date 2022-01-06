@@ -123,22 +123,21 @@ namespace AEX::Proc {
         Thread::yield();
 
         if (current->interrupted()) {
-            printk("sleep: Interrupted [%i, 0x%p]\n", current->getProcess()->pid, current);
+            printk("sleep: Interrupted [%i, %p]\n", current->getProcess()->pid, current);
             current->status = TS_RUNNABLE;
         }
     }
 
-    // TODO: Make this migrate pending signals over
     void Thread::exit(void* retval, bool ignoreBusy) {
         // If we're running we have the lock acquired
         auto thread = Thread::current();
 
         if (thread->m_retval_set) {
-            printkd(PTKD_PROC_TH, "proc: th0x%p: Exit %s\n", Thread::current(),
+            printkd(PTKD_PROC_TH, "proc: th%p: Exit %s\n", Thread::current(),
                     ignoreBusy ? "finalized" : "attempted");
         }
         else {
-            printkd(PTKD_PROC_TH, "proc: th0x%p: Exit 0x%p\n", Thread::current(), retval);
+            printkd(PTKD_PROC_TH, "proc: th%p: Exit %p\n", Thread::current(), retval);
             thread->retval = retval;
         }
 
@@ -148,17 +147,17 @@ namespace AEX::Proc {
         // AEX_ASSERT(thread->sigqueue.count() == 0);
         AEX_ASSERT(CPU::checkInterrupts());
 
-        if (thread->isBusy() && !ignoreBusy && !thread->safe_exit) {
+        if (thread->isBusy() && !ignoreBusy) {
             thread->_abort();
             return;
         }
 
         thread->addCritical();
-        thread->setStatus(TS_DEAD);
+        thread->status = TS_DEAD;
 
         if (thread->m_joiner) {
             thread->m_joiner->lock.acquire();
-            thread->m_joiner->setStatus(TS_RUNNABLE);
+            thread->m_joiner->status = TS_RUNNABLE;
             thread->m_joiner->lock.release();
         }
         else if (thread->m_detached || Mem::atomic_read(&thread->parent->thread_counter) == 1) {
@@ -186,7 +185,7 @@ namespace AEX::Proc {
 
     optional<void*> Thread::join() {
         if (this == Thread::current()) {
-            printkd(PTKD_PROC_TH, "proc: th0x%p: Attempted to join itself\n", Thread::current());
+            printkd(PTKD_PROC_TH, "proc: th%p: Attempted to join itself\n", Thread::current());
             return EDEADLK;
         }
 
@@ -198,7 +197,7 @@ namespace AEX::Proc {
         if (Thread::current()->m_joiner == this)
             return EDEADLK;
 
-        printkd(PTKD_PROC_TH, "proc: th0x%p: Joining th0x%p\n", Thread::current(), this);
+        printkd(PTKD_PROC_TH, "proc: th%p: Joining th%p\n", Thread::current(), this);
 
         // I've forgotten about joining an already-exitted thread.
         if (status == TS_DEAD) {
@@ -210,8 +209,8 @@ namespace AEX::Proc {
 
         auto state = Thread::current()->saveState();
 
-        m_joiner = Thread::current();
-        Thread::current()->setStatus(TS_BLOCKED);
+        m_joiner                  = Thread::current();
+        Thread::current()->status = TS_BLOCKED;
 
         this->lock.release();
         Thread::yield();
@@ -257,7 +256,7 @@ namespace AEX::Proc {
         if (status == TS_DEAD)
             finish();
 
-        printkd(PTKD_PROC_TH, "proc: th0x%p: Detached th0x%p\n", Thread::current(), this);
+        printkd(PTKD_PROC_TH, "proc: th%p: Detached th%p\n", Thread::current(), this);
         m_detached = true;
 
         return ENONE;
@@ -277,16 +276,16 @@ namespace AEX::Proc {
         if (force)
             m_detached = true;
 
-        if (isBusy() && !safe_exit)
+        if (isBusy())
             return;
 
         if (m_joiner) {
             m_joiner->lock.acquire();
-            m_joiner->setStatus(TS_RUNNABLE);
+            m_joiner->status = TS_RUNNABLE;
             m_joiner->lock.release();
         }
         else if (m_detached) {
-            setStatus(TS_DEAD);
+            status = TS_DEAD;
             finish();
         }
     }
@@ -330,21 +329,17 @@ namespace AEX::Proc {
         broker(broker_cleanup, new Thread_SP(thread));
     }
 
-    void Thread::abortCheck() {
-        if (Thread::current()->m_aborting)
-            Thread::exit((void*) 0x2137, true);
+    void Thread::abortchk() {
+        if (!Thread::current()->m_aborting)
+            return;
+
+        CPU::interrupts();
+        Thread::exit((void*) 0x2137, true);
     }
 
     Process* Thread::getProcess() {
         // We need atomicity here
         return this->parent;
-    }
-
-    void Thread::setStatus(status_t status) {
-        this->status = status;
-
-        // if (status == TS_DEAD)
-        //    AEX_ASSERT(!isBusy());
     }
 
     bool Thread::isBusy() {
@@ -355,15 +350,15 @@ namespace AEX::Proc {
     }
 
     void Thread::addSignability() {
-        Mem::atomic_add(&m_signability, (uint16_t) 1);
+        Mem::atomic_add(&m_signability, (uint32_t) 1);
     }
 
     void Thread::subSignability() {
-        Mem::atomic_sub(&m_signability, (uint16_t) 1);
+        Mem::atomic_sub(&m_signability, (uint32_t) 1);
     }
 
     void Thread::addCritical() {
-        Mem::atomic_add(&m_critical, (uint16_t) 1);
+        Mem::atomic_add(&m_critical, (uint32_t) 1);
 
         // if (!CPU::current()->in_interrupt)
         //    CPU::nointerrupts();
@@ -374,7 +369,7 @@ namespace AEX::Proc {
         // !CPU::current()->in_interrupt)
         //    CPU::interrupts();
 
-        uint16_t res = Mem::atomic_sub_fetch(&m_critical, (uint16_t) 1);
+        uint16_t res = Mem::atomic_sub_fetch(&m_critical, (uint32_t) 1);
         if (res == 0 && CPU::current()->should_yield)
             Thread::yield();
     }

@@ -21,7 +21,7 @@ safe_mxcsr:
 %macro save_context 0
     push rcx
     push rbx
-    push rax
+    ; push rax
 
     mov rcx, rbx
     mov rbx, rax
@@ -30,7 +30,7 @@ safe_mxcsr:
     mov qword [rax + 0x70], rbx
     mov qword [rax + 0x68], rcx
 
-    pop rax
+    mov rax, rbp
     pop rbx
     pop rcx
 
@@ -142,7 +142,7 @@ enter_context:
 proc_timer_tick:
     save_context
 
-    push rbp
+    push rax ; rbp is saved to rax
     mov rbp, rsp
 
     ldmxcsr [safe_mxcsr]

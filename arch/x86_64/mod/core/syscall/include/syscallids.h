@@ -79,10 +79,11 @@ enum syscall_id_t {
     SYS_SETREGID = 98,
     SYS_SETREUID = 99,
 
-    SYS_PANIC = 250,
-    SYS_TEST1 = 251,
-    SYS_TEST2 = 252,
-    SYS_TEST3 = 253,
-    SYS_TEST4 = 254,
-    SYS_TEST5 = 255,
+    SYS_POWEROFF = 249,
+    SYS_PANIC    = 250,
+    SYS_TEST1    = 251,
+    SYS_TEST2    = 252,
+    SYS_TEST3    = 253,
+    SYS_TEST4    = 254,
+    SYS_TEST5    = 255,
 };

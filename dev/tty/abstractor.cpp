@@ -53,6 +53,11 @@ namespace AEX::Dev::TTY {
 
         Sys::CPU::outb(0xE9, c);
 
+        if (c == '\n')
+            Sys::CPU::outb(0x3F8, '\r');
+
+        Sys::CPU::outb(0x3F8, c);
+
         switch (m_state) {
         case OUT:
             if (c == '\x1B') {

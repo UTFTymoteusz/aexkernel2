@@ -16,14 +16,17 @@ namespace AEX::FS {
     enum o_flags_t {
         O_RDONLY    = 0x01,
         O_WRONLY    = 0x02,
-        O_APPEND    = 0x04,
+        O_EXEC      = 0x04,
         O_DIRECTORY = 0x08,
         O_NONBLOCK  = 0x10,
         O_CREAT     = 0x20,
         O_EXCL      = 0x40,
         O_TRUNC     = 0x80,
+        O_CLOEXEC   = 0x100,
+        O_APPEND    = 0x200,
         O_ACCMODE   = 0xFFFF0000,
         O_RDWR      = O_RDONLY | O_WRONLY,
+        O_SEARCH    = O_EXEC,
     };
 
     enum at_t {
@@ -71,8 +74,8 @@ namespace AEX::FS {
         virtual error_t          seekdir(long pos);
         virtual long             telldir();
 
-        int  getFlags();
-        void setFlags(int);
+        int  flags();
+        void flags(int);
 
         protected:
         int m_flags;

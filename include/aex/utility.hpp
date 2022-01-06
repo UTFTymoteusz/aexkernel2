@@ -7,9 +7,20 @@
 #define PACKED __attribute((packed))
 #define WEAK __attribute((weak))
 #define UNUSED __attribute((unused))
-#define FALLTHROUGH __attribute__((fallthrough))
+#define FALLTHROUGH __attribute((fallthrough))
+#define ALIGN(a) __attribute((aligned(a)))
+
+#define USER __attribute(())
+#define KERNEL __attribute(())
+#define ANY __attribute(())
+
+#define O0 __attribute__((optimize("O0")))
+#define O1 __attribute__((optimize("O1")))
+#define O2 __attribute__((optimize("O2")))
+#define O3 __attribute__((optimize("O3")))
 
 #define fall FALLTHROUGH
+#define lenof(x) (sizeof(x) / sizeof(*x))
 
 #define BIT64 INTPTR_MAX == INT64_MAX
 #define BIT32 INTPTR_MAX == INT32_MAX
@@ -36,10 +47,9 @@ namespace AEX {
     [[noreturn]] API void kpanic(const char* format, ...);
 }
 
-#define NOT_IMPLEMENTED kpanic("%s:%i: Not implemented", __FILE__, __LINE__)
+#define NOT_IMPLEMENTED \
+    { kpanic("%s:%i: Not implemented", __FILE__, __LINE__); }
 #define BROKEN kpanic("%s:%i: %s() is broken", __FILE__, __LINE__, __func__)
-#define FUNC_NOT_IMPLEMENTED \
-    { kpanic("%s:%i: %s(): Not implemented", __FILE__, __LINE__, __func__); }
 
 #define ENSURE_R(cond, err) \
     ({                      \

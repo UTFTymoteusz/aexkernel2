@@ -40,18 +40,25 @@ namespace NetStack {
     };
 
     enum tcp_flags_t {
-        TCP_FIN = 0x01,
-        TCP_SYN = 0x02,
-        TCP_RST = 0x04,
-        TCP_PSH = 0x08,
-        TCP_ACK = 0x10,
-        TCP_URG = 0x20,
+        TCP_FIN = 0x0001,
+        TCP_SYN = 0x0002,
+        TCP_RST = 0x0004,
+        TCP_PSH = 0x0008,
+        TCP_ACK = 0x0010,
+        TCP_URG = 0x0020,
+        TCP_ECE = 0x0040,
+        TCP_CWR = 0x0080,
+        TCP_NS  = 0x0100,
     };
 
     enum tcp_kind_t {
-        TCP_OPT_END  = 0x00,
-        TCP_OPT_NOOP = 0x01,
-        TCP_OPT_MSS  = 0x02,
+        TCP_OPT_END       = 0x00,
+        TCP_OPT_NOOP      = 0x01,
+        TCP_OPT_MSS       = 0x02,
+        TCP_OPT_WS        = 0x03,
+        TCP_OPT_SACK_PERM = 0x04,
+        TCP_OPT_SACK      = 0x05,
+        TCP_OPT_TSTMP     = 0x08,
     };
 
     char* tcp_debug_serialize_flags(char* buffer, int flags);
@@ -118,9 +125,9 @@ namespace NetStack {
 
         AEX::optional<AEX::Net::Socket_SP> accept();
 
-        AEX::optional<ssize_t> sendTo(const void* buffer, size_t len, int flags,
+        AEX::optional<ssize_t> sendto(const void* buffer, size_t len, int flags,
                                       const AEX::Net::sockaddr* dst_addr);
-        AEX::optional<ssize_t> receiveFrom(void* buffer, size_t len, int flags,
+        AEX::optional<ssize_t> receivefrom(void* buffer, size_t len, int flags,
                                            AEX::Net::sockaddr* src_addr);
 
         AEX::error_t shutdown(int how);

@@ -36,22 +36,25 @@ namespace AEX::Sys::Time {
     }
 
     time_t uptime() {
-        time_t   ret;
+        // clang-format off
+        Sys::CPU::checkInterrupts() ? uptime_lock.acquire() : uptime_lock.acquireRaw();
+
+        time_t ret;
         uint64_t delta;
         uint64_t ticks = Sys::CPU::ind(acpi_pm_timer_addr);
 
-        // Disable interrupts to avoid messing up the uptime
-        interruptible(false) {
-            if (ticks < acpi_pm_timer_ticks)
-                delta = ticks + acpi_pm_timer_overflow_correction - acpi_pm_timer_ticks;
-            else
-                delta = ticks - acpi_pm_timer_ticks;
+        if (ticks < acpi_pm_timer_ticks)
+            delta = ticks + (acpi_pm_timer_overflow_correction - acpi_pm_timer_ticks);
+        else
+            delta = ticks - acpi_pm_timer_ticks;
 
-            ret = Mem::atomic_add_fetch(
-                &ns_uptime, (time_t) ((delta / (double) ACPI_PM_TIMER_FREQUENCY) * 1000000000.0));
+        ret = Mem::atomic_add_fetch(
+            &ns_uptime, (time_t) ((delta / (double) ACPI_PM_TIMER_FREQUENCY) * 1000000000.0));
 
-            acpi_pm_timer_ticks = ticks;
-        }
+        acpi_pm_timer_ticks = ticks;
+
+        Sys::CPU::checkInterrupts() ? uptime_lock.release() : uptime_lock.releaseRaw();
+        // clang-format on
 
         return ret;
     }
