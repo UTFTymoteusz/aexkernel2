@@ -197,7 +197,6 @@ void apple();
 void kmain_env() {
     using namespace AEX::Sys::Time;
 
-    apple();
     exec_init();
 
     printk("We are done here, adios\n");
