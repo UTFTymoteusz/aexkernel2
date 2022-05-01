@@ -40,8 +40,8 @@ namespace AEX::Dev {
     }
 
     int64_t BlockHandle::read(void* buffer, uint64_t start, uint32_t len) {
-        AEX_ASSERT(m_dev.isValid());
-        AEX_ASSERT(m_shared);
+        ASSERT(m_dev.isValid());
+        ASSERT(m_shared);
 
         auto current_usage = &Proc::Thread::current()->getProcess()->usage;
 
@@ -127,8 +127,8 @@ namespace AEX::Dev {
     }
 
     int64_t BlockHandle::write(const void* buffer, uint64_t start, uint32_t len) {
-        AEX_ASSERT(m_dev.isValid());
-        AEX_ASSERT(m_shared);
+        ASSERT(m_dev.isValid());
+        ASSERT(m_shared);
 
         auto current_usage = &Proc::Thread::current()->getProcess()->usage;
 

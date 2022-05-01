@@ -83,7 +83,7 @@ namespace NetStack {
     // un-god this pls
     TCPSocket::TCPSocket(TCPSocket* parent, tcp_listen_entry* listen_entry) {
         auto dev = IPv4Layer::get_interface(listen_entry->source_address);
-        AEX_ASSERT(dev);
+        ASSERT(dev);
 
         this->source_address      = dev->info.ipv4.addr;
         this->source_port         = parent->source_port;
@@ -909,7 +909,7 @@ namespace NetStack {
         m_lock.acquire();
 
         while (m_tx_buffer.readav()) {
-            AEX_ASSERT(m_block.snd_wnd != 0);
+            ASSERT(m_block.snd_wnd != 0);
 
             int size = min(m_tx_buffer.readav(), (int) m_block.snd_wnd, (int) m_block.snd_mss);
 

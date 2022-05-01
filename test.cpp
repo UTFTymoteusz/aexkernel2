@@ -173,7 +173,7 @@ void apple() {
         BROKEN;
 
     auto tty_wr = FS::File::open("/dev/tty0", FS::O_WRONLY);
-    AEX_ASSERT(tty_wr);
+    ASSERT(tty_wr);
 
     char buffer[4096];
 

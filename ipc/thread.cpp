@@ -24,7 +24,7 @@ namespace AEX::Proc {
     }
 
     error_t Thread::sigret() {
-        AEX_ASSERT(this == Thread::current());
+        ASSERT(this == Thread::current());
 
         printkd(PTKD_IPC, "ipc: th%p: Sigret\n", this);
         sigexit();
@@ -34,7 +34,7 @@ namespace AEX::Proc {
 
     error_t Thread::_signal(siginfo_t& info) {
         // TODO: change this over to the normal lock
-        AEX_ASSERT(sigcheck_lock.isAcquired());
+        ASSERT(sigcheck_lock.isAcquired());
 
         printkd(PTKD_IPC, "ipc: th%p: Signal %s %s\n", this, strsignal((signal_t) info.si_signo),
                 this->m_sigqueue.mask.member(info.si_signo) ? "~masked~" : "");
@@ -66,7 +66,7 @@ namespace AEX::Proc {
             process->stopped = false;
             break;
         case SIG_USER:
-            AEX_ASSERT(!this->isBusy() || scmb.finfo_regs || scmb.syscall_regs);
+            ASSERT(!this->isBusy() || scmb.finfo_regs || scmb.syscall_regs);
 
             error_t err;
             interruptible(false) {
@@ -93,7 +93,7 @@ namespace AEX::Proc {
 
     error_t Thread::sigexit() {
         interruptible(false) {
-            AEX_ASSERT(sigpop() == ENONE);
+            ASSERT(sigpop() == ENONE);
             proc_ctxload();
         }
 

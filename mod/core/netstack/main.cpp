@@ -21,7 +21,7 @@ void module_enter() {
     TCPLayer::init();
 
     auto loopback_dev = new Loopback();
-    AEX_ASSERT(loopback_dev->registerDevice());
+    ASSERT(loopback_dev->registerDevice());
 
     loopback_dev->setIPv4Address(Net::ipv4_addr(127, 0, 0, 1));
     loopback_dev->setIPv4Mask(Net::ipv4_addr(255, 0, 0, 0));

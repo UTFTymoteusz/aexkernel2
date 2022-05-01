@@ -10,10 +10,8 @@ namespace AEX::Proc {
     Context::Context(void* entry, void* stack, size_t stack_size, Mem::Pagemap* pagemap,
                      bool usermode, void (*on_exit)()) {
         rip = (uint64_t) entry;
-
         rsp = (uint64_t) stack + stack_size;
         rbp = 0;
-
         cr3 = (uint64_t) pagemap->root;
 
         if (on_exit) {
@@ -37,6 +35,6 @@ namespace AEX::Proc {
         }
 
         rflags        = FLAGS_INTERRUPTS | FLAGS_RESERVED;
-        fxstate.mxcsr = 0x1f80;
+        fxstate.mxcsr = 0x1F80;
     }
 }

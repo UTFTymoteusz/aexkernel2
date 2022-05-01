@@ -62,7 +62,7 @@ namespace AEX::Sys {
 
         CPU* self;
 
-        // Do not change the order of these or the kernel will go boom
+        // Do not change the order of these or the kernel will go boom boom
         struct {
             Proc::Context* current_context; // 0x08
             Proc::Thread*  current_thread;  // 0x10
@@ -86,6 +86,7 @@ namespace AEX::Sys {
         uint64_t reshed_fault_stack_start;
 
         char name[48];
+        char vendor[16];
 
         static InterruptionGuard<true>  interruptsGuard;
         static InterruptionGuard<false> nointerruptsGuard;
@@ -151,6 +152,13 @@ namespace AEX::Sys {
         static void wrmsr(uint32_t reg, uint64_t data);
 
         /**
+         * Writes to a model specific register.
+         * @param reg  The register in question.
+         * @param data Value to write.
+         **/
+        static void wrmsr(uint32_t reg, void* data);
+
+        /**
          * Gets the ID of the executing CPU.
          **/
         static int currentID();
@@ -186,15 +194,15 @@ namespace AEX::Sys {
 
         static void breakpoint(int index, size_t addr, uint8_t mode, uint8_t size, bool enabled);
 
-        inline static void flushPg(void* addr) {
+        inline static void flush(void* addr) {
             asm volatile("invlpg [%0]" : : "r"(addr));
         }
 
-        inline static void flushPg(size_t addr) {
+        inline static void flush(size_t addr) {
             asm volatile("invlpg [%0]" : : "r"(addr));
         }
 
-        inline static void flushPg() {
+        inline static void flush() {
             asm volatile("push rbx; mov rbx, cr3; mov cr3, rbx; pop rbx");
         }
 
@@ -227,6 +235,7 @@ namespace AEX::Sys {
         char m_fmsgs[16][128];
         int  m_fmsg_ptr;
 
+        void getVendor();
         void getName();
 
         void _send(ipp_type type, void* data = nullptr);

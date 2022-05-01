@@ -17,7 +17,7 @@ namespace AEX::Net {
     }
 
     void Domain::push(socket_type_t type, int protoid, Protocol* proto) {
-        AEX_ASSERT(m_type_counts[type]++ == 0);
+        ASSERT(m_type_counts[type]++ == 0);
         m_dproto.push({.type = type, .protoid = protoid, .proto = proto});
     }
 }

@@ -51,65 +51,45 @@ namespace AEX::Sys::IRQ {
     }
 
     void APIC::interrupt(uint8_t dst, uint8_t vector) {
-        bool ints = CPU::checkInterrupts();
+        interruptible(false) {
+            ASSERT(dst != APIC::id());
 
-        CPU::nointerrupts();
+            write(0x310, dst << 24);
+            write(0x300, (1 << 15) | (1 << 14) | vector);
 
-        AEX_ASSERT(dst != APIC::id());
-
-        write(0x310, dst << 24);
-        write(0x300, (1 << 15) | (1 << 14) | vector);
-
-        while (read(0x300) & (1 << 12))
-            ;
-
-        if (ints)
-            CPU::interrupts();
+            while (read(0x300) & (1 << 12))
+                ;
+        }
     }
 
     void APIC::init(uint8_t dst) {
-        bool ints = CPU::checkInterrupts();
+        interruptible(false) {
+            write(0x310, dst << 24);
+            write(0x300, (5 << 8));
 
-        CPU::nointerrupts();
-
-        write(0x310, dst << 24);
-        write(0x300, (5 << 8));
-
-        while (read(0x300) & (1 << 12))
-            ;
-
-        if (ints)
-            CPU::interrupts();
+            while (read(0x300) & (1 << 12))
+                ;
+        }
     }
 
     void APIC::sipi(uint8_t dst, uint8_t page) {
-        bool ints = CPU::checkInterrupts();
+        interruptible(false) {
+            write(0x310, dst << 24);
+            write(0x300, (6 << 8) | (uint32_t) page);
 
-        CPU::nointerrupts();
-
-        write(0x310, dst << 24);
-        write(0x300, (6 << 8) | (uint32_t) page);
-
-        while (read(0x300) & (1 << 12))
-            ;
-
-        if (ints)
-            CPU::interrupts();
+            while (read(0x300) & (1 << 12))
+                ;
+        }
     }
 
     void APIC::nmi(uint8_t dst) {
-        bool ints = CPU::checkInterrupts();
+        interruptible(false) {
+            write(0x310, dst << 24);
+            write(0x300, (1 << 14) | (4 << 8));
 
-        CPU::nointerrupts();
-
-        write(0x310, dst << 24);
-        write(0x300, (1 << 14) | (4 << 8));
-
-        while (read(0x300) & (1 << 12))
-            ;
-
-        if (ints)
-            CPU::interrupts();
+            while (read(0x300) & (1 << 12))
+                ;
+        }
     }
 
     void APIC::eoi() {

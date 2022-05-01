@@ -15,7 +15,7 @@ namespace AEX::Proc {
         auto cpu    = CPU::current();
         auto thread = Thread::current();
 
-        if (thread->isCritical()) {
+        if (unlikely(thread->isCritical())) {
             cpu->should_yield = true;
             return;
         }
@@ -29,7 +29,7 @@ namespace AEX::Proc {
             }
         }
 
-        if (!sched_lock.tryAcquireRaw()) {
+        if (unlikely(!sched_lock.tryAcquireRaw())) {
             if (thread->status != TS_RUNNABLE || thread->parent->stopped)
                 sched_lock.acquireRaw();
             else
@@ -122,7 +122,7 @@ namespace AEX::Proc {
         }
 
         auto idle = idle_threads[cpu->id];
-        if (thread == idle)
+        if (unlikely(thread == idle))
             thread = thread_list_head;
 
         idle->lock.tryAcquireRaw();

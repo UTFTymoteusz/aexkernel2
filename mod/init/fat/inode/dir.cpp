@@ -3,7 +3,7 @@
 
 namespace AEX::FS {
     optional<INode_SP> FATDirectory::creat(const char* filename, mode_t, fs_type_t type) {
-        AEX_ASSERT(!mutex.tryAcquire());
+        ASSERT(!mutex.tryAcquire());
 
         if (type != FT_REGULAR && type != FT_DIRECTORY)
             return ENOTSUP;
@@ -72,7 +72,7 @@ namespace AEX::FS {
     }
 
     optional<dirent> FATDirectory::readdir(dir_context* ctx) {
-        AEX_ASSERT(!mutex.tryAcquire());
+        ASSERT(!mutex.tryAcquire());
 
         if (ctx->pos >= size)
             return {};
@@ -146,7 +146,7 @@ namespace AEX::FS {
     }
 
     error_t FATDirectory::link(const char* filename, INode_SP inode) {
-        AEX_ASSERT(!mutex.tryAcquire());
+        ASSERT(!mutex.tryAcquire());
 
         int  lfn_count = (strlen(filename) + 1) / 13 + 1;
         int  pos       = 0;
@@ -198,7 +198,7 @@ namespace AEX::FS {
     }
 
     error_t FATDirectory::unlink(const char* filename) {
-        AEX_ASSERT(!mutex.tryAcquire());
+        ASSERT(!mutex.tryAcquire());
 
         fat_dirent_lfn longs[32];
         int            long_count = 0;

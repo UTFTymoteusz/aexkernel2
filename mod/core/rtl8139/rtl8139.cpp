@@ -117,10 +117,10 @@ class RTL8139 : public Dev::NetDevice {
             Proc::Thread::yield();
 
         Mem::phys_t tx_paddr = Mem::kernel_pagemap->paddrof(m_tx_buffers);
-        AEX_ASSERT(tx_paddr <= 0xFFFFFFFF);
+        ASSERT(tx_paddr <= 0xFFFFFFFF);
 
         Mem::phys_t rx_paddr = Mem::kernel_pagemap->paddrof(m_rx_buffer);
-        AEX_ASSERT(rx_paddr <= 0xFFFFFFFF);
+        ASSERT(rx_paddr <= 0xFFFFFFFF);
 
         // Set transmit buffers addresses
         for (int i = 0; i < 4; i++)

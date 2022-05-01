@@ -21,7 +21,7 @@ namespace AEX::Proc {
     static constexpr auto REDZONE_SIZE = 128;
 
     error_t Thread::sigpush(uint8_t id, sigaction& action, siginfo_t& info, state_combo scmb) {
-        AEX_ASSERT(!Sys::CPU::checkInterrupts());
+        ASSERT(!Sys::CPU::checkInterrupts());
 
         size_t stack   = scmb.valid() ? scmb.stack() : context->rsp;
         auto   stacker = Mem::Stacker(stack);
@@ -60,7 +60,7 @@ namespace AEX::Proc {
                 }
             }
             else {
-                AEX_ASSERT(context->usermode());
+                ASSERT(context->usermode());
 
                 context->rip = (size_t) action.handler;
                 context->rdi = id;
@@ -79,16 +79,16 @@ namespace AEX::Proc {
     }
 
     error_t Thread::sigpop() {
-        AEX_ASSERT(!Sys::CPU::checkInterrupts());
+        ASSERT(!Sys::CPU::checkInterrupts());
 
         auto stacker = Mem::Stacker(sigret_stack);
 
         if (Proc::setjmp(&Proc::Thread::current()->fault_recovery) == 0) {
             auto frame = stacker.pop<signal_registers>();
-            AEX_ASSERT(frame);
+            ASSERT(frame);
 
             auto sigmask = stacker.pop<sigset_t>();
-            AEX_ASSERT(sigmask);
+            ASSERT(sigmask);
 
             frame.value.inscribe(context);
 

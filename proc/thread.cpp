@@ -96,8 +96,8 @@ namespace AEX::Proc {
     void Thread::yield() {
         auto thread = Thread::current();
 
-        AEX_ASSERT(!thread->isCritical());
-        AEX_ASSERT(CPU::checkInterrupts());
+        ASSERT(!thread->isCritical());
+        ASSERT(CPU::checkInterrupts());
 
         if (thread->status == TS_BLOCKED && thread->held_mutexes > 0 && process_list_size > 2) {
             printk(WARN "Thread yielded in state TS_BLOCKED whilst holding a mutex\n");
@@ -115,6 +115,8 @@ namespace AEX::Proc {
     }
 
     void Thread::nsleep(uint64_t ns) {
+        ASSERT(Proc::ready);
+
         auto current = Thread::current();
 
         current->wakeup_at = Sys::Time::uptime() + (Sys::Time::time_t) ns;
@@ -143,9 +145,9 @@ namespace AEX::Proc {
 
         thread->m_retval_set = true;
 
-        AEX_ASSERT(!thread->lock.tryAcquire());
-        // AEX_ASSERT(thread->sigqueue.count() == 0);
-        AEX_ASSERT(CPU::checkInterrupts());
+        ASSERT(!thread->lock.tryAcquire());
+        // ASSERT(thread->sigqueue.count() == 0);
+        ASSERT(CPU::checkInterrupts());
 
         if (thread->isBusy() && !ignoreBusy) {
             thread->_abort();
@@ -236,8 +238,8 @@ namespace AEX::Proc {
             return EINTR;
         }
 
-        AEX_ASSERT(!this->m_detached);
-        AEX_ASSERT(Thread::current()->status == TS_RUNNABLE);
+        ASSERT(!this->m_detached);
+        ASSERT(Thread::current()->status == TS_RUNNABLE);
 
         auto retval = this->retval;
         finish();
@@ -315,7 +317,7 @@ namespace AEX::Proc {
 
     void Thread::finish() {
         SCOPE(Thread::current()->criticalGuard);
-        AEX_ASSERT(this->status == TS_DEAD);
+        ASSERT(this->status == TS_DEAD);
 
         auto thread = parent->unassoc(this);
         if (!thread)
@@ -343,7 +345,7 @@ namespace AEX::Proc {
     }
 
     bool Thread::isBusy() {
-        AEX_ASSERT(Thread::current()->lock.isAcquired());
+        ASSERT(Thread::current()->lock.isAcquired());
 
         return (Thread::current() == this && !Sys::CPU::current()->rescheduling) ||
                context->kernelmode();
@@ -359,16 +361,9 @@ namespace AEX::Proc {
 
     void Thread::addCritical() {
         Mem::atomic_add(&m_critical, (uint32_t) 1);
-
-        // if (!CPU::current()->in_interrupt)
-        //    CPU::nointerrupts();
     }
 
     void Thread::subCritical() {
-        // if (Mem::atomic_sub_fetch(&m_critical, (uint16_t) 1) == 0 &&
-        // !CPU::current()->in_interrupt)
-        //    CPU::interrupts();
-
         uint16_t res = Mem::atomic_sub_fetch(&m_critical, (uint32_t) 1);
         if (res == 0 && CPU::current()->should_yield)
             Thread::yield();

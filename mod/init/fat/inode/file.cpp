@@ -7,8 +7,8 @@ namespace AEX::FS {
         if (!m_filled && m_chain.count() > 0)
             fill();
 
-        AEX_ASSERT(start < m_chain.count());
-        AEX_ASSERT(start + count <= m_chain.count());
+        ASSERT(start < m_chain.count());
+        ASSERT(start + count <= m_chain.count());
 
         char* dst = (char*) buffer;
 
@@ -25,8 +25,8 @@ namespace AEX::FS {
         if (!m_filled && m_chain.count() > 0)
             fill();
 
-        AEX_ASSERT(start < m_chain.count());
-        AEX_ASSERT(start + count <= m_chain.count());
+        ASSERT(start < m_chain.count());
+        ASSERT(start + count <= m_chain.count());
 
         char* dst = (char*) buffer;
 

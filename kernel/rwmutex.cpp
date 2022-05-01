@@ -92,14 +92,14 @@ namespace AEX {
     }
 
     void RWMutex::release_read() {
-        AEX_ASSERT(Mem::atomic_read(&m_read) > 0);
+        ASSERT(Mem::atomic_read(&m_read) > 0);
 
         Mem::atomic_sub(&m_read, 1);
         __sync_synchronize();
     }
 
     void RWMutex::release_write() {
-        AEX_ASSERT(Mem::atomic_read(&m_write) > 0);
+        ASSERT(Mem::atomic_read(&m_write) > 0);
 
         Mem::atomic_sub(&m_write, 1);
         __sync_synchronize();

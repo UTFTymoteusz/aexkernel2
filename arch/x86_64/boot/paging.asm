@@ -6,10 +6,11 @@ SECTION .bootstrap
 global paging_init
 global pml4
 
-PAGE_FLAGS equ 0x103
+PAGE_FLAGS equ 0x003 ; apparently AMD processors don't like global pages early even with PGE
 
 paging_init:
     mov ecx, pml4
+
     .pml4init:
         mov dword [ecx], 0
         add ecx, 4
@@ -110,6 +111,7 @@ paging_init:
 
 
 	mov eax, cr4
+    or  eax, PGE
     or  eax, PAE
     mov cr4, eax
 

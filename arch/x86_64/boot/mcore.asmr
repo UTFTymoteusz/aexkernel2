@@ -7,7 +7,7 @@ org 0x1000
 ; signal a successful start
 nop
 
-cli ; Just incase
+cli
 cld
 
 xor ax, ax
@@ -122,7 +122,7 @@ tmp_gdt:
 	dw 0x00       ; Base (low)
 	db 0x00       ; Base (middle)
 	db 0b10011010 ; Access (exec/read)
-	db 0b10101111 ; Granularity - 64 bits, limit 19:16
+	db 0b10101111 ; Granularity, 64 bits, limit 19:16
 	db 0x00       ; Base (high)
 	.data: equ $ - tmp_gdt
 	dw 0xFFFF     ; Limit

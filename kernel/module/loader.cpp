@@ -40,7 +40,7 @@ namespace AEX {
     error_t load_module(const char* label, void* m_addr, size_t, bool block) {
         static Mutex lock = Mutex();
 
-        AEX_ASSERT(Debug::symbols_loaded);
+        ASSERT(Debug::symbols_loaded);
         SCOPE(lock);
 
         uint8_t* addr = (uint8_t*) m_addr;

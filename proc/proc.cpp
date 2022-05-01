@@ -62,8 +62,8 @@ namespace AEX::Proc {
         kernel_process->session = kernel_process->pid;
         kernel_process->group   = kernel_process->pid;
 
-        AEX_ASSERT(kernel_process->isSessionLeader());
-        AEX_ASSERT(kernel_process->isGroupLeader());
+        ASSERT(kernel_process->isSessionLeader());
+        ASSERT(kernel_process->isGroupLeader());
 
         idle_process->ready();
         kernel_process->ready();
@@ -137,8 +137,8 @@ namespace AEX::Proc {
     pid_t add_process(Process* process) {
         static pid_t counter = 0;
 
-        AEX_ASSERT(process);
-        AEX_ASSERT(!processes_lock.tryAcquire());
+        ASSERT(process);
+        ASSERT(!processes_lock.tryAcquire());
 
         auto scope = sched_lock.scope();
 
@@ -167,12 +167,12 @@ namespace AEX::Proc {
     }
 
     void remove_process(Process* process) {
-        AEX_ASSERT(process);
-        AEX_ASSERT(!processes_lock.tryAcquire());
+        ASSERT(process);
+        ASSERT(!processes_lock.tryAcquire());
 
         auto scope = sched_lock.scope();
 
-        AEX_ASSERT(process_list_size > 0);
+        ASSERT(process_list_size > 0);
 
         process_list_size--;
 
@@ -187,7 +187,7 @@ namespace AEX::Proc {
     }
 
     Process* get_process(pid_t pid) {
-        AEX_ASSERT(!processes_lock.tryAcquire());
+        ASSERT(!processes_lock.tryAcquire());
 
         auto scope   = sched_lock.scope();
         auto process = process_list_head;
@@ -205,7 +205,7 @@ namespace AEX::Proc {
     void add_thread(Thread* thread) {
         SCOPE(sched_lock);
 
-        AEX_ASSERT(thread_list_size > 0);
+        ASSERT(thread_list_size > 0);
 
         thread_list_size++;
         thread_list_tail->next = thread;
@@ -220,8 +220,8 @@ namespace AEX::Proc {
     void remove_thread(Thread* thread) {
         SCOPE(sched_lock);
 
-        AEX_ASSERT(thread->held_mutexes == 0);
-        AEX_ASSERT(thread_list_size > 0);
+        ASSERT(thread->held_mutexes == 0);
+        ASSERT(thread_list_size > 0);
 
         for (int i = 0; i < MCore::cpu_count; i++)
             if (idle_threads[i]->next == thread)

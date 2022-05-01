@@ -49,7 +49,7 @@ namespace AEX::Sys::SATA {
             }
 
             void* addr = Mem::kernel_pagemap->map(0x1000, paddr, PAGE_NOCACHE | PAGE_WRITE);
-            auto  ahci = new AHCI(device, addr, index);
+            auto  ahci = new AHCI((PCIDevice*) device, addr, index);
 
             index++;
             device->driver_data = ahci;

@@ -48,6 +48,6 @@ void test_mmap() {
         }
     }
 
-    // AEX_ASSERT(Mem::Phys::frames_available == frames);
-    // AEX_ASSERT(Mem::Heap::heap_allocated == heap);
+    // ASSERT(Mem::Phys::frames_available == frames);
+    // ASSERT(Mem::Heap::heap_allocated == heap);
 }

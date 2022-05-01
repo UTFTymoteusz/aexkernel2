@@ -22,10 +22,6 @@ namespace AEX::Sys {
         AC_DIR_CONFORM = 0x04,
         AC_EXECUTABLE  = 0x08,
         AC_CODE_DATA   = 0x10,
-        AC_RING_0      = 0x00,
-        AC_RING_1      = 0x20,
-        AC_RING_2      = 0x40,
-        AC_RING_3      = 0x60,
         AC_PRESENT     = 0x80,
     };
 
@@ -49,6 +45,12 @@ namespace AEX::Sys {
         gdt_entry& setLimit(uint32_t limit) {
             this->limit_low  = limit & 0xFFFF;
             this->limit_high = (limit >> 16) & 0x0F;
+
+            return *this;
+        }
+
+        gdt_entry& setPrivilege(int level) {
+            this->access |= (level & 0x03) << 5;
 
             return *this;
         }

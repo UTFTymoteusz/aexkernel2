@@ -48,7 +48,7 @@ namespace AEX::IPC {
         int total = m_tiddies.count();
 
         for (auto& thread : m_tiddies) {
-            AEX_ASSERT(thread->status != TS_DEAD);
+            ASSERT(thread->status != TS_DEAD);
             thread->status = TS_RUNNABLE;
         }
 
@@ -65,7 +65,7 @@ namespace AEX::IPC {
         int total = m_tiddies.count();
 
         for (auto& thread : m_tiddies) {
-            AEX_ASSERT(thread->status != TS_DEAD);
+            ASSERT(thread->status != TS_DEAD);
             thread->status = TS_RUNNABLE;
         }
 
@@ -105,7 +105,7 @@ namespace AEX::IPC {
         auto current = Thread::current();
 
         // We need to make sure anybody isn't waiting already.
-        AEX_ASSERT(!m_tiddie);
+        ASSERT(!m_tiddie);
 
         m_tiddie = current;
 

@@ -60,7 +60,7 @@ namespace AEX::Net {
             char buffer[256];
 
             auto read_try = hostname_try.value->read(buffer, sizeof(buffer) - 1);
-            AEX_ASSERT(read_try);
+            ASSERT(read_try);
 
             int len     = min<int>(read_try.value, sizeof(buffer) - 1);
             buffer[len] = '\0';

@@ -15,7 +15,7 @@ namespace AEX::FS {
 
         SCOPE(m_inode->mutex);
 
-        AEX_ASSERT(m_inode->block_size);
+        ASSERT(m_inode->block_size);
         m_inode->opened++;
 
         printkd(PTKD_FS, "fs: Opened inode %i (%i, %i)\n", m_inode->id, m_inode->opened,

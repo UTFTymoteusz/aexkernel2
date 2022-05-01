@@ -41,7 +41,7 @@ namespace AEX::Dev {
 
         m_init_counter--;
 
-        AEX_ASSERT(m_init_counter >= 0);
+        ASSERT(m_init_counter >= 0);
         if (m_init_counter == 0)
             return releaseBlock();
 

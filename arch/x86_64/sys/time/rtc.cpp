@@ -52,11 +52,9 @@ namespace AEX::Sys::Time {
         uint8_t hours   = CMOS::read(0x04);
         uint8_t minutes = CMOS::read(0x02);
         uint8_t seconds = CMOS::read(0x00);
-
-        uint8_t year  = CMOS::read(0x09);
-        uint8_t month = CMOS::read(0x08);
-        uint8_t day   = CMOS::read(0x07);
-
+        uint8_t year    = CMOS::read(0x09);
+        uint8_t month   = CMOS::read(0x08);
+        uint8_t day     = CMOS::read(0x07);
         uint8_t century = CMOS::read(m_century_index);
 
         bool pm = (hours & 0x80);
@@ -67,11 +65,9 @@ namespace AEX::Sys::Time {
             hours   = fromBCD(hours);
             minutes = fromBCD(minutes);
             seconds = fromBCD(seconds);
-
-            year  = fromBCD(year);
-            month = fromBCD(month);
-            day   = fromBCD(day);
-
+            year    = fromBCD(year);
+            month   = fromBCD(month);
+            day     = fromBCD(day);
             century = fromBCD(century);
         }
 

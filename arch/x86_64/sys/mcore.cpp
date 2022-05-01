@@ -54,6 +54,8 @@ namespace AEX::Sys::MCore {
 
     void init() {
         printk(INIT "mcore: Initializing\n");
+        printk("mcore: CPU name  : %93$%s%$\n", CPU::current()->name);
+        printk("mcore: CPU vendor: %93$%s%$\n", CPU::current()->vendor);
 
         // We can assume it exists because the IRQ phase would panic the kernel otherwise
         auto _madt = (madt*) ACPI::find_table("APIC", 0);

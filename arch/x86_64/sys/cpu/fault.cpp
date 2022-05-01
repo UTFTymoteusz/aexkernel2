@@ -89,7 +89,7 @@ namespace AEX::Sys {
         auto cpu    = CPU::current();
         auto thread = cpu->current_thread;
 
-        AEX_ASSERT_PEDANTIC(!CPU::checkInterrupts());
+        ASSERT_PEDANTIC(!CPU::checkInterrupts());
 
         if (thread->faulting && !Proc::testjmp(&Proc::Thread::current()->fault_recovery)) {
             int  delta = 0;
@@ -151,7 +151,7 @@ namespace AEX::Sys {
         switch (info->int_no) {
         case EXC_DEBUG:
         case EXC_NMI:
-            printk(WARN "cpu%i: %93$%s%$ Exception (%i) (%93$%i%$)\nRIP: 0x%016lx <%s+0x%x> "
+            printk(WARN "cpu%i: %93$%s%$ (%i) Exception (%93$%i%$)\nRIP: 0x%016lx <%s+0x%x> "
                         "(cpu%i, pid%i, th%p)\n",
                    CPU::currentID(), exception_names[info->int_no], info->int_no, info->err,
                    info->rip, name, delta, CPU::currentID(),
@@ -182,9 +182,10 @@ namespace AEX::Sys {
 
             return;
         default:
-            printk(FAIL "cpu%i: %93$%s%$ Exception (%i) (%91$%i%$)\nRIP: 0x%016lx <%s+0x%x>\n",
+            printk(FAIL
+                   "cpu%i: %93$%s%$ (%i) Exception (%91$%i, 0x%x%$)\nRIP: 0x%016lx <%s+0x%x>\n",
                    CPU::currentID(), exception_names[info->int_no], info->int_no, info->err,
-                   info->rip, name, delta);
+                   info->err, info->rip, name, delta);
 
             break;
         }
@@ -383,6 +384,9 @@ namespace AEX::Sys {
         asm volatile("mov rax, cr4; mov %0, rax;" : : "m"(cr4) : "memory");
 
         printk("CR0: 0x%016lx  CR2: 0x%016lx  CR3: 0x%016lx  CR4: 0x%016lx\n", cr0, cr2, cr3, cr4);
+
+        printk("thCS: 0x%04x  thSS: 0x%04x\n", CPU::current()->current_context->cs,
+               CPU::current()->current_context->ss);
     }
 
     extern "C" void early_fault_handler(CPU::fault_info* info) {

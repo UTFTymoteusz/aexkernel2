@@ -105,7 +105,7 @@ namespace AEX::Sys::ACPI {
 
     void facp_init() {
         auto _fadt = (fadt*) find_table("FACP", 0);
-        AEX_ASSERT(_fadt);
+        ASSERT(_fadt);
 
         auto table_hdr = (sdt_header*) Mem::kernel_pagemap->map(sizeof(sdt_header), _fadt->dsdt, 0);
         auto table     = (acpi_table*) Mem::kernel_pagemap->map(table_hdr->length, _fadt->dsdt, 0);
@@ -114,7 +114,7 @@ namespace AEX::Sys::ACPI {
 
         add_table(table);
 
-        AEX_ASSERT(_fadt->pm_timer_block);
+        ASSERT(_fadt->pm_timer_block);
     }
 
     bool validate_table(const void* tbl, size_t len) {

@@ -41,12 +41,12 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     Dev::TTY::init(mbinfo);
     Init::print_header();
 
-    AEX_ASSERT(mbinfo->flags & MULTIBOOT_INFO_MODS);
+    ASSERT(mbinfo->flags & MULTIBOOT_INFO_MODS);
 
     init_mem(mbinfo);
     load_symbols(mbinfo);
 
-    AEX_ASSERT(Debug::symbols_loaded);
+    ASSERT(Debug::symbols_loaded);
     uint32_t mb_boot_dev = mbinfo->boot_device;
 
     ACPI::init();
@@ -64,7 +64,7 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     MCore::init();
 
     CPU::interrupts();
-    IRQ::setup_timers_mcore(1000);
+    IRQ::setup_timers_mcore(100);
 
     Proc::init();
 
@@ -158,14 +158,13 @@ void mount_fs(uint32_t dev_code) {
 }
 
 void exec_init() {
-    auto tty_rd = FS::File::open("/dev/tty0", FS::O_RDONLY);
-    AEX_ASSERT(tty_rd);
-
-    auto tty_wr = FS::File::open("/dev/tty0", FS::O_WRONLY);
-    AEX_ASSERT(tty_wr);
-
+    auto tty_rd  = FS::File::open("/dev/tty0", FS::O_RDONLY);
+    auto tty_wr  = FS::File::open("/dev/tty0", FS::O_WRONLY);
     auto tty_wre = FS::File::open("/dev/tty0", FS::O_WRONLY);
-    AEX_ASSERT(tty_wre);
+
+    ASSERT(tty_rd);
+    ASSERT(tty_wr);
+    ASSERT(tty_wre);
 
     auto info = Proc::exec_opt{
         .stdin  = tty_rd.value,
@@ -186,8 +185,8 @@ void exec_init() {
 
     int status = 0;
 
-    AEX_ASSERT(Proc::exec(nullptr, nullptr, INIT_PATH, argv, envp, &info) == ENONE);
-    Proc::Process::wait(status);
+    ASSERT(Proc::exec(nullptr, nullptr, INIT_PATH, argv, envp, &info) == ENONE);
+    ASSERT(Proc::Process::wait(status) == 2);
 
     printk(INIT_PATH " exited with status %i\n", status);
 }
@@ -200,5 +199,5 @@ void kmain_env() {
     exec_init();
 
     printk("We are done here, adios\n");
-    AEX_ASSERT(Sys::Power::poweroff());
+    ASSERT(Sys::Power::poweroff());
 }

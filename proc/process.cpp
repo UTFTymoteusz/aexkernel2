@@ -151,7 +151,7 @@ namespace AEX::Proc {
 
     void exit_threaded_broker(Process* process) {
         auto thread_try = threaded_call(exit_threaded, process);
-        AEX_ASSERT(thread_try);
+        ASSERT(thread_try);
 
         thread_try->detach();
     }
@@ -262,7 +262,7 @@ namespace AEX::Proc {
     };
 
     optional<wait_args> try_get(int pid) {
-        AEX_ASSERT(!processes_lock.tryAcquire());
+        ASSERT(!processes_lock.tryAcquire());
 
         auto    process = process_list_head;
         error_t error   = ECHILD;
@@ -354,7 +354,7 @@ namespace AEX::Proc {
     }
 
     Mem::Vector<char*, 4>& Process::env() {
-        AEX_ASSERT(lock.isAcquired());
+        ASSERT(lock.isAcquired());
         return m_environment;
     }
 
@@ -396,7 +396,7 @@ namespace AEX::Proc {
     }
 
     optional<char*> Process::envGet(int index) {
-        AEX_ASSERT(lock.isAcquired());
+        ASSERT(lock.isAcquired());
 
         if (index < 0 || index >= m_environment.count())
             return EINVAL;
@@ -405,7 +405,7 @@ namespace AEX::Proc {
     }
 
     error_t Process::envSet(int index, char const* val) {
-        AEX_ASSERT(lock.isAcquired());
+        ASSERT(lock.isAcquired());
 
         if (index == -1) {
             size_t len    = strlen(val);

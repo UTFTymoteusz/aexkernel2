@@ -104,6 +104,9 @@ irq_common:
     push rax
     popfq
 
+    mov ax, 0x10
+    mov ss, ax
+
     mov rdi, rsp
     add rdi, 512
     xor rbp, rbp

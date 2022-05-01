@@ -1,13 +1,10 @@
 #pragma once
 
+#include "aex/sys/pci.hpp"
 #include "aex/utility.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
-
-namespace AEX::Dev::Tree {
-    class Device;
-}
 
 namespace AEX::Sys::SATA {
     class AHCI {
@@ -263,7 +260,7 @@ namespace AEX::Sys::SATA {
             uint8_t reserved[0x100 - 0xA0];
         } PACKED;
 
-        AHCI(Dev::Tree::Device* device, void* addr, int index);
+        AHCI(Sys::PCI::PCIDevice* device, void* addr, int index);
 
         private:
         static constexpr auto POWER_MANAGEMENT_ACTIVE = 0x01;

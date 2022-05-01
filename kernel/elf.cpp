@@ -191,7 +191,7 @@ namespace AEX {
 
     void ELF::loadRelocations64() {
         for (auto& header : section_headers) {
-            AEX_ASSERT(header.type != ELF::sc_type_t::SC_RELOC);
+            ASSERT(header.type != ELF::sc_type_t::SC_RELOC);
             if (header.type != ELF::sc_type_t::SC_RELOCA)
                 continue;
 
@@ -219,7 +219,7 @@ namespace AEX {
             if (symbol_id == 0)
                 continue;
 
-            AEX_ASSERT(section.link == symbol_table_id);
+            ASSERT(section.link == symbol_table_id);
 
             relocations.push({
                 .addr              = relocation64.addr,

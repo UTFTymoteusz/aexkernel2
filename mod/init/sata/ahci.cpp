@@ -4,13 +4,15 @@
 #include "aex/dev/tree.hpp"
 #include "aex/mem.hpp"
 #include "aex/printk.hpp"
+#include "aex/sys/pci.hpp"
 
 #include "satadevice.hpp"
 
 using namespace AEX::Dev;
+using namespace AEX::Sys::PCI;
 
 namespace AEX::Sys::SATA {
-    AHCI::AHCI(Tree::Device* device, void* addr, int index) {
+    AHCI::AHCI(PCIDevice* device, void* addr, int index) {
         this->hba      = (hba_t*) addr;
         this->index    = index;
         this->m_device = device;
@@ -19,9 +21,15 @@ namespace AEX::Sys::SATA {
             new Tree::Bus("sata");
 
         hba->global_host_control |= 1 << 31; // Let's set it to AHCI mode just incase.
+        hba->global_host_control |= 1 << 1;  // Interrupts
 
         command_slots = ((hba->host_capability >> 8) & 0b11111) + 1;
+
+        printk("ahci%i: irq %i\n", index, device->getIRQ());
         printk("ahci%i: %i command slots\n", index, command_slots);
+
+        // Sys::IRQ::register_handler(
+        //     m_irq, [](void* dev) { ((RTL8139*) dev)->handleIRQ(); }, this);
 
         scan_ports();
 
@@ -40,10 +48,9 @@ namespace AEX::Sys::SATA {
     }
 
     void AHCI::scan_port(hba_port_t* port, int port_index) {
-        uint32_t status = port->sata_status;
-
-        uint8_t power_management = (status >> 8) & 0b1111;
-        uint8_t device_detection = (status >> 0) & 0b1111;
+        uint32_t status           = port->sata_status;
+        uint8_t  power_management = (status >> 8) & 0b1111;
+        uint8_t  device_detection = (status >> 0) & 0b1111;
 
         if (power_management != POWER_MANAGEMENT_ACTIVE || device_detection != DETECTION_PRESENT)
             return;
@@ -73,8 +80,7 @@ namespace AEX::Sys::SATA {
         port->interrupt_status = 0xFFFFFFFF;
         port->sata_error       = 0xFFFFFFFF;
 
-        int prdt_count = (8192 - sizeof(hba_command_table)) / sizeof(phys_region_table_entry);
-
+        int prdt_count     = (8192 - sizeof(hba_command_table)) / sizeof(phys_region_table_entry);
         int max_page_burst = prdt_count - 2;
         int max_prts       = prdt_count;
 

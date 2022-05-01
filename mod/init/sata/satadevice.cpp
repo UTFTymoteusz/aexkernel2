@@ -11,8 +11,7 @@ using namespace AEX::Dev;
 
 namespace AEX::Sys::SATA {
     bool SATADevice::init() {
-        int slot = findSlot();
-
+        int  slot   = findSlot();
         auto header = getHeader(slot);
         auto table  = getTable(slot);
 
@@ -72,6 +71,8 @@ namespace AEX::Sys::SATA {
 
         printk("sata: %s: Model %s\n", this->name, flipped_buffer);
         printk("sata: %s: %li sectors\n", this->name, this->sector_count);
+
+        hba_port->interrupt_enable = 0xFFFFFFFF;
 
         return true;
     }
@@ -140,8 +141,7 @@ namespace AEX::Sys::SATA {
     void SATADevice::fillPRDTs(volatile AHCI::hba_command_table* table, void* dst, size_t len) {
         size_t dsti      = (size_t) dst;
         size_t page_size = Sys::CPU::PAGE_SIZE;
-
-        int index = 0;
+        int    index     = 0;
 
         while (len > 0) {
             size_t aligned_next = int_floor<size_t>(dsti + page_size, page_size);
@@ -149,6 +149,7 @@ namespace AEX::Sys::SATA {
 
             table->entries[index].bytes        = llen - 1;
             table->entries[index].data_address = Mem::kernel_pagemap->paddrof((void*) dsti);
+
             index++;
 
             dsti += llen;
@@ -157,8 +158,7 @@ namespace AEX::Sys::SATA {
     }
 
     void SATADevice::readWrite(void* buffer, uint64_t sector, uint32_t sector_count, bool write) {
-        int slot = findSlot();
-
+        int  slot   = findSlot();
         auto header = getHeader(slot);
         auto table  = getTable(slot);
 
@@ -190,8 +190,7 @@ namespace AEX::Sys::SATA {
     }
 
     void SATADevice::scsiPacket(uint8_t* packet, void* buffer, int len) {
-        int slot = findSlot();
-
+        int  slot   = findSlot();
         auto header = getHeader(slot);
         auto table  = getTable(slot);
 

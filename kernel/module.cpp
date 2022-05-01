@@ -41,9 +41,8 @@ namespace AEX {
                 strcmp((char*) (size_t) list[i].cmdline, "kernel_symbols") == 0)
                 continue;
 
-            AEX_ASSERT(load_module((char*) (size_t) list[i].cmdline,
-                                   (void*) (size_t) list[i].mod_start,
-                                   list[i].mod_end - list[i].mod_start, true) == ENONE);
+            ASSERT(load_module((char*) (size_t) list[i].cmdline, (void*) (size_t) list[i].mod_start,
+                               list[i].mod_end - list[i].mod_start, true) == ENONE);
         }
     }
 
@@ -118,7 +117,7 @@ namespace AEX {
             char name[FS::PATH_MAX];
 
             FS::canonize_path(list[i].name, COREMOD_PATH, name, sizeof(name));
-            AEX_ASSERT(load_module(name, true) == ENONE);
+            ASSERT(load_module(name, true) == ENONE);
         }
 
         dir->close();

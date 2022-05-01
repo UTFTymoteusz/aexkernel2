@@ -36,6 +36,7 @@ constexpr auto MSR_FSBase       = 0xC0000100;
 constexpr auto MSR_GSBase       = 0xC0000101;
 constexpr auto MSR_KernelGSBase = 0xC0000102;
 
+constexpr auto CPUID_VENDOR_ID     = 0x00000000;
 constexpr auto CPUID_NAME_STRING_1 = 0x80000002;
 constexpr auto CPUID_NAME_STRING_2 = 0x80000003;
 constexpr auto CPUID_NAME_STRING_3 = 0x80000004;
@@ -52,10 +53,9 @@ namespace AEX::Sys {
 
     CPU::CPU(int id) {
         this->id = id;
-        apic_id  = IRQ::APIC::id();
-        self     = this;
 
-        getName();
+        apic_id = IRQ::APIC::id();
+        self    = this;
     }
 
     void CPU::initLocal() {
@@ -70,15 +70,6 @@ namespace AEX::Sys {
 
         wrmsr(MSR_GSBase, (size_t) & (this->self));
 
-        uint32_t idc, edx;
-
-        cpuid(0x0001, &idc, &idc, &idc, &edx);
-
-        if (!(edx & CPUID_FEAT_PAT)) {
-            printk(WARN "cpu%i: PAT not supported\n", id);
-            return;
-        }
-
         uint64_t pat = rdmsr(MSR_PAT);
 
         pat &= ~(7ul << 32);
@@ -91,6 +82,9 @@ namespace AEX::Sys {
 
         // reshed_fault_stack_start = (size_t) Mem::kernel_pagemap->alloc(4096);
         in_interrupt = 1;
+
+        getVendor();
+        getName();
     }
 
     void CPU::halt() {
@@ -124,7 +118,7 @@ namespace AEX::Sys {
     }
 
     void CPU::wait() {
-        AEX_ASSERT(CPU::checkInterrupts());
+        ASSERT(CPU::checkInterrupts());
         asm volatile("hlt");
     }
 
@@ -194,6 +188,10 @@ namespace AEX::Sys {
                      :
                      : "r"(data), "c"(reg)
                      : "memory");
+    }
+
+    void CPU::wrmsr(uint32_t reg, void* data) {
+        wrmsr(reg, (uint64_t) data);
     }
 
     CPU* CPU::current() {
@@ -275,7 +273,7 @@ namespace AEX::Sys {
         wrmsr(MSR_FSBase, (size_t) thread->tls);
 
         if (Proc::ready)
-            AEX_ASSERT(thread->parent);
+            ASSERT(thread->parent);
 
         Sec::feed_random(thread->context->rsp);
         Sec::feed_random(IRQ::APIC::counter());
@@ -318,5 +316,13 @@ namespace AEX::Sys {
         memset(name + 48 - pad_count, '\0', pad_count);
 
         name[47] = '\0';
+    }
+
+    void CPU::getVendor() {
+        uint32_t ignore;
+
+        memset(vendor, '\0', sizeof(vendor));
+        cpuid(CPUID_VENDOR_ID, &ignore, (uint32_t*) (vendor + 0), (uint32_t*) (vendor + 8),
+              (uint32_t*) (vendor + 4));
     }
 }

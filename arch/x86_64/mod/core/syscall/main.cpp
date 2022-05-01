@@ -67,9 +67,9 @@ void module_enter() {
     auto table = Sys::default_table();
 
     // -O2 makes these asserts pass
-    AEX_ASSERT(table[SYS_SIGACT] == (void*) sys_sigact);
-    AEX_ASSERT(table[SYS_SIGATHRD] == (void*) sys_sigathrd);
-    AEX_ASSERT(table[SYS_PANIC] == (void*) sys_panic);
+    ASSERT(table[SYS_SIGACT] == (void*) sys_sigact);
+    ASSERT(table[SYS_SIGATHRD] == (void*) sys_sigathrd);
+    ASSERT(table[SYS_PANIC] == (void*) sys_panic);
 
     // print_all();
 }
@@ -79,15 +79,12 @@ void module_exit() {
 }
 
 void install_handler() {
-    Sys::CPU::wrmsr(IA32_STAR, (Sys::CPU::rdmsr(IA32_STAR) & 0xFFFFFFFF) | (0x00100008ul << 32));
-    Sys::CPU::wrmsr(IA32_LSTAR, (uint64_t) handler);
+    constexpr uint64_t kernel_segment = 0x0008ul;
+    constexpr uint64_t user_segment   = 0x0013ul;
 
-    // AEX::Sys::idt[0x80]
-    //     .setOffset((void*) int_handler)
-    //     .setSelector(0x08)
-    //     .setType(0x6F)
-    //     .setIST(7)
-    //     .setPresent(true);
+    Sys::CPU::wrmsr(IA32_STAR, (Sys::CPU::rdmsr(IA32_STAR) & 0xFFFFFFFF) | (kernel_segment << 32) |
+                                   (user_segment << 48));
+    Sys::CPU::wrmsr(IA32_LSTAR, (void*) handler);
 }
 
 void register_syscalls() {
@@ -102,12 +99,12 @@ void register_syscalls() {
 }
 
 extern "C" void syscall_prepare(int syscall) {
-    AEX_ASSERT(!Proc::Thread::current()->isCritical());
+    ASSERT(!Proc::Thread::current()->isCritical());
 }
 
 extern "C" void syscall_done(int syscall, IPC::syscall_registers* regs) {
     auto thread = Proc::Thread::current();
-    AEX_ASSERT(!thread->isCritical());
+    ASSERT(!thread->isCritical());
 
     thread->sigchk(regs);
     thread->abortchk();

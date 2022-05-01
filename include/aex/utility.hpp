@@ -21,6 +21,8 @@
 
 #define fall FALLTHROUGH
 #define lenof(x) (sizeof(x) / sizeof(*x))
+#define likely(x) __builtin_expect((x), 1)
+#define unlikely(x) __builtin_expect((x), 0)
 
 #define BIT64 INTPTR_MAX == INT64_MAX
 #define BIT32 INTPTR_MAX == INT32_MAX

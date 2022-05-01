@@ -113,6 +113,9 @@ exc_common:
     push rax
     push rbp
     mov rbp, rsp
+
+    mov ax, 0x10
+    mov ss, ax
     
     mov rax, 0x0002
     push rax

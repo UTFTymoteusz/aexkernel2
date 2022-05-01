@@ -23,7 +23,7 @@ namespace AEX::Mem {
 
         T read() {
             T val;
-            AEX_ASSERT(read(&val, 1));
+            ASSERT(read(&val, 1));
             return val;
         }
 
@@ -68,7 +68,7 @@ namespace AEX::Mem {
         }
 
         T write(T val) {
-            AEX_ASSERT(write(&val, 1, true));
+            ASSERT(write(&val, 1, true));
             return val;
         }
 

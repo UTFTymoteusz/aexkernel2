@@ -31,7 +31,7 @@ namespace AEX::FS {
         auto inode_try  = mount_info.mount->controlblock->find(mount_info.new_path, true);
 
         if (!inode_try) {
-            printkd(PTKD_FS, "fs: %s, %i: no inode (%s)\n", path, mode, strerror(inode_try.error));
+            printkd(PTKD_FS, "fs: %s, %i: no inode? (%s)\n", path, mode, strerror(inode_try.error));
             return inode_try.error;
         }
 
@@ -111,7 +111,7 @@ namespace AEX::FS {
         auto finfo      = file_info();
 
         if (parent)
-            AEX_ASSERT(!parent->mutex.tryAcquire());
+            ASSERT(!parent->mutex.tryAcquire());
 
         using(inode->mutex) {
             finfo.containing_dev_id = 0;

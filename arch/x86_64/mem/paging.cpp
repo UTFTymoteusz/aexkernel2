@@ -82,7 +82,7 @@ namespace AEX::Mem {
         debug_pptr_targets[index] = at;
         *pptr_entries[index]      = at | PAGE_WRITE | PAGE_PRESENT;
 
-        Sys::CPU::flushPg(pptr_vaddr[index]);
+        Sys::CPU::flush(pptr_vaddr[index]);
 
         return pptr_vaddr[index];
     }
@@ -212,7 +212,7 @@ namespace AEX::Mem {
         }
         Phys::free(root, 1);
 
-        AEX_ASSERT(Sys::CPU::checkInterrupts());
+        ASSERT(Sys::CPU::checkInterrupts());
         Sys::CPU::broadcast(Sys::CPU::IPP_PG_FLUSH);
 
         m_lock.release();
@@ -513,7 +513,7 @@ namespace AEX::Mem {
 
     // Private
     void Pagemap::assign(int pptr, virt_t virt, phys_t phys, uint16_t flags) {
-        AEX_ASSERT_PEDANTIC(!m_lock.tryAcquire());
+        ASSERT_PEDANTIC(!m_lock.tryAcquire());
 
         virt &= MEM_PAGE_MASK;
         phys &= MEM_PAGE_MASK;
@@ -528,9 +528,9 @@ namespace AEX::Mem {
 
     // Make this unalloc page tables pls
     phys_t Pagemap::unassign(int pptr, virt_t virt) {
-        AEX_ASSERT(virt >= vstart);
-        AEX_ASSERT(virt <= vend);
-        AEX_ASSERT_PEDANTIC(!m_lock.tryAcquire());
+        ASSERT(virt >= vstart);
+        ASSERT(virt <= vend);
+        ASSERT_PEDANTIC(!m_lock.tryAcquire());
 
         virt &= MEM_PAGE_MASK;
 

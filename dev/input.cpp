@@ -33,6 +33,7 @@ namespace AEX::Dev::Input {
             TTY::VTTYs[i]->inputReady();
 
         auto thread = Proc::Thread::create(1, (void*) tty_loop, 8192, nullptr);
+
         thread.value->start();
         thread.value->detach();
     }

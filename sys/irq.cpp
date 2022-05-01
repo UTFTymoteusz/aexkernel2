@@ -63,7 +63,7 @@ namespace AEX::Sys::IRQ {
     void handle(uint8_t irq) {
         Sec::feed_random(irq * 73);
 
-        AEX_ASSERT(irq < 32);
+        ASSERT(irq < 32);
 
         auto thread = Thread::current();
         auto state  = thread->saveState();

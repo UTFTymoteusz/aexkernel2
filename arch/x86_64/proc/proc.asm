@@ -145,6 +145,9 @@ proc_timer_tick:
     push rax ; rbp is saved to rax
     mov rbp, rsp
 
+    mov ax, 0x10
+    mov ss, ax
+
     ldmxcsr [safe_mxcsr]
     call proc_timer_tick_ext
 
@@ -156,6 +159,9 @@ proc_sched_nosave_int:
     push rbp
     mov rbp, rsp
 
+    mov ax, 0x10
+    mov ss, ax
+
     ldmxcsr [safe_mxcsr]
     call proc_sched_int_ext
 
@@ -165,9 +171,16 @@ proc_sched_nosave_int:
 
 proc_ctxsave_int:
     save_context
+
+    mov ax, 0x10
+    mov ss, ax
+
     jmp enter_context
 
 proc_ctxload_int:
+    mov ax, 0x10
+    mov ss, ax
+
     jmp enter_context
 
 proc_reshed:

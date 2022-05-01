@@ -12,7 +12,7 @@ namespace AEX::IPC {
         sigset_t mask;
 
         siginfo_t& peek(int index) {
-            AEX_ASSERT(index >= 0 && index < m_queue.count());
+            ASSERT(index >= 0 && index < m_queue.count());
             return m_queue[index];
         }
 

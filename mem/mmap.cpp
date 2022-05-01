@@ -128,7 +128,7 @@ namespace AEX::Mem {
         if (!(flags & MAP_ANONYMOUS) && !file)
             return EBADF;
 
-        AEX_ASSERT(process != nullptr);
+        ASSERT(process != nullptr);
 
         int aflags = (process != Proc::Process::kernel()) ? PAGE_USER : 0;
 

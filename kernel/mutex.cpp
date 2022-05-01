@@ -48,7 +48,7 @@ namespace AEX {
     void Mutex::release() {
         __sync_synchronize();
 
-        AEX_ASSERT(__sync_bool_compare_and_swap(&m_lock, true, false));
+        ASSERT(__sync_bool_compare_and_swap(&m_lock, true, false));
 
         m_thread = nullptr;
 

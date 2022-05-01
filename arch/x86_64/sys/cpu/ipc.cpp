@@ -24,7 +24,7 @@ namespace AEX::Sys {
             case IPP_PG_FLUSH:
             case IPP_PG_INV:
             case IPP_PG_INVM:
-                Sys::CPU::flushPg();
+                Sys::CPU::flush();
                 return;
             default:
                 kpanic("crazy IPP's too early");
@@ -75,7 +75,7 @@ namespace AEX::Sys {
         while (!m_ipi_packet.ack) {
             counter++;
 
-            AEX_ASSERT(Sys::CPU::current()->id != this->id);
+            ASSERT(Sys::CPU::current()->id != this->id);
 
             // if (counter == 100000000l * 4) {
             //     IRQ::APIC::nmi(apic_id);
@@ -108,8 +108,8 @@ namespace AEX::Sys {
     void CPU::handleIPP() {
         auto us = CPU::current();
 
-        AEX_ASSERT(us->m_ipi_lock.isAcquired());
-        AEX_ASSERT(!CPU::checkInterrupts());
+        ASSERT(us->m_ipi_lock.isAcquired());
+        ASSERT(!CPU::checkInterrupts());
 
         switch (m_ipi_packet.type) {
         case IPP_HALT:
@@ -138,12 +138,12 @@ namespace AEX::Sys {
             m_ipi_packet.ack = true;
             break;
         case IPP_PG_FLUSH:
-            flushPg();
+            flush();
             m_ipi_packet.ack = true;
 
             break;
         case IPP_PG_INV:
-            flushPg(m_ipi_packet.data);
+            flush(m_ipi_packet.data);
             m_ipi_packet.ack = true;
 
             break;
@@ -157,7 +157,7 @@ namespace AEX::Sys {
                 IRQ::APIC::eoi();
 
             for (uint32_t i = 0; i < pages; i++) {
-                flushPg(addr);
+                flush(addr);
                 addr += CPU::PAGE_SIZE;
             }
 

@@ -18,7 +18,7 @@ namespace AEX::Proc {
     error_t exec(Process* process, Thread* initiator, const char* path, char* const argv[],
                  char* const envp[], exec_opt* options) {
         if (process == Process::current()) {
-            AEX_ASSERT(initiator->getProcess() == process);
+            ASSERT(initiator->getProcess() == process);
 
             auto thread_sp = process->unassoc(initiator);
             thread_sp.value.defuse();

@@ -31,14 +31,14 @@ namespace AEX::Debug {
 
     void load_symbols(const char* elf_path) {
         auto file_try = FS::File::open(elf_path, FS::O_RDONLY);
-        AEX_ASSERT(file_try);
+        ASSERT(file_try);
 
         auto    file = file_try.value;
         ssize_t size = file->seek(0, FS::File::SEEK_END).value;
 
         auto mmap_try = Mem::mmap(Proc::Process::kernel(), nullptr, size, Mem::PROT_READ,
                                   Mem::MAP_NONE, file, 0);
-        AEX_ASSERT(mmap_try);
+        ASSERT(mmap_try);
 
         file->close();
 
@@ -50,7 +50,7 @@ namespace AEX::Debug {
 
     void load_symbols(void* addr) {
         auto elf = ELF(addr);
-        AEX_ASSERT(elf.isValid(ELF::BIT_64, ELF::EN_LITTLE, ELF::ISA_AMD64));
+        ASSERT(elf.isValid(ELF::BIT_64, ELF::EN_LITTLE, ELF::ISA_AMD64));
 
         elf.loadStrings();
         elf.loadSymbols();
