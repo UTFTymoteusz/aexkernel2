@@ -54,7 +54,7 @@ SECTIONS
         _end_bss = . - KERNEL_EXEC_VMA;
     }
 
-    .whocares :
+    .whocares (NOLOAD) :
     {
         *(.note.gnu.build-id)
         *(.comment)
