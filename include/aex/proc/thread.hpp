@@ -74,8 +74,9 @@ namespace AEX::Proc {
         void* tls;
         void* retval = nullptr;
 
-        int sched_counter;
-        int held_mutexes;
+        int  sched_counter;
+        int  held_mutexes;
+        int* holder; // If this is greater than 0 while in TS_HELD, the thread gets blocked
 
         Thread* next;
         Thread* prev;
@@ -97,6 +98,7 @@ namespace AEX::Proc {
         static void exit_implicit() {
             exit(nullptr, true);
         }
+        static void wait(int* volatile holder);
 
         error_t         start();
         optional<void*> join();

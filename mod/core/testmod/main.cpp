@@ -12,6 +12,7 @@ void test_mmap();
 void test_paging();
 void test_threads();
 void test_processes();
+void test_locks();
 
 void module_enter() {
     printk(WARN "testmod: Loaded\n");
@@ -20,6 +21,7 @@ void module_enter() {
     test_paging();
     test_threads();
     // test_processes();
+    test_locks();
 
     // while (true)
     //    printk("a: %c ", Dev::TTY::VTTYs[Dev::TTY::ROOT_TTY]->read());

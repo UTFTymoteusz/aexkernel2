@@ -8,6 +8,7 @@ namespace AEX::Proc {
         TS_RUNNABLE,
         TS_SLEEPING,
         TS_BLOCKED,
+        TS_HELD,
         TS_VERYSPECIAL,
         TS_DEAD,
     };

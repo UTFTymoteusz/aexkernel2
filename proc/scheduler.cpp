@@ -67,6 +67,15 @@ namespace AEX::Proc {
 
                 thread->status = TS_RUNNABLE;
                 break;
+            case TS_HELD:
+                ASSERT_PEDANTIC(thread->holder != nullptr);
+
+                if (*thread->holder < 1) {
+                    thread->status = TS_RUNNABLE;
+                    break;
+                }
+
+                fall;
             case TS_BLOCKED:
                 if (!thread->interrupted())
                     continue;

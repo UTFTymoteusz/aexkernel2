@@ -18,6 +18,7 @@
 #include "aex/printk.hpp"
 #include "aex/proc.hpp"
 #include "aex/rwspinlock.hpp"
+#include "aex/semaphore.hpp"
 #include "aex/spinlock.hpp"
 #include "aex/std.hpp"
 #include "aex/string.hpp"

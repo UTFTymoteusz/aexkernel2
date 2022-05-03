@@ -173,6 +173,12 @@ namespace AEX::Proc {
             CPU::wait();
     }
 
+    void Thread::wait(int* volatile holder) {
+        Thread::current()->holder = holder;
+        Thread::current()->status = TS_HELD;
+        Thread::yield();
+    }
+
     Thread* Thread::current() {
         // We need atomicity here
         return CPU::currentThread();
