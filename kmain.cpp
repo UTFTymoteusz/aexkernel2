@@ -50,13 +50,9 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     uint32_t mb_boot_dev = mbinfo->boot_device;
 
     ACPI::init();
-    printk("\n");
-
     Time::init();
-
     IRQ::init();
     IRQ::init_timer();
-    printk("\n");
 
     auto bsp = new CPU(0);
     bsp->initLocal();
@@ -64,27 +60,23 @@ extern "C" void kmain(multiboot_info_t* mbinfo) {
     MCore::init();
 
     CPU::interrupts();
-    IRQ::setup_timers_mcore(100);
+    IRQ::setup_timers_mcore(1000);
 
     Proc::init();
 
     bsp->in_interrupt--;
 
     Dev::init();
-    printk("\n");
     FS::init();
-    printk("\n");
 
     load_modules(mbinfo);
 
     Mem::cleanup();
-    printk("\n");
 
     mount_fs(mb_boot_dev);
 
     IPC::init();
     Net::init();
-    printk("\n");
 
     Sys::syscall_init();
     Dev::Input::init();
@@ -106,8 +98,6 @@ void init_mem(multiboot_info_t* mbinfo) {
     Phys::init(mbinfo);
     Mem::init();
     Heap::init();
-    printk("\n");
-
     Dev::TTY::init_mem(mbinfo);
 }
 

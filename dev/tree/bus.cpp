@@ -12,7 +12,7 @@ namespace AEX::Dev::Tree {
 
         buses.addRef(this);
 
-        printk(OK "dev: Registered bus '%s'\n", this->name);
+        printk("dev: Registered bus '%s'\n", this->name);
     }
 
     void Bus::bind(Driver* driver, Device* device) {

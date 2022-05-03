@@ -31,10 +31,10 @@ namespace AEX::Sys::IRQ {
     size_t  find_apic_tps();
 
     void init() {
+        printk(INIT "irq: Initializing\n");
+
         Sys::setup_idt();
         Sys::load_idt(Sys::idt, 256);
-
-        printk(INIT "irq: Initializing\n");
 
         uint32_t eax, ebx, ecx, edx;
 
@@ -174,36 +174,36 @@ namespace AEX::Sys::IRQ {
     }
 
     void set_vector(int irq, uint8_t vector) {
-        irq = find_redirection(irq);
-
         auto ioapic = find_ioapic(irq);
+
+        irq = find_redirection(irq);
         irq -= ioapic->irq_base;
 
         ioapic->vector(irq, vector);
     }
 
     void set_mask(int irq, bool mask) {
-        irq = find_redirection(irq);
-
         auto ioapic = find_ioapic(irq);
+
+        irq = find_redirection(irq);
         irq -= ioapic->irq_base;
 
         ioapic->mask(irq, mask);
     }
 
     void set_destination(int irq, uint8_t destination) {
-        irq = find_redirection(irq);
-
         auto ioapic = find_ioapic(irq);
+
+        irq = find_redirection(irq);
         irq -= ioapic->irq_base;
 
         ioapic->destination(irq, destination);
     }
 
     void set_mode(int irq, uint8_t mode) {
-        irq = find_redirection(irq);
-
         auto ioapic = find_ioapic(irq);
+
+        irq = find_redirection(irq);
         irq -= ioapic->irq_base;
 
         ioapic->mode(irq, mode);
@@ -230,12 +230,11 @@ namespace AEX::Sys::IRQ {
             }
         }
 
-        // Now we don't need the PIT anymore, mask it to hell
         set_vector(0, 0x20 + 30);
         set_mask(0, true);
         set_destination(0, 1);
 
-        printk("apparently %li tps\n", ticks);
+        printk("apic: %li tps\n", ticks);
 
         return ticks;
     }
