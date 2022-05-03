@@ -277,6 +277,7 @@ namespace AEX::Sys::SATA {
         int    index;
 
         int command_slots = 0;
+        int bits          = 0;
 
         void scan_ports();
 

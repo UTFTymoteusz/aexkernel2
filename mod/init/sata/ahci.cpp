@@ -24,9 +24,11 @@ namespace AEX::Sys::SATA {
         hba->global_host_control |= 1 << 1;  // Interrupts
 
         command_slots = ((hba->host_capability >> 8) & 0b11111) + 1;
+        bits          = ((hba->host_capability) & (1 << 31)) ? 64 : 32;
 
         printk("ahci%i: irq %i\n", index, device->getIRQ());
         printk("ahci%i: %i command slots\n", index, command_slots);
+        printk("ahci%i: %i bits\n", index, bits);
 
         // Sys::IRQ::register_handler(
         //     m_irq, [](void* dev) { ((RTL8139*) dev)->handleIRQ(); }, this);
