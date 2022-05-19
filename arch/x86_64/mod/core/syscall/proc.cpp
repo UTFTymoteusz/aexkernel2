@@ -241,7 +241,7 @@ pid_t sys_setsid() {
     return current->pid;
 }
 
-O2 void register_proc(Sys::syscall_t* table) {
+O0 void register_proc(Sys::syscall_t* table) {
     table[SYS_EXIT]   = (void*) sys_exit;
     table[SYS_FORK]   = (void*) sys_fork;
     table[SYS_EXECVE] = (void*) sys_execve;

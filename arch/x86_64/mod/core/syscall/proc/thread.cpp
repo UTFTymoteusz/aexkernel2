@@ -66,7 +66,7 @@ void sys_texit(void* retval) {
     Thread::exit(retval);
 }
 
-O2 void register_proc_thread(Sys::syscall_t* table) {
+O0 void register_proc_thread(Sys::syscall_t* table) {
     table[SYS_NSLEEP]  = (void*) sys_nsleep;
     table[SYS_YIELD]   = (void*) sys_yield;
     table[SYS_TCREATE] = (void*) sys_tcreate;

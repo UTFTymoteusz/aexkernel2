@@ -20,6 +20,6 @@ int sys_gethostname(char* name, size_t len) {
     return 0;
 }
 
-O2 void register_net(Sys::syscall_t* table) {
+O0 void register_net(Sys::syscall_t* table) {
     table[SYS_GETHOSTNAME] = (void*) sys_gethostname;
 }

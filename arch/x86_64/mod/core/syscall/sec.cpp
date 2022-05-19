@@ -112,7 +112,7 @@ int sys_setreuid(Sec::uid_t ruid, Sec::uid_t euid) {
     return ret;
 }
 
-O2 void register_sec(Sys::syscall_t* table) {
+O0 void register_sec(Sys::syscall_t* table) {
     table[SYS_GETEGID] = (void*) sys_getegid;
     table[SYS_GETEUID] = (void*) sys_geteuid;
     table[SYS_GETGID]  = (void*) sys_getgid;

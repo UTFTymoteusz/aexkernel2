@@ -213,7 +213,7 @@ int sys_sigsuspend(const IPC::sigset_t* usr_mask) {
     return -1;
 }
 
-O2 void register_ipc(Sys::syscall_t* table) {
+O0 void register_ipc(Sys::syscall_t* table) {
     table[SYS_PIPE]       = (void*) sys_pipe;
     table[SYS_KILL]       = (void*) sys_kill;
     table[SYS_SIGACT]     = (void*) sys_sigact;

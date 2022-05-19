@@ -43,7 +43,7 @@ error_t sys_test5(uint64_t a, uint64_t b, uint64_t c, uint64_t d, uint64_t e) {
     return ENONE;
 }
 
-O2 void register_test(Sys::syscall_t* table) {
+O0 void register_test(Sys::syscall_t* table) {
     table[SYS_POWEROFF] = (void*) sys_poweroff;
     table[SYS_PANIC]    = (void*) sys_panic;
     table[SYS_TEST1]    = (void*) sys_test1;
